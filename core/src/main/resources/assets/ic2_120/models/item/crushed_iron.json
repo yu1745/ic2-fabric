@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/crushed_iron.obj",
@@ -14,6 +13,3 @@
     "flat_fef4ed": "ic2_120:item/item3d/flat_fef4ed"
   }
 }
-=======
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/crushed/iron" } }
->>>>>>> backup/1.21.1

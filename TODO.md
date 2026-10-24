@@ -38,7 +38,6 @@
 
 - [ ] 钓鱼失败全服公告（写在别的 mod 里）
 
-<<<<<<< HEAD
 ## 存储 / 自动化
 
 - [ ] 将 `RoutedItemStorage` 改为真正的 `SlottedStorage<ItemVariant>`（暂缓，当前不实现）
@@ -65,9 +64,3 @@
 残留（非阻塞）：
 - `IBatteryItem.transferSpeed: Int` 仍用 `toInt()`，但电池 tier 不会到 10+，无实际影响。
 - 工业升级 tier 11 面板 maxStorage=10T 在 GUI 同步 `toInt()` 处会溢出，仅影响进度条显示，不影响能量传输。
-=======
-
-release350:
-7.包内若有可无线充电电池 神行不消耗部件电量和电池电量（若无可无线充电电池 则消耗部件电量）
-8.飞行触地自动关闭飞行（海面上基本飞不起来）
->>>>>>> backup/1.21.1

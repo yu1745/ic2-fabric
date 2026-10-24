@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/reactor_plating.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,10 +8,4 @@
     "metal_aaaaaa": "ic2_120:item/item3d/metal_aaaaaa",
     "flat_707070": "ic2_120:item/item3d/flat_707070"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/reactor/plating"
-	}
->>>>>>> backup/1.21.1
 }

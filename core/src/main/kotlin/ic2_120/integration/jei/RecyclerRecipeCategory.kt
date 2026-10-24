@@ -19,15 +19,11 @@ import net.minecraft.util.Identifier
  */
 class RecyclerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<RecyclerJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-<<<<<<< HEAD
         Identifier("ic2", "textures/gui/guirecycler.png"),
-=======
-        Identifier.of("ic2", "textures/gui/guirecycler.png"),
->>>>>>> backup/1.21.1
         30, 5, 120, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "recycler")))
+        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "recycler")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.RECYCLER

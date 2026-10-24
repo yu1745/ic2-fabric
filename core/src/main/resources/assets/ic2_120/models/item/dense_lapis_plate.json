@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/dense_lapis_plate.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,10 +8,5 @@
     "flat_1d2e8e": "ic2_120:item/item3d/flat_1d2e8e",
     "flat_2a4071": "ic2_120:item/item3d/flat_2a4071",
     "flat_4a64a8": "ic2_120:item/item3d/flat_4a64a8"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/resource/plate/dense_lapis"
->>>>>>> backup/1.21.1
   }
 }

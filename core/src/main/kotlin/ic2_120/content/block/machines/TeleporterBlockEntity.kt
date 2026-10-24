@@ -2,10 +2,7 @@
 
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.TeleporterBlock
-<<<<<<< HEAD
 import kotlin.math.ceil
-=======
->>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import team.reborn.energy.api.EnergyStorage
 import ic2_120.content.screen.TeleporterScreenHandler
@@ -40,9 +37,8 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
@@ -59,8 +55,6 @@ import java.util.UUID
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = TeleporterBlock::class)
 class TeleporterBlockEntity(
@@ -74,11 +68,7 @@ class TeleporterBlockEntity(
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
-<<<<<<< HEAD
     IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
-=======
-    ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = TeleporterBlock.ACTIVE
     override fun getInventory(): net.minecraft.inventory.Inventory = this
@@ -90,11 +80,10 @@ class TeleporterBlockEntity(
     override var voltageTierBonus: Int = 0
     override var redstoneInverted: Boolean = false
 
-
     companion object {
         const val TELEPORTER_TIER = 4
-        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "machine.teleporter.charge"))
-        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "machine.teleporter.use"))
+        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "machine.teleporter.charge"))
+        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "machine.teleporter.use"))
 
         const val SLOT_UPGRADE_0 = 0
         const val SLOT_UPGRADE_1 = 1
@@ -209,11 +198,9 @@ class TeleporterBlockEntity(
         markDirty()
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.teleporter")
@@ -221,9 +208,9 @@ class TeleporterBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): net.minecraft.screen.ScreenHandler =
         TeleporterScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
 
         sync.amount = nbt.getLong(TeleporterSync.NBT_ENERGY_STORED)
@@ -262,9 +249,9 @@ class TeleporterBlockEntity(
         sync.teleportRange = teleportRange
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
 
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
@@ -297,10 +284,7 @@ class TeleporterBlockEntity(
         sync.teleportRange = teleportRange
 
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-<<<<<<< HEAD
         RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-=======
->>>>>>> backup/1.21.1
 
         if (teleportCooldown > 0) {
             teleportCooldown--
@@ -369,12 +353,8 @@ class TeleporterBlockEntity(
 
         val distance = sqrt(pos.getSquaredDistance(target)).toLong().coerceAtLeast(1L)
         val weight = computeWeight(entity).coerceAtMost(5100)
-<<<<<<< HEAD
         // 传送耗能按超频 1.6^n 计（向上取整，整数 EU）
         val energyNeed = ceil(computeEnergyNeed(weight, distance) * energyMultiplier).toLong().coerceAtLeast(1L)
-=======
-        val energyNeed = computeEnergyNeed(weight, distance)
->>>>>>> backup/1.21.1
         val availableMfe = simulateAdjacentMfeEnergy(world, pos)
         if (availableMfe < energyNeed) {
             clearCharging()
@@ -494,10 +474,6 @@ class TeleporterBlockEntity(
             return false
         }
 
-<<<<<<< HEAD
-=======
-        // 通过事务从相邻 MFE/MFSU 一次性抽取能量
->>>>>>> backup/1.21.1
         var success = false
         Transaction.openOuter().use { tx ->
             val extracted = extractFromAdjacentMfe(serverWorld, pos, chargingEnergyNeed, tx)
@@ -587,13 +563,6 @@ class TeleporterBlockEntity(
         return world.isSpaceEmpty(entity, offset)
     }
 
-<<<<<<< HEAD
-=======
-    /**
-     * 从事务中从相邻 MFE/MFSU/充电座抽取能量。
-     * 若最终事务未 commit（如能量不足），抽取自动退还。
-     */
->>>>>>> backup/1.21.1
     private fun extractFromAdjacentMfe(world: World, pos: BlockPos, amount: Long, tx: Transaction): Long {
         var remaining = amount
         for (dir in Direction.entries) {
@@ -618,12 +587,6 @@ class TeleporterBlockEntity(
         return amount - remaining
     }
 
-<<<<<<< HEAD
-=======
-    /**
-     * 模拟查询相邻 MFE/MFSU/充电座当前可提供的总能量（用于 Jade 显示）。
-     */
->>>>>>> backup/1.21.1
     fun simulateAdjacentMfeEnergy(world: World, pos: BlockPos): Long {
         var total = 0L
         for (dir in Direction.entries) {
@@ -644,8 +607,5 @@ class TeleporterBlockEntity(
         entity.velocity = Vec3d.ZERO
         entity.velocityModified = true
     }
-<<<<<<< HEAD
 
-=======
->>>>>>> backup/1.21.1
 }

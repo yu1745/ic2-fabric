@@ -7,31 +7,17 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
-=======
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
->>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-<<<<<<< HEAD
-=======
-import ic2_120.registry.annotation.ScreenFactory
->>>>>>> backup/1.21.1
 
 @ModScreenHandler(name = "tank")
 class TankScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
-<<<<<<< HEAD
     private val context: ScreenHandlerContext,
     propertyDelegate: PropertyDelegate,
-=======
-    propertyDelegate: PropertyDelegate,
-    private val context: ScreenHandlerContext
->>>>>>> backup/1.21.1
 ) : ScreenHandler(TankScreenHandler::class.type(), syncId) {
 
     val sync = TankSync(SyncedDataView(propertyDelegate)) { 0 }
@@ -69,15 +55,5 @@ class TankScreenHandler(
     override fun canUse(player: PlayerEntity): Boolean = true
 
     companion object {
-<<<<<<< HEAD
-=======
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): TankScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            return TankScreenHandler(syncId, playerInventory, ArrayPropertyDelegate(propertyCount), context)
-        }
->>>>>>> backup/1.21.1
     }
 }

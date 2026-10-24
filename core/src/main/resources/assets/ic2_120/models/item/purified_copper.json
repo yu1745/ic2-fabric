@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/purified_copper.obj",
@@ -14,6 +13,3 @@
     "flat_635b40": "ic2_120:item/item3d/flat_635b40"
   }
 }
-=======
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/purified/copper" } }
->>>>>>> backup/1.21.1

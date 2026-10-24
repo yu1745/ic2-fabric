@@ -19,15 +19,11 @@ import net.minecraft.util.Identifier
  */
 class CentrifugeRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CentrifugeJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-<<<<<<< HEAD
         Identifier("ic2", "textures/gui/guicentrifuge.png"),
-=======
-        Identifier.of("ic2", "textures/gui/guicentrifuge.png"),
->>>>>>> backup/1.21.1
         0, 11, 150, 72
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "centrifuge")))
+        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "centrifuge")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.CENTRIFUGE

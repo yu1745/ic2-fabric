@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/crushed_uranium.obj",
@@ -14,6 +13,3 @@
     "flat_146800": "ic2_120:item/item3d/flat_146800"
   }
 }
-=======
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/crushed/uranium" } }
->>>>>>> backup/1.21.1

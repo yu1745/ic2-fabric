@@ -1,15 +1,11 @@
 package ic2_120.content.item.armor
 
 import ic2_120.content.item.energy.IElectricTool
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArmorMaterial
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.item.tooltip.TooltipType
-import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.text.Text
-import ic2_120.editCustomData
-import ic2_120.getCustomData
 
 /**
  * 能量护甲基类
@@ -38,23 +34,18 @@ import ic2_120.getCustomData
  * - 能量不足时回退到普通护甲效果
  */
 abstract class ElectricArmorItem(
-    material: RegistryEntry<ArmorMaterial>,
+    material: ArmorMaterial,
     type: Type,
-<<<<<<< HEAD
     settings: FabricItemSettings
 ) : ArmorItem(material, type, settings.maxDamage(-1)), IElectricTool {
-=======
-    settings: Item.Settings
-) : ArmorItem(material, type, settings), IElectricTool {
->>>>>>> backup/1.21.1
 
     // ========== IElectricTool 实现 ==========
 
     override fun getEnergy(stack: ItemStack): Long =
-        stack.getCustomData()?.getLong(IElectricTool.ENERGY_KEY) ?: 0L
+        stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY)
 
     override fun setEnergy(stack: ItemStack, energy: Long) {
-        stack.editCustomData { it.putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity)) }
+        stack.orCreateNbt.putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity))
     }
 
     // ========== 防止原版耐久消耗 ==========
@@ -66,6 +57,8 @@ abstract class ElectricArmorItem(
      * 会在每次受击时同时消耗原版耐久度，导致护甲在耐久耗尽时消失，
      * 即使 EU 能量充足。详见 [ic2_120.mixin.PlayerEntityMixin]。
      */
+    override fun isDamageable(): Boolean = false
+
     // ========== 抽象方法 ==========
 
     /**
@@ -87,8 +80,8 @@ abstract class ElectricArmorItem(
     override fun getItemBarColor(stack: ItemStack): Int =
         getEnergyBarColor(stack)
 
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
+        super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
     }
 }

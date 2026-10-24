@@ -57,11 +57,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         var ENABLE_CABLE_BURN_LOG = false
     }
 
-<<<<<<< HEAD
-=======
-    private val underTierCableBurnRatio = 1
-
->>>>>>> backup/1.21.1
     val cables = mutableSetOf<Long>()
     var energy: Long = 0
     var capacity: Long = 0
@@ -91,14 +86,11 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
 
     var lastTickTime: Long = -1
 
-<<<<<<< HEAD
     /**
      * 消费者公平分发的轮转起点。每 tick 向后移动，避免同一个 consumer 永远先拿到首轮配额。
      */
     private var consumerRoundRobinOffset = 0
 
-=======
->>>>>>> backup/1.21.1
     override fun createSnapshot(): NetworkSnapshot = NetworkSnapshot(
         energy = energy,
         cableTransferRemaining = cableTransferRemaining.toMutableMap()
@@ -181,11 +173,8 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                 val inserted = consumer.storage.insert(stepDemand, transaction)
                 if (inserted > 0) {
                     val moved = (inserted + pathLossEu).coerceAtMost(pathCapacity)
-<<<<<<< HEAD
                     // 容量账本纳入事务快照：外部事务回滚时一并恢复，避免同 tick 可用容量被多扣。
                     updateSnapshots(transaction)
-=======
->>>>>>> backup/1.21.1
                     for (cablePosLong in path) {
                         cableTransferRemaining[cablePosLong] =
                             (cableTransferRemaining[cablePosLong] ?: 0L) - moved
@@ -246,11 +235,8 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             val extracted = provider.storage.extract(needFromProvider, transaction)
             if (extracted > 0) {
                 val moved = minOf(extracted, pathCapacity)
-<<<<<<< HEAD
                 // 容量账本纳入事务快照：外部事务回滚时一并恢复。
                 updateSnapshots(transaction)
-=======
->>>>>>> backup/1.21.1
                 for (cablePosLong in path) {
                     cableTransferRemaining[cablePosLong] =
                         (cableTransferRemaining[cablePosLong] ?: 0L) - moved
@@ -352,9 +338,9 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
 
     private fun createCableShockDamageSource(world: ServerWorld): DamageSource {
         val registry = world.registryManager.get(RegistryKeys.DAMAGE_TYPE)
-        val key = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("ic2_120", "cable_shock"))
+        val key = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier("ic2_120", "cable_shock"))
         val entry = registry.getEntry(key).orElse(null)
-            ?: registry.getEntry(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("minecraft", "lightning")))
+            ?: registry.getEntry(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier("minecraft", "lightning")))
                 .orElseThrow()
         return DamageSource(entry)
     }
@@ -372,7 +358,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             log.debug("[导线烧毁] 电网输出等级=$outputLevel，可烧毁导线数量=${toBurn.size}（电压等级 < $outputLevel）")
         }
 
-<<<<<<< HEAD
         val generalConfig = ic2_120.config.Ic2Config.current.general
         val minBurnPercent = generalConfig.cableBurnMinPercent.coerceIn(1, 100)
         val maxBurnPercent = generalConfig.cableBurnMaxPercent.coerceIn(1, 100)
@@ -383,9 +368,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         val burnCount = ((toBurn.size.toLong() * burnPercent + 99L) / 100L)
             .toInt()
             .coerceIn(1, toBurn.size)
-=======
-        val burnCount = (toBurn.size * underTierCableBurnRatio).coerceIn(0, toBurn.size)
->>>>>>> backup/1.21.1
         if (burnCount <= 0) return
 
         if (ENABLE_CABLE_BURN_LOG) {
@@ -566,7 +548,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         return (2f * 2.0.pow(level - 4)).toFloat()
     }
 
-<<<<<<< HEAD
     /**
      * 获取（并按需重建）边界端点缓存。缓存构建遍历拓扑边界逐个 [EnergyStorage.SIDED.find]，
      * 结果在拓扑/端点不变时跨 tick 复用，避免每 tick 全量重查世界。
@@ -621,18 +602,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                 val ep = consumers.getOrPut(entry.neighborPosLong) { Endpoint(storage) }
                 ep.entryCables.add(entry.cablePosLong)
                 ep.blockPos = entry.neighborPosLong
-=======
-    /** 扫描拓扑边界，返回消费者（supportsInsertion）。 */
-    private fun findConsumers(world: World, topology: TopologyCache): Map<Long, Endpoint> {
-        val consumers = mutableMapOf<Long, Endpoint>()
-        for (boundary in topology.boundaries) {
-            val neighborPos = BlockPos.fromLong(boundary.neighborPosLong)
-            val storage = EnergyStorage.SIDED.find(world, neighborPos, boundary.lookupFromNeighborSide) ?: continue
-            if (storage.supportsInsertion()) {
-                val ep = consumers.getOrPut(boundary.neighborPosLong) { Endpoint(storage) }
-                ep.entryCables.add(boundary.cablePosLong)
-                ep.blockPos = boundary.neighborPosLong
->>>>>>> backup/1.21.1
             }
         }
         return consumers
@@ -641,22 +610,12 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     /** 扫描拓扑边界，返回 providers（supportsExtraction）。 */
     private fun findProviders(world: World, topology: TopologyCache): Map<Long, Endpoint> {
         val providers = mutableMapOf<Long, Endpoint>()
-<<<<<<< HEAD
         for (entry in getBoundaryEndpoints(world, topology)) {
             val storage = entry.storage ?: continue
             if (storage.supportsExtraction()) {
                 val ep = providers.getOrPut(entry.neighborPosLong) { Endpoint(storage) }
                 ep.entryCables.add(entry.cablePosLong)
                 ep.blockPos = entry.neighborPosLong
-=======
-        for (boundary in topology.boundaries) {
-            val neighborPos = BlockPos.fromLong(boundary.neighborPosLong)
-            val storage = EnergyStorage.SIDED.find(world, neighborPos, boundary.lookupFromNeighborSide) ?: continue
-            if (storage.supportsExtraction()) {
-                val ep = providers.getOrPut(boundary.neighborPosLong) { Endpoint(storage) }
-                ep.entryCables.add(boundary.cablePosLong)
-                ep.blockPos = boundary.neighborPosLong
->>>>>>> backup/1.21.1
             }
         }
         return providers
@@ -666,7 +625,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         if (cables.isEmpty()) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
-<<<<<<< HEAD
         val consumers = findConsumers(world, topology)
 
         // 无消费者 = 空载：本 tick 不会有任何传输，cableLoad 无需每 tick 同步
@@ -697,22 +655,10 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         for (consumer in orderedConsumers) {
             if (energy <= 0) break
             if (pullFromBufferedEnergyByPath(world, consumer, topology.neighbors)) anyTransfer = true
-=======
-        ensureCapacityTracking(world, topology.cableRates)
-
-        val consumers = findConsumers(world, topology)
-        val providers = findProviders(world, topology)
-
-        // Phase 1: 残余池能分发（BFS 合并等场景遗留的 energy，通常一次 tick 即清空）
-        for ((_, consumer) in consumers) {
-            if (energy <= 0) break
-            pullFromBufferedEnergyByPath(world, consumer, topology.neighbors)
->>>>>>> backup/1.21.1
         }
 
         // Phase 2: providers → consumers 直送
         if (providers.isNotEmpty()) {
-<<<<<<< HEAD
             // 首轮给每个 consumer 一个有限额度，保证后面的 consumer 至少有一次取电机会。
             // 这里的额度按 provider 的提取量计算，已包含路径损耗的消耗。
             val totalProviderEnergy = providers.values.sumOf {
@@ -740,14 +686,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         // cableLoad 仅用于 Jade 显示：确有传输时同步；无传输时每 20 tick 强制刷一次，
         // 让停止传输后窗口能归零（不永久残留旧值），其余 tick 不遍历导线。
         if (anyTransfer || isCableLoadSyncDue(world)) syncCableLoadToLocalStorage(world, topology.cableRates)
-=======
-            for ((_, consumer) in consumers) {
-                pullFromProvidersByPath(world, consumer, providers, topology.neighbors)
-            }
-        }
-
-        syncCableLoadToLocalStorage(world, topology.cableRates)
->>>>>>> backup/1.21.1
     }
 
     /** cableLoad 定期同步判定（相位与端点 verify 一致，各网络错开）。 */
@@ -758,12 +696,8 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         world: World,
         consumer: Endpoint,
         neighbors: Map<Long, List<Long>>
-<<<<<<< HEAD
     ): Boolean {
         var anyTransferred = false
-=======
-    ) {
->>>>>>> backup/1.21.1
         while (energy > 0) {
             val demand = simulateInsertion(consumer.storage, Long.MAX_VALUE)
             if (demand <= 0) break
@@ -824,18 +758,12 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         world: World,
         consumer: Endpoint,
         providers: Map<Long, Endpoint>,
-<<<<<<< HEAD
         neighbors: Map<Long, List<Long>>,
         maxAmount: Long = Long.MAX_VALUE
     ): Boolean {
         var anyTransferred = false
         var remainingBudget = maxAmount
         while (remainingBudget > 0) {
-=======
-        neighbors: Map<Long, List<Long>>
-    ) {
-        while (true) {
->>>>>>> backup/1.21.1
             val demand = simulateInsertion(consumer.storage, Long.MAX_VALUE)
             if (demand <= 0) break
 
@@ -929,13 +857,10 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         providers: Map<Long, Endpoint>,
         neighbors: Map<Long, List<Long>>
     ): List<ProviderPath> {
-<<<<<<< HEAD
         // 候选路径/损耗只依赖拓扑，跨 tick 缓存，避免每 tick 重建 + 排序。
         val cacheKey = providerCandidatesKey(consumer, providers)
         providerCandidatesCacheByConsumer[cacheKey]?.let { return it }
 
-=======
->>>>>>> backup/1.21.1
         val candidates = mutableListOf<ProviderPath>()
         for (source in consumer.entryCables) {
             val dijkstra = shortestLossFromSourcesCached(setOf(source), neighbors)
@@ -1131,24 +1056,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                 accepted = storage.insert(maxAmount, tx)
             }
         }
-<<<<<<< HEAD
-=======
-        return accepted
-    }
-
-    /** 模拟抽取能量，不改变实际存储。 */
-    private fun simulateExtraction(storage: EnergyStorage, maxAmount: Long, parentTx: TransactionContext? = null): Long {
-        var accepted = 0L
-        if (parentTx != null) {
-            Transaction.openNested(parentTx).use { tx ->
-                accepted = storage.extract(maxAmount, tx)
-            }
-        } else {
-            Transaction.openOuter().use { tx ->
-                accepted = storage.extract(maxAmount, tx)
-            }
-        }
->>>>>>> backup/1.21.1
         return accepted
     }
 

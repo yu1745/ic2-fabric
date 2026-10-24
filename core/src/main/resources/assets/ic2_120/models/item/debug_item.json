@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/debug_item.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -7,10 +6,5 @@
     "particle": "ic2_120:item/item3d/flat_6b3f7f",
     "flat_6b3f7f": "ic2_120:item/item3d/flat_6b3f7f",
     "glow_d67fff": "ic2_120:item/item3d/glow_d67fff"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/tool/debug_item"
->>>>>>> backup/1.21.1
   }
 }

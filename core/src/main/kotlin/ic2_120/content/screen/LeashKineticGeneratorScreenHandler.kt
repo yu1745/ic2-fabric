@@ -4,19 +4,10 @@ import ic2_120.content.block.LeashKineticGeneratorBlock
 import ic2_120.content.sync.LeashKineticGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
-<<<<<<< HEAD
-=======
-import ic2_120.registry.annotation.ScreenFactory
->>>>>>> backup/1.21.1
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
-=======
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
->>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -57,20 +48,5 @@ class LeashKineticGeneratorScreenHandler(
         const val PLAYER_INV_START = 0
         const val SLOT_SIZE = 18
 
-<<<<<<< HEAD
-=======
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): LeashKineticGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            return LeashKineticGeneratorScreenHandler(
-                syncId,
-                playerInventory,
-                context,
-                ArrayPropertyDelegate(propertyCount)
-            )
-        }
->>>>>>> backup/1.21.1
     }
 }

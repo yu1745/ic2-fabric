@@ -18,9 +18,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtOps
 import net.minecraft.util.math.BlockPos
-import net.minecraft.registry.RegistryWrapper
 
 @ModBlockEntity(block = CokeKilnGrateBlock::class)
 class CokeKilnGrateBlockEntity(
@@ -49,11 +47,7 @@ class CokeKilnGrateBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = TANK_CAPACITY
         override fun canInsert(variant: FluidVariant): Boolean = false
         override fun canExtract(variant: FluidVariant): Boolean =
-<<<<<<< HEAD
             (variant.fluid == ModFluids.CREOSOTE_STILL || variant.fluid == ModFluids.CREOSOTE_FLOWING) && !variant.isBlank
-=======
-            (variant.fluid == ModFluids.CREOSOTE_STILL || variant.fluid == ModFluids.CREOSOTE_FLOWING) && ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
 
         override fun onFinalCommit() {
             markDirty()
@@ -108,19 +102,19 @@ class CokeKilnGrateBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
         val tankNbt = NbtCompound()
-        tankNbt.put("Variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, creosoteTank.variant).result().orElse(NbtCompound()))
+        tankNbt.put("Variant", creosoteTank.variant.toNbt())
         tankNbt.putLong("Amount", creosoteTank.amount)
         nbt.put(NBT_TANK, tankNbt)
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
         val tankNbt = nbt.getCompound(NBT_TANK)
         if (!tankNbt.isEmpty) {
-            creosoteTank.variant = FluidVariant.CODEC.decode(NbtOps.INSTANCE, tankNbt.getCompound("Variant")).result().map { it.first }.orElse(FluidVariant.blank())
+            creosoteTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("Variant"))
             creosoteTank.amount = tankNbt.getLong("Amount").coerceIn(0L, TANK_CAPACITY)
         }
     }

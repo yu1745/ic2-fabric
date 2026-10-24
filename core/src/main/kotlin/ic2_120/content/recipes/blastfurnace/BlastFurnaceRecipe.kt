@@ -5,7 +5,6 @@ import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.Recipe
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.RecipeType
-<<<<<<< HEAD
 import net.minecraft.recipe.book.CraftingRecipeCategory
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -16,13 +15,6 @@ import net.minecraft.world.World
  *
  * 配方处理物品转换，压缩空气在运行时由机器单独消耗（每1000 ticks 1瓶）。
  */
-=======
-import net.minecraft.recipe.input.RecipeInput
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
-
->>>>>>> backup/1.21.1
 class BlastFurnaceRecipe(
     private val id: Identifier,
     val ingredient: Ingredient,
@@ -30,7 +22,6 @@ class BlastFurnaceRecipe(
     val slagOutput: ItemStack
 ) : Recipe<BlastFurnaceRecipe.Input> {
 
-<<<<<<< HEAD
     override fun matches(inventory: Input, world: World): Boolean {
         return ingredient.test(inventory.getStack(0))
     }
@@ -41,23 +32,12 @@ class BlastFurnaceRecipe(
 
     override fun getId(): Identifier = id
 
-=======
-    override fun matches(input: Input, world: World): Boolean {
-        return ingredient.test(input.getStackInSlot(0))
-    }
-
-    override fun craft(input: Input, lookup: RegistryWrapper.WrapperLookup): ItemStack {
-        return steelOutput.copy()
-    }
-
->>>>>>> backup/1.21.1
     override fun getSerializer(): RecipeSerializer<*> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(BlastFurnaceRecipe::class)
 
     override fun getType(): RecipeType<*> = ic2_120.content.recipes.ModMachineRecipes.recipeType(BlastFurnaceRecipe::class)
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-<<<<<<< HEAD
     override fun getOutput(registry: net.minecraft.registry.DynamicRegistryManager): ItemStack = steelOutput.copy()
 
     override fun getRemainder(inventory: Input): net.minecraft.util.collection.DefaultedList<ItemStack> {
@@ -96,23 +76,6 @@ class BlastFurnaceRecipe(
         /**
          * 获取炉渣输出
          */
-=======
-    override fun getResult(lookup: RegistryWrapper.WrapperLookup): ItemStack = steelOutput.copy()
-
-    override fun getRemainder(input: Input): net.minecraft.util.collection.DefaultedList<ItemStack> {
-        return net.minecraft.util.collection.DefaultedList.ofSize(1, ItemStack.EMPTY)
-    }
-
-    class Input(val inputStack: ItemStack) : RecipeInput {
-        override fun getStackInSlot(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
-
-        override fun getSize(): Int = 1
-    }
-
-    companion object {
-        fun getSteelOutput(recipe: BlastFurnaceRecipe): ItemStack = recipe.steelOutput.copy()
-
->>>>>>> backup/1.21.1
         fun getSlagOutput(recipe: BlastFurnaceRecipe): ItemStack = recipe.slagOutput.copy()
     }
 }

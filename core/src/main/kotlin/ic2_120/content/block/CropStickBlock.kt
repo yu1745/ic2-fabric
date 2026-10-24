@@ -1,6 +1,5 @@
 package ic2_120.content.block
 
-import com.mojang.serialization.MapCodec
 import ic2_120.content.crop.CropStats
 import ic2_120.content.crop.CropCareTarget
 import ic2_120.content.crop.CropSystem
@@ -17,10 +16,11 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
+import java.util.function.Consumer
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -38,16 +38,13 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
-import net.minecraft.util.ItemActionResult
 import net.minecraft.util.ItemScatterer
-import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import net.minecraft.world.WorldView
-import net.minecraft.registry.RegistryWrapper
 
 @ModBlock(
     name = "crop_stick",
@@ -62,8 +59,6 @@ class CropStickBlock : BlockWithEntity(
         .noCollision()
         .nonOpaque()
 ) {
-    override fun getCodec(): MapCodec<out BlockWithEntity> = CROP_STICK_CODEC
-
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
     init {
@@ -110,29 +105,27 @@ class CropStickBlock : BlockWithEntity(
         return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
-=======
-    override fun onUseWithItem(
-        stack: ItemStack,
->>>>>>> backup/1.21.1
         state: BlockState,
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
         hand: Hand,
         hit: BlockHitResult
-    ): ItemActionResult {
-        if (world.isClient) return ItemActionResult.SUCCESS
+    ): ActionResult {
+        if (world.isClient) return ActionResult.SUCCESS
+        val stack = player.getStackInHand(hand)
         val isCreative = player.abilities.creativeMode
 
+        // 放置第二根作物架：变为杂交底座
         if (!state.get(CROSSING_BASE) && stack.item == this.asItem()) {
             if (!isCreative) stack.decrement(1)
             world.setBlockState(pos, state.with(CROSSING_BASE, true), Block.NOTIFY_ALL)
-            return ItemActionResult.SUCCESS
+            return ActionResult.SUCCESS
         }
 
+        // 空架种植基础种子
         if (!state.get(CROSSING_BASE)) {
             if (stack.item is CropSeedBagItem) {
                 val cropType = CropSeedData.readType(stack)
@@ -145,7 +138,7 @@ class CropStickBlock : BlockWithEntity(
                     be?.scanLevel = CropSeedData.readScanLevel(stack)
                     be?.markDirty()
                     if (!isCreative) stack.decrement(1)
-                    return ItemActionResult.SUCCESS
+                    return ActionResult.SUCCESS
                 }
             }
 
@@ -158,18 +151,11 @@ class CropStickBlock : BlockWithEntity(
                 be?.scanLevel = 0
                 be?.markDirty()
                 if (!isCreative) stack.decrement(1)
-                return ItemActionResult.SUCCESS
+                return ActionResult.SUCCESS
             }
         }
 
-        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-    }
-
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.mainHandStack
-
-        // 空手拆除杂交底座
+        // 右键空手可拆除杂交底座并返还一根作物架
         if (state.get(CROSSING_BASE) && stack.isEmpty) {
             world.setBlockState(pos, state.with(CROSSING_BASE, false), Block.NOTIFY_ALL)
             ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), this.asItem().defaultStack)
@@ -187,6 +173,7 @@ class CropStickBlock : BlockWithEntity(
         if (!state.get(CROSSING_BASE)) {
             val stickBe = world.getBlockEntity(pos) as? CropStickBlockEntity
             if (stickBe?.hasWeedExProtection(random) == true) return
+            // IC2: 空作物架有极低概率自发长出杂草。
             if (random.nextInt(100) == 0) {
                 world.setBlockState(pos, CropBlock.defaultCropState(CropType.WEED, 0), Block.NOTIFY_ALL)
                 val be = world.getBlockEntity(pos) as? CropBlockEntity
@@ -285,14 +272,13 @@ class CropStickBlock : BlockWithEntity(
     }
 
     companion object {
-        val CROP_STICK_CODEC: MapCodec<CropStickBlock> = Block.createCodec { error("CropStickBlock cannot be deserialized from JSON") }
         val CROSSING_BASE: BooleanProperty = BooleanProperty.of("crossing_base")
         private val HORIZONTAL_DIRS = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
 
         fun defaultStickState(): BlockState = CropStickBlock::class.instance().defaultState.with(CROSSING_BASE, false)
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropStickBlock::class.item(), 2)
                 .pattern("   ")
                 .pattern("S S")
@@ -379,15 +365,15 @@ class CropStickBlockEntity(
         return accepted
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
         nbt.putInt("nutrients", storageNutrients)
         nbt.putInt("water", storageWater)
         nbt.putInt("weed_ex", storageWeedEx)
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
         storageNutrients = nbt.getInt("nutrients")
         storageWater = nbt.getInt("water")
         storageWeedEx = nbt.getInt("weed_ex")

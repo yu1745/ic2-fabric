@@ -1,9 +1,5 @@
 {
   "variants": {
-<<<<<<< HEAD
     "": { "model": "ic2_120:block/resource/ore/raw_uranium_block" }
-=======
-    "": { "model": "ic2:block/resource/ore/raw_uranium_block" }
->>>>>>> backup/1.21.1
   }
 }

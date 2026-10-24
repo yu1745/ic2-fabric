@@ -19,7 +19,6 @@ class InductionFurnaceSync(
 ) {
 
     companion object {
-<<<<<<< HEAD
         const val ENERGY_CAPACITY = 10000L
         const val MAX_INSERT = 128L
         const val MAX_EXTRACT = 0L
@@ -34,23 +33,6 @@ class InductionFurnaceSync(
 
     var energy by schema.int("Energy")
     var progress by schema.int("Progress")
-=======
-        const val ENERGY_CAPACITY = 1600L
-        const val MAX_INSERT = 128L
-        const val MAX_EXTRACT = 0L
-        const val NBT_ENERGY_STORED = "EnergyStored"
-        const val EU_PER_OPERATION = 150L
-        const val BASE_TICKS_PER_OPERATION = 10.0
-        const val MAX_HEAT_ENERGY_PER_TICK = 1L
-        const val MIN_HEAT_THRESHOLD = 1
-        const val HEAT_MAX = 10000
-        const val HEAT_CHANGE_PER_TICK = 5
-    }
-
-    var energy by schema.int("Energy")
-    var progressSlot0 by schema.int("Progress0")
-    var progressSlot1 by schema.int("Progress1")
->>>>>>> backup/1.21.1
     var heat by schema.int("Heat")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
 

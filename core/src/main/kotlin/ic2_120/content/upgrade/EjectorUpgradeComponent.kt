@@ -1,42 +1,27 @@
 package ic2_120.content.upgrade
 
 import ic2_120.content.item.EjectorUpgrade
-<<<<<<< HEAD
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiCache
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.entity.BlockEntity
-=======
-import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
->>>>>>> backup/1.21.1
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
-<<<<<<< HEAD
 import net.minecraft.server.world.ServerWorld
-=======
->>>>>>> backup/1.21.1
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-<<<<<<< HEAD
 import java.util.WeakHashMap
 import kotlin.math.pow
-=======
-import ic2_120.editCustomData
-import ic2_120.getCustomData
->>>>>>> backup/1.21.1
 
 object EjectorUpgradeComponent {
     private const val NBT_ITEM_FILTER = "PipeItemFilter"
     private const val NBT_DIRECTION = "PipeItemDirection"
-<<<<<<< HEAD
     private const val NBT_DIRECTIONS = "PipeItemDirections"
 
     private data class EjectorConfig(val filter: Item?, val sides: Set<Direction>, val count: Int)
@@ -97,24 +82,16 @@ object EjectorUpgradeComponent {
         }
         return caches
     }
-=======
-
-    private data class EjectorConfig(val filter: Item?, val side: Direction?)
->>>>>>> backup/1.21.1
 
     /**
      * 统一入口：扫描升级槽中的所有弹出升级，逐个独立弹出 outputSlotIndices 中的物品。
      * 每个弹出升级使用自己的过滤和方向配置。
-<<<<<<< HEAD
      * 轮询语义（对齐 ic2_origin，2026-08-26 P4/P5 修订）：每次触发遍历全部 n 个候选方向，
      * 每个候选至多传输 elapsed × itemTransferRate(count) 个物品（配额跨输出槽共享，按实际
      * 流逝 tick 补偿）；每次触发起始方向轮转（BE 内计数器游标），避免低吞吐时第一个候选独占。
      * 开启方向过滤时，轮转只在过滤后的方向集内进行。整个触发共用一个事务（P4）。
      * 使用 Fabric Transfer API 查找目标容器，兼容 vanilla Inventory 和 modded Storage。
      * 空闲退避（P5）：空手 1t/tick 递增至最长 20t 一跳，干活即逐步回到每 tick。
-=======
-     * 使用 Fabric Transfer API 查找目标容器，兼容 vanilla Inventory 和 modded Storage。
->>>>>>> backup/1.21.1
      */
     fun ejectIfUpgraded(
         world: World,
@@ -125,7 +102,6 @@ object EjectorUpgradeComponent {
     ) {
         if (outputSlotIndices.isEmpty()) return
 
-<<<<<<< HEAD
         // ── P5 退避门：未到触发时刻直接返回 ──
         val machine = inventory as? BlockEntity
         var st: BackoffState? = null
@@ -244,51 +220,6 @@ object EjectorUpgradeComponent {
 
     fun readFilter(stack: ItemStack): Item? {
         val nbt = stack.nbt ?: return null
-=======
-        val configs = mutableListOf<EjectorConfig>()
-        for (idx in upgradeSlotIndices) {
-            val stack = inventory.getStack(idx)
-            if (stack.isEmpty) continue
-            if (stack.item is EjectorUpgrade) {
-                configs.add(EjectorConfig(readFilter(stack), readDirection(stack)))
-            }
-        }
-        if (configs.isEmpty()) return
-
-        for (config in configs) {
-            val dirs = if (config.side != null) listOf(config.side) else Direction.values().toList()
-
-            for (slotIndex in outputSlotIndices) {
-                val stack = inventory.getStack(slotIndex)
-                if (stack.isEmpty) continue
-                if (config.filter != null && stack.item != config.filter) continue
-
-                var remaining = stack.count
-                val variant = ItemVariant.of(stack)
-
-                for (dir in dirs) {
-                    if (remaining <= 0) break
-                    val target = ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
-                    val tx = Transaction.openOuter()
-                    val moved = target.insert(variant, remaining.toLong(), tx)
-                    tx.commit()
-                    remaining -= moved.toInt()
-                }
-
-                if (remaining <= 0) {
-                    inventory.setStack(slotIndex, ItemStack.EMPTY)
-                } else {
-                    val newStack = stack.copy()
-                    newStack.count = remaining
-                    inventory.setStack(slotIndex, newStack)
-                }
-            }
-        }
-    }
-
-    fun readFilter(stack: ItemStack): Item? {
-        val nbt = stack.getCustomData() ?: return null
->>>>>>> backup/1.21.1
         val raw = nbt.getString(NBT_ITEM_FILTER)
         if (raw.isNullOrBlank()) return null
         val id = Identifier.tryParse(raw) ?: return null
@@ -296,7 +227,6 @@ object EjectorUpgradeComponent {
     }
 
     fun writeFilter(stack: ItemStack, item: Item?) {
-<<<<<<< HEAD
         val nbt = stack.orCreateNbt
         if (item == null) {
             nbt.remove(NBT_ITEM_FILTER)
@@ -341,34 +271,6 @@ object EjectorUpgradeComponent {
             list.add(net.minecraft.nbt.NbtString.of(side.name.lowercase()))
         }
         nbt.put(NBT_DIRECTIONS, list)
-=======
-        stack.editCustomData { nbt ->
-            if (item == null) {
-                nbt.remove(NBT_ITEM_FILTER)
-                return@editCustomData
-            }
-            val id = Registries.ITEM.getId(item)
-            if (id.path != "air") nbt.putString(NBT_ITEM_FILTER, id.toString())
-            else nbt.remove(NBT_ITEM_FILTER)
-        }
-    }
-
-    fun readDirection(stack: ItemStack): Direction? {
-        val nbt = stack.getCustomData() ?: return null
-        val raw = nbt.getString(NBT_DIRECTION)
-        if (raw.isNullOrBlank()) return null
-        return Direction.byName(raw.lowercase())
-    }
-
-    fun writeDirection(stack: ItemStack, side: Direction?) {
-        stack.editCustomData { nbt ->
-            if (side == null) {
-                nbt.remove(NBT_DIRECTION)
-                return@editCustomData
-            }
-            nbt.putString(NBT_DIRECTION, side.name.lowercase())
-        }
->>>>>>> backup/1.21.1
     }
 
     fun nextDirection(current: Direction?): Direction? {

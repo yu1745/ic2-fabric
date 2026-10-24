@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/dense_lead_plate.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,10 +8,5 @@
     "metal_8f9781": "ic2_120:item/item3d/metal_8f9781",
     "metal_d5d9b9": "ic2_120:item/item3d/metal_d5d9b9",
     "flat_fafafa": "ic2_120:item/item3d/flat_fafafa"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/resource/plate/dense_lead"
->>>>>>> backup/1.21.1
   }
 }

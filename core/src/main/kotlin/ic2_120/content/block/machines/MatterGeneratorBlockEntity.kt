@@ -11,10 +11,7 @@ import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.item.setFluidCellVariant
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.MatterGeneratorScreenHandler
 import ic2_120.content.sync.MatterGeneratorSync
@@ -26,10 +23,7 @@ import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
-<<<<<<< HEAD
 import ic2_120.content.upgrade.IRedstoneInverterUpgradeSupport
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.content.upgrade.RedstoneControlComponent
@@ -58,8 +52,6 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.RegistryWrapper
-import io.netty.buffer.Unpooled
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandler
@@ -78,14 +70,9 @@ class MatterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty = MatterGeneratorBlock.ACTIVE
     override val tier: Int = MatterGeneratorSync.MATTER_GENERATOR_TIER
@@ -115,17 +102,12 @@ class MatterGeneratorBlockEntity(
         const val SLOT_UPGRADE_3 = 6
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_CONTAINER_OUTPUT)
-<<<<<<< HEAD
         // 抽入升级的抽入目标：除容器输入槽外还包含废料槽——修复“抽入升级无法从箱子抽废料/废料盒”（#30）。
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_SCRAP, SLOT_CONTAINER_INPUT)
         const val INVENTORY_SIZE = 7
 
         /** 一个废料盒按合成配方（3×3 废料）等价于 9 个废料。 */
         const val SCRAP_UNITS_PER_BOX = 9
-=======
-        val SLOT_INPUT_INDICES = intArrayOf(SLOT_CONTAINER_INPUT)
-        const val INVENTORY_SIZE = 7
->>>>>>> backup/1.21.1
 
         private const val NBT_TANK_AMOUNT = "TankAmount"
         private const val NBT_PROGRESS = "Progress"
@@ -159,7 +141,6 @@ class MatterGeneratorBlockEntity(
         extractSlots = intArrayOf(SLOT_SCRAP, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT),
         markDirty = { markDirty() }
     )
-<<<<<<< HEAD
 
     override val routedItemStorage get() = itemStorage
     private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
@@ -167,11 +148,6 @@ class MatterGeneratorBlockEntity(
     private val uuMatterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "uu_matter_cell")) }
     private val scrapItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "scrap")) }
     private val scrapBoxItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "scrap_box")) }
-=======
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val uuMatterCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "uu_matter_cell")) }
->>>>>>> backup/1.21.1
 
     private val outputPerCycle = mbToDroplets(1)
     /** 当前 1 mB 生成周期内已经消耗的废料数量。 */
@@ -194,12 +170,8 @@ class MatterGeneratorBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
-<<<<<<< HEAD
         /** 实际容量 = max(标称 10K, 读档存量)。只升到存量、不为存量而降，之后所有写入都被 capacity 封顶且只减不增，永不可能再超。 */
         private var tankCapacity = MatterGeneratorSync.TANK_CAPACITY_DROPLETS.toLong()
-=======
-        private val tankCapacity = FluidConstants.BUCKET * MatterGeneratorSync.TANK_CAPACITY_DROPLETS
->>>>>>> backup/1.21.1
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
@@ -210,18 +182,11 @@ class MatterGeneratorBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-<<<<<<< HEAD
         override fun canExtract(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && !variant.isBlank
 
         override fun onFinalCommit() {
             sync.fluidAmount = toMilliBuckets(amount)
             sync.fluidCapacity = getEffectiveCapacity()
-=======
-        override fun canExtract(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && ModFluids.isFluid(variant.fluid)
-
-        override fun onFinalCommit() {
-            sync.fluidAmount = toMilliBuckets(amount)
->>>>>>> backup/1.21.1
             markDirty()
         }
 
@@ -238,17 +203,13 @@ class MatterGeneratorBlockEntity(
             tankCapacity = tankCapacity.coerceAtLeast(stored)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.UU_MATTER_STILL) else FluidVariant.blank()
             sync.fluidAmount = toMilliBuckets(amount)
-<<<<<<< HEAD
             sync.fluidCapacity = getEffectiveCapacity()
-=======
->>>>>>> backup/1.21.1
         }
 
         fun insertInternal(toInsert: Long): Long {
             if (toInsert <= 0L) return 0L
             val actual = minOf(toInsert, availableSpace())
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -258,20 +219,12 @@ class MatterGeneratorBlockEntity(
                 markDirty()
                 actual
             }
-=======
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.UU_MATTER_STILL)
-            sync.fluidAmount = toMilliBuckets(amount)
-            markDirty()
-            return actual
->>>>>>> backup/1.21.1
         }
 
         fun extractInternal(toExtract: Long): Long {
             if (toExtract <= 0L || variant.isBlank) return 0L
             val actual = minOf(toExtract, amount)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -281,13 +234,6 @@ class MatterGeneratorBlockEntity(
                 markDirty()
                 actual
             }
-=======
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fluidAmount = toMilliBuckets(amount)
-            markDirty()
-            return actual
->>>>>>> backup/1.21.1
         }
     }
 
@@ -343,27 +289,21 @@ class MatterGeneratorBlockEntity(
     private fun matterGenIsFillableContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = Registries.ITEM.getId(stack.item)
-        return itemId == Identifier.of(Ic2_120.MOD_ID, "empty_cell") ||
+        return itemId == Identifier(Ic2_120.MOD_ID, "empty_cell") ||
             stack.item == Items.BUCKET ||
-            (itemId == Identifier.of(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
+            (itemId == Identifier(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
-<<<<<<< HEAD
         SLOT_SCRAP -> Ic2Config.current.matterGenerator.allowScrapBoost && isScrapFuel(stack)
-=======
-        SLOT_SCRAP -> !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier.of(Ic2_120.MOD_ID, "scrap")
->>>>>>> backup/1.21.1
         SLOT_CONTAINER_INPUT -> !stack.isEmpty && matterGenIsFillableContainer(stack)
         SLOT_CONTAINER_OUTPUT -> false
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem && stack.item !is OverclockerUpgrade
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.matter_generator")
@@ -378,28 +318,23 @@ class MatterGeneratorBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(MatterGeneratorSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
         sync.progress = nbt.getInt(NBT_PROGRESS).coerceAtLeast(0)
-<<<<<<< HEAD
         scrapConsumedThisCycle = nbt.getInt(NBT_SCRAP_CONSUMED).coerceIn(0, MatterGeneratorSync.SCRAP_PER_MB)
         tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
         sync.fluidCapacity = tankInternal.getEffectiveCapacity()
-=======
-        tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
-        sync.fluidCapacity = MatterGeneratorSync.TANK_CAPACITY_DROPLETS
->>>>>>> backup/1.21.1
         sync.mode = resolveDisplayedMode()
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(MatterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
@@ -423,11 +358,7 @@ class MatterGeneratorBlockEntity(
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, tankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
-<<<<<<< HEAD
         sync.fluidCapacity = tankInternal.getEffectiveCapacity()
-=======
-        sync.fluidCapacity = MatterGeneratorSync.TANK_CAPACITY_DROPLETS
->>>>>>> backup/1.21.1
 
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
@@ -457,17 +388,12 @@ class MatterGeneratorBlockEntity(
         val euPerMb = if (hasScrap) MatterGeneratorSync.SCRAP_EU_PER_MB else MatterGeneratorSync.BASE_EU_PER_MB
 
         // Consume as much energy as available, up to 1mb worth per tick
-<<<<<<< HEAD
         // 已知缺陷（故意保留）：hasScrap 仅判断槽位非空，整个 tick 的进度都按 1/6 加速费率计费。
         // 若本 tick 废料不足 SCRAP_PER_MB，consumeScrapForProgress 会静默按实际库存截断消耗，
         // 导致每个废料最多可折扣约 166_667 EU（预期约 24_510 EU），等价于"废料稀缺时单废料价值放大 ~34 倍"。
         // 能量吞吐越高（MAX_INSERT=Long.MAX_VALUE 时甚至可单 tick 跑满 1 mB 周期），该放大效应越明显。
         val energyBudget = minOf(sync.amount, euPerMb)
         val rawProgress = (energyBudget * MatterGeneratorSync.PROGRESS_MAX / euPerMb).toInt().coerceAtLeast(0)
-=======
-        val energyBudget = minOf(sync.amount, euPerMb)
-        val rawProgress = (energyBudget * MatterGeneratorSync.PROGRESS_MAX / euPerMb).toInt().coerceAtLeast(1)
->>>>>>> backup/1.21.1
         val progressIncrement = minOf(rawProgress, MatterGeneratorSync.PROGRESS_MAX - sync.progress)
 
         val energyNeeded = ceil(
@@ -588,20 +514,16 @@ class MatterGeneratorBlockEntity(
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.areItemsAndComponentsEqual(current, toInsert) && current.count < current.maxCount)
+        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
     }
 
     private fun isScrap(stack: ItemStack): Boolean =
-<<<<<<< HEAD
         !stack.isEmpty && stack.item == scrapItem
 
     private fun isScrapBox(stack: ItemStack): Boolean =
         !stack.isEmpty && stack.item == scrapBoxItem
 
     private fun isScrapFuel(stack: ItemStack): Boolean = isScrap(stack) || isScrapBox(stack)
-=======
-        !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier.of(Ic2_120.MOD_ID, "scrap")
->>>>>>> backup/1.21.1
 
     private fun isUuMatter(fluid: net.minecraft.fluid.Fluid): Boolean =
         fluid == ModFluids.UU_MATTER_STILL || fluid == ModFluids.UU_MATTER_FLOWING

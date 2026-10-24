@@ -24,7 +24,7 @@ object ChainsawModeHandler {
                 return@register TypedActionResult.pass(stack)
             }
             sendToggleOnceThisTick(player.age)
-            TypedActionResult.success(stack, true)
+            TypedActionResult.success(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->

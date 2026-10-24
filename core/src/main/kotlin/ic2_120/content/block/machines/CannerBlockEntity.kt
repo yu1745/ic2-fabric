@@ -5,19 +5,9 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.CannerBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.EmptyFuelRodItem
-<<<<<<< HEAD
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.energy.charge.BatteryDischargerComponent
-=======
-import ic2_120.content.item.CfPack
-import ic2_120.content.item.FoamSprayerItem
-import ic2_120.content.sound.MachineSoundConfig
-import ic2_120.content.block.ITieredMachine
-import ic2_120.content.energy.charge.BatteryDischargerComponent
-import ic2_120.content.item.ModFluidCell
-import ic2_120.content.item.fluidToFilledCellStack
->>>>>>> backup/1.21.1
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
 import ic2_120.content.item.IUpgradeItem
@@ -65,19 +55,12 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-<<<<<<< HEAD
 import net.minecraft.inventory.SimpleInventory
-=======
-import net.minecraft.item.BucketItem
-import net.minecraft.recipe.input.SingleStackRecipeInput
->>>>>>> backup/1.21.1
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtOps
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -86,8 +69,6 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 /**
  * 流体/固体装罐机方块实体。
@@ -96,11 +77,7 @@ import io.netty.buffer.Unpooled
  * 模式化工作：
  * - 排出模式：左槽满容器 → 左液槽，空容器从右槽输出
  * - 灌入模式：左槽空容器/中槽泡沫喷枪或Cf背包 → 右液槽灌装，满容器从右槽输出
-<<<<<<< HEAD
  * - 流体混合：左液槽 + 中槽固体 → 优先灌入左槽空容器，余液进入右液槽
-=======
- * - 流体混合：左液槽 + 中槽固体 → 右液槽（配方见 CannerMixingRecipes）
->>>>>>> backup/1.21.1
  * - 固体装罐：左槽锡罐 + 中槽食物 → 右槽成品
  */
 @ModBlockEntity(block = CannerBlock::class)
@@ -108,13 +85,8 @@ class CannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CannerBlock.ACTIVE
 
@@ -165,7 +137,7 @@ class CannerBlockEntity(
         private const val TANK_CAPACITY_BUCKETS = 8
         private val TANK_CAPACITY = FluidConstants.BUCKET * TANK_CAPACITY_BUCKETS
 
-        private val tinCanItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "tin_can")) }
+        private val tinCanItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "tin_can")) }
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -186,15 +158,9 @@ class CannerBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-<<<<<<< HEAD
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) }),
             ItemInsertRoute(intArrayOf(SLOT_MATERIAL), matcher = { isValid(SLOT_MATERIAL, it) }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1)
-=======
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) }),
-            ItemInsertRoute(intArrayOf(SLOT_MATERIAL), matcher = { isValid(SLOT_MATERIAL, it) })
->>>>>>> backup/1.21.1
         ),
         extractSlots = intArrayOf(SLOT_INPUT, SLOT_MATERIAL, SLOT_OUTPUT, SLOT_DISCHARGING),
         markDirty = { markDirty() }
@@ -215,11 +181,7 @@ class CannerBlockEntity(
     private val leftTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = TANK_CAPACITY
-<<<<<<< HEAD
         override fun canInsert(variant: FluidVariant): Boolean = !variant.isBlank
-=======
-        override fun canInsert(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
         override fun canExtract(variant: FluidVariant): Boolean = true
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -239,11 +201,7 @@ class CannerBlockEntity(
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = TANK_CAPACITY
         override fun canInsert(variant: FluidVariant): Boolean = true
-<<<<<<< HEAD
         override fun canExtract(variant: FluidVariant): Boolean = !variant.isBlank
-=======
-        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -328,19 +286,12 @@ class CannerBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> {
-<<<<<<< HEAD
             if (stack.isEmpty || stack.item is IBatteryItem) return false
             when (sync.getMode()) {
                 CannerSync.Mode.BOTTLE_SOLID -> stack.item == tinCanItem || stack.item is EmptyFuelRodItem
                 CannerSync.Mode.EMPTY_LIQUID -> cannerIsFilledFluidContainer(stack)
                 CannerSync.Mode.ENRICH_LIQUID ->
                     cannerIsFilledFluidContainer(stack) || cannerIsEmptyFluidContainer(stack)
-=======
-            if (stack.isEmpty || stack.item is IBatteryItem || stack.item is FoamSprayerItem || stack.item is CfPack) return false
-            when (sync.getMode()) {
-                CannerSync.Mode.BOTTLE_SOLID -> stack.item == tinCanItem || stack.item is EmptyFuelRodItem
-                CannerSync.Mode.EMPTY_LIQUID, CannerSync.Mode.ENRICH_LIQUID -> cannerIsFilledFluidContainer(stack)
->>>>>>> backup/1.21.1
                 CannerSync.Mode.BOTTLE_LIQUID -> cannerIsEmptyFluidContainer(stack)
             }
         }
@@ -348,29 +299,19 @@ class CannerBlockEntity(
             if (stack.isEmpty || stack.item is IBatteryItem) return false
             when (sync.getMode()) {
                 CannerSync.Mode.EMPTY_LIQUID -> false
-<<<<<<< HEAD
                 CannerSync.Mode.BOTTLE_LIQUID, CannerSync.Mode.EMPTY_LIQUID -> false
-=======
-                CannerSync.Mode.BOTTLE_LIQUID -> stack.item is FoamSprayerItem || stack.item is CfPack
->>>>>>> backup/1.21.1
                 else -> SolidCannerRecipe.slot1Ingredients(world!!).any { it.test(stack) } ||
                     CannerMixingRecipes.isMixingMaterial(stack.item)
             }
         }
         SLOT_OUTPUT -> false
-<<<<<<< HEAD
         SLOT_DISCHARGING -> !stack.isEmpty && (stack.item is IBatteryItem || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust)
-=======
-        SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
->>>>>>> backup/1.21.1
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.canner")
@@ -378,9 +319,9 @@ class CannerBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         CannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -393,14 +334,10 @@ class CannerBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
         leftTankInternal.amount = nbt.getLong(NBT_LEFT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
         val leftFluidTag = nbt.getCompound(NBT_LEFT_FLUID_VARIANT)
-        leftTankInternal.variant = if (leftFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, leftFluidTag).result().map { it.first }.orElse(FluidVariant.blank())
+        leftTankInternal.variant = if (leftFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(leftFluidTag)
         rightTankInternal.amount = nbt.getLong(NBT_RIGHT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
         val rightFluidTag = nbt.getCompound(NBT_RIGHT_FLUID_VARIANT)
-<<<<<<< HEAD
         rightTankInternal.variant = if (rightFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(rightFluidTag)
-=======
-        rightTankInternal.variant = if (rightFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, rightFluidTag).result().map { it.first }.orElse(FluidVariant.blank())
->>>>>>> backup/1.21.1
         sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
         sync.leftFluidCapacity = TANK_CAPACITY.toInt()
         sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
@@ -409,22 +346,21 @@ class CannerBlockEntity(
         sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
         nbt.putFloat("EnergyDebt", energyDebtF)
         nbt.putLong(NBT_LEFT_FLUID_AMOUNT, leftTankInternal.amount)
-        if (!leftTankInternal.variant.isBlank) nbt.put(NBT_LEFT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, leftTankInternal.variant).result().orElse(NbtCompound()))
+        if (!leftTankInternal.variant.isBlank) nbt.put(NBT_LEFT_FLUID_VARIANT, leftTankInternal.variant.toNbt())
         nbt.putLong(NBT_RIGHT_FLUID_AMOUNT, rightTankInternal.amount)
-        if (!rightTankInternal.variant.isBlank) nbt.put(NBT_RIGHT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, rightTankInternal.variant).result().orElse(NbtCompound()))
+        if (!rightTankInternal.variant.isBlank) nbt.put(NBT_RIGHT_FLUID_VARIANT, rightTankInternal.variant.toNbt())
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
         return CombinedStorage(listOf(leftTankInputOnly, rightTankOutputOnly))
-<<<<<<< HEAD
     }
 
     /** 重置全部进度状态（操作不可用/模式切换/换罐时调用）。 */
@@ -434,8 +370,6 @@ class CannerBlockEntity(
             energyDebtF = 0f
             sync.progress = 0
         }
-=======
->>>>>>> backup/1.21.1
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -450,11 +384,7 @@ class CannerBlockEntity(
         if (fluidPipeProviderEnabled && mode != CannerSync.Mode.BOTTLE_SOLID && mode != CannerSync.Mode.EMPTY_LIQUID) {
             FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, rightTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
         }
-<<<<<<< HEAD
         if (fluidPipeReceiverEnabled && (mode == CannerSync.Mode.EMPTY_LIQUID || mode == CannerSync.Mode.ENRICH_LIQUID)) {
-=======
-        if (fluidPipeReceiverEnabled && mode == CannerSync.Mode.EMPTY_LIQUID) {
->>>>>>> backup/1.21.1
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, leftTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
@@ -537,11 +467,7 @@ class CannerBlockEntity(
         sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
         sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
         sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
-<<<<<<< HEAD
         resetProgress()
-=======
-        sync.progress = 0
->>>>>>> backup/1.21.1
         markDirty()
         return beforeLeft != leftTankInternal.amount ||
             beforeRight != rightTankInternal.amount ||
@@ -583,14 +509,7 @@ class CannerBlockEntity(
     private fun trySolidCanning(container: ItemStack, material: ItemStack, outputSlot: ItemStack): Boolean {
         if (container.isEmpty || material.isEmpty) return false
         if (container.item != tinCanItem && container.item !is EmptyFuelRodItem) return false
-<<<<<<< HEAD
         val recipe = solidCanningRecipeFor(container, material) ?: return false
-=======
-        val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
-        val match = world?.recipeManager?.getFirstMatch(recipeType, SingleStackRecipeInput(container.copyWithCount(1)), world) ?: return false
-        if (match.isEmpty) return false
-        val recipe = match.get().value
->>>>>>> backup/1.21.1
         if (container.count < recipe.slot0Count || material.count < recipe.slot1Count) return false
         if (!canAcceptOutput(outputSlot, recipe.output.copy())) return false
         return true
@@ -678,7 +597,6 @@ class CannerBlockEntity(
             }
             if (!containerFluidMatches) return false
         }
-<<<<<<< HEAD
         val outputSlot = getStack(SLOT_OUTPUT)
         return true
     }
@@ -717,71 +635,6 @@ class CannerBlockEntity(
             val fullAfterFill = storage.insert(variant, 1L, tx) == 0L
             if (fullAfterFill && !canAcceptOutput(getStack(SLOT_OUTPUT), result)) return null
             return ContainerFillPlan(inserted, result, fullAfterFill)
-=======
-        val emptyResult = getEmptyContainerFor(container) ?: return false
-        val outputSlot = getStack(SLOT_OUTPUT)
-        if (!canAcceptOutput(outputSlot, emptyResult)) return false
-        return true
-    }
-
-    /**
-     * 灌入模式：左槽为空桶/单元，灌装后满容器写入 SLOT_OUTPUT；
-     * 或中槽为未满的建筑泡沫喷枪/Cf背包（从右液槽灌装）。
-     */
-    private fun resolveBottleLiquidTargetSlot(): Int? {
-        val inputStack = getStack(SLOT_INPUT)
-        if (canFillStackFromRightTank(inputStack) && canAcceptOutput(getStack(SLOT_OUTPUT), getFilledResult(inputStack))) return SLOT_INPUT
-        val mat = getStack(SLOT_MATERIAL)
-        if (mat.item is FoamSprayerItem && canFillStackFromRightTank(mat)) return SLOT_MATERIAL
-        if (mat.item is CfPack && canFillStackFromRightTank(mat)) return SLOT_MATERIAL
-        return null
-    }
-
-    private fun getFilledResult(emptyContainer: ItemStack): ItemStack = when (emptyContainer.item) {
-        Items.BUCKET -> {
-            val fluid = rightTankInternal.variant.fluid
-            when (fluid) {
-                Fluids.WATER, Fluids.FLOWING_WATER -> ItemStack(Items.WATER_BUCKET)
-                Fluids.LAVA, Fluids.FLOWING_LAVA -> ItemStack(Items.LAVA_BUCKET)
-                else -> ItemStack.EMPTY
-            }
-        }
-        else -> fluidToFilledCellStack(rightTankInternal.variant.fluid)
-    }
-
-    private fun canFillStackFromRightTank(container: ItemStack): Boolean {
-        if (container.isEmpty) return false
-        if (rightTankInternal.amount < FluidConstants.BUCKET || rightTankInternal.variant.isBlank) return false
-        val single = container.copyWithCount(1)
-        val ctx = ContainerItemContext.withConstant(single)
-        val itemStorage = ctx.find(FluidStorage.ITEM) ?: return false
-        if (!itemStorage.supportsInsertion()) return false
-        val fluid = rightTankInternal.variant.fluid
-        return when (container.item) {
-            Items.BUCKET -> when (fluid) {
-                Fluids.WATER, Fluids.FLOWING_WATER -> true
-                Fluids.LAVA, Fluids.FLOWING_LAVA -> true
-                else -> false
-            }
-            is FoamSprayerItem ->
-                (fluid == ModFluids.CONSTRUCTION_FOAM_STILL || fluid == ModFluids.CONSTRUCTION_FOAM_FLOWING) &&
-                    FoamSprayerItem.getFluidAmount(container) < FoamSprayerItem.CAPACITY_DROPLETS
-            is CfPack ->
-                (fluid == ModFluids.CONSTRUCTION_FOAM_STILL || fluid == ModFluids.CONSTRUCTION_FOAM_FLOWING) &&
-                    CfPack.getFluidAmount(container) < CfPack.CAPACITY_DROPLETS
-            else -> fluidToFilledCellStack(fluid).isEmpty.not()
-        }
-    }
-
-    private fun getEmptyContainerFor(filled: ItemStack): ItemStack? = when (filled.item) {
-        is BucketItem -> ItemStack(Items.BUCKET)
-        is ModFluidCell -> ItemStack((filled.item as ModFluidCell).getEmptyCell())
-        else -> {
-            val path = Registries.ITEM.getId(filled.item).path
-            if (path == "fluid_cell" || path.endsWith("_cell")) {
-                ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")))
-            } else null
->>>>>>> backup/1.21.1
         }
     }
 
@@ -814,7 +667,6 @@ class CannerBlockEntity(
 
         Transaction.openOuter().use { tx ->
             val extracted = leftTankInternal.extract(extractVariant, FluidConstants.BUCKET, tx)
-<<<<<<< HEAD
             if (extracted != FluidConstants.BUCKET) return@use
 
             var filledContainer = ItemStack.EMPTY
@@ -844,18 +696,6 @@ class CannerBlockEntity(
                     else outputSlot.increment(filledContainer.count)
                 } else {
                     setStack(SLOT_INPUT, filledContainer)
-=======
-            if (extracted > 0) {
-                val inserted = rightTankInternal.insert(outputVariant, FluidConstants.BUCKET, tx)
-                if (inserted > 0) {
-                    tx.commit()
-                    material.decrement(recipe.inputSolidCount)
-                    if (material.isEmpty) setStack(SLOT_MATERIAL, ItemStack.EMPTY)
-                    sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
-                    sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
-                    sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
-                    sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
->>>>>>> backup/1.21.1
                 }
             }
             sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
@@ -869,14 +709,7 @@ class CannerBlockEntity(
         val container = getStack(SLOT_INPUT)
         val material = getStack(SLOT_MATERIAL)
         val outputSlot = getStack(SLOT_OUTPUT)
-<<<<<<< HEAD
         val recipe = solidCanningRecipeFor(container, material) ?: return
-=======
-        val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
-        val match = world?.recipeManager?.getFirstMatch(recipeType, SingleStackRecipeInput(container.copyWithCount(1)), world) ?: return
-        if (match.isEmpty) return
-        val recipe = match.get().value
->>>>>>> backup/1.21.1
         container.decrement(recipe.slot0Count)
         material.decrement(recipe.slot1Count)
         if (container.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
@@ -910,14 +743,8 @@ class CannerBlockEntity(
                             tx.commit()
                             container.decrement(1)
                             if (container.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
-<<<<<<< HEAD
                             if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, emptyResult)
                             else outputSlot.increment(1)
-=======
-                            val outputSlot = getStack(SLOT_OUTPUT)
-                            if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, emptyResult)
-                            else outputSlot.increment(emptyResult.count)
->>>>>>> backup/1.21.1
                             sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
                             sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
                             return
@@ -934,60 +761,12 @@ class CannerBlockEntity(
         if (container.isEmpty) return
         val variant = rightTankInternal.variant
         if (variant.isBlank) return
-<<<<<<< HEAD
         val plan = planContainerFill(container, variant, rightTankInternal.amount) ?: return
-=======
-        val fluid = variant.fluid
-
-        if (container.item is FoamSprayerItem) {
-            // withConstant 不修改传入的 ItemStack（Fabric 文档：内容仅为拷贝），必须直接改槽内堆叠的 NBT
-            val before = FoamSprayerItem.getFluidAmount(container)
-            val space = (FoamSprayerItem.CAPACITY_DROPLETS - before).coerceAtLeast(0L)
-            val move = minOf(FluidConstants.BUCKET, space)
-            if (move <= 0L) return
-            Transaction.openOuter().use { tx ->
-                val extracted = rightTankInternal.extract(variant, move, tx)
-                if (extracted <= 0) return@use
-                tx.commit()
-                FoamSprayerItem.setFluidAmount(container, before + extracted)
-            }
-            setStack(slot, container)
-            sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
-            return
-        }
-
-        if (container.item is CfPack) {
-            val before = CfPack.getFluidAmount(container)
-            val space = (CfPack.CAPACITY_DROPLETS - before).coerceAtLeast(0L)
-            val move = minOf(FluidConstants.BUCKET, space)
-            if (move <= 0L) return
-            Transaction.openOuter().use { tx ->
-                val extracted = rightTankInternal.extract(variant, move, tx)
-                if (extracted <= 0) return@use
-                tx.commit()
-                CfPack.setFluidAmount(container, before + extracted)
-            }
-            setStack(slot, container)
-            sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
-            return
-        }
-
-        val filledResult = when (container.item) {
-            Items.BUCKET -> when (fluid) {
-                Fluids.WATER, Fluids.FLOWING_WATER -> ItemStack(Items.WATER_BUCKET)
-                Fluids.LAVA, Fluids.FLOWING_LAVA -> ItemStack(Items.LAVA_BUCKET)
-                else -> return
-            }
-            else -> fluidToFilledCellStack(fluid)
-        }
-        if (filledResult.isEmpty) return
->>>>>>> backup/1.21.1
         val single = container.copyWithCount(1)
         @Suppress("DEPRECATION")
         val ctx = ContainerItemContext.withInitial(single)
         val itemStorage = ctx.find(FluidStorage.ITEM) ?: return
         Transaction.openOuter().use { tx ->
-<<<<<<< HEAD
             val inserted = itemStorage.insert(variant, plan.amount, tx)
             if (inserted != plan.amount) return@use
             val extracted = rightTankInternal.extract(variant, inserted, tx)
@@ -1004,25 +783,6 @@ class CannerBlockEntity(
                 else output.increment(filled.count)
             } else {
                 setStack(SLOT_INPUT, filled)
-=======
-            val inserted = itemStorage.insert(variant, FluidConstants.BUCKET, tx)
-            if (inserted > 0) {
-                val extracted = rightTankInternal.extract(variant, inserted, tx)
-                if (extracted > 0) {
-                    tx.commit()
-                    if (slot == SLOT_INPUT) {
-                        // 从左输入槽取空容器，灌装后放入输出槽
-                        container.decrement(1)
-                        if (container.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
-                        val output = getStack(SLOT_OUTPUT)
-                        if (output.isEmpty) setStack(SLOT_OUTPUT, filledResult)
-                        else output.increment(filledResult.count)
-                    } else {
-                        setStack(slot, filledResult)
-                    }
-                    sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
-                }
->>>>>>> backup/1.21.1
             }
             sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
         }

@@ -16,10 +16,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 import org.slf4j.LoggerFactory
 import kotlin.math.*
-<<<<<<< HEAD
 import java.util.UUID
-=======
->>>>>>> backup/1.21.1
 
 /**
  * 自定义核爆炸模拟，严格对齐 IC2 原版 Ic2Explosion。
@@ -34,12 +31,8 @@ class NuclearExplosion private constructor(
     val centerY: Double,
     val centerZ: Double,
     val power: Float,
-<<<<<<< HEAD
     private val damageSource: DamageSource,
     private val ownerUuid: UUID?
-=======
-    private val damageSource: DamageSource
->>>>>>> backup/1.21.1
 ) {
     /** 是否已完成全部工作 */
     val finished: Boolean get() = phase == Phase.DONE
@@ -67,10 +60,7 @@ class NuclearExplosion private constructor(
     // ---- 摧毁阶段（DESTROYING）状态 ----
     private val blocksToDestroy = mutableListOf<BlockPos>()
     private var destroyIndex = 0
-<<<<<<< HEAD
     private val chunkProtectionCache = HashMap<Long, Boolean>()
-=======
->>>>>>> backup/1.21.1
 
     init {
         val maxDistance = (power / 0.4f).toDouble()
@@ -93,7 +83,6 @@ class NuclearExplosion private constructor(
             world: ServerWorld,
             x: Double, y: Double, z: Double,
             power: Float,
-<<<<<<< HEAD
             damageSource: DamageSource,
             ownerUuid: UUID? = null
         ): NuclearExplosion {
@@ -106,11 +95,6 @@ class NuclearExplosion private constructor(
         val chunkKey = net.minecraft.util.math.ChunkPos.toLong(pos.x shr 4, pos.z shr 4)
         return chunkProtectionCache.getOrPut(chunkKey) {
             ic2_120.integration.ftbchunks.ClaimProtection.isExplosionProtected(world, pos, ownerUuid)
-=======
-            damageSource: DamageSource
-        ): NuclearExplosion {
-            return NuclearExplosion(world, x, y, z, power, damageSource)
->>>>>>> backup/1.21.1
         }
     }
 
@@ -231,12 +215,9 @@ class NuclearExplosion private constructor(
                 0.5 + maxOf(0.0, (res + 4.0) * 0.3)
             }
 
-<<<<<<< HEAD
             // FTB Chunks 保护：受保护的方块充当屏障，截断射线
             if (!isAir && isProtected(mutablePos)) break
 
-=======
->>>>>>> backup/1.21.1
             if (absorption > remaining) break
             remaining -= absorption
 
@@ -287,11 +268,8 @@ class NuclearExplosion private constructor(
                 val res = block.getBlastResistance().toDouble().coerceAtLeast(0.0)
                 0.5 + maxOf(0.0, (res + 4.0) * 0.3)
             }
-<<<<<<< HEAD
             // FTB Chunks 保护：受保护的方块充当屏障，截断射线
             if (!isAir && isProtected(mutablePos)) break
-=======
->>>>>>> backup/1.21.1
             if (absorption > remaining) break
             remaining -= absorption
             if (!isAir) affectedSet.add(mutablePos.toImmutable())

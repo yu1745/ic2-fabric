@@ -1,13 +1,13 @@
 package ic2_120.content.recipes.solidcanner
 
 import ic2_120.content.recipes.ModMachineRecipes
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.Recipe
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.RecipeType
-import net.minecraft.recipe.input.RecipeInput
-import net.minecraft.registry.RegistryWrapper
+import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
 
@@ -24,39 +24,24 @@ class SolidCannerRecipe(
     val slot1Ingredient: Ingredient,
     val slot1Count: Int,
     val output: ItemStack
-) : Recipe<RecipeInput> {
+) : Recipe<SimpleInventory> {
 
     companion object {
         private var slot1Cache: Set<Ingredient>? = null
 
-<<<<<<< HEAD
         fun slot1Ingredients(world: net.minecraft.world.World): Set<Ingredient> {
             slot1Cache?.let { return it }
             val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
             val result: Set<Ingredient> = world.recipeManager.listAllOfType(recipeType).mapTo(mutableSetOf()) { it.slot1Ingredient }
-=======
-        fun slot1Ingredients(world: World): Set<Ingredient> {
-            slot1Cache?.let { return it }
-            val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
-            val result: Set<Ingredient> = if (recipeType == null) emptySet()
-            else world.recipeManager.listAllOfType(recipeType).mapTo(mutableSetOf()) { it.value.slot1Ingredient }
->>>>>>> backup/1.21.1
             slot1Cache = result
             return result
         }
     }
 
-<<<<<<< HEAD
     override fun matches(inventory: SimpleInventory, world: World): Boolean {
         if (inventory.size() < 2) return false
         val slot0 = inventory.getStack(0)
         val slot1 = inventory.getStack(1)
-=======
-    override fun matches(input: RecipeInput, world: World): Boolean {
-        if (input.size < 2) return false
-        val slot0 = input.getStackInSlot(0)
-        val slot1 = input.getStackInSlot(1)
->>>>>>> backup/1.21.1
         if (slot0.isEmpty || slot1.isEmpty) return false
         if (slot0.count < slot0Count) return false
         if (!slot0Ingredient.test(slot0)) return false
@@ -65,13 +50,16 @@ class SolidCannerRecipe(
         return true
     }
 
-    override fun craft(input: RecipeInput, lookup: RegistryWrapper.WrapperLookup): ItemStack {
+    override fun craft(inventory: SimpleInventory, registryManager: DynamicRegistryManager): ItemStack {
         return output.copy()
     }
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getResult(lookup: RegistryWrapper.WrapperLookup): ItemStack = output.copy()
+    override fun getOutput(registryManager: DynamicRegistryManager): ItemStack = output.copy()
+
+    override fun getId(): Identifier = id
+
     override fun getSerializer(): RecipeSerializer<*> = ModMachineRecipes.recipeSerializer(SolidCannerRecipe::class)
 
     override fun getType(): RecipeType<*> = ModMachineRecipes.recipeType(SolidCannerRecipe::class)

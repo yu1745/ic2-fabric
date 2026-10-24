@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/steel_rotor.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,4 @@
     "flat_595c68": "ic2_120:item/item3d/flat_595c68",
     "flat_6f7983": "ic2_120:item/item3d/flat_6f7983"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/rotor/steel_rotor"
-	}
->>>>>>> backup/1.21.1
 }

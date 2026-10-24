@@ -20,11 +20,7 @@ class LeashKineticGeneratorBlockEntityRenderer(
 ) : BlockEntityRenderer<LeashKineticGeneratorBlockEntity> {
 
     companion object {
-<<<<<<< HEAD
         private val LEASH_KNOT_TEXTURE = Identifier("textures/entity/lead_knot.png")
-=======
-        private val LEASH_KNOT_TEXTURE = Identifier.ofVanilla("textures/entity/lead_knot.png")
->>>>>>> backup/1.21.1
     }
 
     private val leashKnotModel = LeashKnotEntityModel<Entity>(
@@ -68,11 +64,7 @@ class LeashKineticGeneratorBlockEntityRenderer(
         matrices.translate(0.0, 0.4, 0.0)
         matrices.scale(-1.0f, -1.0f, 1.0f)
         val vertexConsumer = vertexConsumers.getBuffer(leashKnotModel.getLayer(LEASH_KNOT_TEXTURE))
-<<<<<<< HEAD
         leashKnotModel.render(matrices, vertexConsumer, renderLight, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f)
-=======
-        leashKnotModel.render(matrices, vertexConsumer, renderLight, OverlayTexture.DEFAULT_UV)
->>>>>>> backup/1.21.1
         matrices.pop()
 
         matrices.pop()

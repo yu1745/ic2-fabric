@@ -25,19 +25,18 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArmorMaterial
 import net.minecraft.item.Item
-import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.Registries
-import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.sound.SoundEvent
 import net.minecraft.sound.SoundEvents
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -47,6 +46,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.client.item.TooltipContext
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
@@ -57,20 +57,14 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
-=======
-import net.minecraft.data.server.recipe.RecipeExporter
->>>>>>> backup/1.21.1
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Supplier
+import java.util.function.Consumer
 import ic2_120.content.item.armor.ElectricArmorItem
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
 import ic2_120.config.Ic2Config
-import ic2_120.editCustomData
-import ic2_120.getCustomData
 
 
 //todo 全套防化服，防化三件套加橡胶靴 可免疫特斯拉线圈伤害 可免疫触电伤害，只要有单个防化头盔，物品栏有压缩空气单元，就可以在气泡值用尽时消耗压缩空气单元回满
@@ -79,16 +73,30 @@ import ic2_120.getCustomData
 // ========== 护甲材料 ==========
 
 /**
- * 创建自定义护甲材料（1.21.1 record 构造器）
+ * 创建自定义护甲材料
+ *
+ * @param name 材料名称（用于内部标识）
+ * @param durabilityMultiplier 耐久度倍率，基础值 × 倍率 = 实际耐久
+ *        - 头盔：11 × 倍率
+ *        - 胸甲：16 × 倍率
+ *        - 护腿：15 × 倍率
+ *        - 靴子：13 × 倍率
+ * @param protection 各部位护甲值（Minecraft 原版护甲点数；
+ *        1 点护甲 = 护甲条 1 半格，2 点护甲 = 1 个完整护甲图标）
+ * @param enchantability 附魔能力，影响附魔品质
+ * @param equipSound 装备音效
+ * @param toughness 护甲韧性，减少被击退伤害（钻石为 2.0）
+ * @param knockbackResistance 击退抗性（量子服最高 0.4）
+ * @param repairIngredient 修复配方所需原料
  */
 private fun createArmorMaterial(
     name: String,
+    durabilityMultiplier: Int,
     protection: Map<ArmorItem.Type, Int>,
     enchantability: Int,
-    equipSound: RegistryEntry<SoundEvent>,
+    equipSound: SoundEvent,
     toughness: Float,
     knockbackResistance: Float,
-<<<<<<< HEAD
     repairIngredient: Ingredient,
     durabilityOverrides: Map<ArmorItem.Type, Int> = emptyMap()
 ): ArmorMaterial = object : ArmorMaterial {
@@ -109,28 +117,14 @@ private fun createArmorMaterial(
     override fun getToughness() = toughness
     override fun getKnockbackResistance() = knockbackResistance
 }
-=======
-    repairIngredient: Ingredient
-): RegistryEntry<ArmorMaterial> = RegistryEntry.of(
-    ArmorMaterial(
-        protection,
-        enchantability,
-        equipSound,
-        Supplier { repairIngredient },
-        listOf(ArmorMaterial.Layer(Identifier.ofVanilla(name))),
-        toughness,
-        knockbackResistance
-    )
-)
->>>>>>> backup/1.21.1
 
 // ========== 修复原料 ==========
 // 各护甲材料对应的修复物品（通过模组 ID 加载）
-private val bronzeIngot = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "bronze_ingot")))
-private val rubber = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "rubber")))
-private val carbonFibre = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "carbon_fibre")))
-private val advancedAlloy = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "alloy")))
-private val iridium = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "iridium")))
+private val bronzeIngot = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "bronze_ingot")))
+private val rubber = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "rubber")))
+private val carbonFibre = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "carbon_fibre")))
+private val advancedAlloy = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "alloy")))
+private val iridium = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "iridium")))
 
 // ========== 护甲材料定义 ==========
 
@@ -141,6 +135,7 @@ private val iridium = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_1
  */
 private val SOLAR_ARMOR = createArmorMaterial(
     name = "ic2_solar",  // 使用 "solar" 作为名称，这样会查找 solar_1.png 和 solar_2.png
+    durabilityMultiplier = 8,
     protection = mapOf(
         ArmorItem.Type.HELMET to 2,      // 2 点护甲（与青铜相同）
         ArmorItem.Type.CHESTPLATE to 0,
@@ -162,10 +157,7 @@ private val SOLAR_ARMOR = createArmorMaterial(
  */
 private val BRONZE_ARMOR = createArmorMaterial(
     name = "ic2_bronze",
-<<<<<<< HEAD
     durabilityMultiplier = 15,
-=======
->>>>>>> backup/1.21.1
     protection = mapOf(
         ArmorItem.Type.HELMET to 2,      // 2 点护甲（2 半格 / 1 图标）
         ArmorItem.Type.CHESTPLATE to 5,  // 原版 IC2 数值
@@ -179,9 +171,6 @@ private val BRONZE_ARMOR = createArmorMaterial(
     repairIngredient = bronzeIngot
 )
 
-// 青铜护甲耐久倍率（与铁护甲相同）
-private const val BRONZE_DURABILITY_MULTIPLIER = 15
-
 // ========== 橡胶靴 (Rubber Boots) ==========
 /**
  * IC2 橡胶靴专用护甲材料，提供绝缘特性。
@@ -190,6 +179,7 @@ private const val BRONZE_DURABILITY_MULTIPLIER = 15
  */
 private val RUBBER_ARMOR = createArmorMaterial(
     name = "ic2_rubber",
+    durabilityMultiplier = 5,  // 13*5=65，接近原版 64
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,  // 无防护
         ArmorItem.Type.CHESTPLATE to 0,
@@ -202,8 +192,6 @@ private val RUBBER_ARMOR = createArmorMaterial(
     knockbackResistance = 0f,
     repairIngredient = rubber
 )
-// 橡胶靴耐久倍率（约 5，使靴子耐久为 64）
-private const val RUBBER_DURABILITY_MULTIPLIER = 5
 
 // ========== 防化服 (Hazmat Armor) ==========
 /**
@@ -214,6 +202,7 @@ private const val RUBBER_DURABILITY_MULTIPLIER = 5
  */
 private val HAZMAT_ARMOR = createArmorMaterial(
     name = "ic2_hazmat",
+    durabilityMultiplier = 5,  // 接近原版 64 的统一耐久
     protection = mapOf(
         ArmorItem.Type.HELMET to 1,     // 1 点护甲（1 半格 / 0.5 图标）
         ArmorItem.Type.CHESTPLATE to 1,
@@ -232,8 +221,6 @@ private val HAZMAT_ARMOR = createArmorMaterial(
         ArmorItem.Type.BOOTS to 64
     )
 )
-// 防化服耐久倍率（使各部位耐久约 64）
-private const val HAZMAT_DURABILITY_MULTIPLIER = 5
 
 // ========== 纳米护甲 (Nano Armor) ==========
 /**
@@ -249,6 +236,7 @@ private const val HAZMAT_DURABILITY_MULTIPLIER = 5
  */
 private val NANO_ARMOR = createArmorMaterial(
     name = "ic2_nano",
+    durabilityMultiplier = 15,      // 超高耐久（青铜约 1.7 倍）
     protection = mapOf(
         ArmorItem.Type.HELMET to 3,      // 3 点护甲（钻石级）
         ArmorItem.Type.CHESTPLATE to 7,   // 原版 IC2 特殊护甲显示值
@@ -279,6 +267,7 @@ private val NANO_ARMOR = createArmorMaterial(
  */
 private val QUANTUM_ARMOR = createArmorMaterial(
     name = "ic2_quantum",
+    durabilityMultiplier = 25,    // 最高耐久（青铜约 2.8 倍）
     protection = mapOf(
         ArmorItem.Type.HELMET to 3,
         ArmorItem.Type.CHESTPLATE to 10,
@@ -299,12 +288,8 @@ private val QUANTUM_ARMOR = createArmorMaterial(
  */
 private val ALLOY_ARMOR = createArmorMaterial(
     name = "ic2_alloy",
-<<<<<<< HEAD
     // 原版 IC2 Alloy 材料倍率为 50，胸甲耐久为 800。
     durabilityMultiplier = 50,
-=======
-    // 胸甲耐久 = 16 × multiplier；原版钻石胸甲为 528 ⇒ multiplier = 33
->>>>>>> backup/1.21.1
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,     // 无头盔
         ArmorItem.Type.CHESTPLATE to 7,
@@ -317,8 +302,6 @@ private val ALLOY_ARMOR = createArmorMaterial(
     knockbackResistance = 0f,
     repairIngredient = advancedAlloy
 )
-// 复合胸甲耐久倍率（与钻石胸甲相同）
-private const val ALLOY_DURABILITY_MULTIPLIER = 33
 
 // ========== 背包护甲材料 ==========
 /**
@@ -327,6 +310,7 @@ private const val ALLOY_DURABILITY_MULTIPLIER = 33
  */
 private val BACKPACK_ARMOR = createArmorMaterial(
     name = "batpack",  // 使用 batpack 作为基础，会查找 batpack_1.png
+    durabilityMultiplier = 10,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
         ArmorItem.Type.CHESTPLATE to 0,
@@ -343,6 +327,7 @@ private val BACKPACK_ARMOR = createArmorMaterial(
 // 高级电池背包护甲材料
 private val ADVANCED_BATPACK_ARMOR = createArmorMaterial(
     name = "advbatpack",  // 查找 advbatpack_1.png
+    durabilityMultiplier = 12,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
         ArmorItem.Type.CHESTPLATE to 0,
@@ -359,6 +344,7 @@ private val ADVANCED_BATPACK_ARMOR = createArmorMaterial(
 // 能量背包护甲材料
 private val ENERGY_PACK_ARMOR = createArmorMaterial(
     name = "energypack",  // 查找 energypack_1.png
+    durabilityMultiplier = 15,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
         ArmorItem.Type.CHESTPLATE to 0,
@@ -375,6 +361,7 @@ private val ENERGY_PACK_ARMOR = createArmorMaterial(
 // 兰波顿背包护甲材料
 private val LAPPACK_ARMOR = createArmorMaterial(
     name = "lappack",  // 查找 lappack_1.png
+    durabilityMultiplier = 20,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
         ArmorItem.Type.CHESTPLATE to 0,
@@ -394,6 +381,7 @@ private val LAPPACK_ARMOR = createArmorMaterial(
 // 建筑泡沫背包护甲材料
 private val CF_PACK_ARMOR = createArmorMaterial(
     name = "cf_pack",  // 需要创建 cf_pack_1.png
+    durabilityMultiplier = 8,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
         ArmorItem.Type.CHESTPLATE to 0,
@@ -409,6 +397,7 @@ private val CF_PACK_ARMOR = createArmorMaterial(
 
 private val NIGHT_VISION_ARMOR = createArmorMaterial(
     name = "ic2_night_vision",
+    durabilityMultiplier = 5,
     protection = mapOf(
         ArmorItem.Type.HELMET to 1,
         ArmorItem.Type.CHESTPLATE to 0,
@@ -430,10 +419,10 @@ private val NIGHT_VISION_ARMOR = createArmorMaterial(
  * 适用于游戏早期阶段，属性接近铁质护甲但可通过 IC2 方式获取。
  */
 @ModItem(name = "bronze_helmet", tab = CreativeTab.IC2_MATERIALS, group = "bronze_armor")
-class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.HELMET.getMaxDamage(BRONZE_DURABILITY_MULTIPLIER))) {
+class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val bronze = BronzeIngot::class.instance()
             if (bronze != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeHelmet::class.instance(), 1)
@@ -448,10 +437,10 @@ class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, Item.Setting
 }
 
 @ModItem(name = "bronze_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "bronze_armor")
-class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(BRONZE_DURABILITY_MULTIPLIER))) {
+class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val bronze = BronzeIngot::class.instance()
             if (bronze != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeChestplate::class.instance(), 1)
@@ -467,10 +456,10 @@ class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, Item
 }
 
 @ModItem(name = "bronze_leggings", tab = CreativeTab.IC2_MATERIALS, group = "bronze_armor")
-class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.LEGGINGS.getMaxDamage(BRONZE_DURABILITY_MULTIPLIER))) {
+class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, FabricItemSettings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val bronze = BronzeIngot::class.instance()
             if (bronze != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeLeggings::class.instance(), 1)
@@ -486,10 +475,10 @@ class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, Item.Set
 }
 
 @ModItem(name = "bronze_boots", tab = CreativeTab.IC2_MATERIALS, group = "bronze_armor")
-class BronzeBoots : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.BOOTS.getMaxDamage(BRONZE_DURABILITY_MULTIPLIER))) {
+class BronzeBoots : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.BOOTS, FabricItemSettings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val bronze = BronzeIngot::class.instance()
             if (bronze != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeBoots::class.instance(), 1)
@@ -510,14 +499,14 @@ class BronzeBoots : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
  * 行走时可为背包中的可充电物品充电，数值由配置控制。
  */
 @ModItem(name = "rubber_boots", tab = CreativeTab.IC2_MATERIALS, group = "hazmat_armor")
-class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.BOOTS.getMaxDamage(RUBBER_DURABILITY_MULTIPLIER))) {
+class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, FabricItemSettings().maxCount(1)) {
     companion object {
         private const val WALK_ACC_KEY = "Ic2RubberBootsWalkAcc"
         private const val LAST_X_KEY = "Ic2RubberBootsLastX"
         private const val LAST_Z_KEY = "Ic2RubberBootsLastZ"
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val rubber = RubberItem::class.instance()
             if (rubber == Items.AIR) return
             ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, RubberBoots::class.instance(), 1)
@@ -538,13 +527,11 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         val player = entity as? PlayerEntity ?: return
         if (player.getEquippedStack(EquipmentSlot.FEET) !== stack) return
 
-        val nbt = stack.getCustomData()
-        val hasLastPos = nbt?.contains(LAST_X_KEY) == true && nbt.contains(LAST_Z_KEY)
+        val nbt = stack.orCreateNbt
+        val hasLastPos = nbt.contains(LAST_X_KEY) && nbt.contains(LAST_Z_KEY)
         if (!hasLastPos) {
-            stack.editCustomData {
-                it.putDouble(LAST_X_KEY, player.x)
-                it.putDouble(LAST_Z_KEY, player.z)
-            }
+            nbt.putDouble(LAST_X_KEY, player.x)
+            nbt.putDouble(LAST_Z_KEY, player.z)
             return
         }
 
@@ -552,10 +539,8 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         val lastZ = nbt.getDouble(LAST_Z_KEY)
         val dx = player.x - lastX
         val dz = player.z - lastZ
-        stack.editCustomData {
-            it.putDouble(LAST_X_KEY, player.x)
-            it.putDouble(LAST_Z_KEY, player.z)
-        }
+        nbt.putDouble(LAST_X_KEY, player.x)
+        nbt.putDouble(LAST_Z_KEY, player.z)
 
         if (!player.isOnGround) return
         val segment = kotlin.math.sqrt(dx * dx + dz * dz)
@@ -567,7 +552,7 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         var acc = nbt.getDouble(WALK_ACC_KEY) + segment
         val charges = kotlin.math.floor(acc / distance).toLong()
         if (charges <= 0L) {
-            stack.editCustomData { it.putDouble(WALK_ACC_KEY, acc) }
+            nbt.putDouble(WALK_ACC_KEY, acc)
             return
         }
 
@@ -576,12 +561,12 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         remaining -= chargePlayerInventory(player, remaining)
         val actualCharged = (toCharge - remaining) / eu
         acc -= actualCharged * distance
-        stack.editCustomData { it.putDouble(WALK_ACC_KEY, acc.coerceAtLeast(0.0)) }
+        nbt.putDouble(WALK_ACC_KEY, acc.coerceAtLeast(0.0))
     }
 
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
         tooltip.add(Text.literal("§7行走时为背包内可充电物品充电"))
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendTooltip(stack, world, tooltip, context)
     }
 }
 
@@ -597,13 +582,13 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
  * 参考原版 IC2 各部位耐久：均为 64
  */
 @ModItem(name = "hazmat_helmet", tab = CreativeTab.IC2_MATERIALS, group = "hazmat_armor")
-class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.HELMET.getMaxDamage(HAZMAT_DURABILITY_MULTIPLIER))) {
+class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)) {
     companion object {
         private const val CHECK_COOLDOWN_KEY = "AirCheckCooldown"
         private const val AIR_THRESHOLD = 60  // 当气泡值 <= 60 时触发（约 3 秒，20%）
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val rubber = RubberItem::class.instance()
             if (rubber == Items.AIR) return
             ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, HazmatHelmet::class.instance(), 1)
@@ -630,17 +615,17 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
         if (!player.isTouchingWater) return
 
         // 检查冷却，防止同一tick多次消耗
-        val nbt = stack.getCustomData()
-        val cooldown = nbt?.getInt(CHECK_COOLDOWN_KEY) ?: 0
+        val nbt = stack.orCreateNbt
+        val cooldown = nbt.getInt(CHECK_COOLDOWN_KEY)
         if (cooldown > 0) {
-            stack.editCustomData { it.putInt(CHECK_COOLDOWN_KEY, cooldown - 1) }
+            nbt.putInt(CHECK_COOLDOWN_KEY, cooldown - 1)
             return
         }
 
         // 当气泡值低于阈值时（<= 60，约 3 秒）
         if (player.air <= AIR_THRESHOLD) {
-            val airCellItem = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "air_cell"))
-            val emptyCellItem = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell"))
+            val airCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "air_cell"))
+            val emptyCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
 
             // 查找背包中的压缩空气单元
             val airCellSlot = player.inventory.main.find { slot ->
@@ -663,17 +648,17 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
                 player.air = player.maxAir
 
                 // 设置冷却时间，防止同一tick多次触发（20 ticks = 1秒）
-                stack.editCustomData { it.putInt(CHECK_COOLDOWN_KEY, 20) }
+                nbt.putInt(CHECK_COOLDOWN_KEY, 20)
             }
         }
     }
 }
 
 @ModItem(name = "hazmat_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "hazmat_armor")
-class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(HAZMAT_DURABILITY_MULTIPLIER))) {
+class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val rubber = RubberItem::class.instance()
             if (rubber == Items.AIR) return
             ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, HazmatChestplate::class.instance(), 1)
@@ -689,10 +674,10 @@ class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Item
 }
 
 @ModItem(name = "hazmat_leggings", tab = CreativeTab.IC2_MATERIALS, group = "hazmat_armor")
-class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.LEGGINGS.getMaxDamage(HAZMAT_DURABILITY_MULTIPLIER))) {
+class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, FabricItemSettings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val rubber = RubberItem::class.instance()
             if (rubber == Items.AIR) return
             ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, HazmatLeggings::class.instance(), 1)
@@ -714,12 +699,12 @@ class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, Item.Set
  * 可在日光下自动为玩家装备中的电池物品充电的头盔。
  */
 @ModItem(name = "solar_helmet", tab = CreativeTab.IC2_MATERIALS, group = "solar_armor")
-class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
+class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)) {
     companion object {
         private const val EU_PER_TICK = 1L
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val solar = SolarGeneratorBlock::class.item()
             val cable = InsulatedCopperCableBlock::class.item()
             if (solar == Items.AIR || cable == Items.AIR) return
@@ -786,10 +771,10 @@ class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings(
  * 9 点护甲、耐久与原版钻石胸甲相同；仅胸甲槽，无其他部位。
  */
 @ModItem(name = "alloy_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(ALLOY_DURABILITY_MULTIPLIER))) {
+class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val alloy = Alloy::class.instance()
             if (alloy != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AlloyChestplate::class.instance(), 1)
@@ -815,7 +800,6 @@ class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Item.S
  * 作为胸甲装备。
  */
 @ModItem(name = "cf_pack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-<<<<<<< HEAD
 class CfPack : ArmorItem(
     CF_PACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
@@ -832,9 +816,6 @@ class CfPack : ArmorItem(
             net.minecraft.util.ActionResult.SUCCESS
         } else net.minecraft.util.ActionResult.PASS
     }
-=======
-class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
->>>>>>> backup/1.21.1
 
     override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
@@ -865,19 +846,11 @@ class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings
 
     override fun appendTooltip(
         stack: ItemStack,
-<<<<<<< HEAD
         world: World?,
         tooltip: MutableList<Text>,
         context: TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
-=======
-        context: Item.TooltipContext,
-        tooltip: MutableList<Text>,
-        type: TooltipType
-    ) {
-        super.appendTooltip(stack, context, tooltip, type)
->>>>>>> backup/1.21.1
         val amt = getFluidAmount(stack)
         val buckets = amt * 1000L / FluidConstants.BUCKET
         val maxBuckets = CAPACITY_DROPLETS * 1000L / FluidConstants.BUCKET
@@ -901,13 +874,10 @@ class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings
 
     override fun getItemBarColor(stack: ItemStack): Int = 0xFF_6B8E9F.toInt()
 
-<<<<<<< HEAD
     override fun createFullVariant(): ItemStack {
         return ItemStack(this).also { setFluidAmount(it, CAPACITY_DROPLETS) }
     }
 
-=======
->>>>>>> backup/1.21.1
     companion object {
         private const val NBT_FLUID_DROPLETS = "CfPackFoamDroplets"
 
@@ -915,35 +885,21 @@ class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings
 
         fun getFluidAmount(stack: ItemStack): Long {
             if (stack.isEmpty || stack.item !is CfPack) return 0L
-<<<<<<< HEAD
             return stack.nbt?.getLong(NBT_FLUID_DROPLETS)?.coerceIn(0L, CAPACITY_DROPLETS) ?: 0L
-=======
-            return stack.getCustomData()?.getLong(NBT_FLUID_DROPLETS)?.coerceIn(0L, CAPACITY_DROPLETS) ?: 0L
->>>>>>> backup/1.21.1
         }
 
         fun setFluidAmount(stack: ItemStack, amount: Long) {
             if (stack.isEmpty || stack.item !is CfPack) return
             val v = amount.coerceIn(0L, CAPACITY_DROPLETS)
             if (v <= 0L) {
-<<<<<<< HEAD
                 stack.orCreateNbt.remove(NBT_FLUID_DROPLETS)
             } else {
                 stack.orCreateNbt.putLong(NBT_FLUID_DROPLETS, v)
-=======
-                stack.editCustomData { it.remove(NBT_FLUID_DROPLETS) }
-            } else {
-                stack.editCustomData { it.putLong(NBT_FLUID_DROPLETS, v) }
->>>>>>> backup/1.21.1
             }
         }
 
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: java.util.function.Consumer<RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             val sprayer = FoamSprayerItem::class.instance()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()
@@ -974,7 +930,7 @@ class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings
 class Jetpack : JetpackItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val casing = IronCasing::class.instance()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()
@@ -1003,7 +959,7 @@ class Jetpack : JetpackItem() {
 class ElectricJetpack : ElectricArmorItem(
     ModArmorMaterials.ELECTRIC_JETPACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
-    Item.Settings().maxCount(1)
+    FabricItemSettings().maxCount(1)
 ) {
     companion object {
         private const val FLIGHT_REMAINDER_KEY = "ElectricJetpackFlightRemainder"
@@ -1018,7 +974,7 @@ class ElectricJetpack : ElectricArmorItem(
             get() = Ic2Config.current.armor.electricJetpack.flightDurationSeconds
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val casing = IronCasing::class.instance()
             val advanced = AdvancedCircuit::class.instance()
             val batbox = BatBoxBlock::class.item()
@@ -1046,41 +1002,28 @@ class ElectricJetpack : ElectricArmorItem(
     fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
         val energy = getEnergy(stack)
         if (energy <= 0) return false
-<<<<<<< HEAD
         val nbt = stack.orCreateNbt
         var remainder = nbt.getDouble(FLIGHT_REMAINDER_KEY)
-=======
-        val customData = stack.getCustomData()
-        var remainder = customData?.getDouble(FLIGHT_REMAINDER_KEY) ?: 0.0
->>>>>>> backup/1.21.1
         val cost = euPerTick
         remainder += cost
         val toConsume = remainder.toLong()
         if (toConsume <= 0) {
-<<<<<<< HEAD
             nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder)
-=======
-            stack.editCustomData { it.putDouble(FLIGHT_REMAINDER_KEY, remainder) }
->>>>>>> backup/1.21.1
             return true
         }
         if (energy < toConsume) return false
         setEnergy(stack, energy - toConsume)
-<<<<<<< HEAD
         nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume)
-=======
-        stack.editCustomData { it.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume) }
->>>>>>> backup/1.21.1
         return true
     }
 
     override fun appendTooltip(
         stack: ItemStack,
-        context: Item.TooltipContext,
+        world: World?,
         tooltip: MutableList<Text>,
-        type: TooltipType
+        context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendTooltip(stack, world, tooltip, context)
 
         // 计算剩余飞行时间（秒）
         val energy = getEnergy(stack)
@@ -1106,15 +1049,11 @@ class ElectricJetpack : ElectricArmorItem(
  * 提供夜视效果的头戴式装备。
  */
 @ModItem(name = "night_vision_goggles", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-<<<<<<< HEAD
 class NightVisionGoggles : ArmorItem(
     NIGHT_VISION_ARMOR,
     ArmorItem.Type.HELMET,
     FabricItemSettings().maxCount(1).maxDamage(-1)
 ), IBatteryItem {
-=======
-class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)), IBatteryItem {
->>>>>>> backup/1.21.1
     override val tier: Int = 2
     override val maxCapacity: Long
         get() = Ic2Config.current.armor.nightVision.nightVisionGogglesMaxEnergy
@@ -1137,7 +1076,7 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
             get() = Ic2Config.current.armor.nightVision.nightVisionGogglesDurationSeconds
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val heatEx = AdvancedHeatExchangerItem::class.instance()
             val battery = AdvancedReBatteryItem::class.instance()
             val luminator = LuminatorFlatBlock::class.item()
@@ -1164,19 +1103,26 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
         }
 
         fun toggleEnabled(stack: ItemStack): Boolean {
-            val enabled = !(stack.getCustomData()?.getBoolean(ENABLED_KEY) ?: false)
-            stack.editCustomData { it.putBoolean(ENABLED_KEY, enabled) }
+            val nbt = stack.orCreateNbt
+            val enabled = !nbt.getBoolean(ENABLED_KEY)
+            nbt.putBoolean(ENABLED_KEY, enabled)
             return enabled
         }
     }
 
-    override fun getCurrentCharge(stack: ItemStack): Long = stack.getCustomData()?.getLong(ENERGY_KEY) ?: 0L
+    override fun getCurrentCharge(stack: ItemStack): Long = stack.orCreateNbt.getLong(ENERGY_KEY)
 
     override fun setCurrentCharge(stack: ItemStack, charge: Long) {
-        stack.editCustomData { it.putLong(ENERGY_KEY, charge.coerceIn(0L, maxCapacity)) }
+        stack.orCreateNbt.putLong(ENERGY_KEY, charge.coerceIn(0L, maxCapacity))
     }
 
-    private fun isEnabled(stack: ItemStack): Boolean = stack.getCustomData()?.getBoolean(ENABLED_KEY) ?: false
+    private fun isEnabled(stack: ItemStack): Boolean = stack.orCreateNbt.getBoolean(ENABLED_KEY)
+
+    /**
+     * 夜视镜使用电量系统，不走原版耐久系统。
+     * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
+     */
+    override fun isDamageable(): Boolean = false
 
     override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
@@ -1193,12 +1139,8 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
         }
 
         // 使用余数累加器消耗能量
-<<<<<<< HEAD
         val nbt = stack.orCreateNbt
         var remainder = nbt.getDouble(NV_REMAINDER_KEY)
-=======
-        var remainder = stack.getCustomData()?.getDouble(NV_REMAINDER_KEY) ?: 0.0
->>>>>>> backup/1.21.1
         remainder += euPerTick
         val toConsume = remainder.toLong()
         if (toConsume > 0) {
@@ -1209,11 +1151,7 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
             }
             setCurrentCharge(stack, energy - toConsume)
         }
-<<<<<<< HEAD
         nbt.putDouble(NV_REMAINDER_KEY, remainder - toConsume)
-=======
-        stack.editCustomData { it.putDouble(NV_REMAINDER_KEY, remainder - toConsume) }
->>>>>>> backup/1.21.1
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
@@ -1232,11 +1170,11 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
 
     override fun appendTooltip(
         stack: ItemStack,
-        context: Item.TooltipContext,
+        world: World?,
         tooltip: MutableList<Text>,
-        type: TooltipType
+        context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendTooltip(stack, world, tooltip, context)
         val energy = getCurrentCharge(stack)
         val ratio = if (maxCapacity > 0) energy.toDouble() / maxCapacity else 0.0
         val nvEnabled = isEnabled(stack)
@@ -1273,18 +1211,14 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
  * 可在电池充电座等机器中充放电。
  */
 abstract class BatteryPackArmorItem(
-    armorMaterial: RegistryEntry<ArmorMaterial>,
+    armorMaterial: ArmorMaterial,
     override val tier: Int,
     override val maxCapacity: Long,
-<<<<<<< HEAD
 ) : ArmorItem(
     armorMaterial,
     ArmorItem.Type.CHESTPLATE,
     FabricItemSettings().maxCount(1).maxDamage(-1)
 ), IBatteryItem {
-=======
-) : ArmorItem(armorMaterial, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)), IBatteryItem {
->>>>>>> backup/1.21.1
 
     init {
         require(tier in 1..4) { "电池背包等级须在 1–4，当前: $tier" }
@@ -1296,6 +1230,14 @@ abstract class BatteryPackArmorItem(
      * 实际逻辑见 [autoFillElectricToolsInInventory]。
      */
     override val canChargeWireless: Boolean = true
+
+    /**
+     * 电池背包不走原版耐久系统，完全由 EU 能量驱动。
+     *
+     * 若不禁用，原版 [net.minecraft.entity.LivingEntity.damageArmor]
+     * 会在每次受击时消耗原版耐久度，导致背包耐久条下降。
+     */
+    override fun isDamageable(): Boolean = false
 
     override fun getCurrentCharge(stack: ItemStack): Long =
         BatteryItemBase.getEnergy(stack).coerceIn(0L, maxCapacity)
@@ -1361,11 +1303,11 @@ abstract class BatteryPackArmorItem(
 
     override fun appendTooltip(
         stack: ItemStack,
-        context: Item.TooltipContext,
+        world: World?,
         tooltip: MutableList<Text>,
-        type: TooltipType
+        context: TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendTooltip(stack, world, tooltip, context)
         val energy = getCurrentCharge(stack)
         val ratio = getChargeRatio(stack)
         tooltip.add(
@@ -1407,7 +1349,7 @@ abstract class BatteryPackArmorItem(
 class BatPack : BatteryPackArmorItem(BACKPACK_ARMOR, tier = 1, maxCapacity = 60_000L) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val re = ReBatteryItem::class.instance()
             val circuit = Circuit::class.instance()
             if (re != Items.AIR && circuit != Items.AIR) {
@@ -1436,7 +1378,7 @@ class BatPack : BatteryPackArmorItem(BACKPACK_ARMOR, tier = 1, maxCapacity = 60_
 class AdvancedBatPack : BatteryPackArmorItem(ADVANCED_BATPACK_ARMOR, tier = 2, maxCapacity = 600_000L) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val adv = AdvancedReBatteryItem::class.instance()
             val circuit = Circuit::class.instance()
             val copper = CopperCasing::class.instance()
@@ -1466,7 +1408,7 @@ class AdvancedBatPack : BatteryPackArmorItem(ADVANCED_BATPACK_ARMOR, tier = 2, m
 class EnergyPack : BatteryPackArmorItem(ENERGY_PACK_ARMOR, tier = 3, maxCapacity = 2_000_000L) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val advCircuit = AdvancedCircuit::class.instance()
             val iron = IronCasing::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
@@ -1496,7 +1438,7 @@ class EnergyPack : BatteryPackArmorItem(ENERGY_PACK_ARMOR, tier = 3, maxCapacity
 class LapPack : BatteryPackArmorItem(LAPPACK_ARMOR, tier = 4, maxCapacity = 20_000_000L) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val lapotron = LapotronCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             val energyPack = EnergyPack::class.instance()

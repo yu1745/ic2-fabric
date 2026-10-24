@@ -38,24 +38,15 @@ All storage blocks accept EU only from the five non-front faces and extract EU o
 
 ## Slots
 
-<<<<<<< HEAD
 - **Top charge slot:** batteries and electric tools with tier less than or equal to the storage tier are charged by the storage block.
 - **Bottom supply slot:** batteries discharge into the storage block; redstone adds 800 EU and Energium Dust adds 16,000 EU. Fuel is consumed only when there is enough empty space for the full value.
-=======
-- **Charge slot:** batteries and electric tools with tier less than or equal to the storage tier.
-- **Fuel slot:** redstone adds 800 EU, Energium Dust adds 16,000 EU. Fuel is consumed only when there is enough empty space for the full value.
->>>>>>> backup/1.21.1
 - **MFE/MFSU equipment view:** higher-tier screens also expose player equipment charging controls.
 
 Storage blocks do not have upgrade slots. Use transformers when you need to bridge voltage tiers.
 
 ## Network Tips
 
-<<<<<<< HEAD
 BatBox, CESU, MFE, and MFSU can face any of the six directions and output their tier rate: 32, 128, 512, and 2,048 EU/t. Machines or cables below that tier need a transformer or a lower-tier buffer between them and the storage output. MFE and MFSU are also valid adjacent energy sources for Teleporters, which draw teleport costs directly from nearby storage.
-=======
-BatBox, CESU, MFE, and MFSU output their tier rate: 32, 128, 512, and 2,048 EU/t. Machines or cables below that tier need a transformer or a lower-tier buffer between them and the storage output. MFE and MFSU are also valid adjacent energy sources for Teleporters, which draw teleport costs directly from nearby storage.
->>>>>>> backup/1.21.1
 
 ## Recipe
 

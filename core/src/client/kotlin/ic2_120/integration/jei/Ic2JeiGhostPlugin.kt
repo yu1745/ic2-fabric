@@ -26,7 +26,7 @@ import net.minecraft.util.Identifier
 
 @JeiPlugin
 class Ic2JeiGhostPlugin : IModPlugin {
-    override fun getPluginUid(): Identifier = Identifier("ic2_120", "ghost_filters")
+    override fun getPluginUid(): Identifier = Identifier.of("ic2_120", "ghost_filters")
 
     override fun registerGuiHandlers(registration: IGuiHandlerRegistration) {
         val fluidIngredientType = registration.jeiHelpers.platformFluidHelper.fluidIngredientType

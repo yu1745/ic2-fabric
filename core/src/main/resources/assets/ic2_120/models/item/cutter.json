@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/cutter.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,5 @@
     "flat_373737": "ic2_120:item/item3d/flat_373737",
     "flat_505050": "ic2_120:item/item3d/flat_505050",
     "flat_696969": "ic2_120:item/item3d/flat_696969"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/tool/cutter"
->>>>>>> backup/1.21.1
   }
 }

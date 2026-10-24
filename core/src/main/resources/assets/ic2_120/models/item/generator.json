@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/block/machine3d/generator_item.obj",
   "parent": "minecraft:block/block",
@@ -14,7 +13,4 @@
     "hazard": "ic2_120:block/machine3d/hazard",
     "lamp_off": "ic2_120:block/machine3d/lamp_off"
   }
-=======
-  "parent": "ic2:block/generator/electric/generator"
->>>>>>> backup/1.21.1
 }

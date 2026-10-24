@@ -1,9 +1,5 @@
 {
   "variants": {
-<<<<<<< HEAD
     "": { "model": "ic2_120:block/generator/reactor/reactor_chamber" }
-=======
-    "": { "model": "ic2:block/generator/reactor/reactor_chamber" }
->>>>>>> backup/1.21.1
   }
 }

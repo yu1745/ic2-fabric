@@ -1,7 +1,7 @@
 package ic2_120_industrial_upgrade.content.recipes
 
 import com.google.gson.JsonObject
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.Ingredient
 import net.minecraft.util.Identifier
 
@@ -15,7 +15,7 @@ class CompressorRecipeJsonProvider(
     private val inputCount: Int,
     private val outputIdStr: String,
     private val containerReturnId: String?
-) : RecipeJsonProvider {
+) : RecipeExporter {
 
     override fun serialize(json: JsonObject) {
         json.addProperty("type", "ic2_120:compressing")

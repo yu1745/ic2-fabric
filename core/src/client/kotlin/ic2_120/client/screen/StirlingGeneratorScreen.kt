@@ -28,11 +28,7 @@ class StirlingGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val generationRate = handler.sync.getSyncedInsertedAmount().coerceAtLeast(0L)
@@ -67,10 +63,6 @@ class StirlingGeneratorScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guithermalenergygenerator.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guithermalenergygenerator.png")
->>>>>>> backup/1.21.1
     }
 }

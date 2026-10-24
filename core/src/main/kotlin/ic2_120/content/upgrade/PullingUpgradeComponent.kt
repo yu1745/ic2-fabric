@@ -3,19 +3,15 @@ package ic2_120.content.upgrade
 import ic2_120.content.item.PullingUpgrade
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-<<<<<<< HEAD
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.item.Item
-=======
->>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-<<<<<<< HEAD
 import java.util.WeakHashMap
 
 object PullingUpgradeComponent {
@@ -52,14 +48,6 @@ object PullingUpgradeComponent {
      * elapsed × itemTransferRate(count) 个物品（配额跨输入槽共享，按实际流逝 tick 补偿）；
      * 每次触发起始方向轮转（BE 内计数器游标），避免低吞吐时第一个候选独占。
      * 开启方向过滤时，轮转只在过滤后的方向集内进行。
-=======
-
-object PullingUpgradeComponent {
-
-    /**
-     * 扫描升级槽中的所有抽入升级，从相邻容器抽取物品到机器的输入槽。
-     * 每个抽入升级使用自己的过滤和方向配置。
->>>>>>> backup/1.21.1
      * 复用 EjectorUpgradeComponent 的 NBT 读写方法（过滤和方向配置格式一致）。
      */
     fun pullIfUpgraded(
@@ -71,7 +59,6 @@ object PullingUpgradeComponent {
     ) {
         if (inputSlotIndices.isEmpty()) return
 
-<<<<<<< HEAD
         // ── P5 退避门：未到触发时刻直接返回（成本 ≈ 一次 HashMap 查找 + 比较）──
         val machine = inventory as? BlockEntity ?: return pullLegacy(world, pos, inventory, upgradeSlotIndices, inputSlotIndices)
         val st = backoff.getOrPut(machine) { BackoffState() }
@@ -161,56 +148,30 @@ object PullingUpgradeComponent {
                 // 遍历源容器中的所有物品变体
                 for (view in source) {
                     if (remainingQuota <= 0) break
-=======
-        for (idx in upgradeSlotIndices) {
-            val upgradeStack = inventory.getStack(idx)
-            if (upgradeStack.isEmpty || upgradeStack.item !is PullingUpgrade) continue
-
-            val filter = EjectorUpgradeComponent.readFilter(upgradeStack)
-            val side = EjectorUpgradeComponent.readDirection(upgradeStack)
-            val dirs = if (side != null) listOf(side) else Direction.values().toList()
-
-            for (dir in dirs) {
-                val source = ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
-
-                // 遍历源容器中的所有物品变体
-                for (view in source) {
->>>>>>> backup/1.21.1
                     if (view.isResourceBlank()) continue
                     val variant = view.resource
                     val item = variant.item
 
                     // 应用过滤
                     if (filter != null && item != filter) continue
-<<<<<<< HEAD
                     // IValidInputItem 快速否定（P1）：零分配，走布尔缓存
                     if (fastReject != null && !fastReject.isValidInputItem(item)) continue
 
                     // 找到可以接受此物品的输入槽
                     for (slotIndex in inputSlotIndices) {
                         if (remainingQuota <= 0) break
-=======
-
-                    // 找到可以接受此物品的输入槽
-                    for (slotIndex in inputSlotIndices) {
->>>>>>> backup/1.21.1
                         val current = inventory.getStack(slotIndex)
                         if (!current.isEmpty) {
                             if (current.item != item) continue
                             if (current.count >= current.maxCount) continue
                         }
 
-<<<<<<< HEAD
                         // 检查机器是否接受该物品（完整语义裁决，仅对放行候选执行一次）
-=======
-                        // 检查机器是否接受该物品
->>>>>>> backup/1.21.1
                         if (!inventory.isValid(slotIndex, variant.toStack(1))) continue
 
                         val space = if (current.isEmpty) current.maxCount else current.maxCount - current.count
                         if (space <= 0) continue
 
-<<<<<<< HEAD
                         // 受每候选配额限制，从源容器中抽取物品
                         val amount = minOf(remainingQuota, space.toLong(), view.amount).toInt()
                         if (amount <= 0) continue
@@ -221,13 +182,6 @@ object PullingUpgradeComponent {
                                 tx.commit()
                                 remainingQuota -= extracted
                                 didWork = true
-=======
-                        // 尝试从源容器中抽取物品
-                        Transaction.openOuter().use { tx ->
-                            val extracted = source.extract(variant, space.toLong(), tx)
-                            if (extracted > 0) {
-                                tx.commit()
->>>>>>> backup/1.21.1
                                 // 将物品放入输入槽
                                 if (current.isEmpty) {
                                     inventory.setStack(slotIndex, variant.toStack(extracted.toInt()))
@@ -242,9 +196,6 @@ object PullingUpgradeComponent {
                 }
             }
         }
-<<<<<<< HEAD
         return didWork
-=======
->>>>>>> backup/1.21.1
     }
 }

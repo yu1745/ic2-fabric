@@ -10,26 +10,18 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.AnimalmatronScreenHandler
 import ic2_120.content.sync.AnimalmatronSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
-<<<<<<< HEAD
 import ic2_120.content.upgrade.EnergyDebtAccounting
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
-=======
-import ic2_120.content.upgrade.FluidPipeUpgradeComponent
-import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
->>>>>>> backup/1.21.1
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
@@ -50,10 +42,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-<<<<<<< HEAD
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-=======
->>>>>>> backup/1.21.1
 import net.minecraft.block.BlockState
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.passive.AnimalEntity
@@ -69,14 +58,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
-<<<<<<< HEAD
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-=======
-
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -89,11 +72,6 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
-<<<<<<< HEAD
-=======
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 
 @ModBlockEntity(block = AnimalmatronBlock::class)
 class AnimalmatronBlockEntity(
@@ -102,20 +80,13 @@ class AnimalmatronBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state),
     Inventory,
-<<<<<<< HEAD
     IRoutedSidedInventory,
-=======
->>>>>>> backup/1.21.1
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport,
-<<<<<<< HEAD
     IEjectorUpgradeSupport,
     ExtendedScreenHandlerFactory {
-=======
-    ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = AnimalmatronBlock.ACTIVE
     override val tier: Int = ANIMALMATRON_TIER
@@ -134,12 +105,9 @@ class AnimalmatronBlockEntity(
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
 
-<<<<<<< HEAD
     /** 浮点耗能债务：1.6^n 的小数余数跨 tick 结转（有受监管动物时的持续抽电）。 */
     private var energyDebtF = 0f
 
-=======
->>>>>>> backup/1.21.1
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
@@ -156,13 +124,9 @@ class AnimalmatronBlockEntity(
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         markDirty = { markDirty() }
     )
-<<<<<<< HEAD
 
     override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData()
-=======
-    val syncedData = SyncedData(this)
->>>>>>> backup/1.21.1
 
     @RegisterEnergy
     val sync = AnimalmatronSync(
@@ -183,11 +147,7 @@ class AnimalmatronBlockEntity(
     private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = waterTankCapacity
-<<<<<<< HEAD
         override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid) && !variant.isBlank
-=======
-        override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid) && ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -211,7 +171,6 @@ class AnimalmatronBlockEntity(
             val space = waterTankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -221,20 +180,12 @@ class AnimalmatronBlockEntity(
                 markDirty()
                 actual
             }
-=======
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(Fluids.WATER)
-            sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
->>>>>>> backup/1.21.1
         }
 
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || variant.isBlank) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -244,13 +195,6 @@ class AnimalmatronBlockEntity(
                 markDirty()
                 actual
             }
-=======
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
->>>>>>> backup/1.21.1
         }
 
         fun getStoredWater(): Long = amount
@@ -259,11 +203,7 @@ class AnimalmatronBlockEntity(
     private val weedExTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = weedExTankCapacity
-<<<<<<< HEAD
         override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid) && !variant.isBlank
-=======
-        override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid) && ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -287,7 +227,6 @@ class AnimalmatronBlockEntity(
             val space = weedExTankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -297,20 +236,12 @@ class AnimalmatronBlockEntity(
                 markDirty()
                 actual
             }
-=======
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.WEED_EX_STILL)
-            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
->>>>>>> backup/1.21.1
         }
 
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || variant.isBlank) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -320,13 +251,6 @@ class AnimalmatronBlockEntity(
                 markDirty()
                 actual
             }
-=======
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
->>>>>>> backup/1.21.1
         }
 
         fun getStoredWeedEx(): Long = amount
@@ -347,56 +271,31 @@ class AnimalmatronBlockEntity(
 
         override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
             val views = mutableListOf<StorageView<FluidVariant>>()
-<<<<<<< HEAD
-=======
-            if (!waterTankInternal.variant.isBlank && waterTankInternal.amount > 0L) {
->>>>>>> backup/1.21.1
                 views.add(object : StorageView<FluidVariant> {
                     override fun getResource(): FluidVariant = waterTankInternal.variant
                     override fun getAmount(): Long = waterTankInternal.amount
                     override fun getCapacity(): Long = waterTankCapacity
                     override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
-<<<<<<< HEAD
                     override fun isResourceBlank(): Boolean = waterTankInternal.variant.isBlank
                 })
-=======
-                    override fun isResourceBlank(): Boolean = false
-                })
-            }
-            if (!weedExTankInternal.variant.isBlank && weedExTankInternal.amount > 0L) {
->>>>>>> backup/1.21.1
                 views.add(object : StorageView<FluidVariant> {
                     override fun getResource(): FluidVariant = weedExTankInternal.variant
                     override fun getAmount(): Long = weedExTankInternal.amount
                     override fun getCapacity(): Long = weedExTankCapacity
                     override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
-<<<<<<< HEAD
                     override fun isResourceBlank(): Boolean = weedExTankInternal.variant.isBlank
                 })
-=======
-                    override fun isResourceBlank(): Boolean = false
-                })
-            }
->>>>>>> backup/1.21.1
             return views.iterator()
         }
     }
 
     private var workOffset: Int = random.nextBetween(0, WORK_INTERVAL_TICKS - 1)
 
-<<<<<<< HEAD
     private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
     private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
     private val waterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "water_cell")) }
     private val distilledWaterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "distilled_water_cell")) }
     private val weedExCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "weed_ex_cell")) }
-=======
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val waterCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "water_cell")) }
-    private val distilledWaterCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "distilled_water_cell")) }
-    private val weedExCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "weed_ex_cell")) }
->>>>>>> backup/1.21.1
 
     constructor(pos: BlockPos, state: BlockState) : this(AnimalmatronBlockEntity::class.type(), pos, state)
 
@@ -418,15 +317,9 @@ class AnimalmatronBlockEntity(
 
     private fun matchesWaterInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-<<<<<<< HEAD
         val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
         val waterCellId = Identifier(Ic2_120.MOD_ID, "water_cell")
         val distilledWaterCellId = Identifier(Ic2_120.MOD_ID, "distilled_water_cell")
-=======
-        val fluidCellId = Identifier.of(Ic2_120.MOD_ID, "fluid_cell")
-        val waterCellId = Identifier.of(Ic2_120.MOD_ID, "water_cell")
-        val distilledWaterCellId = Identifier.of(Ic2_120.MOD_ID, "distilled_water_cell")
->>>>>>> backup/1.21.1
         return when {
             stack.item == Items.WATER_BUCKET || stack.item == ModFluids.DISTILLED_WATER_BUCKET -> true
             Registries.ITEM.getId(stack.item) == waterCellId -> true
@@ -442,13 +335,8 @@ class AnimalmatronBlockEntity(
 
     private fun matchesWeedExInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-<<<<<<< HEAD
         val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
         val weedExCellId = Identifier(Ic2_120.MOD_ID, "weed_ex_cell")
-=======
-        val fluidCellId = Identifier.of(Ic2_120.MOD_ID, "fluid_cell")
-        val weedExCellId = Identifier.of(Ic2_120.MOD_ID, "weed_ex_cell")
->>>>>>> backup/1.21.1
         return when {
             stack.item == ModFluids.WEED_EX_BUCKET -> true
             Registries.ITEM.getId(stack.item) == weedExCellId -> true
@@ -481,17 +369,9 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         else -> false
     }
 
-<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-=======
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        return buf
->>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.animalmatron")
@@ -506,23 +386,14 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             itemStorage
         )
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         Inventories.readNbt(nbt, inventory)
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
->>>>>>> backup/1.21.1
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(AnimalmatronSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-<<<<<<< HEAD
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
-=======
->>>>>>> backup/1.21.1
 
         waterTankInternal.setStoredFluid(nbt.getLong(NBT_WATER_MB).coerceIn(0, waterTankCapacity))
         weedExTankInternal.setStoredFluid(nbt.getLong(NBT_WEED_EX_MB).coerceIn(0, weedExTankCapacity))
@@ -538,20 +409,12 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         }
     }
 
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalmatronSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
-        syncedData.writeNbt(nbt)
-        nbt.putLong(AnimalmatronSync.NBT_ENERGY_STORED, sync.amount)
->>>>>>> backup/1.21.1
         nbt.putLong(NBT_WATER_MB, waterTankInternal.amount)
         nbt.putLong(NBT_WEED_EX_MB, weedExTankInternal.amount)
         nbt.putInt(NBT_WORK_OFFSET, workOffset)
@@ -576,18 +439,14 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
         adjacentEnergyTransfer.tick()
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
-<<<<<<< HEAD
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_ITEM_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_ITEM_INPUT_INDICES)
-=======
->>>>>>> backup/1.21.1
         if (fluidPipeReceiverEnabled) {
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, waterTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         processWaterInputContainer()
         processWeedExInputContainer()
 
-<<<<<<< HEAD
         var canPower = true
         if (sync.animalCount > 0) {
             // 浮点耗能记账：1.6^n 按浮点累计，取整数部分消费、余数结转（超频提速的同时耗能按比例增加）
@@ -600,22 +459,12 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
                 // 停顿期间不累计债务：防恢复供电后 need 超容量 all-or-nothing 卡死
                 energyDebtF = 0f
             }
-=======
-        // 按监管动物数量持续耗电（每只 1 EU/t）
-        val drain = sync.animalCount.toLong()
-        if (drain > 0) {
-            sync.consumeEnergy(drain)
->>>>>>> backup/1.21.1
         }
 
         var active = false
         val interval = (WORK_INTERVAL_TICKS.toFloat() / speedMultiplier).toInt().coerceAtLeast(1)
         if ((world.time + workOffset) % interval.toLong() == 0L) {
-<<<<<<< HEAD
             val report = if (canPower) runScan(world) else ScanReport()
-=======
-            val report = runScan(world)
->>>>>>> backup/1.21.1
             sync.animalCount = report.touched
             sync.touchedThisRun = report.touched
             sync.foodConsumedThisRun = report.foodConsumed
@@ -649,20 +498,12 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
             // 获取或创建动物数据
             val animalData = animalDataMap.computeIfAbsent(animal.uuid) {
-<<<<<<< HEAD
                 if (!animal.isBaby) {
                     // 外来成体：直接标记已长成。P3 修复：不再默认授予 canBreed——
                     // 否则区块卸载重建档案/拆机重放都会变成免费繁殖入口。
                     // 外来成体需喂满 FOOD_TO_BREED 次才可繁殖（与机器养大的幼崽同规则）；
                     // 仍在原版繁殖冷却中的正常计入 foodConsumed 起点但不提前豁免。
                     AnimalGrowthData(animal.uuid, foodConsumed = FOOD_TO_GROW, canBreed = false)
-=======
-                // 如果是成年动物（从外面牵来的），直接标记为已长成
-                if (!animal.isBaby) {
-                    // 检查原版繁殖冷却，防止通过抱出抱入绕过冷却
-                    val hasCooldown = animal is AnimalEntity && animal.breedingAge > 0
-                    AnimalGrowthData(animal.uuid, foodConsumed = FOOD_TO_GROW, canBreed = !hasCooldown)
->>>>>>> backup/1.21.1
                 } else {
                     AnimalGrowthData(animal.uuid)
                 }
@@ -686,7 +527,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             tryBreedReadyAnimals(world, animals, report)
         }
 
-<<<<<<< HEAD
         // 只清理确证死亡/卸载维度不存在的动物数据；离开范围（区块仍加载）的保留状态。
         // P3 修复：原实现 world.getEntity(uuid)==null 即删档——动物走远致区块卸载后档案被删，
         // 回来时按"外来成体"重建直接免费 canBreed，形成免费繁殖循环。改为仅删
@@ -695,13 +535,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             animalDataMap.entries.removeIf { (uuid, _) ->
                 val entity = world.getEntity(uuid)
                 entity != null && !entity.isAlive
-=======
-        // 只清理已死亡的动物数据，活着的实体（包括离开范围的）保留状态
-        if (world is ServerWorld) {
-            animalDataMap.keys.removeAll { uuid ->
-                val entity = world.getEntity(uuid)
-                entity == null || !entity.isAlive
->>>>>>> backup/1.21.1
             }
         }
 
@@ -727,16 +560,12 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             animalData.insecticidePaidToday = false
         }
 
-<<<<<<< HEAD
         // P2 修复：喂食终止条件——幼崽已喂满 10、或成体已解锁繁殖资格但未配对（无配偶/32上限/
         // 同种不足）时不再消耗饲料。否则单身动物/上限卡住时会每天吞 5 饲料且 foodConsumed 无上界增长。
         if (animalData.foodConsumed >= FOOD_TO_GROW && (animalData.breedUnlocked || !animal.isBaby)) return
         if (!animal.isBaby && animalData.breedUnlocked) return
 
         // 每天仍限 FOOD_PER_DAY 个（防超频逐帧喂食）
-=======
-        // 检查今天是否已经喂够了5个
->>>>>>> backup/1.21.1
         if (animalData.foodToday >= FOOD_PER_DAY) return
 
         // 计算喂食间隔：12000 tick / 5 = 2400 tick = 2分钟喂1个
@@ -757,16 +586,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
                 // 消耗水
                 consumeWater(report)
 
-<<<<<<< HEAD
                 // 暂时停用除草剂的实际作用：允许灌入，但不消耗，也不因缺少除草剂产生负面效果。
-=======
-                // 每日杀虫剂消耗（每只动物每天固定 100mb）
-                if (!animalData.insecticidePaidToday && weedExTankInternal.getStoredWeedEx() >= INSECTICIDE_PER_DAY) {
-                    weedExTankInternal.consumeInternal(mbToDroplets(INSECTICIDE_PER_DAY))
-                    animalData.insecticidePaidToday = true
-                    report.weedExConsumed += INSECTICIDE_PER_DAY
-                }
->>>>>>> backup/1.21.1
 
                 // 检查是否达到成长/繁殖条件
                 checkGrowthAndBreeding(animal, animalData, totalAnimals, report)
@@ -794,7 +614,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         totalAnimals: Int,
         report: ScanReport
     ) {
-<<<<<<< HEAD
         // 原版手动繁殖同步：玩家用原版机制配对后 breedingAge>0（6000t 冷却）。此时档案的
         // breedUnlocked/canBreed 必须立即失效，否则机器会认为它"已解锁待配对"，JADE 显示
         // 与实际状态不符，且冷却结束后可能绕过机器喂食直接机器配对。
@@ -804,8 +623,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             return
         }
 
-=======
->>>>>>> backup/1.21.1
         // 检查是否达到10个食物
         if (animalData.foodConsumed >= FOOD_TO_GROW) {
             // 先让动物长大（如果还是幼崽）
@@ -814,7 +631,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
                 report.grewUp++
             }
 
-<<<<<<< HEAD
             // 解锁繁殖资格：喂满后一次性解锁（breedUnlocked），配对消耗后置回，需重新喂满。
             // 注：除草剂日剂量支付已在 125c9c29 停用（不再消耗、无负面作用），
             // 此处不得再把 insecticidePaidToday 当作繁殖门槛——否则机器喂大的动物
@@ -823,15 +639,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
                 animalData.breedUnlocked = true
                 animalData.canBreed = true
                 report.canBreedNow++
-=======
-            // 检查是否可以繁殖（需要当日已支付杀虫剂）
-            if (totalAnimals < MAX_ANIMALS_FOR_BREEDING && !animalData.canBreed) {
-                if (animalData.insecticidePaidToday) {
-                    animalData.canBreed = true
-                    report.canBreedNow++
-                }
-                // 没有杀虫剂则无法繁殖，但动物仍可正常长大
->>>>>>> backup/1.21.1
             }
         }
     }
@@ -877,15 +684,10 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             world.spawnEntityAndPassengers(child)
 
             animalData.foodConsumed = 0
-<<<<<<< HEAD
             animalData.breedUnlocked = false
             animalData.canBreed = false
             mateData.foodConsumed = 0
             mateData.breedUnlocked = false
-=======
-            animalData.canBreed = false
-            mateData.foodConsumed = 0
->>>>>>> backup/1.21.1
             mateData.canBreed = false
 
             used.add(mate.uuid)
@@ -971,7 +773,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     private fun getExtraProduct(animal: PassiveEntity): ItemStack? {
         val entityId = Registries.ENTITY_TYPE.getId(animal.type).toString()
         return when (entityId) {
-<<<<<<< HEAD
             "minecraft:chicken" -> {
                 // P5 修复：幼鸡不下蛋（原实现无 isBaby 检查）
                 if (animal.isBaby) null else ItemStack(Items.EGG, 1)
@@ -980,13 +781,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
                 if (animal is SheepEntity && !animal.isSheared) {
                     val colorName = animal.color.asString()
                     val woolItem = Registries.ITEM.get(Identifier("minecraft", "${colorName}_wool"))
-=======
-            "minecraft:chicken" -> ItemStack(Items.EGG, 1)
-            "minecraft:sheep" -> {
-                if (animal is SheepEntity && !animal.isSheared) {
-                    val colorName = animal.color.asString()
-                    val woolItem = Registries.ITEM.get(Identifier.of("minecraft", "${colorName}_wool"))
->>>>>>> backup/1.21.1
                     ItemStack(woolItem, 1)
                 } else null
             }
@@ -1024,7 +818,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
         val product = getExtraProduct(animal) ?: return
 
-<<<<<<< HEAD
         // P5 修复：先确认输出槽可容纳，再产生副作用（剪刀耐久/羊剪毛标记）。
         // 原实现先扣耐久+标 isSheared 再发现输出满直接 return——羊毛凭空消失，
         // 且 lastHarvestTick 不推进，每 2400t 空剪一次。
@@ -1044,28 +837,14 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         }
 
         // 收获后处理（如标记羊已剪毛）——此时输出已确认可容纳，副作用不会白费
-=======
-        // 鸡蛋不需要剪刀，其他产物需要消耗剪刀耐久
-        val needsShears = product.item != Items.EGG
-        if (needsShears && !tryConsumeShearsDurability()) return
-
-        // 收获后处理（如标记羊已剪毛）
->>>>>>> backup/1.21.1
         if (animal is SheepEntity) {
             animal.isSheared = true
         }
 
         // 放入输出槽
-<<<<<<< HEAD
         val out2 = getStack(SLOT_HARVEST_OUTPUT)
         if (!out2.isEmpty) {
             out2.increment(product.count)
-=======
-        val out = getStack(SLOT_HARVEST_OUTPUT)
-        if (!out.isEmpty) {
-            if (!ItemStack.areItemsAndComponentsEqual(out, product) || out.count >= out.maxCount) return
-            out.increment(product.count)
->>>>>>> backup/1.21.1
         } else {
             setStack(SLOT_HARVEST_OUTPUT, product.copy())
         }
@@ -1077,11 +856,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-<<<<<<< HEAD
         return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
-=======
-        return current.isEmpty || (ItemStack.areItemsAndComponentsEqual(current, toInsert) && current.count < current.maxCount)
->>>>>>> backup/1.21.1
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
@@ -1098,10 +873,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     private fun isWeedEx(fluid: net.minecraft.fluid.Fluid): Boolean =
         fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
 
-<<<<<<< HEAD
-=======
-
->>>>>>> backup/1.21.1
     private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 
     /**
@@ -1121,7 +892,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         return data.canBreed
     }
 
-<<<<<<< HEAD
     /**
      * 获取指定动物是否已解锁繁殖资格（供 JADE 显示分流：待解锁 vs 已解锁等空位）
      */
@@ -1130,8 +900,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         return data.breedUnlocked
     }
 
-=======
->>>>>>> backup/1.21.1
     data class ScanReport(
         var touched: Int = 0,
         var foodConsumed: Int = 0,
@@ -1172,11 +940,8 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             SLOT_FEED_3,
             SLOT_FEED_4
         )
-<<<<<<< HEAD
         val SLOT_ITEM_INPUT_INDICES = intArrayOf(SLOT_SHEARS, SLOT_WATER_INPUT, SLOT_WEED_EX_INPUT, *SLOT_FEED_INDICES)
         val SLOT_ITEM_OUTPUT_INDICES = intArrayOf(SLOT_WATER_OUTPUT, SLOT_WEED_EX_OUTPUT, SLOT_HARVEST_OUTPUT)
-=======
->>>>>>> backup/1.21.1
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
 
         const val INVENTORY_SIZE = 15

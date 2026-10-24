@@ -39,7 +39,7 @@ class TradeOMatScreen(
     }
 
     companion object {
-        private val TEXTURE_OPEN = Identifier("ic2_120", "textures/gui/guitradeomatopen.png")
-        private val TEXTURE_CLOSED = Identifier("ic2_120", "textures/gui/guitradeomatclosed.png")
+        private val TEXTURE_OPEN = Identifier.of("ic2_120", "textures/gui/guitradeomatopen.png")
+        private val TEXTURE_CLOSED = Identifier.of("ic2_120", "textures/gui/guitradeomatclosed.png")
     }
 }

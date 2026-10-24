@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/energy_debug_stick.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,5 @@
     "metal_bc7945": "ic2_120:item/item3d/metal_bc7945",
     "glow_ffcc33": "ic2_120:item/item3d/glow_ffcc33",
     "glow_fff2a0": "ic2_120:item/item3d/glow_fff2a0"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "minecraft:item/stick"
->>>>>>> backup/1.21.1
   }
 }

@@ -17,11 +17,7 @@ import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
-=======
-import net.minecraft.data.server.recipe.RecipeExporter
->>>>>>> backup/1.21.1
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
@@ -42,17 +38,11 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-<<<<<<< HEAD
 import java.util.function.Consumer
 import ic2_120.Ic2_120
 import ic2_120.content.item.*
 import ic2_120.content.screen.LimiterCableScreenHandler
 import ic2_120.content.screen.SplitterCableScreenHandler
-=======
-import ic2_120.Ic2_120
-import ic2_120.content.item.*
-import ic2_120.content.screen.LimiterCableScreenHandler
->>>>>>> backup/1.21.1
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import ic2_120.registry.item
@@ -74,11 +64,7 @@ class TinCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Base
 
     companion object {
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = TinCableBlock::class.id(),
@@ -105,11 +91,7 @@ class CopperCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : B
 
     companion object {
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = CopperCableBlock::class.id(),
@@ -139,11 +121,7 @@ class GoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
 
     companion object {
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = GoldCableBlock::class.id(),
@@ -173,11 +151,7 @@ class IronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
 
     companion object {
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = IronCableBlock::class.id(),
@@ -208,11 +182,7 @@ class GlassFibreCableBlock(
 
     companion object {
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, GlassFibreCableBlock::class.item(), 6)
                 .pattern("GGG")
                 .pattern("ESE")
@@ -244,7 +214,6 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
     IInsulatedCable, ITiered {
 
     override val tier: Int = 2
-<<<<<<< HEAD
    override fun getTransferRate(): Long = nominalEuPerTick()
    override fun getEnergyLoss(): Long = 200L
   override val insulationLevel: Int = 2
@@ -256,16 +225,6 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
        @RecipeProvider
        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
-=======
-    override fun getTransferRate(): Long = nominalEuPerTick()
-    override fun getEnergyLoss(): Long = 200L
-    override val insulationLevel: Int = 2
-
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
->>>>>>> backup/1.21.1
                 .input(CopperCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(CopperCableBlock::class.item()), conditionsFromItem(CopperCableBlock::class.item()))
@@ -296,19 +255,12 @@ class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings(
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 200L
     override val insulationLevel: Int = 2
-<<<<<<< HEAD
     override fun getCableMin(): Double = 5.0 / 16.0
     override fun getCableMax(): Double = 11.0 / 16.0
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedTinCableBlock::class.item(), 1)
                 .input(TinCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
@@ -341,21 +293,12 @@ class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings
     override fun getEnergyLoss(): Long = 400L
     override val insulationLevel: Int = 2
 
-<<<<<<< HEAD
     override fun getCableMin(): Double = 5.5 / 16.0
     override fun getCableMax(): Double = 10.5 / 16.0
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-    override fun getCableMin(): Double = 6.5 / 16.0
-    override fun getCableMax(): Double = 9.5 / 16.0
-
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
@@ -388,21 +331,12 @@ class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSe
     override fun getEnergyLoss(): Long = 400L
     override val insulationLevel: Int = 3
 
-<<<<<<< HEAD
     override fun getCableMin(): Double = 4.5 / 16.0
     override fun getCableMax(): Double = 11.5 / 16.0
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-    override fun getCableMin(): Double = 6.5 / 16.0
-    override fun getCableMax(): Double = 9.5 / 16.0
-
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             // 直接合成：金导线 + 2 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
@@ -446,21 +380,12 @@ class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 2
 
-<<<<<<< HEAD
     override fun getCableMin(): Double = 4.0 / 16.0
     override fun getCableMax(): Double = 12.0 / 16.0
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-    override fun getCableMin(): Double = 5.0 / 16.0
-    override fun getCableMax(): Double = 11.0 / 16.0
-
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
@@ -493,21 +418,12 @@ class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 3
 
-<<<<<<< HEAD
     override fun getCableMin(): Double = 3.0 / 16.0
     override fun getCableMax(): Double = 13.0 / 16.0
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-    override fun getCableMin(): Double = 5.0 / 16.0
-    override fun getCableMax(): Double = 11.0 / 16.0
-
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             // 直接合成：高压导线 + 2 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
@@ -551,21 +467,12 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 4
 
-<<<<<<< HEAD
     override fun getCableMin(): Double = 2.0 / 16.0
     override fun getCableMax(): Double = 14.0 / 16.0
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-=======
-    override fun getCableMin(): Double = 5.0 / 16.0
-    override fun getCableMax(): Double = 11.0 / 16.0
-
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             // 直接合成：高压导线 + 3 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
@@ -599,11 +506,7 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
 }
 
 /**
-<<<<<<< HEAD
  * EU分流导线。红石信号达到可配置阈值时断开所有连接，并支持反相控制。
-=======
- * EU分流导线。受红石控制：高电平时断开所有连接，低电平时正常连接。
->>>>>>> backup/1.21.1
  * Tier 5（8192 EU/t），损耗 0.5 EU/格。
  */
 @ModBlock(name = "splitter_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
@@ -613,11 +516,7 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SplitterCableBlock::class.item(), 1)
                 .pattern("RCR")
                 .pattern("LRL")
@@ -643,15 +542,9 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
     }
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
-<<<<<<< HEAD
         val active = ctx.world.getReceivedRedstonePower(ctx.blockPos) >= CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
         val superState = super.getPlacementState(ctx)
         return if (active) {
-=======
-        val powered = ctx.world.isReceivingRedstonePower(ctx.blockPos)
-        val superState = super.getPlacementState(ctx)
-        return if (powered) {
->>>>>>> backup/1.21.1
             var state = superState.with(ACTIVE, true)
             for (dir in Direction.values()) {
                 state = state.with(propertyFor(dir), false)
@@ -671,7 +564,6 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
             super.neighborUpdate(state, world, pos, block, sourcePos, notify)
             return
         }
-<<<<<<< HEAD
         refreshControlState(world, pos, state)
         super.neighborUpdate(state, world, pos, block, sourcePos, notify)
     }
@@ -718,25 +610,6 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
             }
         })
         return ActionResult.SUCCESS
-=======
-        val powered = world.isReceivingRedstonePower(pos)
-        val currentlyActive = state.get(ACTIVE)
-        if (powered != currentlyActive) {
-            var newState = state.with(ACTIVE, powered)
-            if (powered) {
-                for (dir in Direction.values()) {
-                    newState = newState.with(propertyFor(dir), false)
-                }
-            } else {
-                for (dir in Direction.values()) {
-                    newState = newState.with(propertyFor(dir), canConnect(world, pos, dir))
-                }
-            }
-            world.setBlockState(pos, newState)
-            EnergyNetworkManager.invalidateAt(world, pos)
-        }
-        super.neighborUpdate(state, world, pos, block, sourcePos, notify)
->>>>>>> backup/1.21.1
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -763,11 +636,7 @@ class LimiterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : 
 
     companion object {
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LimiterCableBlock::class.item(), 1)
                 .pattern(" C ")
                 .pattern("RGR")
@@ -790,7 +659,6 @@ class LimiterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState, world: World, pos: BlockPos,
-<<<<<<< HEAD
         player: PlayerEntity, hand: Hand, hit: BlockHitResult
     ): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
@@ -800,19 +668,6 @@ class LimiterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : 
             override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
                 buf.writeBlockPos(pos)
                 buf.writeLong(be.configuredLimit)
-=======
-        player: PlayerEntity, hit: BlockHitResult
-    ): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return ActionResult.PASS
-        player.openHandledScreen(object : ExtendedScreenHandlerFactory<PacketByteBuf> {
-            override fun getDisplayName(): Text = Text.translatable("block.ic2_120.limiter_cable")
-            override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-                val buf = PacketByteBuf(io.netty.buffer.Unpooled.buffer())
-                buf.writeBlockPos(pos)
-                buf.writeLong(be.configuredLimit)
-                return buf
->>>>>>> backup/1.21.1
             }
             override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
                 val handler = LimiterCableScreenHandler(syncId, playerInventory, pos)

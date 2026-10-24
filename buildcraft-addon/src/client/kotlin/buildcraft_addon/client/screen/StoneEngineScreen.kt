@@ -17,11 +17,7 @@ class StoneEngineScreen(
 ) : HandledScreen<StoneEngineScreenHandler>(handler, playerInventory, title) {
 
     companion object {
-<<<<<<< HEAD
         val TEXTURE: Identifier = Identifier(BuildCraftAddon.MOD_ID, "textures/gui/steam_engine_gui.png")
-=======
-        val TEXTURE: Identifier = Identifier.of(BuildCraftAddon.MOD_ID, "textures/gui/steam_engine_gui.png")
->>>>>>> backup/1.21.1
         const val TEXTURE_SIZE = 256
         const val BG_WIDTH = 176
         const val BG_HEIGHT = 166

@@ -1,12 +1,14 @@
 package ic2_120.client
 
 import ic2_120.content.item.IridiumDrill
-import ic2_120.content.network.ToggleIridiumSilkTouchPayload
+import ic2_120.content.network.NetworkManager
+import io.netty.buffer.Unpooled
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.ActionResult
 import net.minecraft.util.TypedActionResult
 
@@ -24,11 +26,7 @@ object IridiumDrillModeHandler {
             if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
                 return@register TypedActionResult.pass(stack)
             }
-<<<<<<< HEAD
             sendToggleOnceThisTick(player.age)
-=======
-            ClientPlayNetworking.send(ToggleIridiumSilkTouchPayload)
->>>>>>> backup/1.21.1
             TypedActionResult.success(stack, true)
         }
 
@@ -37,11 +35,7 @@ object IridiumDrillModeHandler {
             if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
                 return@register ActionResult.PASS
             }
-<<<<<<< HEAD
             sendToggleOnceThisTick(player.age)
-=======
-            ClientPlayNetworking.send(ToggleIridiumSilkTouchPayload)
->>>>>>> backup/1.21.1
             ActionResult.SUCCESS
         }
     }

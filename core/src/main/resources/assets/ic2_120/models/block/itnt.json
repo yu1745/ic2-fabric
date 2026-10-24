@@ -1,14 +1,8 @@
 {
   "parent": "minecraft:block/cube_bottom_top",
   "textures": {
-<<<<<<< HEAD
     "side": "ic2_120:block/explosive/itnt_sides",
     "bottom": "ic2_120:block/explosive/itnt_bottom",
     "top": "ic2_120:block/explosive/itnt_top"
-=======
-    "side": "ic2:block/explosive/itnt_sides",
-    "bottom": "ic2:block/explosive/itnt_bottom",
-    "top": "ic2:block/explosive/itnt_top"
->>>>>>> backup/1.21.1
   }
 }

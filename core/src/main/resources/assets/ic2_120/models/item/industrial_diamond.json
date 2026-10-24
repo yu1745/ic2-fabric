@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/industrial_diamond.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -15,10 +14,4 @@
     "glass_ebebeb": "ic2_120:item/item3d/glass_ebebeb",
     "glow_ebebeb": "ic2_120:item/item3d/glow_ebebeb"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/industrial_diamond"
-	}
->>>>>>> backup/1.21.1
 }

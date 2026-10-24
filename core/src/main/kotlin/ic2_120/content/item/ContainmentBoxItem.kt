@@ -60,7 +60,7 @@ class ContainmentBoxItem : Item(Item.Settings().maxCount(1)) {
             }
         })
 
-        return TypedActionResult.success(stack, true)
+        return TypedActionResult.success(stack)
     }
 
     companion object {

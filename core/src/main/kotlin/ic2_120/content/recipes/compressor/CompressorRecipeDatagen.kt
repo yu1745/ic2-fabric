@@ -9,20 +9,13 @@ import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import ic2_120.registry.item
-<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
-=======
-import net.minecraft.data.server.recipe.RecipeExporter
->>>>>>> backup/1.21.1
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-<<<<<<< HEAD
 import java.util.function.Consumer
-=======
->>>>>>> backup/1.21.1
 
 object CompressorRecipeDatagen {
     data class Entry(
@@ -139,7 +132,6 @@ object CompressorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-<<<<<<< HEAD
     fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
         entries.forEach { entry ->
             CompressorRecipeJsonProvider(
@@ -187,22 +179,4 @@ object CompressorRecipeDatagen {
 
         override fun getAdvancementId(): Identifier? = null
     }
-=======
-    fun generateRecipes(exporter: RecipeExporter) {
-        entries.forEach { entry ->
-            val id = Identifier.of("ic2_120", "compressing/${entry.name}")
-            exporter.accept(
-                id,
-                CompressorRecipe(
-                    id,
-                    entry.input.toIngredient(),
-                    entry.inputCount,
-                    ItemStack(entry.output, entry.count),
-                    entry.containerReturn
-                ),
-                null
-            )
-        }
-    }
->>>>>>> backup/1.21.1
 }

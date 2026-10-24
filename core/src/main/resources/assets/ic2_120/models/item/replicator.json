@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/block/machine3d/replicator_item.obj",
   "parent": "minecraft:block/block",
@@ -18,7 +17,4 @@
     "lamp_red": "ic2_120:block/machine3d/lamp_red",
     "glass": "ic2_120:block/machine3d/glass"
   }
-=======
-  "parent": "ic2:block/machine/uu/replicator"
->>>>>>> backup/1.21.1
 }

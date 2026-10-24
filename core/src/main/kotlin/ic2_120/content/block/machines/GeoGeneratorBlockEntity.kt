@@ -27,10 +27,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-<<<<<<< HEAD
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-=======
->>>>>>> backup/1.21.1
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -39,8 +36,6 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.RegistryWrapper
-import io.netty.buffer.Unpooled
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Identifier
@@ -71,13 +66,8 @@ class GeoGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     companion object {
         const val GENERATOR_TIER = 1
@@ -146,11 +136,7 @@ class GeoGeneratorBlockEntity(
 
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
-<<<<<<< HEAD
         override fun canInsert(variant: FluidVariant): Boolean = variant.fluid == Fluids.LAVA && !variant.isBlank
-=======
-        override fun canInsert(variant: FluidVariant): Boolean = variant.fluid == Fluids.LAVA && ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -183,7 +169,6 @@ class GeoGeneratorBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -192,12 +177,6 @@ class GeoGeneratorBlockEntity(
                 sync.lavaAmount = amount.toInt().coerceAtLeast(0)
                 actual
             }
-=======
-            amount += actual
-            if (variant.fluid != Fluids.LAVA) variant = FluidVariant.of(Fluids.LAVA)
-            sync.lavaAmount = amount.toInt().coerceAtLeast(0)
-            return actual
->>>>>>> backup/1.21.1
         }
 
         /** 内部消耗岩浆（不经过 extract，因 canExtract=false 会阻止外部抽取），返回实际消耗量（droplets） */
@@ -205,7 +184,6 @@ class GeoGeneratorBlockEntity(
             if (toConsume <= 0L || variant.fluid != Fluids.LAVA) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -214,12 +192,6 @@ class GeoGeneratorBlockEntity(
                 sync.lavaAmount = amount.toInt().coerceAtLeast(0)
                 actual
             }
-=======
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.lavaAmount = amount.toInt().coerceAtLeast(0)
-            return actual
->>>>>>> backup/1.21.1
         }
     }
 
@@ -292,7 +264,7 @@ class GeoGeneratorBlockEntity(
         return if (current.isEmpty) {
             setStack(EMPTY_CONTAINER_SLOT, emptyStack.copy())
             true
-        } else if (ItemStack.areItemsAndComponentsEqual(current, emptyStack)) {
+        } else if (ItemStack.canCombine(current, emptyStack)) {
             val toAdd = minOf(emptyStack.count, current.maxCount - current.count)
             if (toAdd > 0) {
                 current.increment(toAdd)
@@ -309,15 +281,13 @@ class GeoGeneratorBlockEntity(
         return if (current.isEmpty) {
             true
         } else {
-            ItemStack.areItemsAndComponentsEqual(current, emptyStack) && current.count + emptyStack.count <= current.maxCount
+            ItemStack.canCombine(current, emptyStack) && current.count + emptyStack.count <= current.maxCount
         }
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.geo_generator")
@@ -332,9 +302,9 @@ class GeoGeneratorBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(GeoGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, GeoGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -343,9 +313,9 @@ class GeoGeneratorBlockEntity(
         lavaConsumptionRemainder = nbt.getLong(NBT_LAVA_CONSUMPTION_REMAINDER).coerceIn(0L, GeoGeneratorSync.BURN_TICKS_PER_BUCKET - 1L)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(GeoGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_LAVA_AMOUNT, lavaTankInternal.getStoredAmount())
@@ -375,7 +345,7 @@ class GeoGeneratorBlockEntity(
             }
             fuelStack.item is LavaCell -> {
                 // 岩浆单元 = 1 桶 = 1000 mB
-                val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")))
+                val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
                 if (lavaTankInternal.canAcceptFullBucket() && canInsertEmptyContainer(emptyCell)) {
                     val inserted = lavaTankInternal.tryInsertLava(FluidConstants.BUCKET)
                     if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {

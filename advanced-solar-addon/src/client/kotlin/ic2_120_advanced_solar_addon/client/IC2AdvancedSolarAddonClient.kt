@@ -2,20 +2,13 @@ package ic2_120_advanced_solar_addon.client
 
 import ic2_120.client.ClientScreenRegistrar
 import ic2_120.content.network.ChunkedConfigReceiver
-<<<<<<< HEAD
 import ic2_120.content.network.ConfigSyncPacket
-=======
->>>>>>> backup/1.21.1
 import ic2_120.registry.type
 import ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon
 import ic2_120_advanced_solar_addon.client.render.MolecularTransformerBlockEntityRenderer
 import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlock
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlockEntity
-<<<<<<< HEAD
-=======
-import ic2_120_advanced_solar_addon.content.recipe.AddonConfigSyncPacket
->>>>>>> backup/1.21.1
 import ic2_120_advanced_solar_addon.content.recipe.MTRecipes
 import ic2_120_advanced_solar_addon.integration.jei.Ic2AdvancedSolarAddonJeiPlugin
 import net.fabricmc.api.ClientModInitializer
@@ -69,16 +62,11 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         }
 
         // 注册配置同步接收（分包）
-<<<<<<< HEAD
         ClientPlayNetworking.registerGlobalReceiver(IC2AdvancedSolarAddon.id("config_sync")) { client, _, buf, _ ->
             val packet = ConfigSyncPacket.read(buf)
             client.execute {
                 configReceiver.accept(packet.totalChunks, packet.chunkIndex, packet.chunkData)
             }
-=======
-        ClientPlayNetworking.registerGlobalReceiver(AddonConfigSyncPacket.ID) { payload, _ ->
-            configReceiver.accept(payload.totalChunks, payload.chunkIndex, payload.chunkData)
->>>>>>> backup/1.21.1
         }
     }
 }

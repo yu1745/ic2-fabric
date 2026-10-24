@@ -1,17 +1,10 @@
 package ic2_120.client.network
 
-<<<<<<< HEAD
 import ic2_120.Ic2_120
-=======
-import ic2_120.content.network.BandwidthHudPacket
-import ic2_120.content.network.ConfigSyncPacket
-import ic2_120.content.network.ConfigSyncReceiver
->>>>>>> backup/1.21.1
 import ic2_120.content.network.ReactorHeatInfoPacket
 import ic2_120.content.network.ReactorLayoutLockPacket
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.network.TeleporterVisualStatePacket
-<<<<<<< HEAD
 import ic2_120.content.network.ConfigSyncPacket
 import ic2_120.content.network.ConfigSyncReceiver
 import ic2_120.content.network.ReplicationCostsSyncReceiver
@@ -22,24 +15,10 @@ import ic2_120.content.network.SemifluidGeneratorFuelStatePacket
 import ic2_120.client.screen.ScannerScreen
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-=======
-import ic2_120.content.network.WaterRotorStatePacket
-import ic2_120.content.network.WindRotorStatePacket
-import ic2_120.content.network.SemifluidGeneratorFuelStatePacket
-
-import ic2_120.client.screen.ScannerScreen
-import ic2_120.content.block.machines.TeleporterBlockEntity
-import ic2_120.content.block.machines.WaterKineticGeneratorBlockEntity
-import ic2_120.content.block.machines.WindKineticGeneratorBlockEntity
-import ic2_120.content.block.nuclear.NuclearReactorBlockEntity
-import ic2_120.Ic2_120
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
->>>>>>> backup/1.21.1
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.Identifier
 
 object NetworkManager {
-<<<<<<< HEAD
     private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
     private val REACTOR_LAYOUT_LOCK_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_layout_lock")
     private val WIND_ROTOR_STATE_PACKET = WindRotorStatePacket.ID
@@ -71,36 +50,10 @@ object NetworkManager {
                 if (be is ic2_120.content.block.nuclear.NuclearReactorBlockEntity) {
                     be.lockedSlots.clear()
                     be.lockedSlots.putAll(packet.lockedSlots)
-=======
-    private val REACTOR_HEAT_INFO_PACKET = Identifier.of(Ic2_120.MOD_ID, "reactor_heat_info")
-    private val WIND_ROTOR_STATE_PACKET = WindRotorStatePacket.ID
-    private val WATER_ROTOR_STATE_PACKET = WaterRotorStatePacket.ID
-
-    private val SCANNER_RESULT_PACKET = ScannerResultPacket.ID
-    private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
-    private val CONFIG_SYNC_PACKET = ConfigSyncPacket.ID
-    fun register() {
-        ClientPlayNetworking.registerGlobalReceiver(ReactorHeatInfoPacket.ID) { payload, _ ->
-            val blockEntity = MinecraftClient.getInstance().world?.getBlockEntity(payload.pos)
-            if (blockEntity is NuclearReactorBlockEntity) {
-                blockEntity.slotHeatInfo.clear()
-                blockEntity.slotHeatInfo.putAll(payload.slotHeatInfo)
-            }
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(ReactorLayoutLockPacket.ID) { payload, _ ->
-            val client = MinecraftClient.getInstance()
-            client.execute {
-                val be = client.world?.getBlockEntity(payload.pos)
-                if (be is ic2_120.content.block.nuclear.NuclearReactorBlockEntity) {
-                    be.lockedSlots.clear()
-                    be.lockedSlots.putAll(payload.lockedSlots)
->>>>>>> backup/1.21.1
                 }
             }
         }
 
-<<<<<<< HEAD
         // 注册风力发电机转子状态接收处理器
         ClientPlayNetworking.registerGlobalReceiver(WIND_ROTOR_STATE_PACKET) { client, handler, buf, responseSender ->
             val packet = WindRotorStatePacket.read(buf)
@@ -174,52 +127,6 @@ object NetworkManager {
                 if (be is ic2_120.content.block.machines.SemifluidGeneratorBlockEntity) {
                     be.clientFuelColorArgb = packet.fuelColorArgb
                 }
-=======
-        ClientPlayNetworking.registerGlobalReceiver(BandwidthHudPacket.ID) { payload, _ ->
-            BandwidthHudState.update(payload.serverBytesPerSecond, payload.players)
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(WindRotorStatePacket.ID) { payload, _ ->
-            val blockEntity = MinecraftClient.getInstance().world?.getBlockEntity(payload.pos)
-            if (blockEntity is WindKineticGeneratorBlockEntity) {
-                blockEntity.receiveRotorState(payload.isStuck, payload.stuckAngle)
-            }
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(WaterRotorStatePacket.ID) { payload, _ ->
-            val blockEntity = MinecraftClient.getInstance().world?.getBlockEntity(payload.pos)
-            if (blockEntity is WaterKineticGeneratorBlockEntity) {
-                blockEntity.receiveRotorState(payload.isStuck, payload.stuckAngle)
-            }
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(ScannerResultPacket.ID) { payload, _ ->
-            ScannerScreen.receiveResults(payload)
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(TeleporterVisualStatePacket.ID) { payload, _ ->
-            val be = MinecraftClient.getInstance().world?.getBlockEntity(payload.pos)
-            if (be is TeleporterBlockEntity) {
-                be.applyClientVisualState(
-                    charging = payload.charging,
-                    progress = payload.chargeProgress,
-                    max = payload.chargeMax,
-                    range = payload.teleportRange,
-                    entityId = payload.chargingEntityId
-                )
-            }
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPacket.ID) { payload, _ ->
-            ConfigSyncReceiver.accept(payload)
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(SemifluidGeneratorFuelStatePacket.ID) { payload, _ ->
-            val client = MinecraftClient.getInstance()
-            val be = client.world?.getBlockEntity(payload.pos)
-            if (be is ic2_120.content.block.machines.SemifluidGeneratorBlockEntity) {
-                be.clientFuelColorArgb = payload.fuelColorArgb
->>>>>>> backup/1.21.1
             }
         }
     }

@@ -10,20 +10,17 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.text.Text
 import net.minecraft.world.World
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 @ModBlockEntity(
     name = "pipe",
@@ -40,7 +37,7 @@ import io.netty.buffer.Unpooled
         CarbonPumpAttachmentBlock::class
     ]
 )
-class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory<PacketByteBuf> {
+class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory {
     var network: PipeNetwork? = null
     var pipeLoad: Long = 0L
     var currentFluidId: String? = null
@@ -84,46 +81,30 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
         disabledMask = nbt.getInt("DisabledMask")
         pipeLoad = nbt.getLong("PipeLoad")
         currentFluidId = nbt.getString("CurrentFluid").takeIf { it.isNotBlank() }
-<<<<<<< HEAD
-=======
-        if (nbt.contains("PumpFilterSlot")) {
-            pumpFilterGhostStack = ItemStack.fromNbt(lookup, nbt.getCompound("PumpFilterSlot")).orElse(ItemStack.EMPTY)
-        } else {
-            pumpFilterGhostStack = ItemStack.EMPTY
-        }
->>>>>>> backup/1.21.1
         pumpFilterFluidId = nbt.getString("PumpFilterFluid").takeIf { it.isNotBlank() }
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
         nbt.putInt("DisabledMask", disabledMask)
         nbt.putLong("PipeLoad", pipeLoad)
         currentFluidId?.let { nbt.putString("CurrentFluid", it) }
-<<<<<<< HEAD
-=======
-        if (!pumpFilterGhostStack.isEmpty) {
-            nbt.put("PumpFilterSlot", pumpFilterGhostStack.encode(lookup))
-        }
->>>>>>> backup/1.21.1
         if (!pumpFilterFluidId.isNullOrBlank()) {
             nbt.putString("PumpFilterFluid", pumpFilterFluidId)
         }
     }
 
-    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
+    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.pump_attachment")

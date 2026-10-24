@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/small_gold_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "flat_feff8c": "ic2_120:item/item3d/flat_feff8c",
     "flat_fdff47": "ic2_120:item/item3d/flat_fdff47",
     "flat_feff73": "ic2_120:item/item3d/flat_feff73"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/small_gold"
->>>>>>> backup/1.21.1
   }
 }

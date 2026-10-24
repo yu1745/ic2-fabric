@@ -5,20 +5,14 @@ import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.EnergyStorageSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.energy.charge.BatteryChargerComponent
-<<<<<<< HEAD
 import ic2_120.content.energy.EnergyTier
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.item.EnergiumDust
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.chargePlayerInventoryPerItemLimit
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
-=======
->>>>>>> backup/1.21.1
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -41,7 +35,6 @@ import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -56,7 +49,6 @@ abstract class EnergyStorageBlockEntity(
     pos: BlockPos,
     state: BlockState,
     val config: EnergyStorageConfig
-<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory, ITieredMachine {
 
     override val tier: Int get() = config.tier
@@ -65,36 +57,6 @@ abstract class EnergyStorageBlockEntity(
         const val CHARGE_SLOT = 0
         const val DISCHARGE_SLOT = 1
     }
-=======
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf>, ITieredMachine {
-
-    override val tier: Int get() = config.tier
-
-    private val fuelSlotIndex: Int = config.slotCount - 1
-
-    private val inventory = DefaultedList.ofSize(config.slotCount, ItemStack.EMPTY)
-    @RegisterItemStorage
-    val itemStorage = RoutedItemStorage(
-        inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
-        insertRoutes = buildList {
-            add(
-                ItemInsertRoute(intArrayOf(0), matcher = { stack ->
-                    val item = stack.item
-                    (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
-                }, maxPerSlot = 1)
-            )
-            add(
-                ItemInsertRoute(intArrayOf(fuelSlotIndex), matcher = { stack ->
-                    stack.isOf(Items.REDSTONE) || stack.item is EnergiumDust
-                }, maxPerSlot = 64)
-            )
-        },
-        extractSlots = IntArray(config.slotCount) { it },
-        markDirty = { markDirty() }
-    )
->>>>>>> backup/1.21.1
 
     private val inventory = DefaultedList.ofSize(config.slotCount, ItemStack.EMPTY)
     @RegisterItemStorage
@@ -153,7 +115,6 @@ abstract class EnergyStorageBlockEntity(
         canChargeNow = { true }
     )
 
-<<<<<<< HEAD
     private val dischargeComponent = BatteryChargerComponent(
         inventory = this,
         batterySlot = DISCHARGE_SLOT,
@@ -163,23 +124,6 @@ abstract class EnergyStorageBlockEntity(
         insertEnergy = { requested -> sync.insertEnergy(requested) },
         canChargeNow = { true }
     )
-=======
-    init {
-        for (slot in 0 until config.slotCount) {
-            if (slot == fuelSlotIndex) continue
-            chargerComponents.add(
-                BatteryChargerComponent(
-                    inventory = this,
-                    batterySlot = slot,
-                    machineTierProvider = { tier },
-                    machineEnergyProvider = { sync.amount },
-                    extractEnergy = { requested -> sync.extractEnergy(requested) },
-                    canChargeNow = { true }
-                )
-            )
-        }
-    }
->>>>>>> backup/1.21.1
 
     override fun size(): Int = config.slotCount
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
@@ -196,32 +140,21 @@ abstract class EnergyStorageBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-<<<<<<< HEAD
         if (slot == DISCHARGE_SLOT) {
             return when (val item = stack.item) {
                 is IBatteryItem -> item.tier <= config.tier
                 else -> stack.isOf(Items.REDSTONE) || item is EnergiumDust
             }
-=======
-        if (slot == fuelSlotIndex) {
-            return stack.isOf(Items.REDSTONE) || stack.item is EnergiumDust
->>>>>>> backup/1.21.1
         }
         val item = stack.item
         return (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
     }
 
-<<<<<<< HEAD
     override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
-=======
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(io.netty.buffer.Unpooled.buffer())
->>>>>>> backup/1.21.1
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         buf.writeVarInt(config.slotCount)
         buf.writeBoolean(config.useEquipmentSlots)
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable(containerTranslationKey)
@@ -230,7 +163,7 @@ abstract class EnergyStorageBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
         val blockId = Registries.BLOCK.getId(world!!.getBlockState(pos).block)
-        val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier.of(blockId.namespace, blockId.path))
+        val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier(blockId.namespace, blockId.path))
             ?: error("ScreenHandler type not found for $blockId")
         @Suppress("UNCHECKED_CAST")
         return ic2_120.content.screen.EnergyStorageScreenHandler(
@@ -239,18 +172,18 @@ abstract class EnergyStorageBlockEntity(
         )
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyStorageSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyStorageSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -342,24 +275,6 @@ abstract class EnergyStorageBlockEntity(
         }
 
         if (config.capacity - sync.amount < energyPerItem) return
-        fuelStack.decrement(1)
-        sync.amount += energyPerItem
-        markDirty()
-    }
-
-    private fun consumeFuel() {
-        val fuelStack = inventory[fuelSlotIndex]
-        if (fuelStack.isEmpty) return
-
-        val energyPerItem = when {
-            fuelStack.isOf(Items.REDSTONE) -> 800L
-            fuelStack.item is EnergiumDust -> 16000L
-            else -> return
-        }
-
-        val remainingCapacity = config.capacity - sync.amount
-        if (remainingCapacity < energyPerItem) return
-
         fuelStack.decrement(1)
         sync.amount += energyPerItem
         markDirty()

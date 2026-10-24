@@ -8,7 +8,6 @@ import ic2_120.content.block.CropStickBlock
 import ic2_120.content.block.CropStickBlockEntity
 import ic2_120.content.block.UvLampBlock
 import ic2_120.content.block.machines.UvLampBlockEntity
-<<<<<<< HEAD
 import ic2_120.content.block.machines.ElectricHeatGeneratorBlockEntity
 import ic2_120.content.block.RubberSaplingBlock
 import ic2_120.content.worldgen.RubberSaplingGrowth
@@ -16,16 +15,11 @@ import ic2_120.content.block.RubberLogBlock
 import ic2_120.content.block.RubberLogBlockEntity
 import ic2_120.content.block.RubberFaceState
 import ic2_120.content.block.Ic2ScaffoldBlock
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.block.AnimalmatronBlock
 import ic2_120.content.block.machines.AnimalmatronBlockEntity
 import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
-<<<<<<< HEAD
 import ic2_120.content.block.ElectricHeatGeneratorBlock
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.WaterKineticGeneratorBlock
@@ -100,11 +94,8 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(KineticJadeProvider, LeashKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, KineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(TeleporterJadeProvider, TeleporterBlockEntity::class.java)
-<<<<<<< HEAD
         registration.registerBlockDataProvider(ElectricHeatGeneratorJadeProvider, ElectricHeatGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(RubberLogJadeProvider, RubberLogBlockEntity::class.java)
-=======
->>>>>>> backup/1.21.1
         registration.registerEntityDataProvider(AnimalJadeProvider, PassiveEntity::class.java)
         registration.registerBlockDataProvider(MachineClaimJadeProvider, BlockEntity::class.java)
     }
@@ -121,14 +112,11 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(KineticJadeProvider, ManualKineticGeneratorBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, KineticGeneratorBlock::class.java)
         registration.registerBlockComponent(TeleporterJadeProvider, TeleporterBlock::class.java)
-<<<<<<< HEAD
         registration.registerBlockComponent(ElectricHeatGeneratorJadeProvider, ElectricHeatGeneratorBlock::class.java)
         registration.registerBlockComponent(RubberSaplingJadeProvider, RubberSaplingBlock::class.java)
         registration.registerBlockComponent(RubberLogJadeProvider, RubberLogBlock::class.java)
         registration.registerBlockComponent(ScaffoldJadeProvider, Ic2ScaffoldBlock::class.java)
         registration.registerBlockComponent(MachineClaimJadeProvider, Block::class.java)
-=======
->>>>>>> backup/1.21.1
         registration.registerEntityComponent(AnimalJadeProvider, PassiveEntity::class.java)
     }
 }
@@ -163,7 +151,7 @@ object ScaffoldJadeProvider : IBlockComponentProvider {
  */
 object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val PIPE_FLOW = Identifier.of("ic2_120", "pipe_flow")
+    private val PIPE_FLOW = Identifier("ic2_120", "pipe_flow")
 
     /**
      * Per-block-position sliding window filter to smooth flow rate display.
@@ -278,7 +266,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
  */
 object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val CABLE_LOAD = Identifier.of("ic2_120", "cable_load")
+    private val CABLE_LOAD = Identifier("ic2_120", "cable_load")
 
     private val filterCache = object : LinkedHashMap<Long, FilteredLong>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, FilteredLong>?): Boolean =
@@ -340,7 +328,7 @@ object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcc
 }
 
 object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val CROP_GROWTH = Identifier.of("ic2_120", "crop_growth")
+    private val CROP_GROWTH = Identifier("ic2_120", "crop_growth")
 
     override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
         val world = accessor.level
@@ -349,12 +337,14 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         if (blockEntity is CropStickBlockEntity) {
             val (nutrients, water, weedEx) = blockEntity.storageSnapshot()
             data.putBoolean("isStick", true)
-            val crossingBase = if (accessor.blockState.block is CropStickBlock) {
-                accessor.blockState.get(CropStickBlock.CROSSING_BASE)
-            } else {
-                false
-            }
-            data.putBoolean("crossingBase", crossingBase)
+            data.putBoolean(
+                "crossingBase",
+                if (accessor.blockState.contains(CropStickBlock.CROSSING_BASE)) {
+                    accessor.blockState.get(CropStickBlock.CROSSING_BASE)
+                } else {
+                    false
+                }
+            )
             data.putInt("nutrients", nutrients)
             data.putInt("water", water)
             data.putInt("weedEx", weedEx)
@@ -523,7 +513,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
 }
 
 object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val KINETIC_INFO = Identifier.of("ic2_120", "kinetic_info")
+    private val KINETIC_INFO = Identifier("ic2_120", "kinetic_info")
 
     override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
         val world = accessor.level
@@ -674,7 +664,7 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
  */
 object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<EntityAccessor> {
 
-    private val ANIMAL_MONITOR = Identifier.of("ic2_120", "animal_monitor")
+    private val ANIMAL_MONITOR = Identifier("ic2_120", "animal_monitor")
 
     override fun appendServerData(data: NbtCompound, accessor: EntityAccessor) {
         val entity = accessor.entity
@@ -696,7 +686,6 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
         var totalFed = 0
         var todayFed = 0
 
-<<<<<<< HEAD
         if (AnimalmatronBlock.isManaged(entity)) {
             val searchBox = entity.boundingBox.expand(AnimalmatronBlock.RANGE_RADIUS)
             val minPos = net.minecraft.util.math.BlockPos(
@@ -719,33 +708,6 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
                     if (progress != null) {
                         totalFed = progress.first
                         todayFed = progress.second
-=======
-        val minX = box.minX.toInt()
-        val minY = box.minY.toInt()
-        val minZ = box.minZ.toInt()
-        val maxX = box.maxX.toInt()
-        val maxY = box.maxY.toInt()
-        val maxZ = box.maxZ.toInt()
-
-        for (x in minX..maxX) {
-            for (y in minY..maxY) {
-                for (z in minZ..maxZ) {
-                    val checkPos = net.minecraft.util.math.BlockPos(x, y, z)
-                    val be = world.getBlockEntity(checkPos)
-                    if (be is AnimalmatronBlockEntity) {
-                        foundMachine = be
-                        hasWater = be.sync.waterAmount > 0
-                        hasWeedEx = be.sync.weedExAmount > 0
-                        // 获取喂食进度
-                        val progress = be.getAnimalFeedProgress(entity.uuid)
-                        if (progress != null) {
-                            totalFed = progress.first
-                            todayFed = progress.second
-                        }
-                        // 获取繁殖状态
-                        data.putBoolean("canBreed", be.isAnimalCanBreed(entity.uuid))
-                        break
->>>>>>> backup/1.21.1
                     }
                     // 获取繁殖状态
                     data.putBoolean("canBreed", be.isAnimalCanBreed(entity.uuid))
@@ -783,21 +745,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
             tooltip.add(Text.translatable("ic2_120.jade.animal_thirsty").formatted(Formatting.RED))
         }
 
-<<<<<<< HEAD
         // 注：除草剂已停用（不消耗、无作用），不再展示“杀虫剂/生病”状态，避免误导。
-=======
-        // 显示杀虫剂状态 / 生病
-        tooltip.add(
-            if (hasWeedEx) {
-                Text.translatable("ic2_120.jade.animal_weedex_ok").formatted(Formatting.GREEN)
-            } else {
-                Text.translatable("ic2_120.jade.animal_weedex_low").formatted(Formatting.RED)
-            }
-        )
-        if (!hasWeedEx) {
-            tooltip.add(Text.translatable("ic2_120.jade.animal_sick").formatted(Formatting.RED))
-        }
->>>>>>> backup/1.21.1
 
         // 显示喂食进度 / 繁殖资格（P3 后语义：foodConsumed 达 10 仅表示"长大了"，
         // 繁殖资格由 breedUnlocked 表达，JADE 分三档显示消除歧义）

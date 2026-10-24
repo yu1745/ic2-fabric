@@ -46,11 +46,7 @@ class IronFurnaceScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -128,11 +124,7 @@ class IronFurnaceScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiironfurnace.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiironfurnace.png")
->>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
 
         // 燃烧值纹理 (180,5)-(193,18) = 13×13

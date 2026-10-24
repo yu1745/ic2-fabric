@@ -12,11 +12,7 @@ item_ids:
 
 <BlockImage id="ic2_120:water_kinetic_generator" p:facing="north" p:active="true" scale="4" />
 
-<<<<<<< HEAD
 The Water Kinetic Generator is a rotor-driven KU source. Install a <ItemLink id="ic2_120:wooden_rotor" />, <ItemLink id="ic2_120:bronze_rotor" />, <ItemLink id="ic2_120:iron_rotor" />, <ItemLink id="ic2_120:steel_rotor" />, or <ItemLink id="ic2_120:carbon_rotor" /> in its single rotor slot, then build the water around the rotor plane one block in front of the machine.
-=======
-The Water Kinetic Generator is a rotor-driven KU source. Install a <ItemLink id="ic2_120:wooden_rotor" />, <ItemLink id="ic2_120:iron_rotor" />, <ItemLink id="ic2_120:steel_rotor" />, or <ItemLink id="ic2_120:carbon_rotor" /> in its single rotor slot, then build the water around the rotor plane one block in front of the machine.
->>>>>>> backup/1.21.1
 
 The rotor is on the front face. KU is available only from the back face, so place shafts or a <ItemLink id="ic2_120:kinetic_generator" /> behind the machine. The Kinetic Generator must face the incoming kinetic line and converts delivered KU at 4 KU = 1 EU.
 
@@ -32,7 +28,6 @@ The required water area grows with rotor radius. Larger rotors make more KU, but
 
 ## KU Output
 
-<<<<<<< HEAD
 **KU/t = floor(128 x rotorMultiplier x waterBonus)**
 
 | Rotor | Radius | Multiplier | Still Water | Flowing Bonus |
@@ -42,16 +37,6 @@ The required water area grows with rotor radius. Larger rotors make more KU, but
 | Iron | 1.5 | 2x | 256 KU/t | 384 KU/t |
 | Steel | 2.0 | 3x | 384 KU/t | 576 KU/t |
 | Carbon | 2.5 | 4x | 512 KU/t | 768 KU/t |
-=======
-**KU/t = floor(64 x rotorMultiplier x waterBonus)**
-
-| Rotor | Radius | Multiplier | Still Water | Flowing Bonus |
-|-------|--------|------------|-------------|---------------|
-| Wooden | 1.0 | 1x | 64 KU/t | 96 KU/t |
-| Iron | 1.5 | 2x | 128 KU/t | 192 KU/t |
-| Steel | 2.0 | 3x | 192 KU/t | 288 KU/t |
-| Carbon | 2.5 | 4x | 256 KU/t | 384 KU/t |
->>>>>>> backup/1.21.1
 
 The screen shows both generated KU and output KU. Generated KU is what the water and rotor can produce this tick. Output KU is what was actually extracted by an adjacent Kinetic Generator or by the kinetic transmission network. If generated KU is positive but output KU is 0, the machine is spinning but nothing is pulling from its back face.
 
@@ -71,11 +56,7 @@ Use at least iron shafts for iron rotors and above if you want the full output t
 
 ## Rotor Wear
 
-<<<<<<< HEAD
 Rotors lose durability only while the machine is actively generating KU. Water generation applies a base wear rate of 1 durability per tick; flowing water raises that by another 1.5x. When the rotor reaches its limit, it breaks and the slot becomes empty.
-=======
-Rotors lose durability only while the machine is actively generating KU. Water generation applies a base wear rate of 2 durability per tick; flowing water raises that by another 1.5x. When the rotor reaches its limit, it breaks and the slot becomes empty.
->>>>>>> backup/1.21.1
 
 The GUI lifetime readout is shown in hours under still-water conditions. Flowing water consumes the same rotor faster, so the real lifetime is about two-thirds of the displayed still-water estimate while the flow bonus is active.
 
@@ -96,10 +77,7 @@ Right-click the block with a valid rotor to install one quickly. Right-click wit
 ## Related
 
 - <ItemLink id="ic2_120:wooden_rotor" />
-<<<<<<< HEAD
 - <ItemLink id="ic2_120:bronze_rotor" />
-=======
->>>>>>> backup/1.21.1
 - <ItemLink id="ic2_120:iron_rotor" />
 - <ItemLink id="ic2_120:steel_rotor" />
 - <ItemLink id="ic2_120:carbon_rotor" />

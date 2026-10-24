@@ -15,7 +15,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -29,6 +29,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 /**
  * 水力发电机方块。
@@ -47,11 +48,7 @@ class WaterGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, WaterGeneratorBlockEntity::class.type()) { w, p, s, be ->
-=======
-        else validateTicker(type, WaterGeneratorBlockEntity::class.type()){ w, p, s, be ->
->>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -68,7 +65,6 @@ class WaterGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -78,13 +74,10 @@ class WaterGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
-            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, net.minecraft.util.Hand.MAIN_HAND)) {
+            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
                 return ActionResult.SUCCESS
             }
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
@@ -98,7 +91,7 @@ class WaterGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val generator = GeneratorBlock::class.item()
             if (generator != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WaterGeneratorBlock::class.item(), 2)

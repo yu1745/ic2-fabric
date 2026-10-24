@@ -258,10 +258,7 @@ This page is generated from the core module's language files, used to confirm th
 | `bronze_leggings` | Bronze Leggings |
 | `bronze_pickaxe` | Bronze Pickaxe |
 | `bronze_plate` | Bronze Plate |
-<<<<<<< HEAD
 | `bronze_rotor` | Rotor (Bronze) |
-=======
->>>>>>> backup/1.21.1
 | `bronze_rotor_blade` | Bronze Rotor Blade |
 | `bronze_shaft` | Shaft (Bronze) |
 | `bronze_shovel` | Bronze Shovel |
@@ -369,10 +366,7 @@ This page is generated from the core module's language files, used to confirm th
 | `flatification_tfbp` | Terrain Forcing Pattern - Flat |
 | `flour` | Flour |
 | `foam_sprayer` | Construction Foam Sprayer |
-<<<<<<< HEAD
 | `painter` | Brush |
-=======
->>>>>>> backup/1.21.1
 | `forge_hammer` | Forge Hammer |
 | `frequency_transmitter` | Frequency Transmitter |
 | `fuel_rod` | Empty Fuel Rod |

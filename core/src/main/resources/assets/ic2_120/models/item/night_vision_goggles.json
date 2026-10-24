@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/night_vision_goggles.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "glow_009b07": "ic2_120:item/item3d/glow_009b07",
     "glow_7fe08a": "ic2_120:item/item3d/glow_7fe08a",
     "flat_4a4a4a": "ic2_120:item/item3d/flat_4a4a4a"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/armor/nightvision_goggles"
->>>>>>> backup/1.21.1
   }
 }

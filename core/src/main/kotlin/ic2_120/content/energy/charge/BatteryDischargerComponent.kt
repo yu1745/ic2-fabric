@@ -1,24 +1,17 @@
 package ic2_120.content.energy.charge
 
 import ic2_120.content.item.energy.IBatteryItem
-<<<<<<< HEAD
 import ic2_120.content.item.EnergiumDust
 import net.minecraft.item.Items
-=======
->>>>>>> backup/1.21.1
 import net.minecraft.inventory.Inventory
 
 /**
  * 通用电池放电组件。
  *
-<<<<<<< HEAD
  * 通过组合方式复用"电池给机器供能"逻辑，避免各类机器重复实现。
  * 同时支持红石和能量粉一次性转化：放电槽中放入对应物品时，每 tick 消耗 1 个，
  * 分别转化为 800 EU 和 16,000 EU。
  * 红石转化不受 canDischargeNow / maxDemand 限制，允许溢出机器容量上限。
-=======
- * 通过组合方式复用“电池给机器供能”逻辑，避免各类机器重复实现。
->>>>>>> backup/1.21.1
  */
 class BatteryDischargerComponent(
     private val inventory: Inventory,
@@ -26,7 +19,6 @@ class BatteryDischargerComponent(
     private val machineTierProvider: () -> Int,
     private val canDischargeNow: () -> Boolean = { true }
 ) {
-<<<<<<< HEAD
     companion object {
         const val REDSTONE_EU_PER_ITEM = 800L
         const val ENERGIUM_DUST_EU_PER_ITEM = 16_000L
@@ -52,18 +44,11 @@ class BatteryDischargerComponent(
             return ENERGIUM_DUST_EU_PER_ITEM
         }
 
-=======
-    /**
-     * 执行一次放电流程，返回本次实际放电量（EU）。
-     */
-    fun tick(maxDemand: Long): Long {
->>>>>>> backup/1.21.1
         if (!canDischargeNow()) return 0L
 
         val demand = maxDemand.coerceAtLeast(0L)
         if (demand <= 0L) return 0L
 
-<<<<<<< HEAD
         val battery = stack.item as? IBatteryItem ?: return 0L
 
         // 低级电池不能给高级机器供电。
@@ -79,24 +64,6 @@ class BatteryDischargerComponent(
         if (discharged <= 0L) return 0L
 
         inventory.setStack(batterySlot, stack)
-=======
-        val batteryStack = inventory.getStack(batterySlot)
-        val battery = batteryStack.item as? IBatteryItem ?: return 0L
-
-        // 低级电池不能给高级机器供电。
-        if (battery.tier < machineTierProvider()) return 0L
-        if (battery.isEmpty(batteryStack)) return 0L
-
-        val transferLimit = battery.nominalEuPerTick()
-        val available = battery.getCurrentCharge(batteryStack).coerceAtLeast(0L)
-        val requested = minOf(demand, transferLimit, available)
-        if (requested <= 0L) return 0L
-
-        val discharged = battery.discharge(batteryStack, requested).coerceIn(0L, requested)
-        if (discharged <= 0L) return 0L
-
-        inventory.setStack(batterySlot, batteryStack)
->>>>>>> backup/1.21.1
         return discharged
     }
 }

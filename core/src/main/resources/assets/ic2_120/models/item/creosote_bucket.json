@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/creosote_bucket.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,10 +11,5 @@
     "flat_5e4800": "ic2_120:item/item3d/flat_5e4800",
     "flat_846b00": "ic2_120:item/item3d/flat_846b00",
     "flat_353535": "ic2_120:item/item3d/flat_353535"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/bucket/creosote"
->>>>>>> backup/1.21.1
   }
 }

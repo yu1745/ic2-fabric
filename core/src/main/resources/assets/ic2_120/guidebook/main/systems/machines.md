@@ -141,15 +141,9 @@ Extracts fluid from plants, e.g. pulling resin from rubber trees.
 ### Geothermal Generator
 
 - **Voltage tier**: Tier 1 (LV)
-<<<<<<< HEAD
 - **Energy buffer**: 10,000 EU
 - **Output**: 20 EU/t
 - **Fluid use**: 1 bucket of lava = 24,000 EU (1200 ticks / 60 seconds at 20 EU/t)
-=======
-- **Energy buffer**: 4,000 EU
-- **Output**: 10 EU/t
-- **Fluid use**: 1 bucket of lava = 20,000 EU (2000 EU/tick, consumed in 10 seconds)
->>>>>>> backup/1.21.1
 
 ### Solar Distiller
 
@@ -320,7 +314,6 @@ See [Power Generation and Storage](../guides/power_generation.md)
 | Machine | Upgrade Slots | Supported Upgrades |
 |------|---:|---|
 | Electric Furnace | 0 | none |
-<<<<<<< HEAD
 | Induction Furnace | 2 | Energy Storage, Transformer, Ejector, Pulling |
 | Macerator | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
 | Compressor | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
@@ -328,14 +321,5 @@ See [Power Generation and Storage](../guides/power_generation.md)
 | Metal Former | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
 | Thermal Centrifuge | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
 | Ore Washing Plant | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
-=======
-| Induction Furnace | 0 | none |
-| Macerator | 4 | Overclock, Energy Storage, Transformer |
-| Compressor | 4 | Overclock, Energy Storage, Transformer |
-| Extractor | 4 | Overclock, Energy Storage, Transformer |
-| Metal Former | 4 | Overclock, Energy Storage, Transformer |
-| Thermal Centrifuge | 4 | Overclock, Energy Storage, Transformer |
-| Ore Washing Plant | 4 | Overclock, Energy Storage, Transformer |
->>>>>>> backup/1.21.1
 | Miner | 4 | Overclock, Energy Storage, Transformer, Ejector |
 | Pump | 4 | Overclock, Energy Storage, Transformer, Fluid Ejector/Inserter |

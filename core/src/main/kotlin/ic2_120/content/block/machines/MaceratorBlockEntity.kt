@@ -39,26 +39,17 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
 import net.minecraft.item.Items
-=======
-import net.minecraft.recipe.input.SingleStackRecipeInput
->>>>>>> backup/1.21.1
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-<<<<<<< HEAD
 import ic2_120.content.upgrade.IValidInputItem
-=======
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 
 @ModBlockEntity(block = MaceratorBlock::class)
 @ModMachineRecipeBinding(MaceratorRecipeSerializer::class)
@@ -66,13 +57,8 @@ class MaceratorBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = MaceratorBlock.ACTIVE
 
@@ -176,11 +162,9 @@ class MaceratorBlockEntity(
         else -> false
     }
 
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.macerator")
@@ -188,9 +172,9 @@ class MaceratorBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         MaceratorScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MaceratorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -203,9 +187,9 @@ class MaceratorBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(MaceratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -245,7 +229,6 @@ class MaceratorBlockEntity(
             return
         }
 
-<<<<<<< HEAD
         val recipe = maceratorRecipeFor(input, world)
         if (recipe == null) {
             resetProgress()
@@ -254,36 +237,18 @@ class MaceratorBlockEntity(
         }
         val result = maceratorOutputFor(recipe)
         val inputCount = recipe.inputCount
-=======
-        val match = world.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), SingleStackRecipeInput(input.copyWithCount(1)), world)
-        if (match.isEmpty) {
-            if (sync.progress != 0) sync.progress = 0
-            sync.syncCurrentTickFlow()
-            return
-        }
-        val result = match.get().value.output.copy()
-        val inputCount = match.get().value.inputCount
->>>>>>> backup/1.21.1
         val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
             (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
 
         if (input.count < inputCount || !canAccept) {
-<<<<<<< HEAD
             resetProgress()
-=======
-            if (sync.progress != 0) sync.progress = 0
->>>>>>> backup/1.21.1
             sync.syncCurrentTickFlow()
             return
         }
 
-<<<<<<< HEAD
         if (progressF >= MaceratorSync.PROGRESS_MAX) {
-=======
-        if (sync.progress >= MaceratorSync.PROGRESS_MAX) {
->>>>>>> backup/1.21.1
             input.decrement(inputCount)
             if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
             else outputSlot.increment(result.count)
@@ -376,7 +341,6 @@ class MaceratorBlockEntity(
         if (stack.isEmpty || isBatteryItem(stack)) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val currentWorld = world ?: return true
-<<<<<<< HEAD
         // 仅用于识别物品类型时，必须提供足够大的虚拟堆叠；部分配方需要多个输入。
         val recipeInventory = SimpleInventory(stack.copyWithCount(stack.maxCount))
         val found = currentWorld.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, currentWorld).isPresent
@@ -384,9 +348,6 @@ class MaceratorBlockEntity(
         cachedInputItem = stack.item
         cachedIsInput = found
         return found
-=======
-        return currentWorld.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), SingleStackRecipeInput(stack.copyWithCount(1)), currentWorld).isPresent
->>>>>>> backup/1.21.1
     }
     /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
      *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */
@@ -397,7 +358,3 @@ class MaceratorBlockEntity(
     }
 
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> backup/1.21.1

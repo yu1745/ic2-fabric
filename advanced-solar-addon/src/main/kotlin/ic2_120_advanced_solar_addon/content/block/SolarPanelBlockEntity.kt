@@ -14,10 +14,6 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.content.syncs.SyncedData
-<<<<<<< HEAD
-=======
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -28,10 +24,6 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
-<<<<<<< HEAD
-=======
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
@@ -44,11 +36,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 
 enum class GenerationState {
-<<<<<<< HEAD
     NONE, NIGHT, DAY, RAIN
-=======
-    NONE, NIGHT, DAY
->>>>>>> backup/1.21.1
 }
 
 abstract class SolarPanelBlockEntity(
@@ -59,7 +47,6 @@ abstract class SolarPanelBlockEntity(
     val nightPower: Int,
     maxStorage: Long,
     override val tier: Int,
-<<<<<<< HEAD
     activeProperty: BooleanProperty,
     /** Rain 变体专用：RAIN 状态发电功率（默认 0，不影响既有面板）。 */
     val rainPower: Int = 0,
@@ -70,16 +57,11 @@ abstract class SolarPanelBlockEntity(
      */
     val maxOutput: Long = ic2_120.content.energy.EnergyTier.euPerTickFromTier(tier)
 ) : MachineBlockEntity(type, pos, state), IGenerator, ExtendedScreenHandlerFactory, Inventory {
-=======
-    activeProperty: BooleanProperty
-) : MachineBlockEntity(type, pos, state), IGenerator, ExtendedScreenHandlerFactory<PacketByteBuf>, Inventory {
->>>>>>> backup/1.21.1
 
     companion object {
         private const val CHARGE_SLOTS = 4
         private const val INVENTORY_NBT_KEY = "charge_inventory"
         /** 6:20 AM ≈ 333 ticks（0 = 6:00 AM，20 分钟 ≈ 333 ticks） */
-<<<<<<< HEAD
         protected const val DAY_START_TICK = 333
         /** 17:45 PM = 11750 ticks（11*1000 + 750） */
         protected const val DAY_END_TICK = 11750
@@ -87,25 +69,12 @@ abstract class SolarPanelBlockEntity(
 
     @Suppress("unused")
     val syncedData = SyncedData()
-=======
-        private const val DAY_START_TICK = 333
-        /** 17:45 PM = 11750 ticks（11*1000 + 750） */
-        private const val DAY_END_TICK = 11750
-    }
-
-    @Suppress("unused")
-    val syncedData = SyncedData(this)
->>>>>>> backup/1.21.1
 
     @RegisterEnergy
     val sync = SolarPanelSync(
         schema = syncedData,
         capacity = maxStorage,
-<<<<<<< HEAD
         maxOutputPerTick = maxOutput,
-=======
-        tier = tier,
->>>>>>> backup/1.21.1
         getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
@@ -117,11 +86,7 @@ abstract class SolarPanelBlockEntity(
     override val activeProperty: BooleanProperty = activeProperty
 
     var generationState: GenerationState = GenerationState.NONE
-<<<<<<< HEAD
         protected set
-=======
-        private set
->>>>>>> backup/1.21.1
     private var ticker: Int = 0
     private val tickRate: Int = 128
 
@@ -167,7 +132,6 @@ abstract class SolarPanelBlockEntity(
         )
     }
 
-<<<<<<< HEAD
     init {
         // These values are tier constants, not per-tick state.
         sync.dayPower = dayPower
@@ -178,8 +142,6 @@ abstract class SolarPanelBlockEntity(
         sync.capacitySync = maxStorage.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-=======
->>>>>>> backup/1.21.1
     override fun getInventory(): Inventory? = this
 
     open fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -195,7 +157,6 @@ abstract class SolarPanelBlockEntity(
         when (generationState) {
             GenerationState.DAY -> sync.generateEnergy(dayPower.toLong())
             GenerationState.NIGHT -> sync.generateEnergy(nightPower.toLong())
-<<<<<<< HEAD
             GenerationState.RAIN -> sync.generateEnergy(rainPower.toLong())
             GenerationState.NONE -> {}
         }
@@ -205,17 +166,6 @@ abstract class SolarPanelBlockEntity(
 
         val generationStateValue = generationState.ordinal
         if (sync.generationState != generationStateValue) sync.generationState = generationStateValue
-=======
-            GenerationState.NONE -> {}
-        }
-
-        sync.isGenerating = if (canGenerate) 1 else 0
-        sync.generationState = generationState.ordinal
-        sync.dayPower = dayPower
-        sync.nightPower = nightPower
-        sync.maxOutput = ic2_120.content.energy.EnergyTier.euPerTickFromTier(tier).toInt()
-        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
->>>>>>> backup/1.21.1
 
         sync.syncCurrentTickFlow()
 
@@ -224,16 +174,9 @@ abstract class SolarPanelBlockEntity(
         }
 
         setActiveState(world, pos, state, canGenerate)
-<<<<<<< HEAD
     }
 
     protected open fun checkSky() {
-=======
-        markDirty()
-    }
-
-    private fun checkSky() {
->>>>>>> backup/1.21.1
         val world = this.world ?: return
         val pos = this.pos
 
@@ -242,7 +185,6 @@ abstract class SolarPanelBlockEntity(
             return
         }
 
-<<<<<<< HEAD
         // 末地永远白天、无天气变化，直接按白天发电
         // 注意：末地的 timeOfDay 会流动，不能用时间判定白天/黑夜
         if (world.registryKey == World.END) {
@@ -251,8 +193,6 @@ abstract class SolarPanelBlockEntity(
             return
         }
 
-=======
->>>>>>> backup/1.21.1
         if (world.registryKey != World.OVERWORLD) {
             generationState = GenerationState.NONE
             return
@@ -277,11 +217,7 @@ abstract class SolarPanelBlockEntity(
      * 检查正上方是否有天空可见（无非透明方块遮挡）。
      * 参考 ic2-fabric 的 SolarGeneratorBlockEntity 实现。
      */
-<<<<<<< HEAD
     protected fun hasSkyAccess(world: World, basePos: BlockPos): Boolean {
-=======
-    private fun hasSkyAccess(world: World, basePos: BlockPos): Boolean {
->>>>>>> backup/1.21.1
         val topY = world.topY
         var y = basePos.y + 1
         while (y < topY) {
@@ -320,27 +256,17 @@ abstract class SolarPanelBlockEntity(
             itemStorage
         )
 
-<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
-=======
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
->>>>>>> backup/1.21.1
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         buf.writeVarInt(CHARGE_SLOTS)
         buf.writeVarInt(tier)
-<<<<<<< HEAD
-=======
-        return buf
->>>>>>> backup/1.21.1
     }
 
     protected open fun getBlockName(): String = "advanced_solar_panel"
 
     // ====== NBT ======
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(SolarPanelSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
@@ -355,21 +281,5 @@ abstract class SolarPanelBlockEntity(
         nbt.putInt("state", generationState.ordinal)
         syncedData.writeNbt(nbt)
         nbt.put(INVENTORY_NBT_KEY, Inventories.writeNbt(NbtCompound(), inventory))
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        sync.restoreEnergy(nbt.getLong(SolarPanelSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
-        generationState = GenerationState.values()[nbt.getInt("state").coerceIn(0, 2)]
-        syncedData.readNbt(nbt)
-        Inventories.readNbt(nbt.getCompound(INVENTORY_NBT_KEY), inventory, lookup)
-    }
-
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        nbt.putLong(SolarPanelSync.NBT_ENERGY, sync.amount)
-        nbt.putInt("state", generationState.ordinal)
-        syncedData.writeNbt(nbt)
-        nbt.put(INVENTORY_NBT_KEY, Inventories.writeNbt(NbtCompound(), inventory, lookup))
->>>>>>> backup/1.21.1
     }
 }

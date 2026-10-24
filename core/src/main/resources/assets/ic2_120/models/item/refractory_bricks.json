@@ -1,7 +1,3 @@
 {
-<<<<<<< HEAD
   "parent": "ic2_120:block/machine/steam/refractory_bricks"
-=======
-  "parent": "ic2:block/machine/steam/refractory_bricks"
->>>>>>> backup/1.21.1
 }

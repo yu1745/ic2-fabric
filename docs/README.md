@@ -4,65 +4,7 @@
 > 其 §1/§5/§6 含 guides / systems / ui / registry / pitfalls 的完整索引与硬性约束。
 > 本文件仅收录低频辅助资料，**不再重复维护主索引**。
 
-<<<<<<< HEAD
 ## 辅助资料
-=======
-## 快速入口
-
-- 新增一台机器：`docs/guides/machine-implementation-guide.md`
-- 新增一个物品：`docs/guides/item-implemented.md`
-- 注解注册系统：`docs/registry/CLASS_BASED_REGISTRY.md`
-- UI DSL 总览：`docs/ui/compose-ui.md`
-
-## 目录结构
-
-### guides（实施指南）
-
-- `docs/guides/machine-implementation-guide.md`
-- `docs/guides/machine-composition-reuse.md`
-- `docs/guides/item-implemented.md`
-- `docs/guides/recall-scroll.md`
-- `docs/guides/branch-cherry-pick-guide.md`（main → 1.21.1 迁移 cherry-pick 必读）
-
-### systems（子系统设计）
-
-- `docs/systems/energy-network.md`
-- `docs/systems/kinetic-transmission.md`
-- `docs/systems/energy-flow-sync.md`
-- `docs/systems/fluid-system.md`（管道传输）
-- `docs/systems/fluid-registration-and-cells.md`（流体注册、单元物品、颜色系统）
-- `docs/systems/heat-system.md`
-- `docs/systems/nuclear-power.md`
-- `docs/systems/upgrade-system.md`
-- `docs/systems/config-system.md`
-- `docs/systems/rubber-tree-worldgen.md`
-- `docs/systems/sync-system.md`
-- `docs/systems/sound-system.md`
-- `docs/systems/jei-integration.md`
-- `docs/systems/crop-hybrid-system.md`
-- `docs/systems/crop-growth-requirements.md`
-
-### ui（界面与槽位）
-
-- `docs/ui/gui-size-handlers.md`（GuiSize 与 ScreenHandler 坐标约定）
-- `docs/ui/compose-ui.md`
-- `docs/ui/slot-spec-system.md`
-- `docs/ui/drawcontext-methods.md`
-- `docs/ui/canner-ui-coordinates.md`
-- `docs/compose-ui/quick-start.md`
-- `docs/compose-ui/elements.md`
-- `docs/compose-ui/containers.md`
-- `docs/compose-ui/scrollview.md`
-- `docs/compose-ui/slot-anchor-pipeline.md`
-- `docs/compose-ui/architecture.md`
-
-### registry（注册与变体）
-
-- `docs/registry/CLASS_BASED_REGISTRY.md`
-- `docs/registry/block-variants.md`
-- `docs/registry/biome-colored-blocks.md`
-- `docs/registry/loot-table-system.md`
->>>>>>> backup/1.21.1
 
 ### inventory（资源清单）
 
@@ -72,14 +14,6 @@
 
 - `docs/fabric-api-usage-report.md` - Fabric API 使用统计
 
-<<<<<<< HEAD
-=======
-### pitfalls（踩坑记录）
-
-- `docs/pitfalls/common-pitfalls.md` — 代码层面踩坑（BlockWithEntity、SlotSpec 等）
-- `docs/pitfalls/lsp-pitfalls.md` — 工具链踩坑（Kotlin LSP 调用陷阱）
-
->>>>>>> backup/1.21.1
 ### archive（归档/TODO）
 
 - `docs/archive/unique-gift-item-anti-dup-todo.md`

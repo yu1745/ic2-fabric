@@ -20,10 +20,10 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.recipe.RecipeType
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.world.ServerWorld
@@ -32,9 +32,6 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 /**
  * 铁炉方块实体。
@@ -50,11 +47,7 @@ class IronFurnaceBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
-=======
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     private val activeProperty: net.minecraft.state.property.BooleanProperty = IronFurnaceBlock.ACTIVE
 
@@ -123,11 +116,9 @@ class IronFurnaceBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = canPlaceInSlot(slot, stack)
 
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text =
@@ -136,9 +127,9 @@ class IronFurnaceBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         IronFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.burnTime = nbt.getInt(IronFurnaceSync.NBT_BURN_TIME)
         sync.totalBurnTime = nbt.getInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME)
@@ -146,9 +137,9 @@ class IronFurnaceBlockEntity(
         storedExperience = nbt.getFloat(FurnaceExperienceHelper.NBT_EXPERIENCE)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt(IronFurnaceSync.NBT_BURN_TIME, sync.burnTime)
         nbt.putInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME, sync.totalBurnTime)
@@ -164,24 +155,12 @@ class IronFurnaceBlockEntity(
         val outputItem = getStack(SLOT_OUTPUT)
 
         // 检查是否有有效的烧制配方
-<<<<<<< HEAD
         val hasRecipe = !inputItem.isEmpty && smeltingRecipeFor(inputItem, world) != null
 
         // 检查输出槽是否可以接收物品
         val canAcceptOutput = if (hasRecipe) {
             val recipe = smeltingRecipeFor(inputItem, world) ?: return
             val result = recipe.getOutput(world.registryManager)
-=======
-        val hasRecipe = if (!inputItem.isEmpty) {
-            val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world)
-            !match.isEmpty
-        } else false
-
-        // 检查输出槽是否可以接收物品
-        val canAcceptOutput = if (hasRecipe) {
-            val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world).get().value
-            val result = recipe.getResult(world.registryManager)
->>>>>>> backup/1.21.1
             outputItem.isEmpty ||
                 (ItemStack.areItemsEqual(outputItem, result) &&
                  outputItem.count + result.count <= result.maxCount)
@@ -210,13 +189,8 @@ class IronFurnaceBlockEntity(
 
             // 烧制完成
             if (sync.cookTime >= IronFurnaceSync.COOK_TIME_MAX) {
-<<<<<<< HEAD
                 val recipe = smeltingRecipeFor(inputItem, world) ?: return
                 val result = recipe.getOutput(world.registryManager).copy()
-=======
-                val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world).get().value
-                val result = recipe.getResult(world.registryManager).copy()
->>>>>>> backup/1.21.1
 
                 inputItem.decrement(1)
                 if (outputItem.isEmpty) {
@@ -282,12 +256,7 @@ class IronFurnaceBlockEntity(
                 // 输入槽：检查是否有烧制配方
                 val world = this.world
                 if (world != null && !world.isClient) {
-<<<<<<< HEAD
                     smeltingRecipeFor(stack, world) != null
-=======
-                    val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack), world)
-                    match.isPresent
->>>>>>> backup/1.21.1
                 } else {
                     true  // 客户端或无世界时允许，由服务器端验证
                 }
@@ -328,16 +297,12 @@ class IronFurnaceBlockEntity(
         if (stack.isEmpty) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-<<<<<<< HEAD
         val inv = SimpleInventory(stack.copyWithCount(1))
         val found = w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found
         return found
-=======
-        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
->>>>>>> backup/1.21.1
     }
 
     fun collectXp(player: PlayerEntity) {

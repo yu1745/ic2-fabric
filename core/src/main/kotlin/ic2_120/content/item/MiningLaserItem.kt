@@ -79,7 +79,7 @@ class MiningLaserItem : Item(
             val crystal = EnergyCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             if (alloy == Items.AIR || crystal == Items.AIR || advCircuit == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, MiningLaserItem::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, MiningLaserItem::class.instance(), 1)
                 .pattern("REE")
                 .pattern("AAC")
                 .pattern(" AA")
@@ -197,7 +197,7 @@ class MiningLaserItem : Item(
             user.itemCooldownManager.set(this, 5)
         }
 
-        return TypedActionResult.success(stack, true)
+        return TypedActionResult.success(stack)
     }
 
     private fun spawnProjectile(

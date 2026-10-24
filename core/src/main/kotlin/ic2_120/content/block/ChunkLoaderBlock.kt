@@ -23,11 +23,12 @@ import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
-import net.minecraft.data.server.recipe.RecipeExporter
 
 /**
  * 区块加载器。消耗 EU 强制加载周围 1～25 个区块，运行时显示绿色。
@@ -46,18 +47,13 @@ class ChunkLoaderBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, ChunkLoaderBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
-=======
-        else validateTicker(type, ChunkLoaderBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
->>>>>>> backup/1.21.1
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Deprecated("Override without Hand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun onUse(
         state: BlockState,
@@ -67,9 +63,6 @@ class ChunkLoaderBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -98,7 +91,7 @@ class ChunkLoaderBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
             val tinPlate = ic2_120.content.item.TinPlate::class.instance()
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()

@@ -17,7 +17,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
@@ -32,6 +32,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 @ModBlock(name = "rt_heat_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -46,11 +47,7 @@ class RtHeatGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) 
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, RtHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
-=======
-        else validateTicker(type, RtHeatGeneratorBlockEntity::class.type()){ w, p, s, be ->
->>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -69,7 +66,6 @@ class RtHeatGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) 
         return be as? NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -79,9 +75,6 @@ class RtHeatGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) 
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -94,7 +87,7 @@ class RtHeatGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) 
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val ironCasing = IronCasing::class.instance()
             val reactorChamber = ReactorChamberBlock::class.item()
             val heatConductor = HeatConductor::class.instance()

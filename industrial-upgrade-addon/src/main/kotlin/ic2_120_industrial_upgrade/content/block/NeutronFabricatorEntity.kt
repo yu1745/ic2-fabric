@@ -136,8 +136,8 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     /** ic2 通用流体单元（万能单元，可装任意流体） */
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "fluid_cell")) }
+    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")) }
+    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell")) }
 
     /** 中子流体槽（内部产出写入，外部只能取出） */
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {

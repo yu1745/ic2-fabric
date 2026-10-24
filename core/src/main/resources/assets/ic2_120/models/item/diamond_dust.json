@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/diamond_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,5 @@
     "glow_d5fff6": "ic2_120:item/item3d/glow_d5fff6",
     "glow_ffffff": "ic2_120:item/item3d/glow_ffffff",
     "glow_4aedd9": "ic2_120:item/item3d/glow_4aedd9"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/diamond"
->>>>>>> backup/1.21.1
   }
 }

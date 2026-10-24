@@ -15,19 +15,10 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
-=======
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
->>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-<<<<<<< HEAD
-=======
-import ic2_120.registry.annotation.ScreenFactory
->>>>>>> backup/1.21.1
 
 @ModScreenHandler(block = ElectricHeatGeneratorBlock::class, inventorySize = ElectricHeatGeneratorBlockEntity.SLOT_COUNT)
 class ElectricHeatGeneratorScreenHandler(
@@ -93,11 +84,7 @@ class ElectricHeatGeneratorScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
-=======
-                index in PLAYER_INV_START..HOTBAR_END -> {
->>>>>>> backup/1.21.1
                     val storage = itemStorage
                     if (storage == null) return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
@@ -106,12 +93,9 @@ class ElectricHeatGeneratorScreenHandler(
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
-<<<<<<< HEAD
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-=======
->>>>>>> backup/1.21.1
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
@@ -134,20 +118,7 @@ class ElectricHeatGeneratorScreenHandler(
 
         const val SLOT_DISCHARGING_INDEX = ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING
         const val PLAYER_INV_START = ElectricHeatGeneratorBlockEntity.SLOT_COUNT
-<<<<<<< HEAD
         const val HOTBAR_END = PLAYER_INV_START + 36
 
-=======
-        const val HOTBAR_END = PLAYER_INV_START + 35
-
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ElectricHeatGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(ElectricHeatGeneratorBlockEntity.SLOT_COUNT)
-            return ElectricHeatGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
->>>>>>> backup/1.21.1
     }
 }

@@ -5,10 +5,7 @@ import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
-=======
->>>>>>> backup/1.21.1
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -26,7 +23,7 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.PropertyDelegate
@@ -36,9 +33,6 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 /**
  * 反应堆流体接口方块实体。
@@ -50,13 +44,8 @@ class ReactorFluidPortBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IFluidPipeUpgradeSupport,
     ExtendedScreenHandlerFactory {
-=======
-) : BlockEntity(type, pos, state), Inventory, IFluidPipeUpgradeSupport,
-    ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     // 次构造函数：仅接受 pos 和 state，自动获取 type
     constructor(pos: BlockPos, state: BlockState) : this(
@@ -116,11 +105,8 @@ class ReactorFluidPortBlockEntity(
         extractSlots = SLOT_UPGRADE_INDICES,
         markDirty = { markDirty() }
     )
-<<<<<<< HEAD
 
     override val routedItemStorage get() = itemStorage
-=======
->>>>>>> backup/1.21.1
 
     // Inventory 实现
     override fun size(): Int = INVENTORY_SIZE
@@ -159,11 +145,9 @@ class ReactorFluidPortBlockEntity(
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.reactor_fluid_port")
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(propertyDelegate.size())
-        return buf
     }
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler? {
@@ -177,14 +161,14 @@ class ReactorFluidPortBlockEntity(
         )
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {

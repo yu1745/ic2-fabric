@@ -15,7 +15,7 @@ import net.minecraft.util.Formatting
 object FoamSprayerTooltipHandler {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, _, type, lines ->
+        ItemTooltipCallback.EVENT.register { stack, _, lines ->
             if (stack.item !is FoamSprayerItem) return@register
             val amt = FoamSprayerItem.getFluidAmount(stack)
             val capBuckets = FoamSprayerItem.CAPACITY_DROPLETS / FluidConstants.BUCKET
@@ -29,15 +29,8 @@ object FoamSprayerTooltipHandler {
                 Text.translatable("tooltip.ic2_120.foam_sprayer.blocks_left", spraysLeft)
                     .formatted(Formatting.GRAY)
             )
-<<<<<<< HEAD
             val keyLine = Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click")
                 .formatted(Formatting.YELLOW)
-=======
-            val modeKey = ModeKeybinds.getFoamModeKey()
-            val keyName = modeKey.boundKeyLocalizedText.string
-            val keyLine = Text.literal("Alt + ").formatted(Formatting.YELLOW)
-                .append(Text.literal(keyName).formatted(Formatting.YELLOW))
->>>>>>> backup/1.21.1
             if (FoamSprayerItem.isMultiMode(stack)) {
                 lines.add(Text.translatable("tooltip.ic2_120.foam_sprayer.mode_multi", keyLine).formatted(Formatting.DARK_AQUA))
             } else {

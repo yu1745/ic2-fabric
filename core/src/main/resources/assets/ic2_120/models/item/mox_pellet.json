@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/mox_pellet.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,10 +8,5 @@
     "flat_68a72a": "ic2_120:item/item3d/flat_68a72a",
     "flat_8aaa6c": "ic2_120:item/item3d/flat_8aaa6c",
     "flat_a1bd88": "ic2_120:item/item3d/flat_a1bd88"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/nuclear/mox_pellet"
->>>>>>> backup/1.21.1
   }
 }

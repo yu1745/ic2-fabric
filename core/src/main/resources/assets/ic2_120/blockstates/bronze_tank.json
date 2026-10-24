@@ -1,9 +1,5 @@
 {
 	"variants": {
-<<<<<<< HEAD
 		"": { "model": "ic2_120:block/bronze_tank" }
-=======
-		"": { "model": "ic2:block/bronze_tank" }
->>>>>>> backup/1.21.1
 	}
 }

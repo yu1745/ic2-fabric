@@ -11,14 +11,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
-=======
-
-import net.minecraft.screen.ArrayPropertyDelegate
->>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 
@@ -73,22 +67,5 @@ class StirlingGeneratorScreenHandler(
         }, true)
 
     companion object {
-<<<<<<< HEAD
-=======
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): StirlingGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(StirlingGeneratorBlockEntity.INVENTORY_SIZE)
-            return StirlingGeneratorScreenHandler(
-                syncId,
-                playerInventory,
-                blockInv,
-                context,
-                ArrayPropertyDelegate(propertyCount)
-            )
-        }
->>>>>>> backup/1.21.1
     }
 }

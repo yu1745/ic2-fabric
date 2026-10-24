@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "multipart": [
     {
       "when": {
@@ -116,38 +115,3 @@
     }
   ]
 }
-=======
-  "variants": {
-    "facing=east,active=false": {
-      "model": "ic2:block/generator/kinetic/water_kinetic_generator",
-      "y": 90
-    },
-    "facing=east,active=true": {
-      "model": "ic2:block/generator/kinetic/water_kinetic_generator",
-      "y": 90
-    },
-    "facing=north,active=false": {
-      "model": "ic2:block/generator/kinetic/water_kinetic_generator"
-    },
-    "facing=north,active=true": {
-      "model": "ic2:block/generator/kinetic/water_kinetic_generator"
-    },
-    "facing=south,active=false": {
-      "model": "ic2:block/generator/kinetic/water_kinetic_generator",
-      "y": 180
-    },
-    "facing=south,active=true": {
-      "model": "ic2:block/generator/kinetic/water_kinetic_generator",
-      "y": 180
-    },
-    "facing=west,active=false": {
-      "model": "ic2:block/generator/kinetic/water_kinetic_generator",
-      "y": 270
-    },
-    "facing=west,active=true": {
-      "model": "ic2:block/generator/kinetic/water_kinetic_generator",
-      "y": 270
-    }
-  }
-}
->>>>>>> backup/1.21.1

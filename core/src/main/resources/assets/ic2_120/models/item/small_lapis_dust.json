@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/small_lapis_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "flat_5a82e2": "ic2_120:item/item3d/flat_5a82e2",
     "flat_345ec3": "ic2_120:item/item3d/flat_345ec3",
     "flat_052463": "ic2_120:item/item3d/flat_052463"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/small_lapis"
->>>>>>> backup/1.21.1
   }
 }

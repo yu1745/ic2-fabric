@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/electric_treetap.obj",
   "parent": "ic2_120:item/item3d/display_handheld",
@@ -12,10 +11,5 @@
     "flat_616161": "ic2_120:item/item3d/flat_616161",
     "flat_6a3600": "ic2_120:item/item3d/flat_6a3600",
     "flat_5c2e00": "ic2_120:item/item3d/flat_5c2e00"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/tool/electric/electric_treetap"
->>>>>>> backup/1.21.1
   }
 }

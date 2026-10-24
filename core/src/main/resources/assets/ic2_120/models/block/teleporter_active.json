@@ -1,7 +1,3 @@
 {
-<<<<<<< HEAD
   "parent": "ic2_120:block/machine/misc/teleporter_active"
-=======
-  "parent": "ic2:block/machine/misc/teleporter_active"
->>>>>>> backup/1.21.1
 }

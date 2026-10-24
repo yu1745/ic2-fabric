@@ -169,19 +169,11 @@ Note: 1×/2×/3× insulation on the same-tier Iron cable only affects **electroc
 - Empty off-hand + right-click → clear filter (accepts everything)
 
 **Direction setup**:
-<<<<<<< HEAD
 - Open the upgrade configuration screen and use six independent buttons to toggle down, up, north, south, west, and east.
 - With all six directions disabled, the upgrade operates in any direction.
 - Sneak + right-click remains a quick preset cycle.
 
 The Ejector Upgrade is supported by machines that expose item output slots, including standard processing machines, the Miner, the Animal-Matron, and the Crop-Matron. Each machine explicitly chooses its work output slots; upgrade slots are never treated as ejectable machine output.
-=======
-- Sneak + right-click → cycle direction
-
-**Eject direction cycle**: any → down → up → north → south → west → east → any...
-
-**Note**: In the current implementation, the Ejector Upgrade is only usable in the **Miner**. Other machines do not yet support this upgrade.
->>>>>>> backup/1.21.1
 
 ---
 
@@ -200,13 +192,9 @@ The Ejector Upgrade is supported by machines that expose item output slots, incl
 - Sneak + right-click → clear filter
 
 **Direction setup**:
-<<<<<<< HEAD
 - Open the upgrade configuration screen and toggle the six directions independently.
 - With all six directions disabled, the upgrade operates in any direction.
 - Sneak + right-click remains a quick preset cycle.
-=======
-- Sneak + right-click → cycle direction
->>>>>>> backup/1.21.1
 
 ---
 
@@ -224,7 +212,6 @@ The Ejector Upgrade is supported by machines that expose item output slots, incl
 
 ---
 
-<<<<<<< HEAD
 ### Pulling Upgrade
 
 <ItemImage id="ic2_120:pulling_upgrade" scale="2" />
@@ -236,18 +223,6 @@ The Ejector Upgrade is supported by machines that expose item output slots, incl
 - The upgrade is supported by standard item-processing machines, the Induction Furnace, the Animal-Matron, and the Crop-Matron.
 
 Use the same filter and direction configuration screen as the Ejector Upgrade.
-=======
-## Not Yet Implemented
-
-The following upgrade items exist, but their behavior is not fully implemented:
-
-<ItemImage id="ic2_120:pulling_upgrade" scale="2" />
-
-- **Pulling Upgrade** — item pulling (installable but has no effect)
-- **Advanced Pulling Upgrade** — high-speed item pulling (installable but has no effect)
-
-These upgrades can be placed in the upgrade slot but currently do nothing.
->>>>>>> backup/1.21.1
 
 ---
 

@@ -23,7 +23,7 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -139,7 +139,7 @@ object CableRecipes {
      * 生成 11 档导线的级联合成表。由 [ic2_120_industrial_upgrade.content.recipes.ModRecipeProvider]
      * 显式调用（导线不走 @ModBlock，其 companion 不参与 ClassScanner 的 @RecipeProvider 扫描）。
      */
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         // 1 光谱：core 玻璃纤维 + 混合金属锭 + 橡胶
         ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SpectralCableBlock::class.item(), 1)
             .pattern(" A ")

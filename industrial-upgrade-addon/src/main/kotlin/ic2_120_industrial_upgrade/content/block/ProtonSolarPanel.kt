@@ -19,7 +19,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.math.BlockPos
@@ -35,11 +35,11 @@ class ProtonSolarPanelBlock : IndustrialSolarPanelBlock() {
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ProtonSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(world, type, ProtonSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // 十字：4 个光谱太阳能 + 1 个质子核心
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ProtonSolarPanelBlock::class.item(), 1)
                 .pattern(" B ")

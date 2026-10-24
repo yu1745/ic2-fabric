@@ -30,7 +30,7 @@ object MiningLaserModeHandler {
                 return@register TypedActionResult.pass(stack)
             }
             sendToggleOnceThisTick()
-            return@register TypedActionResult.success(stack, true)
+            return@register TypedActionResult.success(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->

@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/obsidian_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,5 @@
     "flat_0e0f16": "ic2_120:item/item3d/flat_0e0f16",
     "flat_392f4c": "ic2_120:item/item3d/flat_392f4c",
     "flat_171522": "ic2_120:item/item3d/flat_171522"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/obsidian"
->>>>>>> backup/1.21.1
   }
 }

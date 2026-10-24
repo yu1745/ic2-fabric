@@ -34,11 +34,7 @@ class ReactorFluidPortScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         // 标题居中
@@ -48,11 +44,7 @@ class ReactorFluidPortScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiother.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
->>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
 
         private const val SLOT_BG_U = 179

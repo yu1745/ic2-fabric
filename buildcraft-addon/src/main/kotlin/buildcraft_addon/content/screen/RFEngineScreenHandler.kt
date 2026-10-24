@@ -60,11 +60,7 @@ class RFEngineScreenHandler(
 
         if (slotIndex in 0..3) {
             if (!insertItem(original, 4, 40, true)) return ItemStack.EMPTY
-<<<<<<< HEAD
         } else if (slotIndex in 4 until 40) {
-=======
-        } else if (slotIndex in 4..40) {
->>>>>>> backup/1.21.1
             if (!insertItem(original, 0, 4, false)) return ItemStack.EMPTY
         }
 

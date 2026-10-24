@@ -19,12 +19,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
-=======
-import net.minecraft.network.PacketByteBuf
-
-import net.minecraft.screen.ArrayPropertyDelegate
->>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -99,11 +93,7 @@ class TeleporterScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
-=======
-                index in PLAYER_INV_START..HOTBAR_END -> {
->>>>>>> backup/1.21.1
                     val storage = itemStorage
                     if (storage == null) return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
@@ -112,12 +102,9 @@ class TeleporterScreenHandler(
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
-<<<<<<< HEAD
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-=======
->>>>>>> backup/1.21.1
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
@@ -144,29 +131,6 @@ class TeleporterScreenHandler(
             if (be is IOverclockerUpgradeSupport) add(McText.literal("超频升级"))
             if (be is ITransformerUpgradeSupport) add(McText.literal("变压器升级"))
             if (be is IEnergyStorageUpgradeSupport) add(McText.literal("储能升级"))
-<<<<<<< HEAD
-=======
-        }
-    }
-
-    companion object {
-        private val DEFAULT_SLOT_SPEC = SlotSpec()
-
-        const val SLOT_UPGRADE_INDEX_START = 0
-        const val SLOT_UPGRADE_INDEX_END = 2
-        const val PLAYER_INV_START = 2
-        const val HOTBAR_END = 38
-        const val BUTTON_ID_RANGE_1 = 0
-        const val BUTTON_ID_RANGE_3 = 1
-
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): TeleporterScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(TeleporterBlockEntity.INVENTORY_SIZE)
-            return TeleporterScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
->>>>>>> backup/1.21.1
         }
     }
 

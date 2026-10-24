@@ -17,7 +17,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
@@ -33,6 +33,7 @@ import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
+import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 @ModBlock(name = "pump", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
@@ -47,11 +48,7 @@ class PumpBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings().
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, PumpBlockEntity::class.type()) { w, p, s, be ->
-=======
-        else validateTicker(type, PumpBlockEntity::class.type()){ w, p, s, be ->
->>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -72,7 +69,6 @@ class PumpBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings().
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -82,13 +78,10 @@ class PumpBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings().
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
-            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, net.minecraft.util.Hand.MAIN_HAND)) {
+            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
                 return ActionResult.SUCCESS
             }
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
@@ -100,7 +93,7 @@ class PumpBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings().
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val emptyCell = ic2_120.content.item.EmptyCell::class.instance()

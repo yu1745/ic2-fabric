@@ -14,11 +14,6 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
-=======
-import net.minecraft.network.PacketByteBuf
-
->>>>>>> backup/1.21.1
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
@@ -69,15 +64,9 @@ class CropnalyzerScreenHandler(
    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
        if (id != BUTTON_ID_SCAN) return false
 
-<<<<<<< HEAD
        val scanner = getScannerStack(player) ?: return true
        val seed = itemInventory.getStack(SLOT_INPUT)
        if (seed.item !is CropSeedBagItem) {
-=======
-        val scanner = getScannerStack(player) ?: return true
-        val seed = itemInventory.getStack(SLOT_INPUT)
-        if (seed.item !is CropSeedBagItem) {
->>>>>>> backup/1.21.1
             player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.cropnalyzer.insert_seed_bag").formatted(net.minecraft.util.Formatting.RED), true)
             return true
         }
@@ -93,7 +82,6 @@ class CropnalyzerScreenHandler(
             return true
         }
 
-<<<<<<< HEAD
        val tool = scanner.item as? IElectricTool ?: return true
        val currentEnergy = tool.getEnergy(scanner)
        val currentLevel = CropSeedData.readScanLevel(seed)
@@ -103,39 +91,21 @@ class CropnalyzerScreenHandler(
             return true
         }
         if (currentEnergy < scanCost) {
-=======
-        val tool = scanner.item as? IElectricTool ?: return true
-        val currentEnergy = tool.getEnergy(scanner)
-        if (currentEnergy < CropnalyzerItem.ENERGY_PER_SCAN) {
->>>>>>> backup/1.21.1
             player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.status_no_energy").formatted(net.minecraft.util.Formatting.RED), true)
             return true
         }
 
        tool.setEnergy(scanner, currentEnergy - scanCost)
 
-<<<<<<< HEAD
        val stats = CropSeedData.readStats(seed)
        CropSeedData.write(seed, type, stats, currentLevel + 1)
        itemInventory.setStack(SLOT_OUTPUT, seed.copy())
        itemInventory.setStack(SLOT_INPUT, ItemStack.EMPTY)
        itemInventory.markDirty()
-=======
-        // 一次扫描即达满级
-        val stats = CropSeedData.readStats(seed)
-        CropSeedData.write(seed, type, stats, 4)
-        itemInventory.setStack(SLOT_OUTPUT, seed.copy())
-        itemInventory.setStack(SLOT_INPUT, ItemStack.EMPTY)
-        itemInventory.markDirty()
->>>>>>> backup/1.21.1
 
        refreshEnergyState()
         sendContentUpdates()
-<<<<<<< HEAD
         player.sendMessage(CropnalyzerItem.buildResultMessage(type, stats, currentLevel + 1), false)
-=======
-        player.sendMessage(CropnalyzerItem.buildResultMessage(type, stats, 4), false)
->>>>>>> backup/1.21.1
         return true
     }
 

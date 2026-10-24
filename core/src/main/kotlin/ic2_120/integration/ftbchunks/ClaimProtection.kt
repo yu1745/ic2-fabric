@@ -1,5 +1,4 @@
 package ic2_120.integration.ftbchunks
-<<<<<<< HEAD
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.BlockPos
@@ -8,40 +7,16 @@ import java.util.UUID
 import kotlin.math.ceil
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
-=======
-
-import net.fabricmc.loader.api.FabricLoader
-import org.slf4j.LoggerFactory
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
-import java.util.UUID
->>>>>>> backup/1.21.1
 
 /**
  * FTB Chunks 领地保护集成（外观层）。
  *
-<<<<<<< HEAD
  * 本类不包含任何 FTB Chunks API 的直接引用。
  * 实际保护检查通过 Fabric entrypoint 发现 [FTBChunksProtection] 实现完成，
-=======
- * 本类不包含任何 FTB Chunks API 的直接引用，
- * 实际保护检查通过 [ClaimProtectionImpl] 延迟加载完成，
->>>>>>> backup/1.21.1
  * 确保 FTB Chunks 未安装时不会触发 ClassNotFoundException。
  */
 object ClaimProtection {
 
-<<<<<<< HEAD
-=======
-    private val logger = LoggerFactory.getLogger("IC2-ClaimProtection")
-
-    init {
-        val loaded = FabricLoader.getInstance().isModLoaded("ftbchunks")
-        logger.info("[IC2] FTB Chunks integration: {}", if (loaded) "enabled" else "disabled (mod not present)")
-    }
-
-    /** 保护类型常量，对应 [dev.ftb.mods.ftbchunks.api.Protection] 枚举值 */
->>>>>>> backup/1.21.1
     const val EDIT_BLOCK = "EDIT_BLOCK"
     const val EDIT_FLUID = "EDIT_FLUID"
     const val INTERACT_BLOCK = "INTERACT_BLOCK"
@@ -49,7 +24,6 @@ object ClaimProtection {
     const val INTERACT_ENTITY = "INTERACT_ENTITY"
     const val ATTACK_NONLIVING_ENTITY = "ATTACK_NONLIVING_ENTITY"
 
-<<<<<<< HEAD
     private val impl: FTBChunksProtection? by lazy {
         if (!FabricLoader.getInstance().isModLoaded("ftbchunks")) null
         else FabricLoader.getInstance()
@@ -105,22 +79,5 @@ object ClaimProtection {
             center.x + r, center.y + r, center.z + r
         ).map { it.toImmutable() }.toList()
         return allExplosionAllowed(world, positions, ownerUuid)
-=======
-    private val impl: ClaimProtectionImpl? by lazy {
-        if (!FabricLoader.getInstance().isModLoaded("ftbchunks")) return@lazy null
-        runCatching {
-            Class.forName("ic2_120.integration.ftbchunks.ClaimProtectionImpl")
-                .getDeclaredConstructor()
-                .newInstance() as ClaimProtectionImpl
-        }.getOrNull()
-    }
-
-    fun isProtected(world: World, pos: BlockPos, ownerUuid: UUID? = null, protectionType: String = EDIT_BLOCK): Boolean {
-        return impl?.isProtected(world, pos, ownerUuid, protectionType) == true
-    }
-
-    fun isProtected(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protectionType: String = EDIT_BLOCK): Boolean {
-        return impl?.isProtected(world, pos, actor, protectionType) == true
->>>>>>> backup/1.21.1
     }
 }

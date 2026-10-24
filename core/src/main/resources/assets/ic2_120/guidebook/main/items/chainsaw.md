@@ -12,11 +12,7 @@ item_ids:
 
 <ItemImage id="ic2_120:chainsaw" scale="4" />
 
-<<<<<<< HEAD
 The Chainsaw is a tier-1 electric multi-tool that combines axe and sword combat with a built-in EU buffer. Its optional shear mode also handles shearable entities and shear-specific block drops. Every normal mined block or combat/shear action costs 100 EU, with no vanilla durability cost.
-=======
-The Chainsaw is a tier-1 electric logging tool that combines the cutting power of a diamond axe with a built-in EU buffer. It is the dedicated counterpart to the mining drill: where the drill bores stone, the chainsaw fells wood. Every block of log, wood, or other axe-mineable material it touches is broken for a flat 250 EU, with no vanilla durability cost.
->>>>>>> backup/1.21.1
 
 ## Item View
 
@@ -30,15 +26,9 @@ The Chainsaw is a tier-1 electric logging tool that combines the cutting power o
 |----------|-------|
 | Tier | 1 |
 | Max Energy | 30,000 EU |
-<<<<<<< HEAD
 | Energy per Block | 100 EU |
 | Mining Speed Reference | Diamond Axe |
 | Item Tags | `minecraft:axes`, `minecraft:swords` |
-=======
-| Energy per Block | 250 EU |
-| Mining Speed Reference | Diamond Axe |
-| Item Tag | `minecraft:axes` |
->>>>>>> backup/1.21.1
 | Stack Size | 1 |
 | Vanilla Durability | None (EU-powered) |
 
@@ -49,18 +39,13 @@ The chainsaw is **not damageable**. It has no vanilla durability bar and no anvi
 ### Equipping and Charging
 
 - Place the Chainsaw in your hotbar as you would any tool.
-<<<<<<< HEAD
 - Recharge it from any tier-1-compatible EU source: a BatPack, a BatBox, a charging pad, or any cable that can output tier-1 voltage.
-=======
-- Recharge it from any tier-1-compatible EU source: a BatPack, a BatBox, a charging pad, an Energy Crystal's right-click, or any cable that can output tier-1 voltage.
->>>>>>> backup/1.21.1
 - The energy bar appears above the hotbar slot and fills as EU is added. At full charge you carry 30,000 EU, which is enough for 120 blocks of continuous chopping.
 
 ### Felling Trees
 
 The chainsaw's specialty is bulk wood harvesting. Equip it and break any log, wood, or other axe-mineable block:
 
-<<<<<<< HEAD
 - Each block costs a flat **100 EU**, regardless of the block's hardness.
 - A single oak tree (roughly 4-6 logs plus leaves) typically fits well within one full charge.
 - The chainsaw is tagged `minecraft:axes` and `minecraft:swords`, so it can be used as both an axe and a powered melee tool.
@@ -75,15 +60,6 @@ The chainsaw's specialty is bulk wood harvesting. Equip it and break any log, wo
 ### Out of Power
 
 When the buffer drops below 100 EU, the chainsaw can no longer afford the per-block cost. It will not refuse to mine — it simply reverts to the slow base mining speed until you top it up. There is no risk of "ruining" the tool by running it dry; just recharge and continue.
-=======
-- Each block costs a flat **250 EU**, regardless of the block's hardness.
-- A single oak tree (roughly 4-6 logs plus leaves) typically fits well within one full charge.
-- The chainsaw is tagged `minecraft:axes`, so it interacts correctly with any other mod that inspects axe capabilities on held items.
-
-### Out of Power
-
-When the buffer drops below 250 EU, the chainsaw can no longer afford the per-block cost. It will not refuse to mine — it simply reverts to the slow base mining speed until you top it up. There is no risk of "ruining" the tool by running it dry; just recharge and continue.
->>>>>>> backup/1.21.1
 
 ## Crafting
 

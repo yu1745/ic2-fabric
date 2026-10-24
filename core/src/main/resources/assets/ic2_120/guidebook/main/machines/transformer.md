@@ -28,11 +28,8 @@ Transformers convert between adjacent EU voltage tiers without changing the tota
 
 ## Modes
 
-<<<<<<< HEAD
 The transformer defaults to step-down mode.
 
-=======
->>>>>>> backup/1.21.1
 ### Step-Up
 The five non-front faces accept low-tier EU and the front face outputs the next tier. The transformer waits until it has enough stored EU to emit a full high-tier tick, reducing lossy trickle output.
 

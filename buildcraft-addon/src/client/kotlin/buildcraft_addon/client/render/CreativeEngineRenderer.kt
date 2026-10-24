@@ -24,11 +24,7 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
     private fun ensureSprites() {
         if (spritesLoaded) return
         val atlas = MinecraftClient.getInstance().bakedModelManager.getAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE)
-<<<<<<< HEAD
         fun sprite(path: String) = atlas.getSprite(Identifier(BuildCraftAddon.MOD_ID, path))
-=======
-        fun sprite(path: String) = atlas.getSprite(Identifier.of(BuildCraftAddon.MOD_ID, path))
->>>>>>> backup/1.21.1
         trunkBlack = sprite("block/engine/trunk_black")
         backSprite = sprite("block/engine/creative/back")
         sideSprite = sprite("block/engine/creative/side")

@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/tin_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,5 @@
     "flat_c0c0c0": "ic2_120:item/item3d/flat_c0c0c0",
     "flat_dedede": "ic2_120:item/item3d/flat_dedede",
     "flat_ffffff": "ic2_120:item/item3d/flat_ffffff"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/tin"
->>>>>>> backup/1.21.1
   }
 }

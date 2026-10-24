@@ -1,10 +1,5 @@
 {
   "variants": {
-<<<<<<< HEAD
     "": { "model": "ic2_120:block/reinforced_foam" }
-=======
-    "curing_scheduled=false": { "model": "ic2_120:block/reinforced_foam" },
-    "curing_scheduled=true": { "model": "ic2_120:block/reinforced_foam" }
->>>>>>> backup/1.21.1
   }
 }

@@ -1,16 +1,11 @@
 package ic2_120.content.recipes.crafting
 
-<<<<<<< HEAD
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-=======
-import com.mojang.serialization.MapCodec
->>>>>>> backup/1.21.1
 import ic2_120.content.item.Cutter
 import ic2_120.content.item.ForgeHammer
 import ic2_120.content.item.Treetap
 import ic2_120.content.item.Wrench
-<<<<<<< HEAD
 import ic2_120.registry.annotation.ModMachineRecipe
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.inventory.RecipeInputInventory
@@ -26,25 +21,6 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import java.util.function.Consumer
-=======
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.network.RegistryByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.ShapelessRecipe
-import net.minecraft.recipe.book.CraftingRecipeCategory
-import net.minecraft.recipe.input.CraftingRecipeInput
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import java.util.stream.Stream
-
-private val EMPTY_LOOKUP = RegistryWrapper.WrapperLookup.of(Stream.empty())
->>>>>>> backup/1.21.1
 
 /**
  * 工作台无序配方：合成时对 IC2 工具（锻造锤、切割机、木龙头、扳手）返回耐久-1 的本体，
@@ -54,7 +30,6 @@ private val EMPTY_LOOKUP = RegistryWrapper.WrapperLookup.of(Stream.empty())
  * 而不会在原版合并修复路径触发余物返回，从而避免无限刷物品漏洞。
  */
 class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
-<<<<<<< HEAD
     delegate.id,
     delegate.group,
     delegate.category,
@@ -65,17 +40,6 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
         val remainder = DefaultedList.ofSize(inventory.size(), ItemStack.EMPTY)
         for (slot in 0 until inventory.size()) {
             val stack = inventory.getStack(slot)
-=======
-    delegate.group,
-    delegate.category,
-    delegate.getResult(EMPTY_LOOKUP),
-    delegate.ingredients
-) {
-    override fun getRemainder(input: CraftingRecipeInput): DefaultedList<ItemStack> {
-        val remainder = DefaultedList.ofSize(input.getSize(), ItemStack.EMPTY)
-        for (slot in 0 until input.getSize()) {
-            val stack = input.getStackInSlot(slot)
->>>>>>> backup/1.21.1
             if (stack.isEmpty) continue
             val item = stack.item
             if (isDamageableCraftingTool(item)) {
@@ -84,14 +48,9 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
                     result.damage += 1
                     remainder[slot] = result
                 }
-<<<<<<< HEAD
                 // 已达最大耐久损耗时不返回（工具损坏）
             } else {
                 remainder[slot] = item.getRecipeRemainder(stack)
-=======
-            } else {
-                remainder[slot] = item.recipeRemainder?.let { ItemStack(it) } ?: ItemStack.EMPTY
->>>>>>> backup/1.21.1
             }
         }
         return remainder
@@ -105,7 +64,6 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
     }
 }
 
-<<<<<<< HEAD
 @ModMachineRecipe(id = "damage_tool_shapeless", recipeClass = DamageToolShapelessRecipe::class)
 object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapelessRecipe> {
     override fun read(id: Identifier, json: JsonObject): DamageToolShapelessRecipe {
@@ -144,32 +102,12 @@ object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapeles
 object DamageToolShapelessRecipeDatagen {
     fun offer(
         exporter: Consumer<RecipeJsonProvider>,
-=======
-object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapelessRecipe> {
-    override fun codec(): MapCodec<DamageToolShapelessRecipe> =
-        RecipeSerializer.SHAPELESS.codec().xmap(
-            { DamageToolShapelessRecipe(it) },
-            { it }
-        )
-
-    override fun packetCodec(): PacketCodec<RegistryByteBuf, DamageToolShapelessRecipe> =
-        RecipeSerializer.SHAPELESS.packetCodec().xmap(
-            { DamageToolShapelessRecipe(it) },
-            { it }
-        )
-}
-
-object DamageToolShapelessRecipeDatagen {
-    fun offer(
-        exporter: RecipeExporter,
->>>>>>> backup/1.21.1
         recipeId: Identifier,
         result: Item,
         resultCount: Int = 1,
         ingredients: List<Ingredient>,
         category: String = "misc"
     ) {
-<<<<<<< HEAD
         exporter.accept(
             Provider(
                 recipeId = recipeId,
@@ -179,18 +117,10 @@ object DamageToolShapelessRecipeDatagen {
                 category = category
             )
         )
-=======
-        val defaultedIngredients = DefaultedList.ofSize<Ingredient>(ingredients.size, Ingredient.EMPTY)
-        for (i in ingredients.indices) defaultedIngredients[i] = ingredients[i]
-        val shapeless = ShapelessRecipe("", CraftingRecipeCategory.valueOf(category.uppercase()), ItemStack(result, resultCount), defaultedIngredients)
-        val recipe = DamageToolShapelessRecipe(shapeless)
-        exporter.accept(recipeId, recipe, null)
->>>>>>> backup/1.21.1
     }
 
     fun toolIngredient(tool: Item): Ingredient =
         Ingredient.ofItems(tool)
-<<<<<<< HEAD
 
     private class Provider(
         private val recipeId: Identifier,
@@ -223,6 +153,4 @@ object DamageToolShapelessRecipeDatagen {
 
         override fun getAdvancementId(): Identifier? = null
     }
-=======
->>>>>>> backup/1.21.1
 }

@@ -19,39 +19,26 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.Heightmap
-<<<<<<< HEAD
 import java.util.concurrent.Executors
-=======
->>>>>>> backup/1.21.1
 
 @ModScreen(block = ChunkLoaderBlock::class)
 class ChunkLoaderScreen(
     handler: ChunkLoaderScreenHandler,
     playerInventory: PlayerInventory,
     title: Text
-<<<<<<< HEAD
 ) : HandledScreen<ChunkLoaderScreenHandler>(handler, playerInventory, title) {
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guichunkloader.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
-=======
-    ) : HandledScreen<ChunkLoaderScreenHandler>(handler, playerInventory, title) {
-
-    companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guichunkloader.png")
->>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
         private const val GUI_WIDTH = 176
         private const val GUI_HEIGHT = 250
         private const val PLAYER_INV_Y = 168
         private const val HOTBAR_Y = 226
-<<<<<<< HEAD
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4
         private const val UPTIPS_SIZE = 16
-=======
->>>>>>> backup/1.21.1
 
         private const val MAP_LEFT = 15
         private const val MAP_TOP = 16
@@ -64,7 +51,6 @@ class ChunkLoaderScreen(
         private val mapTextureCache = mutableMapOf<BlockPos, Identifier>()
         /** NativeImage 引用，用于关闭释放 */
         private val mapImageCache = mutableMapOf<Identifier, NativeImage>()
-<<<<<<< HEAD
 
         /**
          * 后台采样线程池（客户端单例，daemon 线程随 JVM 退出）。
@@ -86,10 +72,6 @@ class ChunkLoaderScreen(
     @Volatile
     private var samplingInProgress = false
 
-=======
-    }
-
->>>>>>> backup/1.21.1
     init {
         backgroundWidth = GUI_WIDTH
         backgroundHeight = GUI_HEIGHT
@@ -97,23 +79,12 @@ class ChunkLoaderScreen(
         setSlotPositions()
     }
 
-<<<<<<< HEAD
-=======
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
-    }
-
->>>>>>> backup/1.21.1
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -122,7 +93,6 @@ class ChunkLoaderScreen(
         drawTitle(context, left, top)
         drawMap(context, left, top, mouseX, mouseY)
         drawSideText(context, left, top)
-<<<<<<< HEAD
         context.drawTexture(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
@@ -142,10 +112,6 @@ class ChunkLoaderScreen(
                 mouseX, mouseY
             )
         }
-=======
-
-        drawMouseoverTooltip(context, mouseX, mouseY)
->>>>>>> backup/1.21.1
     }
 
     private fun setSlotPositions() {
@@ -239,7 +205,6 @@ class ChunkLoaderScreen(
         context.drawText(textRenderer, consumeText, sideTextX, top + 32, 0xAAAAAA, false)
     }
 
-<<<<<<< HEAD
     /**
      * 返回当前可用的地图纹理 id：
      * - 缓存命中 → 立即返回（同步、零开销）
@@ -247,13 +212,10 @@ class ChunkLoaderScreen(
      *
      * 改造前是主线程同步采样 20k 像素（卡首帧），现在后台跑，玩家看到的是"地图延迟 1-2 帧出现"。
      */
-=======
->>>>>>> backup/1.21.1
     private fun getMapTexture(): Identifier? {
         val bePos = handler.machinePos
         if (bePos == BlockPos.ORIGIN) return null
 
-<<<<<<< HEAD
         mapTextureCache[bePos]?.let {
             currentTextureId = it
             return it
@@ -340,24 +302,6 @@ class ChunkLoaderScreen(
         val image = NativeImage(MAP_SIZE, MAP_SIZE, false)
         val half = GRID / 2
         val samplePos = BlockPos.Mutable()
-=======
-        mapTextureCache[bePos]?.let { return it }
-
-        val image = renderMapImage(bePos) ?: return null
-        val id = Identifier.of("ic2_120", "chunk_map_${bePos.asLong()}")
-        MinecraftClient.getInstance().textureManager.registerTexture(id, NativeImageBackedTexture(image))
-        mapTextureCache[bePos] = id
-        mapImageCache[id] = image
-        return id
-    }
-
-    private fun renderMapImage(machinePos: BlockPos): NativeImage? {
-        val world = MinecraftClient.getInstance().world ?: return null
-        val centerX = machinePos.x shr 4
-        val centerZ = machinePos.z shr 4
-        val half = GRID / 2
-        val image = NativeImage(MAP_SIZE, MAP_SIZE, false)
->>>>>>> backup/1.21.1
 
         for (chunkRow in 0 until GRID) {
             for (chunkCol in 0 until GRID) {
@@ -370,16 +314,10 @@ class ChunkLoaderScreen(
                         val wx = cx * 16 + bx
                         val wz = cz * 16 + bz
                         val topY = world.getTopY(Heightmap.Type.WORLD_SURFACE, wx, wz) - 1
-<<<<<<< HEAD
                         val rgb = if (topY >= bottomY) {
                             samplePos.set(wx, topY, wz)
                             val state = world.getBlockState(samplePos)
                             0xFF000000.toInt() or state.getMapColor(world, samplePos).color
-=======
-                        val rgb = if (topY >= world.bottomY) {
-                            val state = world.getBlockState(BlockPos(wx, topY, wz))
-                            0xFF000000.toInt() or state.getMapColor(world, BlockPos(wx, topY, wz)).color
->>>>>>> backup/1.21.1
                         } else {
                             0xFF404040.toInt()
                         }
@@ -424,7 +362,6 @@ class ChunkLoaderScreen(
         return super.mouseClicked(mouseX, mouseY, button)
     }
 
-<<<<<<< HEAD
     /**
      * 定时重采样：每 100 tick (5s) 强制重新采样当前机器周围的地图。
      *
@@ -464,9 +401,5 @@ class ChunkLoaderScreen(
         if (currentTextureId == id) {
             currentTextureId = null
         }
-=======
-    override fun removed() {
-        // 缓存不清，GUI 关闭后保留
->>>>>>> backup/1.21.1
     }
 }

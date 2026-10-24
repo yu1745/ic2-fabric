@@ -10,10 +10,7 @@ import ic2_120.content.item.WaterCell
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.content.recipes.orewashing.OreWashingRecipe
@@ -46,10 +43,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-<<<<<<< HEAD
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-=======
->>>>>>> backup/1.21.1
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -57,10 +51,11 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
@@ -70,10 +65,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import ic2_120.Ic2_120
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 /**
  * 洗矿机方块实体。
@@ -98,13 +90,8 @@ class OreWashingPlantBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = OreWashingPlantBlock.ACTIVE
 
@@ -202,11 +189,7 @@ class OreWashingPlantBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
         override fun canInsert(variant: FluidVariant): Boolean =
-<<<<<<< HEAD
             (variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER) && !variant.isBlank
-=======
-            (variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER) && ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 
@@ -232,7 +215,6 @@ class OreWashingPlantBlockEntity(
             if (toConsume <= 0L || variant.fluid != Fluids.WATER) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -241,12 +223,6 @@ class OreWashingPlantBlockEntity(
                 sync.waterAmount = amount.toInt().coerceAtLeast(0)
                 actual
             }
-=======
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            return actual
->>>>>>> backup/1.21.1
         }
     }
 
@@ -294,11 +270,9 @@ class OreWashingPlantBlockEntity(
         else -> false
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.ore_washing_plant")
@@ -307,9 +281,9 @@ class OreWashingPlantBlockEntity(
         OreWashingPlantScreenHandler(syncId, playerInventory, this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(OreWashingPlantSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -323,9 +297,9 @@ class OreWashingPlantBlockEntity(
         waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(OreWashingPlantSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -361,7 +335,6 @@ class OreWashingPlantBlockEntity(
         val inv = OreWashingRecipe.Input(input)
         val recipeManager = world?.recipeManager ?: return null
 
-<<<<<<< HEAD
         val recipe = recipeManager.getFirstMatch(getRecipeType<OreWashingRecipe>(), inv, world ?: return null).orElse(null)
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
@@ -376,9 +349,6 @@ class OreWashingPlantBlockEntity(
             energyDebtF = 0f
             sync.progress = 0
         }
-=======
-        return recipeManager.getFirstMatch(getRecipeType<OreWashingRecipe>(), inv, world ?: return null).map { it.value }.orElse(null)
->>>>>>> backup/1.21.1
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -533,7 +503,7 @@ class OreWashingPlantBlockEntity(
         val emptyStack = when (waterInput.item) {
             Items.WATER_BUCKET -> ItemStack(Items.BUCKET)
             is WaterCell -> {
-                val cellId = Identifier.of(Ic2_120.MOD_ID, "empty_cell")
+                val cellId = Identifier(Ic2_120.MOD_ID, "empty_cell")
                 ItemStack(Registries.ITEM.get(cellId))
             }
             else -> return

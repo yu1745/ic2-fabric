@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "parent": "block/cube",
   "textures": {
     "particle": "ic2_120:block/iridium_storage_box",
@@ -20,7 +19,3 @@
     }
   ]
 }
-=======
-  "parent": "ic2:block/iridium_storage_box"
-}
->>>>>>> backup/1.21.1

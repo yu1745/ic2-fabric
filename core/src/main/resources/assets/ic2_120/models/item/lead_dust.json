@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/lead_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,10 +11,5 @@
     "flat_fafafa": "ic2_120:item/item3d/flat_fafafa",
     "flat_535f51": "ic2_120:item/item3d/flat_535f51",
     "flat_909981": "ic2_120:item/item3d/flat_909981"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/lead"
->>>>>>> backup/1.21.1
   }
 }

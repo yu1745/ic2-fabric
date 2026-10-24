@@ -25,9 +25,10 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import ic2_120.registry.id
+import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -37,12 +38,8 @@ import ic2_120.registry.annotation.RecipeProvider
  * 操作时间：5 秒/桶，2 EU/t，单次 200 EU
  */
 @ModBlock(name = "fluid_canner", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
-<<<<<<< HEAD
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
 class FluidCannerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
-=======
-class FluidCannerBlock : MachineBlock() {
->>>>>>> backup/1.21.1
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         FluidCannerBlockEntity(pos, state)
@@ -53,18 +50,13 @@ class FluidCannerBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, FluidCannerBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
-=======
-        else validateTicker(type, FluidCannerBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
->>>>>>> backup/1.21.1
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -74,9 +66,6 @@ class FluidCannerBlock : MachineBlock() {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -97,7 +86,7 @@ class FluidCannerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()

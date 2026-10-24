@@ -4,13 +4,9 @@ import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.TransformerBlockEntity
-<<<<<<< HEAD
 import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
-=======
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
->>>>>>> backup/1.21.1
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.inventory.Inventory
 import net.minecraft.particle.ParticleTypes
@@ -31,7 +27,6 @@ class AdjacentEnergyTransferComponent(
     private val owner: BlockEntity,
     private val energy: TickLimitedSidedEnergyContainer
 ) {
-<<<<<<< HEAD
     companion object {
         private const val NEIGHBOR_VERIFY_INTERVAL = 20
     }
@@ -45,13 +40,10 @@ class AdjacentEnergyTransferComponent(
     )
 
     private val neighborStorageCache = arrayOfNulls<NeighborStorageCache>(Direction.entries.size)
-=======
->>>>>>> backup/1.21.1
 
     fun tick(): Long {
         val world = owner.world ?: return 0L
         if (world.isClient) return 0L
-<<<<<<< HEAD
         // 停机门控：机器拒绝外部供能时（如红石停机）不再从邻居拉电，避免停工期间空耗电（#30）。
         if (!energy.canAcceptExternalEnergy()) return 0L
 
@@ -84,28 +76,11 @@ class AdjacentEnergyTransferComponent(
             // Most faces have no energy endpoint. Resolve our sided wrapper only
             // after the cached neighbor lookup succeeds.
             val selfStorage = energy.getSideStorage(side)
-=======
-
-        val selfMachine = owner as? ITieredMachine ?: return 0L
-        var total = 0L
-
-        for (side in Direction.values()) {
-            val selfStorage = energy.getSideStorage(side)
-            val neighborPos = owner.pos.offset(side)
-            val neighborBe = world.getBlockEntity(neighborPos)
-            val neighborStorage = EnergyStorage.SIDED.find(world, neighborPos, side.opposite) ?: continue
-
-            if (neighborBe is CableBlockEntity) continue
->>>>>>> backup/1.21.1
 
             total += if (neighborBe is ITieredMachine) {
                 transferWithIc2Rules(world, selfMachine, selfStorage, neighborBe, neighborStorage, side)
             } else {
-<<<<<<< HEAD
                 transferWithExternalRules(selfStorage, neighborStorage, side)
-=======
-                transferWithExternalRules(selfStorage, neighborStorage)
->>>>>>> backup/1.21.1
             }
         }
 
@@ -120,7 +95,6 @@ class AdjacentEnergyTransferComponent(
         providerStorage: EnergyStorage,
         consumerSide: Direction
     ): Long {
-<<<<<<< HEAD
         if (!providerStorage.supportsExtraction()) return 0L
 
         // The insertion probe is both the sided-capability check and the exact
@@ -131,9 +105,6 @@ class AdjacentEnergyTransferComponent(
             (energy.capacity - energy.amount).coerceAtLeast(0L)
         )
         if (receivable <= 0L) return 0L
-=======
-        if (!consumerStorage.supportsInsertion() || !providerStorage.supportsExtraction()) return 0L
->>>>>>> backup/1.21.1
 
         val providerSide = consumerSide.opposite
         val providerVoltage = providerMachine.effectiveVoltageTierForSide(providerSide)
@@ -143,16 +114,11 @@ class AdjacentEnergyTransferComponent(
             return 0L
         }
 
-<<<<<<< HEAD
         return move(providerStorage, consumerStorage, receivable)
-=======
-        return move(providerStorage, consumerStorage)
->>>>>>> backup/1.21.1
     }
 
     private fun transferWithExternalRules(
         selfStorage: EnergyStorage,
-<<<<<<< HEAD
         neighborStorage: EnergyStorage,
         selfSide: Direction
     ): Long {
@@ -175,17 +141,6 @@ class AdjacentEnergyTransferComponent(
             }
         }
         return 0L
-=======
-        neighborStorage: EnergyStorage
-    ): Long {
-        return when {
-            selfStorage.supportsInsertion() && neighborStorage.supportsExtraction() ->
-                move(neighborStorage, selfStorage)
-            selfStorage.supportsExtraction() && neighborStorage.supportsInsertion() ->
-                move(selfStorage, neighborStorage)
-            else -> 0L
-        }
->>>>>>> backup/1.21.1
     }
 
     private fun wouldOvervoltage(
@@ -199,14 +154,7 @@ class AdjacentEnergyTransferComponent(
         return providerVoltage > consumerVoltage
     }
 
-<<<<<<< HEAD
     private fun move(provider: EnergyStorage, consumer: EnergyStorage, receivable: Long): Long {
-=======
-    private fun move(provider: EnergyStorage, consumer: EnergyStorage): Long {
-        val receivable = simulateInsertion(consumer, Long.MAX_VALUE)
-        if (receivable <= 0L) return 0L
-
->>>>>>> backup/1.21.1
         var moved = 0L
         Transaction.openOuter().use { tx ->
             val extracted = provider.extract(receivable, tx)
@@ -236,12 +184,9 @@ class AdjacentEnergyTransferComponent(
         if (consumer is IGenerator) return
         if (consumer is TransformerBlockEntity) return
 
-<<<<<<< HEAD
         val power = explosionPowerForOutputLevel(providerVoltage)
         if (ClaimProtection.isProtected(world, pos, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK) ||
             !ClaimProtection.explosionCubeAllowed(world, pos, power, null)) return
-=======
->>>>>>> backup/1.21.1
         if (owner is Inventory) (owner as Inventory).clear()
         world.breakBlock(pos, false)
 
@@ -253,10 +198,6 @@ class AdjacentEnergyTransferComponent(
             world.spawnParticles(ParticleTypes.FLAME, x, y, z, 6, 0.15, 0.15, 0.15, 0.01)
         }
 
-<<<<<<< HEAD
-=======
-        val power = explosionPowerForOutputLevel(providerVoltage)
->>>>>>> backup/1.21.1
         world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, power, false, World.ExplosionSourceType.BLOCK)
     }
 

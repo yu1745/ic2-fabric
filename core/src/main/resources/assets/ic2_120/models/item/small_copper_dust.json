@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/small_copper_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "flat_a76229": "ic2_120:item/item3d/flat_a76229",
     "flat_a35d25": "ic2_120:item/item3d/flat_a35d25",
     "flat_784115": "ic2_120:item/item3d/flat_784115"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/small_copper"
->>>>>>> backup/1.21.1
   }
 }

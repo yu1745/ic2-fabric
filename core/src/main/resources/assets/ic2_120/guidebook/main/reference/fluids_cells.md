@@ -22,11 +22,6 @@ item_ids:
   - ic2_120:pahoehoe_lava_cell
   - ic2_120:coolant_bucket
   - ic2_120:hot_coolant_bucket
-<<<<<<< HEAD
-=======
-  - ic2_120:steam_bucket
-  - ic2_120:superheated_steam_bucket
->>>>>>> backup/1.21.1
   - ic2_120:biomass_bucket
   - ic2_120:biofuel_bucket
   - ic2_120:uu_matter_bucket
@@ -42,11 +37,8 @@ item_ids:
 
 IC2 uses buckets, cells, tanks, and pipes to move fluids. Cells work well in recipes and inventory slots, buckets interact nicely with vanilla mechanics, and tanks and pipes are the backbone of automation.
 
-<<<<<<< HEAD
 All registered substances use the same Fabric fluid representation for storage and transport. Terms such as steam, compressed air, and liquid fuel describe their gameplay behavior; they are not separate pipe-system categories.
 
-=======
->>>>>>> backup/1.21.1
 ## Common Fluids
 
 | Fluid | Common Use |
@@ -58,11 +50,7 @@ All registered substances use the same Fabric fluid representation for storage a
 | Distilled Water | Advanced thermal chains |
 | Construction Foam | Construction Foam Sprayer, foam blocks |
 | Weed-EX | Crop care |
-<<<<<<< HEAD
 | Creosote, Compressed Air, Pahoehoe Lava | Auxiliary fluids for the Coke Oven, Blast Furnace, and thermal tool chains |
-=======
-| Creosote, Compressed Air, Pahoehoe Lava | Auxiliary fluids for steam, Coke Oven, and tool chains |
->>>>>>> backup/1.21.1
 
 ## Cells
 

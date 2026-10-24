@@ -15,7 +15,7 @@ import ic2_120_industrial_upgrade.content.item.ProtonShard
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider
 import net.fabricmc.fabric.api.recipe.v1.ingredient.DefaultCustomIngredients
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
@@ -26,7 +26,7 @@ import java.util.function.Consumer
 
 class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output) {
 
-    override fun generate(exporter: Consumer<RecipeJsonProvider>) {
+    override fun generate(exporter: Consumer<RecipeExporter>) {
         // 1. 扫描 @RecipeProvider 注解方法（工作台有序合成）
         ClassScanner.generateRecipesForMod(IC2IndustrialUpgrade.MOD_ID, exporter)
 
@@ -42,7 +42,7 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
      * 注册压缩机配方。core 的 CompressorRecipeSerializer JSON 格式：
      * { "type":"ic2_120:compressing", "ingredient":..., "input_count":N, "result":{item,count}[, "container_return":{...}] }
      */
-    private fun registerCompressorRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    private fun registerCompressorRecipes(exporter: Consumer<RecipeExporter>) {
         // 光子锭：9×光子 → 1×光子锭
         compressorRecipe(exporter, "photoniy_to_ingot",
             input = Ingredient.ofStacks(Photoniy::class.instance().defaultStack),
@@ -69,8 +69,8 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
             containerReturn = Items.BUCKET)
 
         // 中子碎片：1×中子流体单元 → 1×中子碎片（返还空流体单元），与桶等效
-        val fluidCellItem = Registries.ITEM.get(Identifier("ic2_120", "fluid_cell"))
-        val emptyCellItem = Registries.ITEM.get(Identifier("ic2_120", "empty_cell"))
+        val fluidCellItem = Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell"))
+        val emptyCellItem = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
         val neutronFluidCell = ItemStack(fluidCellItem).apply {
             setFluidCellVariant(FluidVariant.of(NeutronFluid.NEUTRON_STILL))
         }
@@ -91,7 +91,7 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
     }
 
     private fun compressorRecipe(
-        exporter: Consumer<RecipeJsonProvider>,
+        exporter: Consumer<RecipeExporter>,
         name: String,
         input: Ingredient,
         inputCount: Int,

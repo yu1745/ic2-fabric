@@ -41,11 +41,7 @@ navigation:
 | [蒸汽发电机](../machines/steam_generator.md) | steam-generator.md | Tier 2 (MV) | 蒸汽 | 水 + 热量（HU） |
 | [地热发电机](../machines/geo_generator.md) | geo-generator.md | Tier 1 (LV) | 20 EU/t | 岩浆 |
 | [太阳能发电机](../machines/solar_generator.md) | solar-generator.md | Tier 1 (LV) | 1 EU/t | 日光 |
-<<<<<<< HEAD
 | [风力发电机](../machines/wind_generator.md) | wind-generator.md | Tier 1 (LV) | Y>74 时 3 EU/t | 高度阈值 |
-=======
-| [风力发电机](../machines/wind_generator.md) | wind-generator.md | Tier 1 (LV) | 可变 | 高度/天气 |
->>>>>>> backup/1.21.1
 | [动能发电机](../machines/kinetic_generator.md) | kinetic-generator.md | Tier 3 (HV) | 512 EU/t | 动能（KU） |
 | [创造模式发电机](../machines/creative_generator.md) | creative-generator.md | Tier 1 (LV) | 32 EU/t | 无限（创造模式） |
 
@@ -107,12 +103,8 @@ navigation:
 
 | 机器 | 文件 | 说明 |
 |------|------|------|
-<<<<<<< HEAD
 | [核反应堆](../machines/nuclear_reactor.md) | nuclear-reactor.md | 反应堆 + 反应仓（EU 模式） |
 | [流体冷却反应堆](../machines/nuclear_reactor_fluid_mode.md) | nuclear-reactor-fluid-mode.md | 压力容器、流体接口、访问接口、红石接口（热模式） |
-=======
-| [核反应堆](../machines/nuclear_reactor.md) | nuclear-reactor.md | 反应堆 + 反应仓、容器、流体接口、红石接口 |
->>>>>>> backup/1.21.1
 
 ## UU 物质
 
@@ -138,10 +130,6 @@ navigation:
 |------|------|------|
 | [特斯拉线圈](../machines/tesla_coil.md) | tesla-coil.md | 红石触发电击怪物 |
 | [日光灯](../machines/luminator_flat.md) | luminator.md | 6 面贴装照明 |
-<<<<<<< HEAD
-=======
-| [高级太阳能附属](../machines/advanced_solar.md) | advanced-solar.md | 4 级高级太阳能板 + 分子转换器 + 量子发电机 |
->>>>>>> backup/1.21.1
 
 ---
 
@@ -152,8 +140,3 @@ navigation:
 - [升级系统](../guides/upgrades.md) - 升级槽说明
 - [动能系统](../systems/kinetic_transmission.md) - KU 传动详情
 - [热能系统](../systems/heat_system.md) - HU 热量
-<<<<<<< HEAD
-=======
-- [核反应堆](../systems/nuclear_reactor.md) - 核电系统
-
->>>>>>> backup/1.21.1

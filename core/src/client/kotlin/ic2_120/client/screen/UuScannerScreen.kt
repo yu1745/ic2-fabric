@@ -28,11 +28,7 @@ class UuScannerScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -176,11 +172,7 @@ class UuScannerScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiuuscanner.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiuuscanner.png")
->>>>>>> backup/1.21.1
         private const val TEX_SIZE = 256
 
         private const val ENERGY_U = 179

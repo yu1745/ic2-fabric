@@ -17,14 +17,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
-=======
-
-import net.minecraft.screen.ArrayPropertyDelegate
->>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 
@@ -108,11 +102,7 @@ class SemifluidGeneratorScreenHandler(
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 else -> {
-<<<<<<< HEAD
                     if (index in PLAYER_INV_START until HOTBAR_END) {
-=======
-                    if (index in PLAYER_INV_START..HOTBAR_END) {
->>>>>>> backup/1.21.1
                         // 玩家物品栏 -> 机器
                         val storage = itemStorage ?: return ItemStack.EMPTY
                         val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
@@ -172,16 +162,5 @@ class SemifluidGeneratorScreenHandler(
         private val EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(maxItemCount = 64, canInsert = { false })
         private val BATTERY_SLOT_SPEC = SlotSpec(maxItemCount = 1, canInsert = { stack -> stack.canBeCharged() })
 
-<<<<<<< HEAD
-=======
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SemifluidGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(SemifluidGeneratorBlockEntity.INVENTORY_SIZE)
-            return SemifluidGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
->>>>>>> backup/1.21.1
     }
 }

@@ -1,9 +1,5 @@
 package ic2_120.content.block
 
-<<<<<<< HEAD
-=======
-import com.mojang.serialization.MapCodec
->>>>>>> backup/1.21.1
 import ic2_120.content.block.machines.UvLampBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -23,19 +19,11 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
-=======
-import net.minecraft.data.server.recipe.RecipeExporter
->>>>>>> backup/1.21.1
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemPlacementContext
-<<<<<<< HEAD
-=======
-import net.minecraft.item.ItemStack
->>>>>>> backup/1.21.1
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.state.StateManager
@@ -43,10 +31,6 @@ import net.minecraft.state.property.BooleanProperty
 import net.minecraft.state.property.Properties
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
-<<<<<<< HEAD
-=======
-import net.minecraft.util.ItemActionResult
->>>>>>> backup/1.21.1
 import net.minecraft.util.ItemScatterer
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
@@ -55,10 +39,7 @@ import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
-<<<<<<< HEAD
 import java.util.function.Consumer
-=======
->>>>>>> backup/1.21.1
 
 /**
  * 紫外线灯方块。扁平面板外形（与日光灯相同），支持六面朝向。
@@ -77,11 +58,6 @@ class UvLampBlock : BlockWithEntity(
             .with(ACTIVE, false)
     }
 
-<<<<<<< HEAD
-=======
-    override fun getCodec(): MapCodec<out BlockWithEntity> = UV_LAMP_CODEC
-
->>>>>>> backup/1.21.1
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(Properties.FACING, ACTIVE)
@@ -102,11 +78,7 @@ class UvLampBlock : BlockWithEntity(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, UvLampBlockEntity::class.type()) { w, p, s, be ->
-=======
-        else validateTicker(type, UvLampBlockEntity::class.type()) { w, p, s, be ->
->>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -143,10 +115,7 @@ class UvLampBlock : BlockWithEntity(
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
-<<<<<<< HEAD
         hand: Hand,
-=======
->>>>>>> backup/1.21.1
         hit: BlockHitResult
     ): ActionResult {
         if (!world.isClient) {
@@ -155,25 +124,7 @@ class UvLampBlock : BlockWithEntity(
         return ActionResult.SUCCESS
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-=======
-    override fun onUseWithItem(
-        stack: ItemStack,
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ItemActionResult {
-        if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
-        }
-        return ItemActionResult.SUCCESS
-    }
-
->>>>>>> backup/1.21.1
     override fun onStateReplaced(
         state: BlockState,
         world: World,
@@ -200,10 +151,6 @@ class UvLampBlock : BlockWithEntity(
     }
 
     companion object {
-<<<<<<< HEAD
-=======
-        val UV_LAMP_CODEC: MapCodec<UvLampBlock> = Block.createCodec { error("UvLampBlock cannot be deserialized from JSON") }
->>>>>>> backup/1.21.1
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         private const val THICK = 1.0 / 16.0
@@ -216,11 +163,7 @@ class UvLampBlock : BlockWithEntity(
         private val SHAPE_DOWN = VoxelShapes.cuboid(0.0, 1.0 - THICK, 0.0, 1.0, 1.0, 1.0)
 
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             val luminator = LuminatorFlatBlock::class.item()
             if (luminator != Items.AIR) {
                 ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, UvLampBlock::class.item(), 1)

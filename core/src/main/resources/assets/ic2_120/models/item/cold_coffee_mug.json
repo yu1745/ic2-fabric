@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/cold_coffee_mug.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,4 @@
     "flat_3e3e3e": "ic2_120:item/item3d/flat_3e3e3e",
     "flat_3e240b": "ic2_120:item/item3d/flat_3e240b"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/brewing/mug_cold_coffee"
-	}
->>>>>>> backup/1.21.1
 }

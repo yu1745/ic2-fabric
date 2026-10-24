@@ -8,11 +8,12 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.instance
 import ic2_120.registry.id
+import java.util.function.Consumer
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -50,11 +51,7 @@ class WindGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, WindGeneratorBlockEntity::class.type()) { w, p, s, be ->
-=======
-        else validateTicker(type, WindGeneratorBlockEntity::class.type()){ w, p, s, be ->
->>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -63,7 +60,6 @@ class WindGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -73,9 +69,6 @@ class WindGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -96,7 +89,7 @@ class WindGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val generator = GeneratorBlock::class.item()
             if (generator != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WindGeneratorBlock::class.item(), 1)

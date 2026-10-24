@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/advanced_ejector_upgrade.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -53,48 +52,4 @@
       "model": "ic2_120:item/upgrade/advanced_ejector_east"
     }
   ]
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/upgrade/advanced_ejector"
-	},
-	"overrides": [
-		{
-			"predicate": {
-				"ic2:down": 1
-			},
-			"model": "ic2:item/upgrade/advanced_ejector_down"
-		},
-		{
-			"predicate": {
-				"ic2:up": 1
-			},
-			"model": "ic2:item/upgrade/advanced_ejector_up"
-		},
-		{
-			"predicate": {
-				"ic2:north": 1
-			},
-			"model": "ic2:item/upgrade/advanced_ejector_north"
-		},
-		{
-			"predicate": {
-				"ic2:south": 1
-			},
-			"model": "ic2:item/upgrade/advanced_ejector_south"
-		},
-		{
-			"predicate": {
-				"ic2:west": 1
-			},
-			"model": "ic2:item/upgrade/advanced_ejector_west"
-		},
-		{
-			"predicate": {
-				"ic2:east": 1
-			},
-			"model": "ic2:item/upgrade/advanced_ejector_east"
-		}
-	]
->>>>>>> backup/1.21.1
 }

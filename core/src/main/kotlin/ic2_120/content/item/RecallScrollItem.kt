@@ -12,12 +12,9 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-<<<<<<< HEAD
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.data.server.recipe.RecipeJsonProvider
-=======
->>>>>>> backup/1.21.1
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
@@ -33,25 +30,13 @@ import net.minecraft.util.TypedActionResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
-<<<<<<< HEAD
 import java.util.function.Consumer
-=======
-
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.tooltip.TooltipType
-import ic2_120.getCustomData
-import ic2_120.editCustomData
->>>>>>> backup/1.21.1
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 @ModItem(name = "recall_scroll", tab = CreativeTab.IC2_TOOLS, group = "tools")
-<<<<<<< HEAD
 class RecallScrollItem : Item(FabricItemSettings().maxCount(1)) {
-=======
-class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
->>>>>>> backup/1.21.1
     companion object {
         private const val NBT_BIND_X = "BindX"
         private const val NBT_BIND_Y = "BindY"
@@ -60,11 +45,7 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         private const val NBT_HAS_BIND = "HasBind"
 
         @RecipeProvider
-<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-=======
-        fun generateRecipes(exporter: RecipeExporter) {
->>>>>>> backup/1.21.1
             val teleporter = TeleporterBlock::class.item()
             val paper = Items.PAPER
             val advancedCircuit = AdvancedCircuit::class.instance()
@@ -95,7 +76,6 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         if (state.block !is TeleporterBlock) return ActionResult.PASS
         if (player == null) return ActionResult.SUCCESS
 
-<<<<<<< HEAD
         val nbt = stack.orCreateNbt
         val dim = world.registryKey.value.toString()
 
@@ -104,17 +84,6 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         nbt.putInt(NBT_BIND_Y, pos.y)
         nbt.putInt(NBT_BIND_Z, pos.z)
         nbt.putString(NBT_BIND_DIM, dim)
-=======
-        val dim = world.registryKey.value.toString()
-
-        stack.editCustomData { nbt ->
-            nbt.putBoolean(NBT_HAS_BIND, true)
-            nbt.putInt(NBT_BIND_X, pos.x)
-            nbt.putInt(NBT_BIND_Y, pos.y)
-            nbt.putInt(NBT_BIND_Z, pos.z)
-            nbt.putString(NBT_BIND_DIM, dim)
-        }
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             player.sendMessage(Text.literal("已绑定传送机: ${pos.x}, ${pos.y}, ${pos.z}"), true)
         }
@@ -127,23 +96,14 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         val stack = player.getStackInHand(hand)
         if (world.isClient) return TypedActionResult.success(stack)
 
-<<<<<<< HEAD
         val nbt = stack.orCreateNbt
         if (!nbt.getBoolean(NBT_HAS_BIND)) {
-=======
-        val nbt = stack.getCustomData()
-        if (nbt == null || !nbt.getBoolean(NBT_HAS_BIND)) {
->>>>>>> backup/1.21.1
             player.sendMessage(Text.literal("请先绑定传送机。"), true)
             return TypedActionResult.fail(stack)
         }
 
         val dim = world.registryKey.value.toString()
-<<<<<<< HEAD
         val bindDim = nbt.getString(NBT_BIND_DIM)
-=======
-        val bindDim = nbt.getString(NBT_BIND_DIM) ?: "" 
->>>>>>> backup/1.21.1
         if (bindDim != dim) {
             player.sendMessage(Text.literal("维度不一致，无法传送。"), true)
             return TypedActionResult.fail(stack)
@@ -202,7 +162,6 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
 
     override fun appendTooltip(
         stack: ItemStack,
-<<<<<<< HEAD
         world: World?,
         tooltip: MutableList<Text>,
         context: TooltipContext
@@ -210,15 +169,6 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         super.appendTooltip(stack, world, tooltip, context)
 
         val nbt = stack.nbt
-=======
-        context: Item.TooltipContext,
-        tooltip: MutableList<Text>,
-        type: TooltipType
-    ) {
-        super.appendTooltip(stack, context, tooltip, type)
-
-        val nbt = stack.getCustomData()
->>>>>>> backup/1.21.1
         if (nbt != null && nbt.getBoolean(NBT_HAS_BIND)) {
             val x = nbt.getInt(NBT_BIND_X)
             val y = nbt.getInt(NBT_BIND_Y)

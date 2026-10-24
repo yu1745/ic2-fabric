@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/dense_gold_plate.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,10 +8,5 @@
     "metal_dede00": "ic2_120:item/item3d/metal_dede00",
     "metal_ffff8b": "ic2_120:item/item3d/metal_ffff8b",
     "flat_ffffff": "ic2_120:item/item3d/flat_ffffff"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/resource/plate/dense_gold"
->>>>>>> backup/1.21.1
   }
 }

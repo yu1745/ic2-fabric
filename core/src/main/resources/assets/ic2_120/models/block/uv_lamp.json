@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
 	"parent": "ic2_120:block/machine/misc/luminator_shape_flat",
-=======
-	"parent": "ic2:block/machine/misc/luminator_shape_flat",
->>>>>>> backup/1.21.1
 	"textures": {
 		"all": "ic2_120:block/uv_lamp"
 	}

@@ -6,11 +6,8 @@ import ic2_120.content.CreativeGeneratorItemEntityHandler
 import ic2_120.content.ChainsawHandler
 import ic2_120.content.RubberTreetapHandler
 import ic2_120.content.WrenchHandler
-<<<<<<< HEAD
 import ic2_120.content.block.RubberWoodFlammables
 import ic2_120.content.block.RubberWoodStrippables
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.block.nuclear.NuclearExplosionManager
 import ic2_120.content.block.nuclear.NuclearReactorBlockEntity
 import ic2_120.content.block.nuclear.ReactorChamberBlock
@@ -23,17 +20,9 @@ import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.fluid.UUFluidEffectHandler
 import ic2_120.content.network.NetworkManager
-<<<<<<< HEAD
 import ic2_120.content.network.ConfigSyncHelper
 import ic2_120.content.network.ConfigSyncPacket
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
-=======
-import ic2_120.content.network.BandwidthStatsService
-import ic2_120.content.network.ConfigSyncPacket
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import ic2_120.content.effect.ModStatusEffects
->>>>>>> backup/1.21.1
 import ic2_120.content.effect.RadiationHandler
 import ic2_120.content.worldgen.ChestLootInjector
 import ic2_120.content.worldgen.OreGeneration
@@ -64,28 +53,18 @@ import ic2_120.content.command.ConfigCommand
 import ic2_120.content.command.SeedCommand
 import ic2_120.content.command.RubberTreeCommand
 import ic2_120.content.command.UuReplicationCommand
-<<<<<<< HEAD
-=======
-import ic2_120.editCustomData
->>>>>>> backup/1.21.1
 import ic2_120.content.command.ItemIdCommand
 import ic2_120.registry.ClassScanner
 import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.fabricmc.fabric.api.registry.FuelRegistry
-<<<<<<< HEAD
-=======
-import ic2_120.content.item.CfPack
-import ic2_120.content.item.FoamSprayerItem
-import ic2_120.content.item.armor.JetpackItem
->>>>>>> backup/1.21.1
 import ic2_120.content.item.CreativeTabIconItemsRegistration
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -95,7 +74,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -153,7 +131,7 @@ object Ic2_120 : ModInitializer {
 
         // 焦炭作为固体燃料：燃烧时间为煤炭 2 倍（影响原版熔炉、铁炉、发电机等读取 FuelRegistry 的设备）
         val coalBurnTicks = FuelRegistry.INSTANCE.get(Items.COAL) ?: 1600
-        Registries.ITEM.getOrEmpty(Identifier.of(MOD_ID, "coke")).ifPresent { cokeItem ->
+        Registries.ITEM.getOrEmpty(Identifier(MOD_ID, "coke")).ifPresent { cokeItem ->
             FuelRegistry.INSTANCE.add(cokeItem, coalBurnTicks * 2)
         }
 
@@ -220,15 +198,10 @@ object Ic2_120 : ModInitializer {
                 EnergyNetworkManager.tickAll(world)
             }
             FlightManager.tick(server)
-<<<<<<< HEAD
-=======
-            BandwidthStatsService.onServerTick(server)
->>>>>>> backup/1.21.1
             PipeNetworkManager.tickAllWorlds(server)
             NuclearExplosionManager.tick(server)
         }
 
-<<<<<<< HEAD
         // 匿名使用统计：服务端每次启动上报一次（覆盖独立服务端 + 集成服务端）
         ServerLifecycleEvents.SERVER_STARTED.register {
             AnalyticsReporter.report("server")
@@ -238,71 +211,17 @@ object Ic2_120 : ModInitializer {
         // 避免 /reload 后已加载机器继续使用旧配方。
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register { _, _, _ ->
             RecipeCacheEpoch.invalidate()
-=======
-        // 储电盒自定义 BlockItem（支持满电变体）及创造模式满电物品
-        val storageIds = listOf(
-            "batbox",
-            "cesu",
-            "mfe",
-            "mfsu",
-            "batbox_chargepad",
-            "cesu_chargepad",
-            "mfe_chargepad",
-            "mfsu_chargepad"
-        )
-        val ic2MachinesKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MACHINES.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2MachinesKey).register { entries: FabricItemGroupEntries ->
-            for (id in storageIds) {
-                val fullStack = ItemStack(Registries.ITEM.get(Identifier.of(MOD_ID, id)))
-                fullStack.editCustomData { it.putBoolean(EnergyStorageBlock.NBT_FULL, true) }
-                entries.addUnique(fullStack)
-            }
-        }
-
-        // 注册满燃料喷气背包到创造模式
-        val jetpackItem = Registries.ITEM.get(Identifier.of(MOD_ID, "jetpack"))
-        if (jetpackItem != null) {
-            val ic2MaterialsKey =
-                RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MATERIALS.id))
-            ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries: FabricItemGroupEntries ->
-                // 添加满燃料的喷气背包
-                val fullFuelJetpack = ItemStack(jetpackItem).also {
-                    JetpackItem.setFuel(it, JetpackItem.MAX_FUEL)
-                }
-                entries.addAfterUnique(jetpackItem, fullFuelJetpack)
-            }
-        }
-
-        // 建筑泡沫喷枪：满流体（8 桶）变体
-        val ic2MaterialsKey =
-            RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MATERIALS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries: FabricItemGroupEntries ->
-            val sprayer = Registries.ITEM.get(Identifier.of(MOD_ID, "foam_sprayer"))
-            if (sprayer == Items.AIR || sprayer !is FoamSprayerItem) return@register
-            val fullSprayer = ItemStack(sprayer).also {
-                FoamSprayerItem.setFluidAmount(it, FoamSprayerItem.CAPACITY_DROPLETS)
-            }
-            entries.addAfterUnique(sprayer, fullSprayer)
-
-            val cfPack = Registries.ITEM.get(Identifier.of(MOD_ID, "cf_pack"))
-            if (cfPack != Items.AIR) {
-                val fullCfPack = ItemStack(cfPack).also {
-                    CfPack.setFluidAmount(it, CfPack.CAPACITY_DROPLETS)
-                }
-                entries.addAfterUnique(cfPack, fullCfPack)
-            }
->>>>>>> backup/1.21.1
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
-        val ic2CropSeedsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries: FabricItemGroupEntries ->
-            val seedBag = Registries.ITEM.get(Identifier.of(MOD_ID, "crop_seed_bag"))
+        val ic2CropSeedsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
+        ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries ->
+            val seedBag = Registries.ITEM.get(Identifier(MOD_ID, "crop_seed_bag"))
             val initialSeeds = CropSeedBagItem.createInitialSeedStacks()
             if (seedBag != net.minecraft.item.Items.AIR) {
-                for (stack in initialSeeds) entries.addAfterUnique(seedBag, stack)
+                for (stack in initialSeeds) entries.addAfter(seedBag, stack)
             } else {
-                for (stack in initialSeeds) entries.addUnique(stack)
+                for (stack in initialSeeds) entries.add(stack)
             }
         }
 
@@ -323,7 +242,6 @@ object Ic2_120 : ModInitializer {
 
         // 玩家加入时发送完整配置同步（分包）
         ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
-<<<<<<< HEAD
             ConfigSyncHelper.sendToPlayer(handler.player, ConfigSyncPacket.ID, Ic2Config.prettyCurrentConfig())
             ConfigSyncHelper.sendToPlayer(
                 handler.player,
@@ -336,18 +254,6 @@ object Ic2_120 : ModInitializer {
         // 生存模式重置为 false；登记给 FlightManager 在下次 tick 强制重发 abilities 包兜底。
         ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register { player, _, _ ->
             FlightManager.onWorldChanged(player)
-=======
-            val json = Ic2Config.prettyCurrentConfig()
-            val bytes = json.toByteArray(Charsets.UTF_8)
-            val totalChunks = (bytes.size + ConfigSyncPacket.MAX_CHUNK_BYTES - 1) / ConfigSyncPacket.MAX_CHUNK_BYTES
-            var offset = 0
-            for (index in 0 until totalChunks) {
-                val size = minOf(ConfigSyncPacket.MAX_CHUNK_BYTES, bytes.size - offset)
-                val chunk = bytes.copyOfRange(offset, offset + size)
-                ServerPlayNetworking.send(handler.player, ConfigSyncPacket(totalChunks, index, chunk))
-                offset += size
-            }
->>>>>>> backup/1.21.1
         }
 
         // 注册配置重载命令（/ic2config reload）
@@ -356,7 +262,6 @@ object Ic2_120 : ModInitializer {
         RubberTreeCommand.register()
         UuReplicationCommand.register()
         ItemIdCommand.register()
-<<<<<<< HEAD
 
         // [TEMP] 半流质发电机燃料 dump：启动后遍历所有流体过真实匹配逻辑并打日志。
         // 测完删掉本行 + content/debug/SemifluidFuelDump.kt
@@ -376,8 +281,6 @@ object Ic2_120 : ModInitializer {
                 ic2_120.integration.jei.Ic2JeiPlugin.refreshReplicatorRecipes()
             }
         }
-=======
->>>>>>> backup/1.21.1
 
         logger.info("IC2 1.20 模组已加载（类注解驱动自动注册）")
     }
@@ -385,20 +288,5 @@ object Ic2_120 : ModInitializer {
     /**
      * 创建模组内的标识符
      */
-    fun id(path: String): Identifier = Identifier.of(MOD_ID, path)
-
-    private fun FabricItemGroupEntries.addUnique(stack: ItemStack) {
-        if (containsEquivalent(stack)) return
-        add(stack)
-    }
-
-    private fun FabricItemGroupEntries.addAfterUnique(anchor: Item, stack: ItemStack) {
-        if (containsEquivalent(stack)) return
-        addAfter(anchor, stack)
-    }
-
-    private fun FabricItemGroupEntries.containsEquivalent(stack: ItemStack): Boolean {
-        return displayStacks.any { ItemStack.areEqual(it, stack) } ||
-            searchTabStacks.any { ItemStack.areEqual(it, stack) }
-    }
+    fun id(path: String): Identifier = Identifier(MOD_ID, path)
 }

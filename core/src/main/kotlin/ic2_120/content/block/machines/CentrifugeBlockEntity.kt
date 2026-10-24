@@ -40,15 +40,12 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
 import net.minecraft.item.Items
-=======
-import net.minecraft.recipe.input.SingleStackRecipeInput
->>>>>>> backup/1.21.1
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
@@ -56,13 +53,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-<<<<<<< HEAD
 import ic2_120.content.upgrade.IValidInputItem
-=======
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 
 /**
  * 热能离心机方块实体。
@@ -77,14 +68,9 @@ class CentrifugeBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
     IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CentrifugeBlock.ACTIVE
 
@@ -183,11 +169,9 @@ class CentrifugeBlockEntity(
         else -> false
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.centrifuge")
@@ -195,14 +179,13 @@ class CentrifugeBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         CentrifugeScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CentrifugeSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-<<<<<<< HEAD
         progressF = if (nbt.contains("ProgressF")) {
             nbt.getFloat("ProgressF").coerceIn(0f, CentrifugeSync.PROGRESS_MAX.toFloat())
         } else {
@@ -210,13 +193,11 @@ class CentrifugeBlockEntity(
         }
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
-=======
->>>>>>> backup/1.21.1
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CentrifugeSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -378,7 +359,6 @@ class CentrifugeBlockEntity(
         val input = getStack(SLOT_INPUT)
         if (input.isEmpty) return null
 
-<<<<<<< HEAD
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedRecipeItem === input.item) {
             val cached = cachedRecipe
             if (cached != null && input.count >= cached.inputCount) return cached
@@ -386,26 +366,20 @@ class CentrifugeBlockEntity(
         }
 
         val inv = SimpleInventory(input)
-=======
->>>>>>> backup/1.21.1
         val recipeManager = world?.recipeManager ?: return null
 
         val optionalRecipe = recipeManager.getFirstMatch(
             getRecipeType<CentrifugeRecipe>(),
-            SingleStackRecipeInput(input),
+            inv,
             world ?: return null
         )
 
-<<<<<<< HEAD
         val recipe = optionalRecipe.orElse(null)
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
         cachedRecipe = recipe
         cachedRecipeQueryCount = input.count
         return recipe
-=======
-        return optionalRecipe.map { it.value }.orElse(null)
->>>>>>> backup/1.21.1
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
@@ -419,16 +393,12 @@ class CentrifugeBlockEntity(
         if (stack.isEmpty || isBatteryItem(stack)) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-<<<<<<< HEAD
         val inv = SimpleInventory(stack.copyWithCount(stack.maxCount))
         val found = w.recipeManager.getFirstMatch(getRecipeType<CentrifugeRecipe>(), inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found
         return found
-=======
-        return w.recipeManager.getFirstMatch(getRecipeType<CentrifugeRecipe>(), SingleStackRecipeInput(stack.copyWithCount(stack.maxCount)), w).isPresent
->>>>>>> backup/1.21.1
     }
     /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
      *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */

@@ -10,14 +10,15 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
-import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import java.util.function.Consumer
 
 /**
  * 纳米靴子 (Nano Boots)
@@ -36,11 +37,11 @@ import net.minecraft.util.Formatting
  * - 能量从所有纳米装备均匀扣除
  */
 @ModItem(name = "nano_boots", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoBoots : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1)) {
+class NanoBoots : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.BOOTS, FabricItemSettings().maxCount(1)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val plate = CarbonPlate::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             if (plate == Items.AIR || crystal == Items.AIR) return
@@ -58,15 +59,9 @@ class NanoBoots : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.BOO
         }
     }
 
-<<<<<<< HEAD
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
                 val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
-=======
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
-        super.appendTooltip(stack, context, tooltip, type)
-        val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
->>>>>>> backup/1.21.1
         tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
     }
 }

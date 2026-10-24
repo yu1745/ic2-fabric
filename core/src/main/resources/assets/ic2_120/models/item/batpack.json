@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/batpack.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,3 @@
     "flat_9a9a9a": "ic2_120:item/item3d/flat_9a9a9a"
   }
 }
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/armor/batpack"
-  }
-}
->>>>>>> backup/1.21.1

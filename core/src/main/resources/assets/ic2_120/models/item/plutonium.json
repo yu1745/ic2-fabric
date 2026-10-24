@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/plutonium.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "flat_575757": "ic2_120:item/item3d/flat_575757",
     "flat_c9c9c9": "ic2_120:item/item3d/flat_c9c9c9",
     "flat_868686": "ic2_120:item/item3d/flat_868686"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/nuclear/plutonium"
->>>>>>> backup/1.21.1
   }
 }

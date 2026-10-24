@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/uranium_pellet.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,10 +8,5 @@
     "flat_52950f": "ic2_120:item/item3d/flat_52950f",
     "flat_60ae11": "ic2_120:item/item3d/flat_60ae11",
     "flat_70cc13": "ic2_120:item/item3d/flat_70cc13"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/nuclear/uranium_pellet"
->>>>>>> backup/1.21.1
   }
 }

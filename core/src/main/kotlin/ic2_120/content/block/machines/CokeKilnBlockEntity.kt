@@ -25,13 +25,8 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-<<<<<<< HEAD
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-=======
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.util.Identifier
 import net.minecraft.screen.ScreenHandler
@@ -42,19 +37,13 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = CokeKilnBlock::class)
 class CokeKilnBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
-=======
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     companion object {
         private const val SLOT_INPUT = 0
@@ -77,11 +66,7 @@ class CokeKilnBlockEntity(
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
-<<<<<<< HEAD
     private val peatOreItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "peat_ore")) }
-=======
-    private val peatOreItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore")) }
->>>>>>> backup/1.21.1
 
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
@@ -140,11 +125,9 @@ class CokeKilnBlockEntity(
         markDirty()
     }
 
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.coke_kiln")
@@ -161,7 +144,7 @@ class CokeKilnBlockEntity(
                 setStack(SLOT_OUTPUT, ItemStack.EMPTY)
                 return ActionResult.SUCCESS
             }
-            if (ItemStack.areItemsAndComponentsEqual(handStack, out) && handStack.count + out.count <= handStack.maxCount) {
+            if (ItemStack.canCombine(handStack, out) && handStack.count + out.count <= handStack.maxCount) {
                 handStack.increment(out.count)
                 setStack(SLOT_OUTPUT, ItemStack.EMPTY)
                 return ActionResult.SUCCESS
@@ -198,7 +181,7 @@ class CokeKilnBlockEntity(
     private fun canOutput(recipe: Recipe): Boolean {
         val out = getStack(SLOT_OUTPUT)
         if (out.isEmpty) return true
-        return ItemStack.areItemsAndComponentsEqual(out, recipe.output) && out.count + recipe.output.count <= out.maxCount
+        return ItemStack.canCombine(out, recipe.output) && out.count + recipe.output.count <= out.maxCount
     }
 
     private fun hasTankSpace(recipe: Recipe): Boolean {
@@ -261,16 +244,16 @@ class CokeKilnBlockEntity(
         else -> false
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         nbt.putInt(NBT_PROGRESS, progress)
         syncedData.writeNbt(nbt)
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         progress = nbt.getInt(NBT_PROGRESS)
         syncedData.readNbt(nbt)
         sync.progress = progress

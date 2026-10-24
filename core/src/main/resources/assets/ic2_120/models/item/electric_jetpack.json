@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/electric_jetpack.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -13,10 +12,3 @@
     "flat_b72015": "ic2_120:item/item3d/flat_b72015"
   }
 }
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/armor/jetpack_electric"
-  }
-}
->>>>>>> backup/1.21.1

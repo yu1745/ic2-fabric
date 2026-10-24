@@ -12,7 +12,6 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
@@ -38,15 +37,12 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     /** 限流值，0 表示不限流。由限流导线 GUI 设置。 */
     var configuredLimit: Long = 0
 
-<<<<<<< HEAD
     /** 分流导线的红石触发阈值（1–15）。 */
     var splitterThreshold: Int = DEFAULT_SPLITTER_THRESHOLD
 
     /** 分流导线是否反相：反相时，信号低于阈值才断开。 */
     var splitterInverted: Boolean = false
 
-=======
->>>>>>> backup/1.21.1
     /** 有效传输速率，受限于 [configuredLimit]。 */
     val effectiveTransferRate: Long
         get() {
@@ -76,52 +72,38 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
 
         override fun insert(maxAmount: Long, transaction: TransactionContext): Long {
             val w = world ?: return 0
-<<<<<<< HEAD
             val net = network ?: EnergyNetworkManager.getOrCreateNetwork(w, pos).also { network = it }
-=======
-            val net = network ?: return 0
->>>>>>> backup/1.21.1
             return net.insertAndDeliver(this@CableBlockEntity.pos.asLong(), maxAmount, w, transaction)
         }
 
 
         override fun extract(maxAmount: Long, transaction: TransactionContext): Long {
             val w = world ?: return 0
-<<<<<<< HEAD
             val net = network ?: EnergyNetworkManager.getOrCreateNetwork(w, pos).also { network = it }
-=======
-            val net = network ?: return 0
->>>>>>> backup/1.21.1
             return net.extractFromCable(this@CableBlockEntity.pos.asLong(), maxAmount, w, transaction)
         }
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
         localEnergy = nbt.getLong(NBT_ENERGY)
         configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
-<<<<<<< HEAD
         splitterThreshold = if (nbt.contains(NBT_SPLITTER_THRESHOLD)) {
             nbt.getInt(NBT_SPLITTER_THRESHOLD).coerceIn(MIN_SPLITTER_THRESHOLD, MAX_SPLITTER_THRESHOLD)
         } else {
             DEFAULT_SPLITTER_THRESHOLD
         }
         splitterInverted = nbt.getBoolean(NBT_SPLITTER_INVERTED)
-=======
->>>>>>> backup/1.21.1
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
         nbt.putLong(NBT_ENERGY, network?.getEnergySharePerCable() ?: localEnergy)
         if (configuredLimit > 0) {
             nbt.putLong(NBT_LIMIT, configuredLimit)
         }
-<<<<<<< HEAD
         nbt.putInt(NBT_SPLITTER_THRESHOLD, splitterThreshold)
         nbt.putBoolean(NBT_SPLITTER_INVERTED, splitterInverted)
-=======
->>>>>>> backup/1.21.1
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -134,14 +116,11 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         private val logger = LoggerFactory.getLogger("ic2_120/CableBlockEntity")
         private const val NBT_ENERGY = "CableEnergy"
         private const val NBT_LIMIT = "ConfiguredLimit"
-<<<<<<< HEAD
         private const val NBT_SPLITTER_THRESHOLD = "SplitterThreshold"
         private const val NBT_SPLITTER_INVERTED = "SplitterInverted"
         const val MIN_SPLITTER_THRESHOLD = 1
         const val MAX_SPLITTER_THRESHOLD = 15
         const val DEFAULT_SPLITTER_THRESHOLD = 1
-=======
->>>>>>> backup/1.21.1
         // private const val NBT_LOAD = "CableLoad"
 
         lateinit var TYPE: BlockEntityType<CableBlockEntity>
@@ -188,7 +167,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
             TYPE = FabricBlockEntityTypeBuilder.create(factory, *cableBlocks.toTypedArray())
                 .build() as BlockEntityType<CableBlockEntity>
 
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier.of(modId, "cable"), TYPE)
+            Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier(modId, "cable"), TYPE)
             EnergyStorage.SIDED.registerForBlockEntity({ be, _ -> be.energyStorage }, TYPE)
 
             logger.info("已注册 CableBlockEntity（电网模型），关联 {} 种导线方块", cableBlocks.size)

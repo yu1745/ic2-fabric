@@ -14,13 +14,8 @@ import net.minecraft.util.Identifier
  */
 object ModFluidClient {
 
-<<<<<<< HEAD
     private val STILL_TEX = Identifier("ic2", "block/fluid/fluid_still")
     private val FLOW_TEX = Identifier("ic2", "block/fluid/fluid_flow")
-=======
-    private val STILL_TEX = Identifier.of("ic2", "block/fluid/fluid_still")
-    private val FLOW_TEX = Identifier.of("ic2", "block/fluid/fluid_flow")
->>>>>>> backup/1.21.1
 
     fun register() {
         val fluids = listOf(

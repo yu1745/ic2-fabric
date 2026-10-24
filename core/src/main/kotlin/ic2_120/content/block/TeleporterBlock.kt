@@ -17,7 +17,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -30,6 +30,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 @ModBlock(name = "teleporter", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
@@ -46,11 +47,7 @@ class TeleporterBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, TeleporterBlockEntity::class.type()) { w, p, s, be ->
-=======
-        else validateTicker(type, TeleporterBlockEntity::class.type()){ w, p, s, be ->
->>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -59,7 +56,6 @@ class TeleporterBlock : MachineBlock() {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -70,10 +66,6 @@ class TeleporterBlock : MachineBlock() {
         hit: BlockHitResult
     ): ActionResult {
         val stack = player.getStackInHand(hand)
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        val stack = player.mainHandStack
->>>>>>> backup/1.21.1
         if (stack.item is FrequencyTransmitter || stack.item is RecallScrollItem) {
             return ActionResult.PASS
         }
@@ -98,7 +90,7 @@ class TeleporterBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val freq = FrequencyTransmitter::class.instance()
             val advancedCircuit = AdvancedCircuit::class.instance()

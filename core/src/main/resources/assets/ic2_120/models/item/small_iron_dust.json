@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/small_iron_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "flat_e3e3e3": "ic2_120:item/item3d/flat_e3e3e3",
     "flat_b8b8b8": "ic2_120:item/item3d/flat_b8b8b8",
     "flat_878787": "ic2_120:item/item3d/flat_878787"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/small_iron"
->>>>>>> backup/1.21.1
   }
 }

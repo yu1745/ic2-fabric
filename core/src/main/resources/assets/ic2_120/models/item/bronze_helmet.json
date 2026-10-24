@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/bronze_helmet.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "flat_792d10": "ic2_120:item/item3d/flat_792d10",
     "flat_a33c17": "ic2_120:item/item3d/flat_a33c17",
     "metal_ffa34f": "ic2_120:item/item3d/metal_ffa34f"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2_120_industrial_upgrade:item/proton"
->>>>>>> backup/1.21.1
   }
 }

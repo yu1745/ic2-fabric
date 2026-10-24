@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/power_unit.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,10 +11,4 @@
     "flat_2e2d2d": "ic2_120:item/item3d/flat_2e2d2d",
     "glow_fb9000": "ic2_120:item/item3d/glow_fb9000"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/power_unit"
-	}
->>>>>>> backup/1.21.1
 }

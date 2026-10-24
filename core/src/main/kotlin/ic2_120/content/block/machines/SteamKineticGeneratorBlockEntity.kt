@@ -13,17 +13,11 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.integration.ftbchunks.ClaimProtection
-=======
-import ic2_120.content.upgrade.FluidPipeUpgradeComponent
-import ic2_120.content.upgrade.IEjectorUpgradeSupport
-import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
->>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -44,14 +38,7 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-<<<<<<< HEAD
 import net.minecraft.network.PacketByteBuf
-=======
-import net.minecraft.nbt.NbtOps
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -78,13 +65,8 @@ class SteamKineticGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), IKineticMachinePort, Inventory, IRoutedSidedInventory,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), IKineticMachinePort, Inventory,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SteamKineticGeneratorBlock.ACTIVE
     override val tier: Int = 3
@@ -123,10 +105,6 @@ class SteamKineticGeneratorBlockEntity(
             fluidLookupRegistered = true
         }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> backup/1.21.1
         fun mbToDroplets(mb: Long): Long = mb * FluidConstants.BUCKET / 1000
         fun dropletsToMb(droplets: Long): Long = droplets * 1000 / FluidConstants.BUCKET
     }
@@ -145,13 +123,9 @@ class SteamKineticGeneratorBlockEntity(
         markDirty = { markDirty() }
     )
 
-<<<<<<< HEAD
     override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData()
-=======
-    val syncedData = SyncedData(this)
->>>>>>> backup/1.21.1
     val sync = SteamKineticGeneratorSync(syncedData)
 
     /** 内部 KU 缓冲区 */
@@ -192,7 +166,6 @@ class SteamKineticGeneratorBlockEntity(
             if (droplets <= 0L || variant.isBlank) return 0L
             val actual = minOf(droplets, amount)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -202,13 +175,6 @@ class SteamKineticGeneratorBlockEntity(
                 markDirty()
                 actual
             }
-=======
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.steamAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
->>>>>>> backup/1.21.1
         }
 
         fun isSuperheated(): Boolean = variant.fluid == ModFluids.SUPERHEATED_STEAM_STILL
@@ -220,11 +186,7 @@ class SteamKineticGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean = false
-<<<<<<< HEAD
         override fun canExtract(variant: FluidVariant): Boolean = !variant.isBlank
-=======
-        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
 
         override fun onFinalCommit() {
             sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
@@ -238,7 +200,6 @@ class SteamKineticGeneratorBlockEntity(
             val space = WATER_TANK_CAPACITY - amount
             val actual = minOf(droplets, space)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -248,13 +209,6 @@ class SteamKineticGeneratorBlockEntity(
                 markDirty()
                 actual
             }
-=======
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
-            sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
->>>>>>> backup/1.21.1
         }
 
         fun ejectToNeighbors(world: World, pos: BlockPos) {
@@ -264,7 +218,6 @@ class SteamKineticGeneratorBlockEntity(
                 val neighborPos = pos.offset(side)
                 val storage = FluidStorage.SIDED.find(world, neighborPos, side.opposite) ?: continue
                 try {
-<<<<<<< HEAD
                    val extracted = storage.insert(variant, amount, null)
                    if (extracted > 0L) {
                         Transaction.openOuter().use { tx ->
@@ -273,12 +226,6 @@ class SteamKineticGeneratorBlockEntity(
                             if (amount <= 0L) variant = FluidVariant.blank()
                             tx.commit()
                         }
-=======
-                    val extracted = storage.insert(variant, amount, null)
-                    if (extracted > 0L) {
-                        amount -= extracted
-                        if (amount <= 0L) variant = FluidVariant.blank()
->>>>>>> backup/1.21.1
                         sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
                         markDirty()
                     }
@@ -306,38 +253,21 @@ class SteamKineticGeneratorBlockEntity(
 
         override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
             val views = mutableListOf<StorageView<FluidVariant>>()
-<<<<<<< HEAD
-=======
-            if (!steamTank.variant.isBlank && steamTank.amount > 0L) {
->>>>>>> backup/1.21.1
                 views.add(object : StorageView<FluidVariant> {
                     override fun getResource(): FluidVariant = steamTank.variant
                     override fun getAmount(): Long = steamTank.amount
                     override fun getCapacity(): Long = STEAM_TANK_CAPACITY
                     override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
-<<<<<<< HEAD
                     override fun isResourceBlank(): Boolean = steamTank.variant.isBlank
                 })
-=======
-                    override fun isResourceBlank(): Boolean = false
-                })
-            }
-            if (!distilledWaterTank.variant.isBlank && distilledWaterTank.amount > 0L) {
->>>>>>> backup/1.21.1
                 views.add(object : StorageView<FluidVariant> {
                     override fun getResource(): FluidVariant = distilledWaterTank.variant
                     override fun getAmount(): Long = distilledWaterTank.amount
                     override fun getCapacity(): Long = WATER_TANK_CAPACITY
                     override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long =
                         distilledWaterTank.extract(resource, maxAmount, transaction)
-<<<<<<< HEAD
                     override fun isResourceBlank(): Boolean = distilledWaterTank.variant.isBlank
                 })
-=======
-                    override fun isResourceBlank(): Boolean = false
-                })
-            }
->>>>>>> backup/1.21.1
             return views.iterator()
         }
     }
@@ -397,17 +327,9 @@ class SteamKineticGeneratorBlockEntity(
 
     // ==== ScreenHandler ====
 
-<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-=======
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        return buf
->>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.steam_kinetic_generator")
@@ -424,71 +346,41 @@ class SteamKineticGeneratorBlockEntity(
 
     // ==== NBT ====
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         Inventories.readNbt(nbt, inventory)
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
->>>>>>> backup/1.21.1
         syncedData.readNbt(nbt)
         kuBuffer = nbt.getInt(NBT_KU_BUFFER)
         condensationProgress = nbt.getInt(NBT_CONDENSATION)
 
         if (nbt.contains(NBT_STEAM_TANK)) {
             val tankNbt = nbt.getCompound(NBT_STEAM_TANK)
-<<<<<<< HEAD
             steamTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("variant"))
-=======
-            val steamTag = tankNbt.getCompound("variant")
-            steamTank.variant = if (steamTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, steamTag).result().map { it.first }.orElse(FluidVariant.blank())
->>>>>>> backup/1.21.1
             steamTank.amount = tankNbt.getLong("amount")
         }
         if (nbt.contains(NBT_WATER_TANK)) {
             val tankNbt = nbt.getCompound(NBT_WATER_TANK)
-<<<<<<< HEAD
             distilledWaterTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("variant"))
-=======
-            val waterTag = tankNbt.getCompound("variant")
-            distilledWaterTank.variant = if (waterTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, waterTag).result().map { it.first }.orElse(FluidVariant.blank())
->>>>>>> backup/1.21.1
             distilledWaterTank.amount = tankNbt.getLong("amount")
         }
         sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.distilledWaterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
     }
 
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         Inventories.writeNbt(nbt, inventory)
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
->>>>>>> backup/1.21.1
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_KU_BUFFER, kuBuffer)
         nbt.putInt(NBT_CONDENSATION, condensationProgress)
 
         val steamTankNbt = NbtCompound()
-<<<<<<< HEAD
         steamTankNbt.put("variant", steamTank.variant.toNbt())
-=======
-        steamTankNbt.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, steamTank.variant).result().orElse(NbtCompound()))
->>>>>>> backup/1.21.1
         steamTankNbt.putLong("amount", steamTank.amount)
         nbt.put(NBT_STEAM_TANK, steamTankNbt)
 
         val waterTankNbt = NbtCompound()
-<<<<<<< HEAD
         waterTankNbt.put("variant", distilledWaterTank.variant.toNbt())
-=======
-        waterTankNbt.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, distilledWaterTank.variant).result().orElse(NbtCompound()))
->>>>>>> backup/1.21.1
         waterTankNbt.putLong("amount", distilledWaterTank.amount)
         nbt.put(NBT_WATER_TANK, waterTankNbt)
     }
@@ -532,17 +424,12 @@ class SteamKineticGeneratorBlockEntity(
             // ---- handleSteam: 消耗全部蒸汽 ----
             steamInputDroplets = steamTank.amount.coerceAtLeast(0L)
             steamInputMb = dropletsToMb(steamInputDroplets).toInt().coerceAtLeast(0)
-<<<<<<< HEAD
             Transaction.openOuter().use { tx ->
                 steamTank.updateSnapshots(tx)
                 steamTank.amount = 0L
                 steamTank.variant = FluidVariant.blank()
                 tx.commit()
             }
-=======
-            steamTank.amount = 0L
-            steamTank.variant = FluidVariant.blank()
->>>>>>> backup/1.21.1
             sync.steamAmount = 0
             steamConsumed = steamInputMb.toLong()
 
@@ -597,17 +484,12 @@ class SteamKineticGeneratorBlockEntity(
         } else if (hasTurbine && steamTank.amount > 0L && isTurbineFilledWithWater) {
             // 蒸馏水满阻塞 → 强制排汽，否则爆炸
             steamInputDroplets = steamTank.amount.coerceAtLeast(0L)
-<<<<<<< HEAD
             Transaction.openOuter().use { tx ->
                 steamTank.updateSnapshots(tx)
                 steamTank.amount = 0L
                 steamTank.variant = FluidVariant.blank()
                 tx.commit()
             }
-=======
-            steamTank.amount = 0L
-            steamTank.variant = FluidVariant.blank()
->>>>>>> backup/1.21.1
             sync.steamAmount = 0
             outputSteam(world, pos, steamInputDroplets)
         }
@@ -655,15 +537,10 @@ class SteamKineticGeneratorBlockEntity(
         if (remaining > 0) {
             ventingSteam = true
             if (world.random.nextInt(10) == 0) {
-<<<<<<< HEAD
                 if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
                     world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
                         1f, World.ExplosionSourceType.NONE)
                 }
-=======
-                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                    1f, World.ExplosionSourceType.NONE)
->>>>>>> backup/1.21.1
             }
         } else {
             ventingSteam = false
@@ -699,15 +576,10 @@ class SteamKineticGeneratorBlockEntity(
         if (remaining > 0) {
             ventingSteam = true
             if (world.random.nextInt(10) == 0) {
-<<<<<<< HEAD
                 if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
                     world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
                         1f, World.ExplosionSourceType.NONE)
                 }
-=======
-                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                    1f, World.ExplosionSourceType.NONE)
->>>>>>> backup/1.21.1
             }
         } else {
             ventingSteam = false

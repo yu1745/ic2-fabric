@@ -26,11 +26,7 @@ class WindKineticGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val outputKu = handler.sync.outputKu.coerceAtLeast(0)
@@ -80,11 +76,7 @@ class WindKineticGeneratorScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiwindkineticgenerator.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiwindkineticgenerator.png")
->>>>>>> backup/1.21.1
         private val TEXT_COLOR = 0xFF90EE90.toInt()
     }
 }

@@ -16,10 +16,7 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
@@ -41,17 +38,9 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
-=======
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtOps
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -77,13 +66,8 @@ class CondenserBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CondenserBlock.ACTIVE
     override val tier: Int = 3
@@ -150,13 +134,9 @@ class CondenserBlockEntity(
         markDirty = { markDirty() }
     )
 
-<<<<<<< HEAD
     override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData()
-=======
-    val syncedData = SyncedData(this)
->>>>>>> backup/1.21.1
     @RegisterEnergy
     val sync = CondenserSync(
         schema = syncedData,
@@ -195,11 +175,7 @@ class CondenserBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean = false
-<<<<<<< HEAD
         override fun canExtract(variant: FluidVariant): Boolean = !variant.isBlank
-=======
-        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
 
         override fun onFinalCommit() {
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
@@ -211,17 +187,12 @@ class CondenserBlockEntity(
             val space = WATER_TANK_CAPACITY - amount
             val actual = minOf(droplets, space)
             if (actual <= 0L) return false
-<<<<<<< HEAD
             Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
                 if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
                 tx.commit()
             }
-=======
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
->>>>>>> backup/1.21.1
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return true
@@ -236,17 +207,12 @@ class CondenserBlockEntity(
                 try {
                     val extracted = storage.insert(variant, amount, null)
                     if (extracted > 0L) {
-<<<<<<< HEAD
                         Transaction.openOuter().use { tx ->
                             updateSnapshots(tx)
                             amount -= extracted
                             if (amount <= 0L) variant = FluidVariant.blank()
                             tx.commit()
                         }
-=======
-                        amount -= extracted
-                        if (amount <= 0L) variant = FluidVariant.blank()
->>>>>>> backup/1.21.1
                         sync.waterAmount = amount.toInt().coerceAtLeast(0)
                         markDirty()
                     }
@@ -273,38 +239,21 @@ class CondenserBlockEntity(
 
         override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
             val views = mutableListOf<StorageView<FluidVariant>>()
-<<<<<<< HEAD
-=======
-            if (!steamTank.variant.isBlank && steamTank.amount > 0L) {
->>>>>>> backup/1.21.1
                 views.add(object : StorageView<FluidVariant> {
                     override fun getResource(): FluidVariant = steamTank.variant
                     override fun getAmount(): Long = steamTank.amount
                     override fun getCapacity(): Long = STEAM_TANK_CAPACITY
                     override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
-<<<<<<< HEAD
                     override fun isResourceBlank(): Boolean = steamTank.variant.isBlank
                 })
-=======
-                    override fun isResourceBlank(): Boolean = false
-                })
-            }
-            if (!distilledWaterTank.variant.isBlank && distilledWaterTank.amount > 0L) {
->>>>>>> backup/1.21.1
                 views.add(object : StorageView<FluidVariant> {
                     override fun getResource(): FluidVariant = distilledWaterTank.variant
                     override fun getAmount(): Long = distilledWaterTank.amount
                     override fun getCapacity(): Long = WATER_TANK_CAPACITY
                     override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long =
                         distilledWaterTank.extract(resource, maxAmount, transaction)
-<<<<<<< HEAD
                     override fun isResourceBlank(): Boolean = distilledWaterTank.variant.isBlank
                 })
-=======
-                    override fun isResourceBlank(): Boolean = false
-                })
-            }
->>>>>>> backup/1.21.1
             return views.iterator()
         }
     }
@@ -331,11 +280,7 @@ class CondenserBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_UPGRADE -> isBatteryItem(stack)
-<<<<<<< HEAD
         SLOT_DISCHARGE -> isBatteryItem(stack) || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust
-=======
-        SLOT_DISCHARGE -> isBatteryItem(stack)
->>>>>>> backup/1.21.1
         SLOT_WATER_INPUT -> isFluidCell(stack) || isWaterBucket(stack)
         SLOT_WATER_OUTPUT -> false  // 仅输出
         in SLOT_VENT_INDICES -> isValidVent(stack)
@@ -351,17 +296,9 @@ class CondenserBlockEntity(
 
     // ==== ScreenHandler ====
 
-<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-=======
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        return buf
->>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.condenser")
@@ -371,15 +308,9 @@ class CondenserBlockEntity(
 
     // ==== NBT ====
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         Inventories.readNbt(nbt, inventory)
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
->>>>>>> backup/1.21.1
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CondenserSync.NBT_ENERGY_STORED).coerceIn(0L, CondenserSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -388,55 +319,31 @@ class CondenserBlockEntity(
         machineTier = nbt.getInt(NBT_TIER).coerceAtLeast(3)
         if (nbt.contains(NBT_STEAM_TANK)) {
             val t = nbt.getCompound(NBT_STEAM_TANK)
-<<<<<<< HEAD
             steamTank.variant = FluidVariant.fromNbt(t.getCompound("variant"))
-=======
-            val steamTag = t.getCompound("variant")
-            steamTank.variant = if (steamTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, steamTag).result().map { it.first }.orElse(FluidVariant.blank())
->>>>>>> backup/1.21.1
             steamTank.amount = t.getLong("amount")
         }
         if (nbt.contains(NBT_WATER_TANK)) {
             val t = nbt.getCompound(NBT_WATER_TANK)
-<<<<<<< HEAD
             distilledWaterTank.variant = FluidVariant.fromNbt(t.getCompound("variant"))
-=======
-            val waterTag = t.getCompound("variant")
-            distilledWaterTank.variant = if (waterTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, waterTag).result().map { it.first }.orElse(FluidVariant.blank())
->>>>>>> backup/1.21.1
             distilledWaterTank.amount = t.getLong("amount")
         }
         sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.waterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
     }
 
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         Inventories.writeNbt(nbt, inventory)
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
->>>>>>> backup/1.21.1
         syncedData.writeNbt(nbt)
         nbt.putLong(CondenserSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_PROGRESS, progress)
         nbt.putInt(NBT_TIER, machineTier)
         val st = NbtCompound()
-<<<<<<< HEAD
         st.put("variant", steamTank.variant.toNbt())
         st.putLong("amount", steamTank.amount)
         nbt.put(NBT_STEAM_TANK, st)
         val wt = NbtCompound()
         wt.put("variant", distilledWaterTank.variant.toNbt())
-=======
-        st.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, steamTank.variant).result().orElse(NbtCompound()))
-        st.putLong("amount", steamTank.amount)
-        nbt.put(NBT_STEAM_TANK, st)
-        val wt = NbtCompound()
-        wt.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, distilledWaterTank.variant).result().orElse(NbtCompound()))
->>>>>>> backup/1.21.1
         wt.putLong("amount", distilledWaterTank.amount)
         nbt.put(NBT_WATER_TANK, wt)
     }
@@ -453,12 +360,8 @@ class CondenserBlockEntity(
         val euSpace = (CondenserSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0)
         val discharged = batteryDischarger.tick(euSpace.coerceAtMost(CondenserSync.MAX_INSERT))
         if (discharged > 0) {
-<<<<<<< HEAD
             val inserted = sync.insertEnergy(discharged)
             if (discharged > inserted) sync.forceInsertEnergy(discharged - inserted)
-=======
-            sync.insertEnergy(discharged)
->>>>>>> backup/1.21.1
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         }
 
@@ -503,17 +406,12 @@ class CondenserBlockEntity(
                 if (toConsume > 0L && steamTank.amount > 0L) {
                 val consumed = steamTank.amount.coerceAtMost(toConsume)
                 if (consumed > 0L) {
-<<<<<<< HEAD
                     Transaction.openOuter().use { tx ->
                         steamTank.updateSnapshots(tx)
                         steamTank.amount -= consumed
                         if (steamTank.amount <= 0L) steamTank.variant = FluidVariant.blank()
                         tx.commit()
                     }
-=======
-                    steamTank.amount -= consumed
-                    if (steamTank.amount <= 0L) steamTank.variant = FluidVariant.blank()
->>>>>>> backup/1.21.1
                     steamConsumed = consumed.toInt().coerceAtLeast(0).toLong()
                     progress += steamConsumed.toInt()
                     sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)

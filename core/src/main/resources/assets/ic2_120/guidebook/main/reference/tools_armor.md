@@ -10,10 +10,6 @@ item_ids:
   - ic2_120:frequency_transmitter
   - ic2_120:obscurator
   - ic2_120:tool_box
-<<<<<<< HEAD
-=======
-  - ic2_120:jetpack_attachment_plate
->>>>>>> backup/1.21.1
 ---
 
 # Tools and Armor
@@ -38,21 +34,12 @@ Electric tools do not consume vanilla durability and use EU. When unpowered, fun
 
 | Tool | Tier | Capacity | Typical Consumption | Use |
 |------|------|----------|----------|-----|
-<<<<<<< HEAD
 | Mining Drill | 1 | 30,000 EU | 50 EU/block | Efficiency 8.0; pickaxe/shovel hybrid |
 | Diamond Drill | 1 | 30,000 EU | 80 EU/block | Efficiency 16.0; higher mining capability |
 | Iridium Drill | 3 | 300,000 EU | 800 EU/block, 10x for silk touch | Efficiency 24.0; high-tier pickaxe/shovel, can toggle silk touch |
 | Chainsaw | 1 | 30,000 EU | 100 EU/block | Axe-type felling |
 | Electric Resin Extractor | 1 | 10,000 EU | 50 EU/use | Extracts rubber tree resin |
 | Electric Wrench | 1 | 12,000 EU | 100 EU rotation / 1,000 EU removal | Machine rotation and disassembly |
-=======
-| Mining Drill | 1 | 10,000 EU | 50 EU/block | Pickaxe/shovel hybrid |
-| Diamond Drill | 2 | 10,000 EU | 80 EU/block | Higher mining capability |
-| Iridium Drill | 3 | 1,000,000 EU | 800 EU/block, 10x for silk touch | High-tier pickaxe/shovel, can toggle silk touch |
-| Chainsaw | 1 | 30,000 EU | 250 EU/block | Axe-type felling |
-| Electric Resin Extractor | 1 | 10,000 EU | Per use | Extracts rubber tree resin |
-| Electric Wrench | 1 | 10,000 EU | Per use | Machine rotation and disassembly |
->>>>>>> backup/1.21.1
 | Nano Saber | 3 | 160,000 EU | 400 EU on hit, idle drain when active | Right-click to toggle; high damage when active and powered |
 
 ---
@@ -69,12 +56,8 @@ See: [Mining Laser](../guides/mining_laser.md)
 - **OV Scanner**: more advanced mineral scanner with longer range and stronger capability than the OD.
 - **Frequency Transmitter**: used for remote binding scenarios such as teleporters.
 - **Obscurator**: disguises the appearance of blocks.
-<<<<<<< HEAD
 - **Construction Foam Sprayer**: consumes construction foam; combined with the construction foam backpack it supports continuous building. Right-click to spray, and hold Alt while right-clicking to switch between single-cell and multi-spray modes. Multi-spray follows connected IC2 or vanilla scaffolding.
 - **Brush**: loads a dye from the offhand and recolors hardened Construction Foam Walls. It has 32 uses and resets to an uncolored Brush when its color-specific durability is exhausted.
-=======
-- **Construction Foam Sprayer**: consumes construction foam; combined with the construction foam backpack it supports continuous building.
->>>>>>> backup/1.21.1
 
 ---
 

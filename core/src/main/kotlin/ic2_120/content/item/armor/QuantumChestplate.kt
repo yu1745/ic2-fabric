@@ -14,16 +14,15 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
-import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import ic2_120.editCustomData
-import ic2_120.getCustomData
+import java.util.function.Consumer
 
 /**
  * 量子胸甲 (Quantum Chestplate)
@@ -47,7 +46,7 @@ import ic2_120.getCustomData
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
+class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
 
     companion object {
         private const val FLIGHT_REMAINDER_KEY = "QuantumChestplateFlightRemainder"
@@ -57,7 +56,6 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
 
         val flightDurationSeconds: Int
             get() = Ic2Config.current.armor.quantumChestplate.flightDurationSeconds
-<<<<<<< HEAD
 
         /**
          * 使用余数累加器精确消耗能量（支持小数消耗速率）
@@ -80,31 +78,8 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             return true
         }
 
-=======
-
-        /**
-         * 使用余数累加器精确消耗能量（支持小数消耗速率）
-         * @return true 如果消耗成功，false 如果能量不足
-         */
-        fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
-            val energy = stack.getCustomData()?.getLong(IElectricTool.ENERGY_KEY) ?: 0L
-            if (energy <= 0) return false
-            var remainder = stack.getCustomData()?.getDouble(FLIGHT_REMAINDER_KEY) ?: 0.0
-            remainder += flightCostPerTick
-            val toConsume = remainder.toLong()
-            if (toConsume <= 0) {
-                stack.editCustomData { it.putDouble(FLIGHT_REMAINDER_KEY, remainder) }
-                return true
-            }
-            if (energy < toConsume) return false
-            (stack.item as IElectricTool).setEnergy(stack, energy - toConsume)
-            stack.editCustomData { it.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume) }
-            return true
-        }
-
->>>>>>> backup/1.21.1
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val alloy = Alloy::class.instance()
             val nano = NanoChestplate::class.instance()
             val iridium = IridiumPlate::class.instance()
@@ -128,13 +103,8 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
         }
     }
 
-<<<<<<< HEAD
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
-=======
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
-        super.appendTooltip(stack, context, tooltip, type)
->>>>>>> backup/1.21.1
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0) {

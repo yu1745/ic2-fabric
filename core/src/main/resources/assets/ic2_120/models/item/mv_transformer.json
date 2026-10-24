@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/block/machine3d/mv_transformer_item.obj",
   "parent": "minecraft:block/block",
@@ -10,7 +9,4 @@
     "copper": "ic2_120:block/machine3d/copper",
     "brass": "ic2_120:block/machine3d/brass"
   }
-=======
-  "parent": "ic2:block/wiring/transformer/mv_transformer"
->>>>>>> backup/1.21.1
 }

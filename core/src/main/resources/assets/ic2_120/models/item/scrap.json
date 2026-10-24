@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/scrap.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,4 @@
     "flat_685a30": "ic2_120:item/item3d/flat_685a30",
     "flat_6b6b6b": "ic2_120:item/item3d/flat_6b6b6b"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/scrap"
-	}
->>>>>>> backup/1.21.1
 }

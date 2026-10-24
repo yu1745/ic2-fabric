@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/iodine_tablet.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,10 +11,4 @@
     "glass_5c4a9c": "ic2_120:item/item3d/glass_5c4a9c",
     "flat_b0b0b0": "ic2_120:item/item3d/flat_b0b0b0"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/resource/iodine_tablet"
-	}
->>>>>>> backup/1.21.1
 }

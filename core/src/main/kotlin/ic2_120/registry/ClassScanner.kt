@@ -38,6 +38,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.SpawnGroup
 import net.minecraft.world.World
 import team.reborn.energy.api.EnergyStorage
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.block.Block
@@ -48,21 +49,14 @@ import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-<<<<<<< HEAD
 import net.minecraft.util.Hand
-=======
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.ByteBuf
-import net.minecraft.network.RegistryByteBuf
-import net.minecraft.network.codec.PacketCodec
->>>>>>> backup/1.21.1
 import net.minecraft.util.math.BlockPos
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -90,16 +84,13 @@ import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.superclasses
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
-<<<<<<< HEAD
 import kotlin.reflect.jvm.javaMethod
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
 import java.util.function.Consumer
-=======
->>>>>>> backup/1.21.1
 import java.nio.file.Files
 import java.nio.file.Paths
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 
 /**
  * 基于类注解的注册扫描器。
@@ -146,7 +137,7 @@ object ClassScanner {
     private val screenHandlerTypes = mutableMapOf<kotlin.reflect.KClass<*>, ScreenHandlerType<*>>()
 
     /** 配方生成器列表（带 modId 标记，支持附属 mod 按需过滤） */
-    private data class RecipeGeneratorEntry(val modId: String, val generator: (RecipeExporter) -> Unit)
+    private data class RecipeGeneratorEntry(val modId: String, val generator: (Consumer<RecipeJsonProvider>) -> Unit)
     private val recipeGenerators = mutableListOf<RecipeGeneratorEntry>()
 
     /**
@@ -608,7 +599,7 @@ object ClassScanner {
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = Identifier.of(modId, name)
+                val id = Identifier(modId, name)
 
                 // 创建 RegistryKey
                 val tabKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, id)
@@ -635,7 +626,7 @@ object ClassScanner {
                     }
                     annotation.iconItem.isNotEmpty() -> {
                         // 使用已注册的物品作为图标
-                        val iconId = Identifier.of(modId, annotation.iconItem)
+                        val iconId = Identifier(modId, annotation.iconItem)
                         iconStackSupplier = { ItemStack(Registries.ITEM.get(iconId)) }
                     }
                     else -> {
@@ -654,23 +645,11 @@ object ClassScanner {
                     .icon(iconStackSupplier)
                     .displayName(Text.translatable("itemGroup.$modId.$name"))
                     .entries { _, collector ->
-<<<<<<< HEAD
                         // 实时读取 tabItems（不能捕获构建时快照）：Connector/Forge 环境下附属 main
                         // 可能先于 core 的 registerWithAddons 执行，创造栏会早于附属导线注册构建；
                         // 快照会导致后注册的导线（ic2_120:cables entrypoint 贡献）缺失。
                         val liveEntries = (tabItems[tabEnum] ?: emptyList())
                             .sortedWith(compareBy({ it.group }, { it.itemId.toString() }))
-=======
-                        val addedStacks = mutableListOf<ItemStack>()
-                        fun addUnique(stack: ItemStack) {
-                            if (addedStacks.any { ItemStack.areEqual(it, stack) }) {
-                                return
-                            }
-                            collector.add(stack)
-                            addedStacks.add(stack.copy())
-                        }
-
->>>>>>> backup/1.21.1
                         // 添加所有属于这个物品栏的物品（已按 group 排序）
                         for (entry in liveEntries) {
                             val item = Registries.ITEM.get(entry.itemId)
@@ -692,7 +671,7 @@ object ClassScanner {
                                         val electricTool = item as IElectricTool
                                         electricTool.setEnergy(emptyStack, 0)
                                     }
-                                    addUnique(emptyStack)
+                                    collector.add(emptyStack)
 
                                     // 添加满电版本
                                     val fullStack = ItemStack(item)
@@ -703,7 +682,6 @@ object ClassScanner {
                                         val electricTool = item as IElectricTool
                                         electricTool.setEnergy(fullStack, electricTool.maxCapacity)
                                     }
-<<<<<<< HEAD
                                     collector.add(fullStack)
                                } else {
                                    // 普通物品，直接添加
@@ -713,13 +691,6 @@ object ClassScanner {
                                        collector.add(item.createFullVariant())
                                    }
                                }
-=======
-                                    addUnique(fullStack)
-                                } else {
-                                    // 普通物品，直接添加
-                                    addUnique(ItemStack(item))
-                                }
->>>>>>> backup/1.21.1
                             }
                         }
                     }
@@ -775,19 +746,11 @@ object ClassScanner {
                         name
                     }
 
-                    val id = Identifier.of(modId, finalName)
+                    val id = Identifier(modId, finalName)
 
-                    val type = ExtendedScreenHandlerType<ScreenHandler, PacketByteBuf>(
-                        { syncId, playerInventory, buf -> createFromBuffer(syncId, playerInventory, buf) },
-                        object : PacketCodec<RegistryByteBuf, PacketByteBuf> {
-                            override fun encode(buf: RegistryByteBuf, value: PacketByteBuf) {
-                                buf.writeBytes(value, value.readableBytes())
-                            }
-                            override fun decode(buf: RegistryByteBuf): PacketByteBuf {
-                                return PacketByteBuf(buf.readBytes(buf.readableBytes()) as ByteBuf)
-                            }
-                        }
-                    )
+                    val type = ExtendedScreenHandlerType { syncId, playerInventory, buf ->
+                        createFromBuffer(syncId, playerInventory, buf)
+                    }
 
                     Registry.register(Registries.SCREEN_HANDLER, id, type)
                     screenHandlerTypes[clazz] = type
@@ -911,7 +874,7 @@ object ClassScanner {
         for ((clazz, annotation) in blockEntityClasses) {
             try {
                 val name = resolveNameFromBlockOrAnnotation(annotation.name, annotation.block, clazz.simpleName ?: "unknown")
-                val id = Identifier.of(modId, name)
+                val id = Identifier(modId, name)
                 val targetBlocks = resolveBlockEntityTargets(modId, clazz, annotation, id)
                 if (targetBlocks.isEmpty()) {
                     logger.error("注册方块实体类型 {} 失败: 未解析到任何目标方块", clazz.simpleName)
@@ -1044,7 +1007,7 @@ object ClassScanner {
                     )
                     return@mapNotNull null
                 }
-                val blockId = Identifier.of(modId, blockName)
+                val blockId = Identifier(modId, blockName)
                 val block = Registries.BLOCK.get(blockId)
                 if (block == net.minecraft.block.Blocks.AIR && blockId.path != "air") {
                     logger.warn("方块实体 {} 对应的方块未找到: {}，请确保方块先于方块实体注册", clazz.simpleName, blockId)
@@ -1075,7 +1038,7 @@ object ClassScanner {
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = Identifier.of(modId, name)
+                val id = Identifier(modId, name)
 
                 // 注册方块
                 Registry.register(Registries.BLOCK, id, instance)
@@ -1118,7 +1081,6 @@ object ClassScanner {
         block: Block,
         id: Identifier
     ): BlockItem {
-<<<<<<< HEAD
         var current: KClass<*>? = blockClass
         while (current != null && current != Any::class) {
             val customItemClass = current.nestedClasses.firstOrNull { nested ->
@@ -1143,28 +1105,6 @@ object ClassScanner {
                 logger.debug("方块 {} 的父类 {} 存在自定义 BlockItem 类 {}，但未找到 (Block, Item.Settings) 构造函数，继续向上查找", id, current.simpleName, customItemClass.simpleName)
             }
             current = current.superclasses.firstOrNull()
-=======
-        val customItemClass = blockClass.nestedClasses.firstOrNull { nested ->
-            nested.simpleName?.endsWith("BlockItem") == true && nested.isSubclassOf(BlockItem::class)
-        } ?: return BlockItem(block, Item.Settings())
-
-        val ctor = customItemClass.constructors.firstOrNull { constructor ->
-            val params = constructor.parameters
-            params.size == 2 &&
-                params[0].type.classifier == Block::class &&
-                params[1].type.classifier == Item.Settings::class
-        } ?: run {
-            logger.warn("方块 {} 存在自定义 BlockItem 类 {}，但未找到 (Block, Item.Settings) 构造函数，回退默认 BlockItem", id, customItemClass.simpleName)
-            return BlockItem(block, Item.Settings())
-        }
-
-        return try {
-            @Suppress("UNCHECKED_CAST")
-            ctor.call(block, Item.Settings()) as BlockItem
-        } catch (e: Exception) {
-            logger.warn("创建方块 {} 的自定义 BlockItem 失败: {}，回退默认 BlockItem", id, e.message)
-            BlockItem(block, Item.Settings())
->>>>>>> backup/1.21.1
         }
         return BlockItem(block, FabricItemSettings())
     }
@@ -1179,7 +1119,7 @@ object ClassScanner {
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = Identifier.of(modId, name)
+                val id = Identifier(modId, name)
 
                 // 注册物品
                Registry.register(Registries.ITEM, id, instance)
@@ -1313,7 +1253,7 @@ object ClassScanner {
     }
 
     private fun parseItemGroupKey(modId: String, tab: CreativeTab): RegistryKey<ItemGroup> {
-        val id = Identifier.of(tab.getNamespacedId(modId))
+        val id = Identifier(tab.getNamespacedId(modId))
         return RegistryKey.of(RegistryKeys.ITEM_GROUP, id)
     }
 
@@ -1366,9 +1306,9 @@ object ClassScanner {
                 // 验证方法签名
                 val parameters = generateRecipesMethod.parameters
                 if (parameters.size != 2 ||
-                    parameters[1].type.classifier != RecipeExporter::class) {
+                    parameters[1].type.classifier != Consumer::class) {
                     logger.warn(
-                        "类 {} 的 {} 方法签名不正确，应为 (RecipeExporter) -> Unit",
+                        "类 {} 的 {} 方法签名不正确，应为 (Consumer<RecipeJsonProvider>) -> Unit",
                         clazz.simpleName,
                         generateRecipesMethod.name
                     )
@@ -1376,7 +1316,7 @@ object ClassScanner {
                 }
 
                 // 创建生成器闭包
-                val generator: (RecipeExporter) -> Unit = { exporter ->
+                val generator: (Consumer<RecipeJsonProvider>) -> Unit = { exporter ->
                     @Suppress("UNCHECKED_CAST")
                     generateRecipesMethod.call(companion, exporter as Any?)
                 }
@@ -1395,7 +1335,7 @@ object ClassScanner {
      * 执行所有配方生成
      * 供 ModRecipeProvider 调用
      */
-    fun generateAllRecipes(recipeExporter: RecipeExporter) {
+    fun generateAllRecipes(recipeExporter: Consumer<RecipeJsonProvider>) {
         logger.info("开始生成配方...")
         var successCount = 0
         var failCount = 0
@@ -1415,7 +1355,7 @@ object ClassScanner {
     /**
      * 执行指定 modId 的配方生成（供附属 mod 使用）。
      */
-    fun generateRecipesForMod(modId: String, recipeExporter: RecipeExporter) {
+    fun generateRecipesForMod(modId: String, recipeExporter: Consumer<RecipeJsonProvider>) {
         logger.info("开始生成 {} 配方...", modId)
         var successCount = 0
         var failCount = 0
@@ -1482,7 +1422,7 @@ object ClassScanner {
     private fun <T : BlockEntity> resolveBlockEntityTypeFromRegistry(clazz: kotlin.reflect.KClass<T>): BlockEntityType<T>? {
         val annotation = clazz.findAnnotation<ModBlockEntity>() ?: return null
         val name = resolveNameFromBlockOrAnnotation(annotation.name, annotation.block, clazz.simpleName ?: "unknown")
-        val id = Identifier.of(currentModId, name)
+        val id = Identifier(currentModId, name)
         val type = Registries.BLOCK_ENTITY_TYPE.getOrEmpty(id).orElse(null) ?: return null
         blockEntityTypes[clazz] = type
         return type as? BlockEntityType<T>

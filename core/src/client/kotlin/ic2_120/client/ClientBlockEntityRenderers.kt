@@ -13,7 +13,6 @@ import ic2_120.client.renderers.LeashKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.MinerBlockEntityRenderer
 import ic2_120.content.block.ComposeDebugBlockEntity
 import ic2_120.content.block.machines.AdvancedMinerBlockEntity
-<<<<<<< HEAD
 import ic2_120.content.block.machines.PumpBlockEntity
 import ic2_120.content.block.machines.FluidCannerBlockEntity
 import ic2_120.content.block.machines.CondenserBlockEntity
@@ -33,8 +32,6 @@ import ic2_120.content.block.machines.ExtractorBlockEntity
 import ic2_120.content.block.machines.MaceratorBlockEntity
 import ic2_120.content.block.machines.RecyclerBlockEntity
 import ic2_120.content.block.machines.SolidCannerBlockEntity
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.block.machines.LeashKineticGeneratorBlockEntity
 import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
 import ic2_120.content.block.machines.MinerBlockEntity

@@ -24,10 +24,6 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 - [Heat System](systems/heat_system.md)
 - [Kinetic Transmission](systems/kinetic_transmission.md)
 - [Machine System](systems/machines.md)
-<<<<<<< HEAD
-=======
-- [Nuclear Reactor System](systems/nuclear_reactor.md)
->>>>>>> backup/1.21.1
 
 ## Reference
 
@@ -105,10 +101,7 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 - [Solid Canning Machine](machines/solid_canner.md)
 - [Fluid Canner](machines/fluid_canner.md)
 - [Fluid/Solid Canning Machine](machines/canner.md)
-<<<<<<< HEAD
 - [Biofuel Production Chain](machines/biofuel_chain.md)
-=======
->>>>>>> backup/1.21.1
 - [Block Cutting Machine](machines/block_cutter.md)
 - [Extractor](machines/extractor.md)
 - [Pump](machines/pump.md)
@@ -174,10 +167,6 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 
 ### Addons
 
-<<<<<<< HEAD
-=======
-- [Advanced Solar Addon](machines/advanced_solar.md)
->>>>>>> backup/1.21.1
 - [Storage Box](machines/storage_box.md)
 
 ## Equipment

@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
  "multipart": [
   {
    "apply": {
@@ -115,9 +114,4 @@
    }
   }
  ]
-=======
-  "variants": {
-    "": { "model": "ic2:block/generator/reactor/reactor_fluid_port" }
-  }
->>>>>>> backup/1.21.1
 }

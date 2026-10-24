@@ -1,9 +1,5 @@
 {
   "variants": {
-<<<<<<< HEAD
     "": { "model": "ic2_120:block/machine/steam/refractory_bricks" }
-=======
-    "": { "model": "ic2:block/machine/steam/refractory_bricks" }
->>>>>>> backup/1.21.1
   }
 }

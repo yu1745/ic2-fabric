@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/purified_tin.obj",
@@ -13,6 +12,3 @@
     "flat_727272": "ic2_120:item/item3d/flat_727272"
   }
 }
-=======
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/purified/tin" } }
->>>>>>> backup/1.21.1

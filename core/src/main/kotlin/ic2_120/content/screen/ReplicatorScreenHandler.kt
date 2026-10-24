@@ -112,26 +112,18 @@ class ReplicatorScreenHandler(
                     || index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
-<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
-=======
-                index in PLAYER_INV_START..HOTBAR_END -> {
->>>>>>> backup/1.21.1
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
                         stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
-<<<<<<< HEAD
                 else -> {
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
-=======
-                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
->>>>>>> backup/1.21.1
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY

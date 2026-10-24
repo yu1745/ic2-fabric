@@ -1,12 +1,6 @@
 package ic2_120.content.uu
 
 import ic2_120.config.Ic2Config
-<<<<<<< HEAD
-=======
-import ic2_120.editCustomData
-import ic2_120.getCustomData
-import ic2_120.removeCustomData
->>>>>>> backup/1.21.1
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
@@ -49,16 +43,16 @@ data class UuTemplateEntry(
 }
 
 fun ItemStack.getUuTemplate(): UuTemplateEntry? =
-    UuTemplateEntry.fromNbt(getCustomData()?.getCompound(UU_TEMPLATE_NBT_KEY))
+    UuTemplateEntry.fromNbt(nbt?.getCompound(UU_TEMPLATE_NBT_KEY))
 
 fun ItemStack.setUuTemplate(entry: UuTemplateEntry?) {
+    val root = orCreateNbt
     if (entry == null) {
-        if (getCustomData() == null) return
-        editCustomData { it.remove(UU_TEMPLATE_NBT_KEY) }
-        if (getCustomData()?.isEmpty == true) removeCustomData()
+        root.remove(UU_TEMPLATE_NBT_KEY)
+        if (root.isEmpty) nbt = null
         return
     }
-    editCustomData { it.put(UU_TEMPLATE_NBT_KEY, entry.toNbt()) }
+    root.put(UU_TEMPLATE_NBT_KEY, entry.toNbt())
 }
 
 fun ItemStack.appendUuTemplateTooltip(tooltip: MutableList<Text>) {

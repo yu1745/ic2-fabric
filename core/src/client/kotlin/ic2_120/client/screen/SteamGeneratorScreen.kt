@@ -49,11 +49,7 @@ class SteamGeneratorScreen(
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
         // 标题居中，颜色 0x404040 — 与 Ic2Gui.drawXCenteredString 一致
         context.drawText(
@@ -184,11 +180,7 @@ class SteamGeneratorScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guisteamgenerator.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisteamgenerator.png")
->>>>>>> backup/1.21.1
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val HEAT_COLOR = 0xFFFF4444.toInt()
         private val CALC_COLOR = 0xFF888888.toInt()

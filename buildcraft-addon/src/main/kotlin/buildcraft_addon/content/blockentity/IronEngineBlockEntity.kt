@@ -1,19 +1,12 @@
 package buildcraft_addon.content.blockentity
 
-<<<<<<< HEAD
 import ic2_120.integration.ftbchunks.ClaimProtection
 
-=======
->>>>>>> backup/1.21.1
 import buildcraft_addon.content.block.IronEngineBlock
 import buildcraft_addon.content.screen.IronEngineScreenHandler
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-<<<<<<< HEAD
-=======
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -21,10 +14,6 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.nbt.NbtCompound
-<<<<<<< HEAD
-=======
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
@@ -58,11 +47,7 @@ class IronEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory, IKineticMachinePort {
-=======
-) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory<PacketByteBuf>, IKineticMachinePort {
->>>>>>> backup/1.21.1
 
     constructor(pos: BlockPos, state: BlockState) : this(
         IronEngineBlockEntity::class.type(), pos, state
@@ -226,17 +211,9 @@ class IronEngineBlockEntity(
         return IronEngineScreenHandler(syncId, playerInventory, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), propertyDelegate)
     }
 
-<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(4)
-=======
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(4)
-        return buf
->>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.buildcraft_addon.iron_engine")
@@ -271,11 +248,8 @@ class IronEngineBlockEntity(
     private fun explode() {
         val world = world ?: return
         if (!world.isClient) {
-<<<<<<< HEAD
             if (!ClaimProtection.allAllowedUuid(world, listOf(pos), null, ClaimProtection.EDIT_BLOCK) ||
                 !ClaimProtection.explosionCubeAllowed(world, pos, 4.0f, null)) return
-=======
->>>>>>> backup/1.21.1
             world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.World.ExplosionSourceType.BLOCK)
             world.breakBlock(pos, false)
         }
@@ -358,13 +332,8 @@ class IronEngineBlockEntity(
     }
 
     // === NBT ===
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
@@ -383,13 +352,8 @@ class IronEngineBlockEntity(
         nbt.putInt("penaltyCooling", penaltyCooling)
     }
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")

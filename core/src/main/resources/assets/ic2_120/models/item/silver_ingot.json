@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/silver_ingot.obj",
@@ -11,6 +10,3 @@
     "flat_fafafa": "ic2_120:item/item3d/flat_fafafa"
   }
 }
-=======
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/ingot/silver" } }
->>>>>>> backup/1.21.1

@@ -21,13 +21,13 @@ import net.minecraft.util.Identifier
 class CoalWaterTransformRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CoalWaterTransformJeiRecipe> {
     private val background: IDrawable = guiHelper.createBlankDrawable(130, 62)
     private val slotBackground: IDrawable = guiHelper.createDrawable(
-        Identifier("ic2_120", "textures/gui/jei_transform.png"), 0, 34, 18, 18
+        Identifier.of("ic2_120", "textures/gui/jei_transform.png"), 0, 34, 18, 18
     )
     private val arrow: IDrawable = guiHelper.createDrawable(
-        Identifier("ic2_120", "textures/gui/jei_transform.png"), 0, 17, 24, 17
+        Identifier.of("ic2_120", "textures/gui/jei_transform.png"), 0, 17, 24, 17
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "coal_fuel_dust")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "coal_fuel_dust")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.COAL_WATER_TRANSFORM

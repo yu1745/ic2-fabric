@@ -1,17 +1,11 @@
 package ic2_120.client.screen
 
-<<<<<<< HEAD
 import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.screen.FluidUpgradeScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.loader.api.FabricLoader
-=======
-import ic2_120.client.t
-import ic2_120.content.screen.FluidUpgradeScreenHandler
-import ic2_120.registry.annotation.ModScreen
->>>>>>> backup/1.21.1
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.widget.ButtonWidget
@@ -21,10 +15,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
-<<<<<<< HEAD
 import net.minecraft.client.util.math.Rect2i
-=======
->>>>>>> backup/1.21.1
 
 @ModScreen(handler = "fluid_upgrade")
 class FluidUpgradeScreen(
@@ -47,7 +38,6 @@ class FluidUpgradeScreen(
         val client = client ?: return
 
         addDrawableChild(ButtonWidget.builder(Text.empty()) {
-<<<<<<< HEAD
             client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
         }.dimensions(x + 27, y + 37, 20, 14).build())
 
@@ -73,20 +63,6 @@ class FluidUpgradeScreen(
 
         drawJeiHint(context, mouseX, mouseY)
 
-=======
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_SET_FILTER))
-        }.dimensions(x + 27, y + 37, 20, 14).build())
-
-        addDrawableChild(ButtonWidget.builder(Text.empty()) {
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION))
-        }.dimensions(x + 108, y + 60, 20, 12).build())
-    }
-
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context, mouseX, mouseY, delta)
-        super.render(context, mouseX, mouseY, delta)
-
->>>>>>> backup/1.21.1
         context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // 流体限制文本 (9,18)-(104,32)
@@ -99,27 +75,14 @@ class FluidUpgradeScreen(
         val filterText = t("gui.ic2_120.fluid_upgrade.filter_display", filterName)
         context.drawText(textRenderer, filterText, x + 9, y + 18 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
 
-<<<<<<< HEAD
         drawDirectionButtons(context)
 
         // 7px 按钮文字覆盖
         draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.fluid_upgrade.clear_filter"))
-=======
-        // 方向文本 (9,59)-(104,73)
-        val dirIdx = handler.currentDirectionIndex
-        val dirName = t("gui.ic2_120.direction.${Direction.entries[dirIdx].name.lowercase()}")
-        val dirText = t("gui.ic2_120.fluid_upgrade.direction", dirName)
-        context.drawText(textRenderer, dirText, x + 9, y + 59 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
-
-        // 7px 按钮文字覆盖
-        draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.fluid_upgrade.set_filter"))
-        draw7pxText(context, x + 108, y + 60, 20, 12, t("gui.ic2_120.fluid_upgrade.cycle_direction_short"))
->>>>>>> backup/1.21.1
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-<<<<<<< HEAD
     private fun drawFilterFluid(context: DrawContext) {
         if (handler.fluidRawId <= 0) return
         val fluid = Registries.FLUID.get(handler.fluidRawId)
@@ -161,8 +124,6 @@ class FluidUpgradeScreen(
 
     fun ghostFilterArea(): Rect2i = Rect2i(x + 8, y + 35, 16, 16)
 
-=======
->>>>>>> backup/1.21.1
     private fun draw7pxText(context: DrawContext, bx: Int, by: Int, bw: Int, bh: Int, text: String) {
         val scale = 7f / textRenderer.fontHeight
         val textW = textRenderer.getWidth(text)
@@ -177,16 +138,11 @@ class FluidUpgradeScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiupgrade.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
         private const val HINT_X = 4
         private const val HINT_Y = 4
         private const val HINT_SIZE = 16
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiupgrade.png")
-        private const val TEX_SIZE = 256
->>>>>>> backup/1.21.1
     }
 }

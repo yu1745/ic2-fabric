@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/ender_pearl_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,10 +11,4 @@
     "flat_7fd8c0": "ic2_120:item/item3d/flat_7fd8c0",
     "flat_135447": "ic2_120:item/item3d/flat_135447"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/resource/dust/lapis"
-	}
->>>>>>> backup/1.21.1
 }

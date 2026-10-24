@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/bronze_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,5 @@
     "flat_9f5c23": "ic2_120:item/item3d/flat_9f5c23",
     "flat_c4691b": "ic2_120:item/item3d/flat_c4691b",
     "flat_e09450": "ic2_120:item/item3d/flat_e09450"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/bronze"
->>>>>>> backup/1.21.1
   }
 }

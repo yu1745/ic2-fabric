@@ -13,10 +13,6 @@ import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.type
-<<<<<<< HEAD
-=======
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -28,10 +24,6 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
-<<<<<<< HEAD
-=======
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -41,11 +33,7 @@ import net.minecraft.state.property.BooleanProperty
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-<<<<<<< HEAD
 import net.minecraft.util.Hand
-=======
-
->>>>>>> backup/1.21.1
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -66,18 +54,13 @@ class QuantumGeneratorBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, QuantumGeneratorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
-=======
-        else validateTicker(type, QuantumGeneratorBlockEntity::class.type()) { w: World, p: BlockPos, s: BlockState, be -> be.tick(w, p, s) }
->>>>>>> backup/1.21.1
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Deprecated("Override without Hand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun onUse(
         state: BlockState,
@@ -87,9 +70,6 @@ class QuantumGeneratorBlock : MachineBlock() {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -116,11 +96,7 @@ class QuantumGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(QuantumGeneratorBlockEntity::class.type(), pos, state),
-<<<<<<< HEAD
     IGenerator, ExtendedScreenHandlerFactory {
-=======
-    IGenerator, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     companion object {
         const val DEFAULT_ENERGY_MAC = 512
@@ -133,11 +109,7 @@ class QuantumGeneratorBlockEntity(
     override val activeProperty = QuantumGeneratorBlock.ACTIVE
 
     @Suppress("unused")
-<<<<<<< HEAD
     val syncedData = SyncedData()
-=======
-    val syncedData = SyncedData(this)
->>>>>>> backup/1.21.1
 
     @RegisterEnergy
     val sync = QuantumGeneratorSync(
@@ -212,7 +184,6 @@ class QuantumGeneratorBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         QuantumGeneratorScreenHandler(syncId, playerInventory, ScreenHandlerContext.create(world!!, pos), syncedData)
 
-<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -220,17 +191,6 @@ class QuantumGeneratorBlockEntity(
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
-=======
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        return buf
-    }
-
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         energyMac = if (nbt.contains("energyMac"))
             nbt.getInt("energyMac").coerceIn(1, EnergyTier.euPerTickFromTier(VARIABLE_MAX).toInt()) else DEFAULT_ENERGY_MAC
         variable = if (nbt.contains("variable"))
@@ -240,13 +200,8 @@ class QuantumGeneratorBlockEntity(
         syncedData.readNbt(nbt)
     }
 
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         nbt.putInt("energyMac", energyMac)
         nbt.putInt("variable", variable)
         nbt.putBoolean("active", isActive)

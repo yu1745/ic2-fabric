@@ -19,16 +19,12 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
-import net.minecraft.registry.tag.ItemTags
 import net.minecraft.recipe.book.RecipeCategory
-<<<<<<< HEAD
 import net.minecraft.registry.tag.ItemTags
 import java.util.function.Consumer
-=======
->>>>>>> backup/1.21.1
 
 /**
  * 反应堆访问接口。在反应堆结构内时，右键可打开反应堆 UI；Inventory 委托到对应的中心核反应堆。
@@ -52,7 +48,6 @@ class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = ReactorShellBlo
         }
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -62,9 +57,6 @@ class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = ReactorShellBlo
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (world.isClient) return ActionResult.SUCCESS
         // 查找反应堆，仅当访问接口在其 5×5×5 结构内部时才打开 UI（不根据距离，根据结构归属）
         for (dx in -2..2) {
@@ -84,7 +76,7 @@ class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = ReactorShellBlo
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)

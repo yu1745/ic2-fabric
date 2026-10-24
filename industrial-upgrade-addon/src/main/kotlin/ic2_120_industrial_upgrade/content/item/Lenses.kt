@@ -9,8 +9,7 @@ import ic2_120.registry.item
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -26,10 +25,10 @@ import java.util.function.Consumer
 // i18n: item.ic2_120_industrial_upgrade.sunlinse
 // zh_cn: 日光镜  en_us: Sun Linse
 @ModItem(name = "sunlinse", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "material")
-class SunLinse : Item(FabricItemSettings()) {
+class SunLinse : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // 十字：强化玻璃聚萤石之光
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SunLinse::class.instance(), 1)
                 .pattern(" G ")
@@ -46,10 +45,10 @@ class SunLinse : Item(FabricItemSettings()) {
 // i18n: item.ic2_120_industrial_upgrade.nightlinse
 // zh_cn: 夜光镜  en_us: Night Linse
 @ModItem(name = "nightlinse", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "material")
-class NightLinse : Item(FabricItemSettings()) {
+class NightLinse : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // 十字：强化玻璃聚煤之暗
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, NightLinse::class.instance(), 1)
                 .pattern(" C ")
@@ -66,10 +65,10 @@ class NightLinse : Item(FabricItemSettings()) {
 // i18n: item.ic2_120_industrial_upgrade.rainlinse
 // zh_cn: 雨镜  en_us: Rain Linse
 @ModItem(name = "rainlinse", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "material")
-class RainLinse : Item(FabricItemSettings()) {
+class RainLinse : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // 原版配方：2×日光镜 + 1×夜光镜
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RainLinse::class.instance(), 1)
                 .pattern("USU")

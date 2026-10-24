@@ -43,11 +43,7 @@ class StorageBoxScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         if (boxType.texture != null) {
@@ -73,17 +69,10 @@ class StorageBoxScreen(
         val slotBgV: Int,
         val textureSize: Int
     ) {
-<<<<<<< HEAD
         WOODEN(Identifier("ic2", "textures/gui/guiwoodenbox.png"), 224, 162, 3, 9, 31, 18, 227, 3, 256),
         IRON(Identifier("ic2", "textures/gui/guiironbox.png"), 224, 202, 5, 9, 31, 17, 227, 3, 256),
         STEEL(Identifier("ic2", "textures/gui/guisteelbox.png"), 224, 236, 7, 9, 31, 17, 227, 3, 256),
         IRIDIUM(Identifier("ic2", "textures/gui/guiiridiumbox.png"), 262, 275, 9, 14, 5, 18, 265, 3, 300),
-=======
-        WOODEN(Identifier.of("ic2", "textures/gui/guiwoodenbox.png"), 224, 162, 3, 9, 31, 18, 227, 3, 256),
-        IRON(Identifier.of("ic2", "textures/gui/guiironbox.png"), 224, 202, 5, 9, 31, 17, 227, 3, 256),
-        STEEL(Identifier.of("ic2", "textures/gui/guisteelbox.png"), 224, 236, 7, 9, 31, 17, 227, 3, 256),
-        IRIDIUM(Identifier.of("ic2", "textures/gui/guiiridiumbox.png"), 262, 275, 9, 14, 5, 18, 265, 3, 300),
->>>>>>> backup/1.21.1
         OTHER(null, 176, 166, 0, 0, 0, 0, 0, 0, 256);
 
         companion object {

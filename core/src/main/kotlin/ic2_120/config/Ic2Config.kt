@@ -82,7 +82,6 @@ data class GeneralConfig(
     @field:ConfigComment("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。", "false")
     val explodeWhenNoEnergyFlow: Boolean = false,
     @field:ConfigComment("是否启用超压爆炸。设为 false 则完全关闭超压爆炸。", "true")
-<<<<<<< HEAD
     val enableOvervoltageExplosion: Boolean = true,
     @field:ConfigComment("低耐压导线每次烧毁时随机烧毁的最小比例（百分比）。100 表示全部烧毁；不要填 0，否则不会按预期烧毁导线。", "10")
     val cableBurnMinPercent: Int = 10,
@@ -99,9 +98,6 @@ data class GeneralConfig(
         ""
     )
     val analyticsEndpoint: String = ""
-=======
-    val enableOvervoltageExplosion: Boolean = true
->>>>>>> backup/1.21.1
 )
 
 data class RecyclerConfig(
@@ -229,39 +225,6 @@ data class QuantumBootsConfig(
     /** 是否启用原版 IC2 的常驻摔落保护。 */
     @field:ConfigComment("是否启用量子靴子的常驻摔落保护。开启时前 10 格免费，超过部分每点摔落伤害消耗 20000 EU；关闭时只保护量子大跳的落地。", "true")
     val permanentFallProtection: Boolean = true,
-    /** 每次大跳消耗能量（EU）。默认 1000 次跳空靴子。 */
-    @field:ConfigComment("每次大跳消耗能量（EU）。10M EU / 1000 次 = 10000 EU/次。", "10000")
-    val jumpEnergyCost: Long = 10_000,
-    /** 跳跃高度倍率。3.0 表示 3 倍正常跳跃高度（约 3.75 格）。 */
-    @field:ConfigComment("跳跃高度倍率。3.0 = 3 倍正常高度（约 3.75 格）。", "3.0")
-    val jumpHeightMultiplier: Double = 3.0
-)
-
-data class QuantumHelmetConfig(
-    /** 夜视时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
-    @field:ConfigComment("量子头盔夜视时长（秒），耗电量自动计算。", "28800")
-    val nightVisionDurationSeconds: Int = 28800
-)
-
-data class QuantumLeggingsConfig(
-    /** 最大能量 (EU)。用于计算神行耗电速率。 */
-    @field:ConfigComment("量子护腿计算耗电用的参考容量（EU）。", "10000000")
-    val maxEnergy: Long = 10_000_000L,
-    /** 神行时长（秒）。满电 2 档可连续神行多久。 */
-    @field:ConfigComment("量子护腿神行时长（秒，2档满电），耗电量自动计算。", "1800")
-    val speedBoostDurationSeconds: Int = 1800,
-    /** 神行 1 档速度倍率。 */
-    @field:ConfigComment("神行 1 档速度倍率。0.2 表示 +20% 移速，半耗电。", "0.2")
-    val speedMultiplierTier1: Double = 0.2,
-    /** 神行 2 档速度倍率。 */
-    @field:ConfigComment("神行 2 档速度倍率。0.4 表示 +40% 移速，全耗电。", "0.4")
-    val speedMultiplierTier2: Double = 0.4
-)
-
-data class QuantumBootsConfig(
-    /** 最大能量 (EU)。用于参考。 */
-    @field:ConfigComment("量子靴子计算跳跃耗电的参考容量（EU）。", "10000000")
-    val maxEnergy: Long = 10_000_000L,
     /** 每次大跳消耗能量（EU）。默认 1000 次跳空靴子。 */
     @field:ConfigComment("每次大跳消耗能量（EU）。10M EU / 1000 次 = 10000 EU/次。", "10000")
     val jumpEnergyCost: Long = 10_000,
@@ -417,19 +380,8 @@ private val DEFAULT_PEAT_ORE_BIOMES = listOf(
     "minecraft:mushroom_fields"
 )
 
-private val DEFAULT_PEAT_ORE_BIOMES = listOf(
-    "minecraft:jungle",
-    "minecraft:sparse_jungle",
-    "minecraft:bamboo_jungle",
-    "minecraft:mushroom_fields"
-)
-
 data class WorldgenConfig(
-<<<<<<< HEAD
     @field:ConfigComment("橡胶树世界生成配置。enabled 变更后需要重启；其余多数参数 /ic2config reload 后影响未来生成。群系由 biome tag #ic2_120:generates_rubber_trees 控制。")
-=======
-    @field:ConfigComment("橡胶树世界生成配置。enabled/biomes 变更后需要重启；其余多数参数 /ic2config reload 后影响未来生成。")
->>>>>>> backup/1.21.1
     val rubberTree: RubberTreeWorldgenConfig = RubberTreeWorldgenConfig(),
     @field:ConfigComment("泥炭矿世界生成配置。变更后需要重启生效。")
     val peatOre: PeatOreWorldgenConfig = PeatOreWorldgenConfig()
@@ -600,7 +552,6 @@ object Ic2Config {
     }
 
     fun applyServerConfig(json: String) {
-<<<<<<< HEAD
         // 渲染配置属于客户端本地偏好，不被服务器覆盖
         current = mapper.readValue<Ic2MainConfig>(json).copy(rendering = current.rendering)
         logLoaded("applied from server")
@@ -621,12 +572,6 @@ object Ic2Config {
         syncedReplicationCosts = null
     }
 
-=======
-        current = mapper.readValue(json)
-        logLoaded("applied from server")
-    }
-
->>>>>>> backup/1.21.1
     fun getReplicationCostUb(itemId: String): Int? {
         val normalized = itemId.trim()
         if (normalized.isEmpty()) return null
@@ -732,12 +677,8 @@ object Ic2Config {
      */
     fun getJetpackFuelPerTick(): Double {
         val cfg = current.armor.jetpack
-<<<<<<< HEAD
         return cfg.maxFuel.toDouble() * (net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET / 1000.0) /
             (cfg.flightDurationSeconds * 20.0)
-=======
-        return cfg.maxFuel.toDouble() / (cfg.flightDurationSeconds * 20.0)
->>>>>>> backup/1.21.1
     }
 
     /**
@@ -757,7 +698,6 @@ object Ic2Config {
     }
 
     /**
-<<<<<<< HEAD
      * 电力护甲伤害扣电倍率。基准为原版 IC2 的 20000 EU/点伤害。
      */
     fun getElectricArmorDamageCostMultiplier(): Double {
@@ -772,8 +712,6 @@ object Ic2Config {
     }
 
     /**
-=======
->>>>>>> backup/1.21.1
      * 量子护腿神行每tick能量消耗（2档全速）。
      * 1档耗电为 2档的一半。
      */
@@ -783,7 +721,6 @@ object Ic2Config {
     }
 
     /**
-<<<<<<< HEAD
      * 量子护腿每 tick 追加的地面前进动力。2 档复刻原版 IC2，1 档固定为一半。
      */
     fun getQuantumLeggingsGroundBoost(tier: Int): Double {
@@ -808,8 +745,6 @@ object Ic2Config {
     }
 
     /**
-=======
->>>>>>> backup/1.21.1
      * 量子靴子大跳能量消耗 = 配置值（一次性消耗）
      */
     fun getQuantumBootsJumpEnergyCost(): Long {

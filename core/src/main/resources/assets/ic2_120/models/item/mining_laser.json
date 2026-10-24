@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/mining_laser.obj",
   "parent": "ic2_120:item/item3d/display_handheld",
@@ -9,10 +8,5 @@
     "flat_333333": "ic2_120:item/item3d/flat_333333",
     "glow_d20000": "ic2_120:item/item3d/glow_d20000",
     "glow_be0a0a": "ic2_120:item/item3d/glow_be0a0a"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/tool/electric/mining_laser"
->>>>>>> backup/1.21.1
   }
 }

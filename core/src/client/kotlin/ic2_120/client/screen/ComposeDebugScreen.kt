@@ -34,10 +34,6 @@ class ComposeDebugScreen(
         backgroundHeight = GuiSize.DEBUG.height
     }
 
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
-    }
-
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
@@ -59,12 +55,6 @@ class ComposeDebugScreen(
 
         // 3) 先绘制面板背景
         GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
-<<<<<<< HEAD
-=======
-
-        // 5) 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
 
         // 4) 再绘制 UI（slot 背景），确保它们在物品下方
         ui.render(context, textRenderer, mouseX, mouseY, content = uiContent)
@@ -86,11 +76,10 @@ class ComposeDebugScreen(
     override fun mouseScrolled(
         mouseX: Double,
         mouseY: Double,
-        horizontalAmount: Double,
         amount: Double
     ): Boolean =
         ui.mouseScrolled(mouseX, mouseY, 0.0, amount)
-            || super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount)
+            || super.mouseScrolled(mouseX, mouseY, amount)
 
     override fun mouseDragged(
         mouseX: Double,

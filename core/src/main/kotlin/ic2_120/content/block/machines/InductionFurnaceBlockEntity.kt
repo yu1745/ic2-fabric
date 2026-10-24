@@ -1,9 +1,6 @@
 package ic2_120.content.block.machines
 
-<<<<<<< HEAD
 import ic2_120.content.RecipeCacheEpoch
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.sync.InductionFurnaceSync
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.InductionFurnaceBlock
@@ -15,7 +12,6 @@ import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.EjectorUpgrade
 import ic2_120.content.item.PullingUpgrade
 import ic2_120.content.item.IUpgradeItem
-<<<<<<< HEAD
 import ic2_120.content.item.RedstoneInverterUpgrade
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
@@ -31,17 +27,6 @@ import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.content.upgrade.RedstoneControlComponent
 import ic2_120.content.upgrade.RedstoneInverterUpgradeComponent
-=======
-import ic2_120.content.item.energy.IBatteryItem
-import ic2_120.content.storage.ItemInsertRoute
-import ic2_120.content.storage.RoutedItemStorage
-import ic2_120.content.upgrade.EjectorUpgradeComponent
-import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
-import ic2_120.content.upgrade.IEjectorUpgradeSupport
-import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
-import ic2_120.content.upgrade.ITransformerUpgradeSupport
-import ic2_120.content.upgrade.TransformerUpgradeComponent
->>>>>>> backup/1.21.1
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
@@ -53,18 +38,11 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-<<<<<<< HEAD
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
-=======
-import net.minecraft.item.ItemStack
-import net.minecraft.recipe.input.SingleStackRecipeInput
-import net.minecraft.nbt.NbtCompound
-
->>>>>>> backup/1.21.1
 import net.minecraft.recipe.RecipeType
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
@@ -72,28 +50,16 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-<<<<<<< HEAD
 import ic2_120.content.upgrade.IValidInputItem
-=======
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 
 @ModBlockEntity(block = InductionFurnaceBlock::class)
 class InductionFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
     IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
-    ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = InductionFurnaceBlock.ACTIVE
 
@@ -111,10 +77,7 @@ class InductionFurnaceBlockEntity(
     override val tier: Int = INDUCTION_TIER
 
     override var capacityBonus: Long = 0L
-<<<<<<< HEAD
     override var redstoneInverted: Boolean = false
-=======
->>>>>>> backup/1.21.1
     override var voltageTierBonus: Int = 0
 
     companion object {
@@ -140,28 +103,18 @@ class InductionFurnaceBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is EjectorUpgrade || it.item is PullingUpgrade }),
-<<<<<<< HEAD
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is RedstoneInverterUpgrade }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_0), matcher = { isSmeltingInput(it) }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_1), matcher = { isSmeltingInput(it) }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust }, maxPerSlot = 1)
-=======
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_INPUT_0), matcher = { isSmeltingInput(it) }),
-            ItemInsertRoute(intArrayOf(SLOT_INPUT_1), matcher = { isSmeltingInput(it) })
->>>>>>> backup/1.21.1
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT_0, SLOT_OUTPUT_1),
         markDirty = { markDirty() }
     )
 
-<<<<<<< HEAD
     override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData()
-=======
-    val syncedData = SyncedData(this)
->>>>>>> backup/1.21.1
 
     @RegisterEnergy
     val sync = InductionFurnaceSync(
@@ -207,7 +160,6 @@ class InductionFurnaceBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_0, SLOT_INPUT_1 -> isSmeltingInput(stack)
         SLOT_OUTPUT_0, SLOT_OUTPUT_1 -> false
-<<<<<<< HEAD
         SLOT_DISCHARGING -> isBatteryItem(stack) || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust
         SLOT_UPGRADE_0, SLOT_UPGRADE_1 -> stack.item is EjectorUpgrade || stack.item is PullingUpgrade
             || stack.item is RedstoneInverterUpgrade
@@ -217,18 +169,6 @@ class InductionFurnaceBlockEntity(
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-=======
-        SLOT_DISCHARGING -> isBatteryItem(stack)
-        SLOT_UPGRADE_0, SLOT_UPGRADE_1 -> stack.item is EjectorUpgrade || stack.item is PullingUpgrade
-        else -> false
-    }
-
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        return buf
->>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.induction_furnace")
@@ -243,20 +183,13 @@ class InductionFurnaceBlockEntity(
             itemStorage
         )
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         Inventories.readNbt(nbt, inventory)
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
->>>>>>> backup/1.21.1
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(InductionFurnaceSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-<<<<<<< HEAD
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
@@ -266,15 +199,6 @@ class InductionFurnaceBlockEntity(
         syncedData.writeNbt(nbt)
         nbt.putLong(InductionFurnaceSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
-=======
-    }
-
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
-        syncedData.writeNbt(nbt)
-        nbt.putLong(InductionFurnaceSync.NBT_ENERGY_STORED, sync.amount)
->>>>>>> backup/1.21.1
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -283,19 +207,14 @@ class InductionFurnaceBlockEntity(
 
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-<<<<<<< HEAD
         RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
-=======
-        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
->>>>>>> backup/1.21.1
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
-<<<<<<< HEAD
        val isRedstonePowered = RedstoneControlComponent.canRun(world, pos, this)
         var heat = sync.heat
         var progress = sync.progress
@@ -394,133 +313,6 @@ class InductionFurnaceBlockEntity(
         cachedRecipeItem = input.item
         cachedRecipeOutput = result
         return result
-=======
-        val isRedstonePowered = world.isReceivingRedstonePower(pos)
-        val currentHeat = sync.heat
-
-        if (isRedstonePowered) {
-            if (currentHeat < InductionFurnaceSync.HEAT_MAX) {
-                sync.heat = (currentHeat + InductionFurnaceSync.HEAT_CHANGE_PER_TICK)
-                    .coerceAtMost(InductionFurnaceSync.HEAT_MAX)
-                sync.consumeEnergy(InductionFurnaceSync.MAX_HEAT_ENERGY_PER_TICK)
-            }
-        } else {
-            if (currentHeat > 0) {
-                sync.heat = (currentHeat - InductionFurnaceSync.HEAT_CHANGE_PER_TICK)
-                    .coerceAtLeast(0)
-            }
-        }
-
-        val heat = sync.heat
-        val isActive = processBothSlots(world, heat)
-
-        sync.syncCurrentTickFlow()
-        setActiveState(world, pos, state, isActive)
-    }
-
-    private fun processBothSlots(world: World, heat: Int): Boolean {
-        var slot0Working = false
-        var slot1Working = false
-
-        if (heat >= InductionFurnaceSync.MIN_HEAT_THRESHOLD) {
-            val input0 = getStack(SLOT_INPUT_0)
-            if (!input0.isEmpty) {
-                val recipe0 = findSmeltingRecipe(world, input0)
-                if (recipe0 != null) {
-                    val outputSlot0 = getStack(SLOT_OUTPUT_0)
-                    if (canAcceptOutput(outputSlot0, recipe0)) {
-                        slot0Working = processSlot0(heat, recipe0)
-                    }
-                }
-            }
-
-            val input1 = getStack(SLOT_INPUT_1)
-            if (!input1.isEmpty) {
-                val recipe1 = findSmeltingRecipe(world, input1)
-                if (recipe1 != null) {
-                    val outputSlot1 = getStack(SLOT_OUTPUT_1)
-                    if (canAcceptOutput(outputSlot1, recipe1)) {
-                        slot1Working = processSlot1(heat, recipe1)
-                    }
-                }
-            }
-        }
-
-        if (heat < InductionFurnaceSync.MIN_HEAT_THRESHOLD) {
-            if (sync.progressSlot0 != 0) sync.progressSlot0 = 0
-            if (sync.progressSlot1 != 0) sync.progressSlot1 = 0
-        }
-
-        return slot0Working || slot1Working
-    }
-
-    private fun processSlot0(heat: Int, result: ItemStack): Boolean {
-        val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
-        val euPerOp = InductionFurnaceSync.EU_PER_OPERATION
-        val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).coerceAtLeast(baseTicks)
-
-        val progress = sync.progressSlot0
-        if (progress >= progressNeeded) {
-            val input = getStack(SLOT_INPUT_0)
-            input.decrement(1)
-            val out = getStack(SLOT_OUTPUT_0)
-            if (out.isEmpty) {
-                setStack(SLOT_OUTPUT_0, result.copy())
-            } else {
-                out.increment(result.count)
-            }
-            sync.progressSlot0 = 0
-            markDirty()
-            return false
-        }
-
-        val euPerTick = (euPerOp.toDouble() / progressNeeded).coerceAtLeast(1.0).toLong()
-        if (sync.consumeEnergy(euPerTick) > 0L) {
-            sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            sync.progressSlot0 = progress + 1
-            markDirty()
-            return true
-        }
-        return false
-    }
-
-    private fun processSlot1(heat: Int, result: ItemStack): Boolean {
-        val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
-        val euPerOp = InductionFurnaceSync.EU_PER_OPERATION
-        val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).coerceAtLeast(baseTicks)
-
-        val progress = sync.progressSlot1
-        if (progress >= progressNeeded) {
-            val input = getStack(SLOT_INPUT_1)
-            input.decrement(1)
-            val out = getStack(SLOT_OUTPUT_1)
-            if (out.isEmpty) {
-                setStack(SLOT_OUTPUT_1, result.copy())
-            } else {
-                out.increment(result.count)
-            }
-            sync.progressSlot1 = 0
-            markDirty()
-            return false
-        }
-
-        val euPerTick = (euPerOp.toDouble() / progressNeeded).coerceAtLeast(1.0).toLong()
-        if (sync.consumeEnergy(euPerTick) > 0L) {
-            sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            sync.progressSlot1 = progress + 1
-            markDirty()
-            return true
-        }
-        return false
-    }
-
-    private fun findSmeltingRecipe(world: World, input: ItemStack): ItemStack? {
-        if (input.isEmpty) return null
-        val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(input), world)
-        return if (match.isPresent) {
-            match.get().value.getResult(world.registryManager).copy()
-        } else null
->>>>>>> backup/1.21.1
     }
 
     private fun canAcceptOutput(currentOutput: ItemStack, recipeOutput: ItemStack): Boolean {
@@ -531,28 +323,19 @@ class InductionFurnaceBlockEntity(
 
     private fun extractFromDischargingSlot() {
         val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
-<<<<<<< HEAD
-=======
-        if (space <= 0L) return
->>>>>>> backup/1.21.1
 
         val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
 
-<<<<<<< HEAD
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
-=======
-        sync.insertEnergy(extracted)
->>>>>>> backup/1.21.1
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
 
-<<<<<<< HEAD
     // 类型判定缓存：isSmeltingInput 用 copyWithCount(1) 查询（配方只看物品类型），
     // 结果仅依赖 item，按 item 缓存安全。
     private var cachedInputItem: net.minecraft.item.Item? = null
@@ -578,11 +361,4 @@ class InductionFurnaceBlockEntity(
         return ic2_120.content.RecipeInputLookupCache.hasAnyRecipe(RecipeType.SMELTING, item, w)
     }
 
-=======
-    private fun isSmeltingInput(stack: ItemStack): Boolean {
-        if (stack.isEmpty || isBatteryItem(stack)) return false
-        val w = world ?: return true
-        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
-    }
->>>>>>> backup/1.21.1
 }

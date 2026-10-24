@@ -11,8 +11,7 @@ import ic2_120_advanced_solar_addon.content.item.QuantumCore
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -22,10 +21,10 @@ import java.util.function.Consumer
 // ===== 光谱核心 spectral_core =====
 // zh_cn: 光谱核心  en_us: Spectral Core
 @ModItem(name = "spectral_core", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "component")
-class SpectralCore : Item(FabricItemSettings()) {
+class SpectralCore : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // CBC/CAC/CBC：1×量子核心 + 4×光子 + 4×分光器
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SpectralCore::class.instance(), 1)
                 .pattern("CBC")
@@ -43,10 +42,10 @@ class SpectralCore : Item(FabricItemSettings()) {
 // ===== 质子核心 proton_core =====
 // zh_cn: 质子核心  en_us: Proton Core
 @ModItem(name = "proton_core", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "component")
-class ProtonCore : Item(FabricItemSettings()) {
+class ProtonCore : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // +形：4×质子 + 2×富集阳光合金IV + 1×光谱核心
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ProtonCore::class.instance(), 1)
                 .pattern(" B ")
@@ -64,10 +63,10 @@ class ProtonCore : Item(FabricItemSettings()) {
 // ===== 奇点核心 singular_core =====
 // zh_cn: 奇点核心  en_us: Singular Core
 @ModItem(name = "singular_core", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "component")
-class SingularCore : Item(FabricItemSettings()) {
+class SingularCore : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // ABA/DCD/ABA：4×末影量子组件 + 1×光子锭 + 2×光伏铱板 + 2×富集阳光合金
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SingularCore::class.instance(), 1)
                 .pattern("ABA")
@@ -86,10 +85,10 @@ class SingularCore : Item(FabricItemSettings()) {
 // ===== 量子核心II quant_core2 =====
 // zh_cn: 量子核心II  en_us: Quantum Core II
 @ModItem(name = "quant_core2", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "component")
-class QuantCore2 : Item(FabricItemSettings()) {
+class QuantCore2 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // ABA：2×富集阳光合金III + 1×奇点核心
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuantCore2::class.instance(), 1)
                 .pattern("ABA")
@@ -104,10 +103,10 @@ class QuantCore2 : Item(FabricItemSettings()) {
 // ===== 量子核心I quant_core1 =====
 // zh_cn: 量子核心I  en_us: Quantum Core I
 @ModItem(name = "quant_core1", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "component")
-class QuantCore1 : Item(FabricItemSettings()) {
+class QuantCore1 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // ABA：2×富集阳光合金II + 1×量子核心II
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuantCore1::class.instance(), 1)
                 .pattern("ABA")
@@ -122,10 +121,10 @@ class QuantCore1 : Item(FabricItemSettings()) {
 // ===== 中子核心 neutron_core =====
 // zh_cn: 中子核心  en_us: Neutron Core
 @ModItem(name = "neutron_core", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "component")
-class NeutronCore : Item(FabricItemSettings()) {
+class NeutronCore : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // +形：4×中子 + 1×量子核心II
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, NeutronCore::class.instance(), 1)
                 .pattern(" A ")
@@ -142,10 +141,10 @@ class NeutronCore : Item(FabricItemSettings()) {
 // ===== 末影量子组件 ender_quantum_component =====
 // zh_cn: 末影量子组件  en_us: Ender Quantum Component
 @ModItem(name = "ender_quantum_component", tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "component")
-class EnderQuantumComponent : Item(FabricItemSettings()) {
+class EnderQuantumComponent : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // ABA/BCB/ABA：4×光伏铱板 + 4×末影之眼 + 1×下界之星
             // （1.4.0 原用 IC2 强化铱板，按计划全部替换为光伏铱板）
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnderQuantumComponent::class.instance(), 1)

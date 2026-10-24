@@ -1,5 +1,6 @@
 package ic2_120.content.screen
 
+import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -37,7 +38,7 @@ class ScannerScreenHandler(
 
     private val syncedData = SyncedData()
     val sync = ScannerSync(syncedData)
-    private val scannerUseSound: SoundEvent = SoundEvent.of(Identifier.of("ic2", "item.scanner.use"))
+    private val scannerUseSound: SoundEvent = SoundEvent.of(Identifier("ic2", "item.scanner.use"))
 
     init {
         addProperties(syncedData)
@@ -77,11 +78,7 @@ class ScannerScreenHandler(
 
         val type = OdScannerItem.getScannerType(stack)
         val rangeY = maxOf(1, player.blockPos.y - type.deepY)
-<<<<<<< HEAD
         val energyCost = computeEnergyCost(type, rangeY)
-=======
-        val energyCost = computeEnergyCost(type, type.scanRadius, rangeY, type.scanRadius)
->>>>>>> backup/1.21.1
 
         if (!sync.consumeEnergy(energyCost)) {
             player.sendMessage(
@@ -115,7 +112,6 @@ class ScannerScreenHandler(
             1.0f
         )
 
-<<<<<<< HEAD
         val buf = PacketByteBuf(Unpooled.buffer())
         ScannerResultPacket.write(
             ScannerResultPacket(
@@ -126,17 +122,9 @@ class ScannerScreenHandler(
                 results = results
             ),
             buf
-=======
-        val packet = ScannerResultPacket(
-            energy = sync.energy,
-            energyCapacity = sync.energyCapacity,
-            usesRemaining = sync.usesRemaining,
-            maxUses = sync.maxUses,
-            results = results
->>>>>>> backup/1.21.1
         )
         (player as? net.minecraft.server.network.ServerPlayerEntity)?.let {
-            ServerPlayNetworking.send(it, packet)
+            ServerPlayNetworking.send(it, ScannerResultPacket.ID, buf)
         }
 
         return true
@@ -151,22 +139,12 @@ class ScannerScreenHandler(
 
         val stack = player.mainHandStack
         val type = OdScannerItem.getScannerType(stack)
-<<<<<<< HEAD
         val radius = type.scanRadius
         val minY = maxOf(world.bottomY, type.deepY)
         val maxY = center.y
 
         for (dx in -radius..radius) {
             for (dz in -radius..radius) {
-=======
-        val rangeX = type.scanRadius
-        val rangeZ = type.scanRadius
-        val minY = maxOf(world.bottomY, type.deepY)
-        val maxY = center.y
-
-        for (dx in -rangeX..rangeX) {
-            for (dz in -rangeZ..rangeZ) {
->>>>>>> backup/1.21.1
                 for (y in minY..maxY) {
                     val pos = center.add(dx, 0, dz).withY(y)
                     val state = world.getBlockState(pos)
@@ -219,7 +197,6 @@ class ScannerScreenHandler(
         const val PLAYER_INV_START = 0
         const val BUTTON_ID_SCAN = 0
 
-<<<<<<< HEAD
         /**
          * 根据实际扫描体积计算能量消耗。
          *
@@ -232,12 +209,6 @@ class ScannerScreenHandler(
             val side = type.scanRadius * 2 + 1
             // X/Z 固定为 scanRadius，实际体积 = side² × (rangeY*2+1)
             val v = (side * side).toDouble() * (rangeY * 2 + 1)
-=======
-        @JvmStatic
-        fun computeEnergyCost(type: ScannerType, rangeX: Int, rangeY: Int, rangeZ: Int): Int {
-            val v = (rangeX * 2 + 1).toDouble() * (rangeY * 2 + 1) * (rangeZ * 2 + 1)
-            val side = type.scanRadius * 2 + 1
->>>>>>> backup/1.21.1
             val v0 = (side * side * side).toDouble()
             val multiplier = if (v >= v0) 1.0 else 10.0 - 9.0 * (v / v0)
             return (type.energyPerScan * multiplier).toInt().coerceAtLeast(1)

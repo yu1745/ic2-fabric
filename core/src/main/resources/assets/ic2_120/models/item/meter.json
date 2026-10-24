@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/meter.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -14,10 +13,5 @@
     "flat_525050": "ic2_120:item/item3d/flat_525050",
     "flat_d02020": "ic2_120:item/item3d/flat_d02020",
     "flat_3a3ad0": "ic2_120:item/item3d/flat_3a3ad0"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/tool/meter"
->>>>>>> backup/1.21.1
   }
 }

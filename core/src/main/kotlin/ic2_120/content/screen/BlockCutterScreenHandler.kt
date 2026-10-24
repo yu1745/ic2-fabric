@@ -13,7 +13,6 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-<<<<<<< HEAD
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
@@ -21,20 +20,6 @@ import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 
 @ModScreenHandler(block = BlockCutterBlock::class, inventorySize = BlockCutterBlockEntity.INVENTORY_SIZE)
-=======
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import ic2_120.registry.annotation.ScreenFactory
-
-@ModScreenHandler(block = BlockCutterBlock::class)
->>>>>>> backup/1.21.1
 class BlockCutterScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -90,11 +75,7 @@ class BlockCutterScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
-=======
-                index in PLAYER_INV_START..HOTBAR_END -> {
->>>>>>> backup/1.21.1
                     val storage = itemStorage
                     if (storage == null) return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
@@ -103,12 +84,9 @@ class BlockCutterScreenHandler(
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
-<<<<<<< HEAD
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-=======
->>>>>>> backup/1.21.1
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
@@ -138,20 +116,7 @@ class BlockCutterScreenHandler(
         const val SLOT_UPGRADE_INDEX_START = 4
         const val SLOT_UPGRADE_INDEX_END = 7
         const val PLAYER_INV_START = 8
-<<<<<<< HEAD
         const val HOTBAR_END = 44
 
-=======
-        const val HOTBAR_END = 43
-
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): BlockCutterScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(BlockCutterBlockEntity.INVENTORY_SIZE)
-            return BlockCutterScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
->>>>>>> backup/1.21.1
     }
 }

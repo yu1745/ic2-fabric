@@ -34,9 +34,8 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -46,8 +45,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.ItemScatterer
 import net.minecraft.world.World
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = AnimalSlaughtererBlock::class)
 class AnimalSlaughtererBlockEntity(
@@ -60,7 +57,7 @@ class AnimalSlaughtererBlockEntity(
     IEnergyStorageUpgradeSupport,
     IEjectorUpgradeSupport,
     ITransformerUpgradeSupport,
-    ExtendedScreenHandlerFactory<PacketByteBuf> {
+    ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = AnimalSlaughtererBlock.ACTIVE
     override val tier: Int = ANIMAL_SLAUGHTERER_TIER
@@ -76,11 +73,7 @@ class AnimalSlaughtererBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-<<<<<<< HEAD
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1),
-=======
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
->>>>>>> backup/1.21.1
             ItemInsertRoute(intArrayOf(SLOT_SHEARS), matcher = { !it.isEmpty && it.item == Items.SHEARS }, maxPerSlot = 1)
         ),
         extractSlots = SLOT_CONTENT_INDICES + SLOT_UPGRADE_INDICES + intArrayOf(SLOT_DISCHARGING, SLOT_SHEARS),
@@ -127,21 +120,15 @@ class AnimalSlaughtererBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         SLOT_CONTENT_INDICES.contains(slot) -> false
-<<<<<<< HEAD
         slot == SLOT_DISCHARGING -> (stack.item is IBatteryItem || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust)
-=======
-        slot == SLOT_DISCHARGING -> stack.item is IBatteryItem
->>>>>>> backup/1.21.1
         slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.animal_slaughterer")
@@ -156,18 +143,18 @@ class AnimalSlaughtererBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(AnimalSlaughtererSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalSlaughtererSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -333,7 +320,7 @@ class AnimalSlaughtererBlockEntity(
             if (remaining.isEmpty) break
             val existing = getStack(slot)
             if (existing.isEmpty) continue
-            if (!ItemStack.areItemsAndComponentsEqual(existing, remaining)) continue
+            if (!ItemStack.canCombine(existing, remaining)) continue
             val limit = minOf(existing.maxCount, maxCountPerStack)
             val room = (limit - existing.count).coerceAtLeast(0)
             if (room <= 0) continue

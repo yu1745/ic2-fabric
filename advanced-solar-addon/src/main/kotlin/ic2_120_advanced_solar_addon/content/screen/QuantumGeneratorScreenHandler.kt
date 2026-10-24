@@ -48,14 +48,11 @@ class QuantumGeneratorScreenHandler(
         }
     }
 
-<<<<<<< HEAD
     /**
      * 主背包↔快捷栏互搬：源区间与目标区间互斥（主背包 [0,27) ↔ 快捷栏 [27,36)），
      * 源槽永不落入 insertItem 目标区间，无自合并风险（与 Tank/Scanner 等同构实现一致）。
      * 本 GUI 无机器槽位，不需要 no-op。
      */
-=======
->>>>>>> backup/1.21.1
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]

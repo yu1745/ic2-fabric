@@ -6,10 +6,7 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedData
@@ -33,7 +30,6 @@ import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
@@ -55,11 +51,7 @@ class ElectricHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IRedstoneControlSupport, ExtendedScreenHandlerFactory {
-=======
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRedstoneControlSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricHeatGeneratorBlock.ACTIVE
 
@@ -80,29 +72,14 @@ class ElectricHeatGeneratorBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute((0 until SLOT_DISCHARGING).toList().toIntArray(), matcher = { !it.isEmpty && it.item == coilItem }, maxPerSlot = 1),
-<<<<<<< HEAD
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1)
-=======
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1)
->>>>>>> backup/1.21.1
         ),
         extractSlots = IntArray(SLOT_COUNT) { it },
         markDirty = { markDirty() }
     )
-<<<<<<< HEAD
 
     override val routedItemStorage get() = itemStorage
     private val coilItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "coil")) }
-=======
-    private val coilItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "coil")) }
-
-    private val batteryDischarger = BatteryDischargerComponent(
-        inventory = this,
-        batterySlot = SLOT_DISCHARGING,
-        machineTierProvider = { tier },
-        canDischargeNow = { sync.amount < ElectricHeatGeneratorSync.ENERGY_CAPACITY }
-    )
->>>>>>> backup/1.21.1
 
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
@@ -128,11 +105,9 @@ class ElectricHeatGeneratorBlockEntity(
         state
     )
 
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(io.netty.buffer.Unpooled.buffer())
+    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.electric_heat_generator")
@@ -158,11 +133,7 @@ class ElectricHeatGeneratorBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         in 0 until SLOT_DISCHARGING -> !stack.isEmpty && stack.item == coilItem
-<<<<<<< HEAD
         SLOT_DISCHARGING -> !stack.isEmpty && (stack.item is IBatteryItem || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust)
-=======
-        SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
->>>>>>> backup/1.21.1
         else -> false
     }
 
@@ -187,9 +158,9 @@ class ElectricHeatGeneratorBlockEntity(
         markDirty()
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, ElectricHeatGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -197,9 +168,9 @@ class ElectricHeatGeneratorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
@@ -214,29 +185,18 @@ class ElectricHeatGeneratorBlockEntity(
 
     private fun extractFromDischargingSlot() {
         val space = (ElectricHeatGeneratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
-<<<<<<< HEAD
         val request = minOf(space, ElectricHeatGeneratorSync.MAX_INSERT)
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
-=======
-        if (space <= 0L) return
-        val request = minOf(space, ElectricHeatGeneratorSync.MAX_INSERT)
-        val extracted = batteryDischarger.tick(request)
-        if (extracted <= 0L) return
-        sync.insertEnergy(extracted)
->>>>>>> backup/1.21.1
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
     }
 
-<<<<<<< HEAD
     /** 当前安装的线圈数量。 */
     fun getCoilCount(): Int = inventory.count { !it.isEmpty && it.item == coilItem }
 
-=======
->>>>>>> backup/1.21.1
     override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
         val redstoneAllowsRun = RedstoneControlComponent.canRun(world, pos, this)
         val coilCount = getCoilCount()

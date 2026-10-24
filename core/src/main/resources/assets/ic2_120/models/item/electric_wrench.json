@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/electric_wrench.obj",
   "parent": "ic2_120:item/item3d/display_handheld",
@@ -12,10 +11,5 @@
     "flat_616161": "ic2_120:item/item3d/flat_616161",
     "metal_d5d5d5": "ic2_120:item/item3d/metal_d5d5d5",
     "metal_e7e7e7": "ic2_120:item/item3d/metal_e7e7e7"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/tool/electric/electric_wrench"
->>>>>>> backup/1.21.1
   }
 }

@@ -43,13 +43,7 @@ item_ids:
   - ic2_120:uranium
   - ic2_120:uranium_235
   - ic2_120:uranium_238
-<<<<<<< HEAD
   - ic2_120:mox
-=======
-  - ic2_120:uranium_pellet
-  - ic2_120:mox
-  - ic2_120:mox_pellet
->>>>>>> backup/1.21.1
   - ic2_120:plutonium
   - ic2_120:rtg_pellet
   - ic2_120:containment_box
@@ -57,11 +51,7 @@ item_ids:
 
 # Nuclear Blocks and Components
 
-<<<<<<< HEAD
 Nuclear power is built from the reactor block, external ports, and internal components. Read the [Nuclear Reactor](../machines/nuclear_reactor.md) overview first, then use this page as a component reference.
-=======
-Nuclear power is built from the reactor block, external ports, and internal components. Read the [Nuclear Reactor System](../systems/nuclear_reactor.md) overview first, then use this page as a component reference.
->>>>>>> backup/1.21.1
 
 ## Reactor Blocks
 
@@ -70,11 +60,7 @@ Nuclear power is built from the reactor block, external ports, and internal comp
 | Nuclear Reactor | The main block; holds fuel rods and cooling components |
 | Reactor Chamber | Extends the reactor's interior space |
 | Reactor Access Hatch | Automated input / output of reactor items |
-<<<<<<< HEAD
 | Reactor Fluid Port | In fluid mode, inputs coolant and outputs hot coolant |
-=======
-| Reactor Fluid Port | In heat mode, inputs coolant and outputs hot coolant |
->>>>>>> backup/1.21.1
 | Reactor Redstone Port | Use redstone to control or read reactor state |
 | Reactor Pressure Vessel | The structural shell used in heat-mode reactors |
 

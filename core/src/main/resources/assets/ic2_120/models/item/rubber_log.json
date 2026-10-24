@@ -1,12 +1,7 @@
 {
   "parent": "minecraft:block/cube_column",
   "textures": {
-<<<<<<< HEAD
     "side": "ic2_120:block/resource/rubber_wood_sides",
     "end": "ic2_120:block/resource/rubber_wood_bottomtop"
-=======
-    "side": "ic2:block/resource/rubber_wood_sides",
-    "end": "ic2:block/resource/rubber_wood_bottomtop"
->>>>>>> backup/1.21.1
   }
 }

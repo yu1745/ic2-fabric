@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/nano_leggings.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,10 +8,5 @@
     "flat_2a2a2a": "ic2_120:item/item3d/flat_2a2a2a",
     "flat_3e3e3e": "ic2_120:item/item3d/flat_3e3e3e",
     "glow_00ff00": "ic2_120:item/item3d/glow_00ff00"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/armor/nano_leggings"
->>>>>>> backup/1.21.1
   }
 }

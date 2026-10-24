@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/quantum_helmet.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "flat_3c3c3c": "ic2_120:item/item3d/flat_3c3c3c",
     "glass_3366ff": "ic2_120:item/item3d/glass_3366ff",
     "glow_00ff00": "ic2_120:item/item3d/glow_00ff00"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/armor/quantum_helmet"
->>>>>>> backup/1.21.1
   }
 }

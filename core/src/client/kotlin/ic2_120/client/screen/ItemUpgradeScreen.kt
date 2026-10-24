@@ -3,15 +3,10 @@ package ic2_120.client.screen
 import ic2_120.client.t
 import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.registry.annotation.ModScreen
-<<<<<<< HEAD
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.util.math.Rect2i
-=======
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
->>>>>>> backup/1.21.1
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
@@ -27,12 +22,9 @@ class ItemUpgradeScreen(
     title: Text
 ) : HandledScreen<ItemUpgradeScreenHandler>(handler, playerInventory, title) {
 
-<<<<<<< HEAD
     /** Slot index used by the AE2-style JEI fake-slot packet. */
     val ghostFilterSlotIndex: Int get() = handler.filterSlotIndex
 
-=======
->>>>>>> backup/1.21.1
     init {
         backgroundWidth = 176
         backgroundHeight = 166
@@ -47,7 +39,6 @@ class ItemUpgradeScreen(
         val client = client ?: return
 
         addDrawableChild(ButtonWidget.builder(Text.empty()) {
-<<<<<<< HEAD
             client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
         }.dimensions(x + 27, y + 37, 20, 14).build())
 
@@ -71,20 +62,6 @@ class ItemUpgradeScreen(
         drawFilterItem(context)
         drawJeiHint(context, mouseX, mouseY)
 
-=======
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_SET_FILTER))
-        }.dimensions(x + 27, y + 37, 20, 14).build())
-
-        addDrawableChild(ButtonWidget.builder(Text.empty()) {
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION))
-        }.dimensions(x + 108, y + 60, 20, 12).build())
-    }
-
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context, mouseX, mouseY, delta)
-        super.render(context, mouseX, mouseY, delta)
-
->>>>>>> backup/1.21.1
         context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // 过滤文本 (9,18)-(104,32)
@@ -98,31 +75,14 @@ class ItemUpgradeScreen(
         val filterTextY = y + 18 + (14 - textRenderer.fontHeight) / 2
         context.drawText(textRenderer, filterText, filterTextX, filterTextY, 0x55FF55, false)
 
-<<<<<<< HEAD
         drawDirectionButtons(context)
 
         // 7px 按钮文字覆盖
         draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.item_upgrade.clear_filter"))
-=======
-        // 方向文本 (9,59)-(104,73)
-        val dirOrdinal = handler.directionOrdinal
-        val dirName = if (dirOrdinal in 0..5) {
-            t("gui.ic2_120.direction.${Direction.entries[dirOrdinal].name.lowercase()}")
-        } else {
-            t("gui.ic2_120.fluid_upgrade.any_direction")
-        }
-        val dirText = t("gui.ic2_120.fluid_upgrade.direction", dirName)
-        context.drawText(textRenderer, dirText, x + 9, y + 59 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
-
-        // 7px 按钮文字覆盖
-        draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.item_upgrade.set_filter"))
-        draw7pxText(context, x + 108, y + 60, 20, 12, t("gui.ic2_120.item_upgrade.cycle_direction_short"))
->>>>>>> backup/1.21.1
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-<<<<<<< HEAD
     private fun drawDirectionButtons(context: DrawContext) {
         Direction.entries.forEachIndexed { index, direction ->
             val glyph = when (direction) {
@@ -153,8 +113,6 @@ class ItemUpgradeScreen(
         }
     }
 
-=======
->>>>>>> backup/1.21.1
     private fun draw7pxText(context: DrawContext, bx: Int, by: Int, bw: Int, bh: Int, text: String) {
         val scale = 7f / textRenderer.fontHeight
         val textW = textRenderer.getWidth(text)
@@ -169,7 +127,6 @@ class ItemUpgradeScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiupgrade.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
@@ -180,9 +137,4 @@ class ItemUpgradeScreen(
 
     /** JEI ghost ingredient drag target：容器槽位区域 (x+8, y+35, 16x16) */
     fun ghostFilterArea(): Rect2i = Rect2i(x + 8, y + 35, 16, 16)
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiupgrade.png")
-        private const val TEX_SIZE = 256
-    }
->>>>>>> backup/1.21.1
 }

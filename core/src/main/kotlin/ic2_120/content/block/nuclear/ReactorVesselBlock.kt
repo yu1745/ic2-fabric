@@ -12,15 +12,12 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditio
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
-<<<<<<< HEAD
 import java.util.function.Consumer
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.recipes.ModTags
 
 /**
@@ -31,19 +28,13 @@ class ReactorVesselBlock(settings: AbstractBlock.Settings = ReactorShellBlock.sh
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val leadPlate = LeadPlate::class.instance()
             if (leadPlate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
-<<<<<<< HEAD
                     .pattern("LGL").pattern("GLG").pattern("LGL")
                     .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
                     .input('G', ReinforcedGlassBlock::class.item())  // 透明外壳：铅框 + 强化玻璃
-=======
-                    .pattern("LSL").pattern("SLS").pattern("LSL")
-                    .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
-                    .input('S', Items.STONE)
->>>>>>> backup/1.21.1
                     .criterion(hasItem(leadPlate), conditionsFromItem(leadPlate))
                     .offerTo(exporter, ReactorVesselBlock::class.id())
             }

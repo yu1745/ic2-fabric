@@ -26,12 +26,11 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -39,19 +38,13 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = PatternStorageBlock::class)
 class PatternStorageBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
-=======
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     companion object {
         const val SLOT_CRYSTAL = 0
@@ -71,13 +64,9 @@ class PatternStorageBlockEntity(
         extractSlots = intArrayOf(SLOT_CRYSTAL),
         markDirty = { markDirty() }
     )
-<<<<<<< HEAD
 
     override val routedItemStorage get() = itemStorage
     private val crystalMemoryId = Identifier(Ic2_120.MOD_ID, "crystal_memory")
-=======
-    private val crystalMemoryId = Identifier.of(Ic2_120.MOD_ID, "crystal_memory")
->>>>>>> backup/1.21.1
 
     private val templates = mutableListOf<UuTemplateEntry>()
 
@@ -186,11 +175,9 @@ class PatternStorageBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(0)
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.pattern_storage")
@@ -198,9 +185,9 @@ class PatternStorageBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         PatternStorageScreenHandler(syncId, playerInventory, this, pos, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         templates.clear()
         templates += decodeUuTemplateList(nbt.getList(UU_TEMPLATE_LIST_NBT_KEY, 10))
         selectedTemplateIndex = nbt.getInt(NBT_SELECTED_INDEX)
@@ -209,14 +196,14 @@ class PatternStorageBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         nbt.put(UU_TEMPLATE_LIST_NBT_KEY, encodeUuTemplateList(templates))
         nbt.putInt(NBT_SELECTED_INDEX, selectedTemplateIndex)
     }
 
-    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
+    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 

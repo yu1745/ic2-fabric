@@ -39,15 +39,9 @@ class TransformerSync(
     /**
      * 变压器工作模式
      */
-<<<<<<< HEAD
    enum class Mode(val id: Int, val translationKey: String) {
         STEP_DOWN(0, "mode.step_down"),  // 降压模式：正面输入高级能量，其他面输出低级能量（默认）
         STEP_UP(1, "mode.step_up");      // 升压模式：其他面输入低级能量，正面输出高级能量
-=======
-    enum class Mode(val id: Int, val translationKey: String) {
-        STEP_UP(0, "mode.step_up"),      // 升压模式：其他面输入低级能量，正面输出高级能量
-        STEP_DOWN(1, "mode.step_down");  // 降压模式：正面输入高级能量，其他面输出低级能量
->>>>>>> backup/1.21.1
 
        companion object {
             fun fromId(id: Int): Mode = entries.firstOrNull { it.id == id } ?: STEP_DOWN

@@ -23,28 +23,16 @@ import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-<<<<<<< HEAD
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
-=======
-import net.minecraft.nbt.NbtOps
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-<<<<<<< HEAD
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import java.util.ArrayDeque
-=======
-import net.minecraft.util.math.BlockPos
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 
 
 /**
@@ -72,11 +60,7 @@ import io.netty.buffer.Unpooled
 class TankBlockEntity(
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : BlockEntity(TankBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory {
-=======
-) : BlockEntity(TankBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     companion object {
         /** 青铜/铁储罐容量 (mB) */
@@ -88,11 +72,8 @@ class TankBlockEntity(
         /** 铱储罐容量 (mB) */
         const val IRIDIUM_CAPACITY_MB = 1024000
 
-<<<<<<< HEAD
         private const val MAX_HISTORY_SECONDS = 60
 
-=======
->>>>>>> backup/1.21.1
         private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 
         /** 容量常量（droplets） */
@@ -139,16 +120,12 @@ class TankBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
         override fun onFinalCommit() {
-<<<<<<< HEAD
             recordCommittedChange()
-=======
->>>>>>> backup/1.21.1
             syncFluidState()
             markDirty()
         }
     }
 
-<<<<<<< HEAD
     val syncedData = SyncedData()
     val sync = TankSync(syncedData) { getCapacityMb() }
     val guiSlotInv = SimpleInventory(1)
@@ -220,25 +197,16 @@ class TankBlockEntity(
         }
         return (sum / count).toInt()
     }
-=======
-    val syncedData = SyncedData(this)
-    val sync = TankSync(syncedData) { getCapacityMb() }
-    val guiSlotInv = SimpleInventory(1)
-    var shouldDropOnBreak = true
->>>>>>> backup/1.21.1
 
     fun syncFluidState() {
         val variant = tankInternal.variant
         sync.fluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
         sync.fluidAmount = getFluidAmountMb()
         sync.capacity = getCapacityMb()
-<<<<<<< HEAD
         if (!trackingInitialized) {
             observedAmountMb = sync.fluidAmount
             trackingInitialized = true
         }
-=======
->>>>>>> backup/1.21.1
     }
 
     fun extractFluidForBucket(player: PlayerEntity): Boolean {
@@ -300,7 +268,6 @@ class TankBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
         syncFluidState()
-<<<<<<< HEAD
         refreshRateStatistics()
         return TankScreenHandler(
             syncId,
@@ -313,21 +280,6 @@ class TankBlockEntity(
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-=======
-        return TankScreenHandler(
-            syncId,
-            playerInventory,
-            syncedData,
-            ScreenHandlerContext.create(world!!, pos)
-        )
-    }
-
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        return buf
->>>>>>> backup/1.21.1
     }
 
     /**
@@ -347,24 +299,15 @@ class TankBlockEntity(
 
     // ========== NBT 持久化 ==========
 
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, tankInternal.variant.toNbt())
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
-        if (!tankInternal.variant.isBlank) {
-            nbt.put(NBT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, tankInternal.variant).result().orElse(NbtCompound()))
->>>>>>> backup/1.21.1
         }
         syncedData.writeNbt(nbt)
     }
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
@@ -375,14 +318,4 @@ class TankBlockEntity(
         updateRateSync()
     }
 
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
-        val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
-        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
-        syncedData.readNbt(nbt)
-        syncFluidState()
-    }
->>>>>>> backup/1.21.1
 }

@@ -19,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemEntity.class)
 public abstract class CoalDustWaterTransformMixin {
     @Unique
-    private static final Identifier IC2_COAL_DUST = new Identifier("ic2_120", "coal_dust");
+    private static final Identifier IC2_COAL_DUST = new Identifier.of("ic2_120", "coal_dust");
 
     @Unique
-    private static final Identifier IC2_COAL_FUEL_DUST = new Identifier("ic2_120", "coal_fuel_dust");
+    private static final Identifier IC2_COAL_FUEL_DUST = new Identifier.of("ic2_120", "coal_fuel_dust");
 
     @Unique
     private int ic2$coalWaterTransformTicks;

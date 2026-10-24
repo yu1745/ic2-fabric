@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/forge_hammer.obj",
   "parent": "ic2_120:item/item3d/display_handheld",
@@ -13,10 +12,5 @@
     "metal_fafafa": "ic2_120:item/item3d/metal_fafafa",
     "metal_91a3aa": "ic2_120:item/item3d/metal_91a3aa",
     "flat_616772": "ic2_120:item/item3d/flat_616772"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/tool/forge_hammer"
->>>>>>> backup/1.21.1
   }
 }

@@ -39,27 +39,18 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
 import net.minecraft.item.Items
-=======
-import net.minecraft.recipe.input.SingleStackRecipeInput
->>>>>>> backup/1.21.1
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-<<<<<<< HEAD
 import ic2_120.content.upgrade.IValidInputItem
-=======
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 
 @ModBlockEntity(block = ExtractorBlock::class)
 @ModMachineRecipeBinding(ExtractorRecipeSerializer::class)
@@ -67,11 +58,7 @@ class ExtractorBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ExtractorBlock.ACTIVE
 
@@ -177,11 +164,9 @@ class ExtractorBlockEntity(
         else -> false
     }
 
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.extractor")
@@ -189,9 +174,9 @@ class ExtractorBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         ExtractorScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ExtractorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -204,9 +189,9 @@ class ExtractorBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ExtractorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -298,7 +283,6 @@ class ExtractorBlockEntity(
 
     private fun getRecipe(world: World, input: ItemStack): ExtractorRecipe? {
         if (input.isEmpty) return null
-<<<<<<< HEAD
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedRecipeItem === input.item) return cachedRecipe
         val inventory = SimpleInventory(input)
         val recipeManager = world.recipeManager
@@ -308,11 +292,6 @@ class ExtractorBlockEntity(
         cachedRecipeItem = input.item
         cachedRecipe = recipe
         return recipe
-=======
-        val recipeManager = world.recipeManager
-        val optionalRecipe = recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), SingleStackRecipeInput(input), world)
-        return optionalRecipe.map { it.value }.orElse(null)
->>>>>>> backup/1.21.1
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
@@ -327,16 +306,12 @@ class ExtractorBlockEntity(
         if (stack.isEmpty || isBatteryItem(stack)) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-<<<<<<< HEAD
         val inv = SimpleInventory(stack.copyWithCount(1))
         val found = w.recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found
         return found
-=======
-        return w.recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
->>>>>>> backup/1.21.1
     }
 
     /**

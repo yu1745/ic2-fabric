@@ -12,10 +12,6 @@ import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
-<<<<<<< HEAD
-=======
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
@@ -36,11 +32,7 @@ class CreativeGeneratorBlockEntity(
         const val GENERATOR_TIER = 1
     }
 
-<<<<<<< HEAD
     val syncedData = SyncedData()
-=======
-    val syncedData = SyncedData(this)
->>>>>>> backup/1.21.1
 
     @RegisterEnergy
     val sync = CreativeGeneratorSync(syncedData, { world?.time })
@@ -55,25 +47,15 @@ class CreativeGeneratorBlockEntity(
         state
     )
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CreativeGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, CreativeGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
     }
 
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         syncedData.writeNbt(nbt)
         nbt.putLong(CreativeGeneratorSync.NBT_ENERGY_STORED, sync.amount)
     }

@@ -1,7 +1,3 @@
 {
-<<<<<<< HEAD
  "parent": "ic2_120:block/generator/reactor/reactor_access_hatch_item"
-=======
-  "parent": "ic2:block/generator/reactor/reactor_access_hatch"
->>>>>>> backup/1.21.1
 }

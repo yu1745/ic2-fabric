@@ -7,21 +7,12 @@ import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import ic2_120.registry.item
-<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
-=======
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
->>>>>>> backup/1.21.1
 
 object ExtractorRecipeDatagen {
     data class Entry(
@@ -68,7 +59,6 @@ object ExtractorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-<<<<<<< HEAD
     fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
         entries.forEach { entry ->
             ExtractorRecipeJsonProvider(
@@ -104,16 +94,4 @@ object ExtractorRecipeDatagen {
 
         override fun getAdvancementId(): Identifier? = null
     }
-=======
-    fun generateRecipes(exporter: RecipeExporter) {
-        entries.forEach { entry ->
-            val id = Identifier.of("ic2_120", "extracting/${entry.name}")
-            exporter.accept(
-                id,
-                ExtractorRecipe(id, entry.input.toIngredient(), ItemStack(entry.output, entry.count)),
-                null
-            )
-        }
-    }
->>>>>>> backup/1.21.1
 }

@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/cropnalyzer.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,5 @@
     "glass_303030": "ic2_120:item/item3d/glass_303030",
     "glow_3fbf3f": "ic2_120:item/item3d/glow_3fbf3f",
     "metal_9a9a9a": "ic2_120:item/item3d/metal_9a9a9a"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/crop/cropnalyzer"
->>>>>>> backup/1.21.1
   }
 }

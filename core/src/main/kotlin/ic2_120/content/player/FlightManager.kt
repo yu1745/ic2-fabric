@@ -13,7 +13,6 @@ import java.util.UUID
 /**
  * 喷气背包/电力喷气背包/量子胸甲的飞行管理（服务端 tick）。
  *
-<<<<<<< HEAD
  * 设计上完全复用 Minecraft 的创造模式飞行代码：
  *
  * - 服务端只负责根据玩家装备的胸甲是否可飞行，授予/剥夺 [net.minecraft.entity.player.PlayerAbilities.allowFlying]。
@@ -26,15 +25,10 @@ import java.util.UUID
  *
  * 因此本类没有任何手写的「按键按下/抬起」检测或额外状态机：玩家穿上一件可飞行的胸甲，就相当于
  * 进入了「带飞行权限的生存模式」，与创造模式完全一致——燃料还够就等效创造，燃料耗尽立刻变回生存。
-=======
- * 服务端只根据胸甲是否可飞行来授予或剥夺 vanilla 飞行权限；双击空格、
- * 起飞/停止等行为交给原版 PlayerAbilities 流程处理。
->>>>>>> backup/1.21.1
  */
 object FlightManager {
     private val abilitySnapshots = mutableMapOf<UUID, FlightAbilitySnapshot>()
 
-<<<<<<< HEAD
     /**
      * 维度切换后客户端的 ClientPlayerEntity 会被销毁重建，新实例的 allowFlying 会被 vanilla 的
      * GameMode.setAbilities(SURVIVAL) 抹成 false（见 onPlayerRespawn 里的 copyAbilities + setGameModes）。
@@ -44,8 +38,6 @@ object FlightManager {
      */
     private val pendingResync = java.util.concurrent.ConcurrentHashMap.newKeySet<UUID>()
 
-=======
->>>>>>> backup/1.21.1
     fun tick(server: MinecraftServer) {
         for (world in server.worlds) {
             for (player in world.players) {
@@ -55,36 +47,25 @@ object FlightManager {
     }
 
     private fun tickPlayer(player: PlayerEntity) {
-<<<<<<< HEAD
         // 创造/旁观模式的飞行由游戏模式自己处理，不要插手
         if (player.isCreative || player.isSpectator) {
             abilitySnapshots.remove(player.uuid)
             pendingResync.remove(player.uuid)
-=======
-        if (player.isCreative || player.isSpectator) {
-            abilitySnapshots.remove(player.uuid)
->>>>>>> backup/1.21.1
             return
         }
 
         val chest = player.getEquippedStack(EquipmentSlot.CHEST)
         val source = flightSource(chest)
-<<<<<<< HEAD
         // 燃料/能量是否充足？边界：刚从「有」变「无」时这一 tick 不能「先开再关」，
         // 否则会发两次 abilities 包让客户端闪一下，所以先做预检再决定授权。
         if (source == null || !source.hasEnergy(chest)) {
             restorePreviousFlightState(player)
             pendingResync.remove(player.uuid)
-=======
-        if (source == null || !source.hasEnergy(chest)) {
-            restorePreviousFlightState(player)
->>>>>>> backup/1.21.1
             return
         }
 
         grantFlightPermission(player)
 
-<<<<<<< HEAD
         // 真正在飞的时候才消耗燃料/能量。耗尽时由上面的 !hasEnergy 分支在下一 tick 收回飞行权限。
         if (player.abilities.flying) {
             source.consume(chest)
@@ -103,11 +84,6 @@ object FlightManager {
      */
     fun onWorldChanged(player: net.minecraft.server.network.ServerPlayerEntity) {
         pendingResync.add(player.uuid)
-=======
-        if (player.abilities.flying) {
-            source.consume(chest)
-        }
->>>>>>> backup/1.21.1
     }
 
     private fun grantFlightPermission(player: PlayerEntity) {
@@ -146,11 +122,7 @@ object FlightManager {
         val flying: Boolean
     )
 
-<<<<<<< HEAD
     private fun flightSource(stack: ItemStack): FlightSource? = when (val item = stack.item) {
-=======
-    private fun flightSource(stack: ItemStack): FlightSource? = when (stack.item) {
->>>>>>> backup/1.21.1
         is JetpackItem -> JetpackSource
         is ElectricJetpack -> ElectricJetpackSource
         is QuantumChestplate -> QuantumSource
@@ -158,49 +130,28 @@ object FlightManager {
     }
 
     private interface FlightSource {
-<<<<<<< HEAD
         /** 当前是否还有燃料/能量可供飞行。 */
         fun hasEnergy(stack: ItemStack): Boolean
         /** 消耗一次 tick 的飞行燃料/能量；调用前应确保 [hasEnergy] 为 true。 */
-=======
-        fun hasEnergy(stack: ItemStack): Boolean
->>>>>>> backup/1.21.1
         fun consume(stack: ItemStack)
     }
 
     private object JetpackSource : FlightSource {
         override fun hasEnergy(stack: ItemStack): Boolean = JetpackItem.getFuel(stack) > 0
-<<<<<<< HEAD
         override fun consume(stack: ItemStack) { JetpackItem.consumeFuelPerTick(stack) }
-=======
-        override fun consume(stack: ItemStack) {
-            JetpackItem.consumeFuelPerTick(stack)
-        }
->>>>>>> backup/1.21.1
     }
 
     private object ElectricJetpackSource : FlightSource {
         override fun hasEnergy(stack: ItemStack): Boolean =
             (stack.item as ElectricJetpack).getEnergy(stack) > 0
-<<<<<<< HEAD
-=======
-
->>>>>>> backup/1.21.1
         override fun consume(stack: ItemStack) {
             (stack.item as ElectricJetpack).consumeFlightEnergyPerTick(stack)
         }
     }
 
     private object QuantumSource : FlightSource {
-<<<<<<< HEAD
         override fun hasEnergy(stack: ItemStack): Boolean =
             stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY) > 0
         override fun consume(stack: ItemStack) { QuantumChestplate.consumeFlightEnergyPerTick(stack) }
-=======
-        override fun hasEnergy(stack: ItemStack): Boolean = IElectricTool.getEnergy(stack) > 0
-        override fun consume(stack: ItemStack) {
-            QuantumChestplate.consumeFlightEnergyPerTick(stack)
-        }
->>>>>>> backup/1.21.1
     }
 }

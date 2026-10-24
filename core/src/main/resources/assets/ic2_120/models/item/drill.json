@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/drill.obj",
   "parent": "ic2_120:item/item3d/display_handheld",
@@ -13,10 +12,5 @@
     "metal_aaaaaa": "ic2_120:item/item3d/metal_aaaaaa",
     "metal_a5a5a5": "ic2_120:item/item3d/metal_a5a5a5",
     "flat_8e8e8e": "ic2_120:item/item3d/flat_8e8e8e"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/tool/electric/drill"
->>>>>>> backup/1.21.1
   }
 }

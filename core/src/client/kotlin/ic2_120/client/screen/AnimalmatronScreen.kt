@@ -24,20 +24,12 @@ class AnimalmatronScreen(
 
     private val waterSprite by lazy {
         MinecraftClient.getInstance()
-<<<<<<< HEAD
             .getSpriteAtlas(Identifier("minecraft", "textures/atlas/blocks.png"))
-=======
-            .getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png"))
->>>>>>> backup/1.21.1
             .apply(WATER_STILL_ID)
     }
     private val weedExSprite by lazy {
         MinecraftClient.getInstance()
-<<<<<<< HEAD
             .getSpriteAtlas(Identifier("minecraft", "textures/atlas/blocks.png"))
-=======
-            .getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png"))
->>>>>>> backup/1.21.1
             .apply(WEED_EX_STILL_ID)
     }
 
@@ -51,11 +43,7 @@ class AnimalmatronScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -186,7 +174,6 @@ class AnimalmatronScreen(
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
-<<<<<<< HEAD
         // Weed-EX 槽悬停：除草剂机制已停用（125c9c29），仅展示残留量与废弃说明
         if (relX in WEED_EX_TANK_X until WEED_EX_TANK_X + WEED_EX_TANK_W &&
             relY in WEED_EX_TANK_Y until WEED_EX_TANK_Y + WEED_EX_TANK_H
@@ -196,14 +183,6 @@ class AnimalmatronScreen(
                 lines.add(Text.translatable("fluid.ic2_120.weed_ex"))
                 lines.add(Text.literal("${"%,d".format(weedExAmount / DROPLETS_PER_MB)} / ${"%,d".format(WEED_EX_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             }
-=======
-        // Weed-EX 槽悬停
-        if (relX in WEED_EX_TANK_X until WEED_EX_TANK_X + WEED_EX_TANK_W &&
-            relY in WEED_EX_TANK_Y until WEED_EX_TANK_Y + WEED_EX_TANK_H
-        ) {
-            val lines = if (weedExAmount > 0) listOf(Text.translatable("fluid.ic2_120.weed_ex"), Text.literal("${"%,d".format(weedExAmount / DROPLETS_PER_MB)} / ${"%,d".format(WEED_EX_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
-                        else listOf(Text.literal("空"))
->>>>>>> backup/1.21.1
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
@@ -230,17 +209,10 @@ class AnimalmatronScreen(
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val WATER_TANK_DROPLETS = (FluidConstants.BUCKET * AnimalmatronSync.WATER_TANK_CAPACITY_BUCKETS).toInt()
         private val WEED_EX_TANK_DROPLETS = (FluidConstants.BUCKET * AnimalmatronSync.WEED_EX_TANK_CAPACITY_BUCKETS).toInt()
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiregulation.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private val WATER_STILL_ID = Identifier("minecraft", "block/water_still")
         private val WEED_EX_STILL_ID = Identifier("ic2", "block/fluid/weed_ex_still")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiregulation.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
-        private val WATER_STILL_ID = Identifier.of("minecraft", "block/water_still")
-        private val WEED_EX_STILL_ID = Identifier.of("ic2", "block/fluid/weed_ex_still")
->>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (180,3)-(194,16) = 14x13

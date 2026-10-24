@@ -3,7 +3,6 @@ package ic2_120.content.network
 import ic2_120.Ic2_120
 import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.block.machines.ReplicatorBlockEntity
-<<<<<<< HEAD
 import ic2_120.content.screen.FluidUpgradeScreenHandler
 import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.content.screen.PumpAttachmentScreenHandler
@@ -11,15 +10,10 @@ import net.minecraft.registry.Registries
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.Chainsaw
-=======
-import ic2_120.content.item.FoamSprayerItem
-import ic2_120.content.item.IridiumDrill
->>>>>>> backup/1.21.1
 import ic2_120.content.item.MiningLaserItem
 import ic2_120.content.item.MiningLaserServerSuppress
 import ic2_120.content.item.NightVisionGoggles
 import ic2_120.content.item.armor.NanoHelmet
-<<<<<<< HEAD
 import ic2_120.content.item.armor.QuantumHelmet
 import ic2_120.content.item.armor.QuantumLeggings
 import ic2_120.content.item.armor.QuantumBoots
@@ -29,23 +23,10 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.server.network.ServerPlayerEntity
-=======
-import ic2_120.content.item.armor.QuantumBoots
-import ic2_120.content.item.armor.QuantumHelmet
-import ic2_120.content.item.armor.QuantumLeggings
-import io.netty.buffer.Unpooled
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
->>>>>>> backup/1.21.1
 import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
-<<<<<<< HEAD
 import net.minecraft.server.world.ServerWorld
 
 object NetworkManager {
@@ -133,56 +114,11 @@ object NetworkManager {
                             2 -> "message.ic2_120.quantum_leggings.speed_tier2"
                             else -> "message.ic2_120.quantum_leggings.speed_off"
                         }
-=======
-
-object NetworkManager {
-    private val REACTOR_HEAT_INFO_PACKET = Identifier.of(Ic2_120.MOD_ID, "reactor_heat_info")
-    private val WIND_ROTOR_STATE_PACKET = Identifier.of(Ic2_120.MOD_ID, "wind_rotor_state")
-    private val WATER_ROTOR_STATE_PACKET = Identifier.of(Ic2_120.MOD_ID, "water_rotor_state")
-    private val REACTOR_LAYOUT_LOCK_PACKET = Identifier.of(Ic2_120.MOD_ID, "reactor_layout_lock")
-
-    private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
-    val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
-    val TOGGLE_NANO_VISION_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_nano_vision")
-    val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
-    val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
-    val TOGGLE_MINING_LASER_MODE_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
-    val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
-    val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
-
-    fun register() {
-        registerPayloadTypes()
-
-        ServerPlayNetworking.registerGlobalReceiver(ToggleNightVisionGogglesPayload.ID) { _, context ->
-            val player = context.player()
-            val stack = player.getEquippedStack(EquipmentSlot.HEAD)
-            val goggles = stack.item as? NightVisionGoggles ?: return@registerGlobalReceiver
-            val enabled = NightVisionGoggles.toggleEnabled(stack)
-            val key = if (enabled) "message.ic2_120.night_vision_goggles.enabled" else "message.ic2_120.night_vision_goggles.disabled"
-            player.sendMessage(Text.translatable(key), true)
-        }
-
-        ServerPlayNetworking.registerGlobalReceiver(ToggleNanoVisionPayload.ID) { _, context ->
-            val player = context.player()
-            val stack = player.getEquippedStack(EquipmentSlot.HEAD)
-            when (stack.item) {
-                is NanoHelmet -> {
-                    val enabled = NanoHelmet.toggleNightVision(stack)
-                    player.sendMessage(Text.translatable(
-                        if (enabled) "message.ic2_120.nano_helmet.nv_on" else "message.ic2_120.nano_helmet.nv_off"
-                    ), true)
-                }
-                is QuantumHelmet -> {
-                    val enabled = QuantumHelmet.toggleNightVision(stack)
-                    player.sendMessage(Text.translatable(
-                        if (enabled) "message.ic2_120.quantum_helmet.nv_on" else "message.ic2_120.quantum_helmet.nv_off"
->>>>>>> backup/1.21.1
                     ), true)
                 }
             }
         }
 
-<<<<<<< HEAD
         ServerPlayNetworking.registerGlobalReceiver(QUANTUM_LEGGINGS_SPEED_TICK_PACKET) { server, player, _, _, _ ->
             server.execute {
                 if (player.hasVehicle() || player.abilities.flying || player.isSpectator) return@execute
@@ -232,64 +168,10 @@ object NetworkManager {
                         )
                         return@execute
                     }
-=======
-        ServerPlayNetworking.registerGlobalReceiver(ToggleQuantumLeggingsSpeedPayload.ID) { _, context ->
-            val player = context.player()
-            val stack = player.getEquippedStack(EquipmentSlot.LEGS)
-            if (stack.item is QuantumLeggings) {
-                val tier = QuantumLeggings.cycleSpeedTier(stack)
-                player.sendMessage(Text.translatable(
-                    when (tier) {
-                        1 -> "message.ic2_120.quantum_leggings.speed_tier1"
-                        2 -> "message.ic2_120.quantum_leggings.speed_tier2"
-                        else -> "message.ic2_120.quantum_leggings.speed_off"
-                    }
-                ), true)
-            }
-        }
-
-        ServerPlayNetworking.registerGlobalReceiver(ToggleQuantumBootsJumpPayload.ID) { _, context ->
-            val player = context.player()
-            val stack = player.getEquippedStack(EquipmentSlot.FEET)
-            if (stack.item is QuantumBoots) {
-                val enabled = QuantumBoots.toggleSuperJump(stack)
-                player.sendMessage(Text.translatable(
-                    if (enabled) "message.ic2_120.quantum_boots.jump_on" else "message.ic2_120.quantum_boots.jump_off"
-                ), true)
-            }
-        }
-
-        ServerPlayNetworking.registerGlobalReceiver(ToggleIridiumSilkTouchPayload.ID) { _, context ->
-            val player = context.player()
-            val stack = player.mainHandStack
-            if (stack.item is IridiumDrill) {
-                val enabled = IridiumDrill.toggleSilkTouch(stack)
-                player.sendMessage(Text.translatable(
-                    if (enabled) "message.ic2_120.iridium_drill.silk_touch_on" else "message.ic2_120.iridium_drill.silk_touch_off"
-                ), true)
-            }
-        }
-
-        ServerPlayNetworking.registerGlobalReceiver(ToggleFoamSprayerModePayload.ID) { _, context ->
-            val player = context.player()
-            for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
-                val stack = player.getStackInHand(hand)
-                if (stack.item is FoamSprayerItem) {
-                    val multi = FoamSprayerItem.toggleMultiMode(stack)
-                    player.setStackInHand(hand, stack)
-                    player.sendMessage(
-                        Text.translatable(
-                            if (multi) "message.ic2_120.foam_sprayer.mode_multi" else "message.ic2_120.foam_sprayer.mode_single"
-                        ),
-                        true
-                    )
-                    return@registerGlobalReceiver
->>>>>>> backup/1.21.1
                 }
             }
         }
 
-<<<<<<< HEAD
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_FOAM_SPRAYER_MODE_PACKET) { server, player, _, _, _ ->
             server.execute {
                 for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
@@ -305,26 +187,10 @@ object NetworkManager {
                         )
                         return@execute
                     }
-=======
-        ServerPlayNetworking.registerGlobalReceiver(ToggleMiningLaserModePayload.ID) { _, context ->
-            val player = context.player()
-            for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
-                val stack = player.getStackInHand(hand)
-                if (stack.item is MiningLaserItem) {
-                    MiningLaserServerSuppress.onMiningLaserModeToggled(player)
-                    val newMode = MiningLaserItem.cycleMode(stack)
-                    player.setStackInHand(hand, stack)
-                    player.sendMessage(
-                        Text.translatable(newMode.translationKey),
-                        true
-                    )
-                    return@registerGlobalReceiver
->>>>>>> backup/1.21.1
                 }
             }
         }
 
-<<<<<<< HEAD
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_MINING_LASER_MODE_PACKET) { server, player, _, _, _ ->
             server.execute {
                 for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
@@ -374,19 +240,10 @@ object NetworkManager {
             server.execute {
                 val handler = player.currentScreenHandler
                 if (handler is ItemUpgradeScreenHandler) handler.setItemFilter(slotIndex, stack)
-=======
-        ServerPlayNetworking.registerGlobalReceiver(SelectTemplatePayload.ID) { payload, context ->
-            val player = context.player()
-            val be = player.world.getBlockEntity(payload.pos)
-            when (be) {
-                is ReplicatorBlockEntity -> be.selectTemplate(payload.index)
-                is PatternStorageBlockEntity -> be.selectTemplate(payload.index)
->>>>>>> backup/1.21.1
             }
         }
     }
 
-<<<<<<< HEAD
     // 发送数据包到客户端
     fun sendToClient(player: ServerPlayerEntity, packet: ReactorHeatInfoPacket) {
         val buf = PacketByteBuf(Unpooled.buffer())
@@ -411,23 +268,6 @@ object NetworkManager {
                 val buf = PacketByteBuf(Unpooled.buffer())
                 WindRotorStatePacket.write(WindRotorStatePacket(pos, isStuck, stuckAngle), buf)
                 ServerPlayNetworking.send(player, WindRotorStatePacket.ID, buf)
-=======
-    fun sendToClient(player: ServerPlayerEntity, packet: ReactorHeatInfoPacket) {
-        ServerPlayNetworking.send(player, packet)
-    }
-
-    fun sendToClient(player: ServerPlayerEntity, packet: ReactorLayoutLockPacket) {
-        ServerPlayNetworking.send(player, packet)
-    }
-
-    fun sendWindRotorStateToNearby(world: net.minecraft.world.World, pos: net.minecraft.util.math.BlockPos, isStuck: Boolean, stuckAngle: Float) {
-        if (world.isClient) return
-        val serverWorld = world as net.minecraft.server.world.ServerWorld
-        val packet = WindRotorStatePacket(pos, isStuck, stuckAngle)
-        for (player in serverWorld.players) {
-            if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
-                ServerPlayNetworking.send(player, packet)
->>>>>>> backup/1.21.1
             }
         }
     }
@@ -449,18 +289,13 @@ object NetworkManager {
         )
         for (player in serverWorld.players) {
             if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
-<<<<<<< HEAD
                 val buf = PacketByteBuf(Unpooled.buffer())
                 TeleporterVisualStatePacket.write(packet, buf)
                 ServerPlayNetworking.send(player, TELEPORTER_VISUAL_STATE_PACKET, buf)
-=======
-                ServerPlayNetworking.send(player, packet)
->>>>>>> backup/1.21.1
             }
         }
     }
 
-<<<<<<< HEAD
     // 发送水力发电机转子状态到附近玩家
     fun sendWaterRotorStateToNearby(world: net.minecraft.world.World, pos: net.minecraft.util.math.BlockPos, isStuck: Boolean, stuckAngle: Float) {
         if (world.isClient) return
@@ -471,48 +306,14 @@ object NetworkManager {
                 val buf = PacketByteBuf(Unpooled.buffer())
                 WaterRotorStatePacket.write(WaterRotorStatePacket(pos, isStuck, stuckAngle), buf)
                 ServerPlayNetworking.send(player, WaterRotorStatePacket.ID, buf)
-=======
-    fun sendWaterRotorStateToNearby(world: net.minecraft.world.World, pos: net.minecraft.util.math.BlockPos, isStuck: Boolean, stuckAngle: Float) {
-        if (world.isClient) return
-        val serverWorld = world as net.minecraft.server.world.ServerWorld
-        val packet = WaterRotorStatePacket(pos, isStuck, stuckAngle)
-        for (player in serverWorld.players) {
-            if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
-                ServerPlayNetworking.send(player, packet)
->>>>>>> backup/1.21.1
             }
         }
     }
 
-<<<<<<< HEAD
-=======
-    private fun registerPayloadTypes() {
-        PayloadTypeRegistry.playC2S().register(ToggleNightVisionGogglesPayload.ID, ToggleNightVisionGogglesPayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(ToggleNanoVisionPayload.ID, ToggleNanoVisionPayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(ToggleQuantumLeggingsSpeedPayload.ID, ToggleQuantumLeggingsSpeedPayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(ToggleQuantumBootsJumpPayload.ID, ToggleQuantumBootsJumpPayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(ToggleIridiumSilkTouchPayload.ID, ToggleIridiumSilkTouchPayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(ToggleFoamSprayerModePayload.ID, ToggleFoamSprayerModePayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(ToggleMiningLaserModePayload.ID, ToggleMiningLaserModePayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(SelectTemplatePayload.ID, SelectTemplatePayload.CODEC)
-
-        PayloadTypeRegistry.playS2C().register(ReactorHeatInfoPacket.ID, ReactorHeatInfoPacket.CODEC)
-        PayloadTypeRegistry.playS2C().register(BandwidthHudPacket.ID, BandwidthHudPacket.CODEC)
-        PayloadTypeRegistry.playS2C().register(WindRotorStatePacket.ID, WindRotorStatePacket.CODEC)
-        PayloadTypeRegistry.playS2C().register(WaterRotorStatePacket.ID, WaterRotorStatePacket.CODEC)
-        PayloadTypeRegistry.playS2C().register(ScannerResultPacket.ID, ScannerResultPacket.CODEC)
-        PayloadTypeRegistry.playS2C().register(TeleporterVisualStatePacket.ID, TeleporterVisualStatePacket.CODEC)
-        PayloadTypeRegistry.playS2C().register(ConfigSyncPacket.ID, ConfigSyncPacket.CODEC)
-        PayloadTypeRegistry.playS2C().register(SemifluidGeneratorFuelStatePacket.ID, SemifluidGeneratorFuelStatePacket.CODEC)
-        PayloadTypeRegistry.playS2C().register(ReactorLayoutLockPacket.ID, ReactorLayoutLockPacket.CODEC)
-    }
-
->>>>>>> backup/1.21.1
     fun sendSemifluidGeneratorFuelState(world: ServerWorld, pos: BlockPos, fuelColorArgb: Int) {
         val packet = SemifluidGeneratorFuelStatePacket(pos, fuelColorArgb)
         for (player in world.players) {
             if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
-<<<<<<< HEAD
                 val buf = PacketByteBuf(Unpooled.buffer())
                 SemifluidGeneratorFuelStatePacket.write(packet, buf)
                 ServerPlayNetworking.send(player, SemifluidGeneratorFuelStatePacket.ID, buf)
@@ -520,10 +321,4 @@ object NetworkManager {
         }
     }
 
-=======
-                ServerPlayNetworking.send(player, packet)
-            }
-        }
-    }
->>>>>>> backup/1.21.1
 }

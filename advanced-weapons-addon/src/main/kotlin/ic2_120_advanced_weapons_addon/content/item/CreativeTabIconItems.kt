@@ -9,10 +9,6 @@ class TabIconIc2AdvancedWeaponsItem : Item(Item.Settings())
 
 object CreativeTabIconItemsRegistration {
     fun register(modId: String) {
-<<<<<<< HEAD
         Registry.register(Registries.ITEM, Identifier(modId, "tab_icon_ic2_advanced_weapons"), TabIconIc2AdvancedWeaponsItem())
-=======
-        Registry.register(Registries.ITEM, Identifier.of(modId, "tab_icon_ic2_advanced_weapons"), TabIconIc2AdvancedWeaponsItem())
->>>>>>> backup/1.21.1
     }
 }

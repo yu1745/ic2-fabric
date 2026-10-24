@@ -15,23 +15,18 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.RotationAxis
+import org.joml.Matrix3f
+import org.joml.Matrix4f
 
 class ManualKineticGeneratorBlockEntityRenderer(
     context: BlockEntityRendererFactory.Context
 ) : BlockEntityRenderer<ManualKineticGeneratorBlockEntity> {
 
     companion object {
-<<<<<<< HEAD
         private val WOOD_TEXTURE = Identifier("ic2_120", "textures/item/rotor/wood_rotor_model.png")
         private val IRON_TEXTURE = Identifier("ic2_120", "textures/item/rotor/iron_rotor_model.png")
         private val STEEL_TEXTURE = Identifier("ic2_120", "textures/item/rotor/steel_rotor_model.png")
         private val CARBON_TEXTURE = Identifier("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
-=======
-        private val WOOD_TEXTURE = Identifier.of("ic2", "textures/item/rotor/wood_rotor_model.png")
-        private val IRON_TEXTURE = Identifier.of("ic2", "textures/item/rotor/iron_rotor_model.png")
-        private val STEEL_TEXTURE = Identifier.of("ic2", "textures/item/rotor/steel_rotor_model.png")
-        private val CARBON_TEXTURE = Identifier.of("ic2", "textures/item/rotor/carbon_rotor_model.png")
->>>>>>> backup/1.21.1
         
         private const val PIXEL = 1.0f / 16.0f
         private const val SHAFT_HALF = 1.0f * PIXEL
@@ -161,28 +156,30 @@ class ManualKineticGeneratorBlockEntityRenderer(
         maxZ: Float
     ) {
         val entry = matrices.peek()
+        val pos = entry.positionMatrix
+        val normal = entry.normalMatrix
 
-        quad(vc, entry, light, overlay,
+        quad(vc, pos, normal, light, overlay,
             minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ,
             0f, 0f, 1f
         )
-        quad(vc, entry, light, overlay,
+        quad(vc, pos, normal, light, overlay,
             maxX, minY, minZ, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ,
             0f, 0f, -1f
         )
-        quad(vc, entry, light, overlay,
+        quad(vc, pos, normal, light, overlay,
             minX, minY, minZ, minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ,
             -1f, 0f, 0f
         )
-        quad(vc, entry, light, overlay,
+        quad(vc, pos, normal, light, overlay,
             maxX, minY, maxZ, maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ,
             1f, 0f, 0f
         )
-        quad(vc, entry, light, overlay,
+        quad(vc, pos, normal, light, overlay,
             minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, minX, maxY, minZ,
             0f, 1f, 0f
         )
-        quad(vc, entry, light, overlay,
+        quad(vc, pos, normal, light, overlay,
             minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, minX, minY, maxZ,
             0f, -1f, 0f
         )
@@ -190,7 +187,8 @@ class ManualKineticGeneratorBlockEntityRenderer(
 
     private fun quad(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        pos: Matrix4f,
+        normal: Matrix3f,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -199,15 +197,16 @@ class ManualKineticGeneratorBlockEntityRenderer(
         x4: Float, y4: Float, z4: Float,
         nx: Float, ny: Float, nz: Float
     ) {
-        vertex(vc, entry, x1, y1, z1, 0f, 0f, light, overlay, nx, ny, nz)
-        vertex(vc, entry, x2, y2, z2, 1f, 0f, light, overlay, nx, ny, nz)
-        vertex(vc, entry, x3, y3, z3, 1f, 1f, light, overlay, nx, ny, nz)
-        vertex(vc, entry, x4, y4, z4, 0f, 1f, light, overlay, nx, ny, nz)
+        vertex(vc, pos, normal, x1, y1, z1, 0f, 0f, light, overlay, nx, ny, nz)
+        vertex(vc, pos, normal, x2, y2, z2, 1f, 0f, light, overlay, nx, ny, nz)
+        vertex(vc, pos, normal, x3, y3, z3, 1f, 1f, light, overlay, nx, ny, nz)
+        vertex(vc, pos, normal, x4, y4, z4, 0f, 1f, light, overlay, nx, ny, nz)
     }
 
     private fun vertex(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        pos: Matrix4f,
+        normal: Matrix3f,
         x: Float,
         y: Float,
         z: Float,
@@ -219,11 +218,12 @@ class ManualKineticGeneratorBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(entry.positionMatrix, x, y, z)
+        vc.vertex(pos, x, y, z)
             .color(255, 255, 255, 255)
             .texture(u, v)
             .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
             .light(light)
-            .normal(entry, nx, ny, nz)
+            .normal(normal, nx, ny, nz)
+            .next()
     }
 }

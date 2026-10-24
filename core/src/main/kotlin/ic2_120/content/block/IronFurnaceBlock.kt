@@ -14,7 +14,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
@@ -30,6 +30,7 @@ import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
+import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -47,8 +48,6 @@ class IronFurnaceBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     override fun getCasingDrop() = asItem()
 
-    override fun getCasingDrop() = asItem()
-
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         IronFurnaceBlockEntity(pos, state)
 
@@ -58,18 +57,13 @@ class IronFurnaceBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, IronFurnaceBlockEntity::class.type()) { world1, pos, state, be -> be.tick(world1, pos, state) }
-=======
-        else validateTicker(type, IronFurnaceBlockEntity::class.type()){ world1, pos, state, be -> be.tick(world1, pos, state) }
->>>>>>> backup/1.21.1
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -79,9 +73,6 @@ class IronFurnaceBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -102,7 +93,7 @@ class IronFurnaceBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val ironPlate = ic2_120.content.item.IronPlate::class.instance()
             if (ironPlate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronFurnaceBlock::class.item(), 1)

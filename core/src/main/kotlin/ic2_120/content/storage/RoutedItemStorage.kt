@@ -1,17 +1,11 @@
 package ic2_120.content.storage
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-<<<<<<< HEAD
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage
-=======
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
->>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
 import net.minecraft.item.ItemStack
@@ -29,7 +23,6 @@ class RoutedItemStorage(
     val insertRoutes: List<ItemInsertRoute>,
     val extractSlots: IntArray,
     private val markDirty: () -> Unit
-<<<<<<< HEAD
 ) : SnapshotParticipant<MutableList<ItemStack>>(), SlottedStorage<ItemVariant> {
 
     /**
@@ -110,16 +103,6 @@ class RoutedItemStorage(
         if (routesForSlot.isEmpty()) return false
         return slotValidator(slot, stack) && routesForSlot.any { it.matcher(stack) }
     }
-=======
-) : SnapshotParticipant<MutableList<ItemStack>>(), Storage<ItemVariant> {
-
-    private val visibleSlots: IntArray = linkedSetOf<Int>().apply {
-        for (route in insertRoutes) {
-            for (slot in route.slotIndices) add(slot)
-        }
-        for (slot in extractSlots) add(slot)
-    }.toIntArray()
->>>>>>> backup/1.21.1
 
     override fun createSnapshot(): MutableList<ItemStack> = inventory.map { it.copy() }.toMutableList()
 
@@ -151,16 +134,10 @@ class RoutedItemStorage(
 
             for (slot in route.slotIndices) {
                 if (remaining <= 0L) break
-<<<<<<< HEAD
                 if (slot !in inventory.indices) continue
                 val existing = inventory[slot]
                 if (existing.isEmpty) continue
                 if (!slotValidator(slot, probe) || ItemVariant.of(existing) != resource) continue
-=======
-                if (!isSlotAvailableForInsert(slot, probe)) continue
-                val existing = inventory[slot]
-                if (existing.isEmpty || ItemVariant.of(existing) != resource) continue
->>>>>>> backup/1.21.1
                 val limit = slotLimit(route, existing)
                 val room = (limit - existing.count).coerceAtLeast(0)
                 if (room <= 0) continue
@@ -174,16 +151,10 @@ class RoutedItemStorage(
 
             for (slot in route.slotIndices) {
                 if (remaining <= 0L) break
-<<<<<<< HEAD
                 if (slot !in inventory.indices) continue
                 val existing = inventory[slot]
                 if (!existing.isEmpty) continue
                 if (!slotValidator(slot, probe)) continue
-=======
-                if (!isSlotAvailableForInsert(slot, probe)) continue
-                val existing = inventory[slot]
-                if (!existing.isEmpty) continue
->>>>>>> backup/1.21.1
                 val limit = slotLimit(route, probe)
                 if (limit <= 0) continue
                 val moved = minOf(remaining, limit.toLong())
@@ -228,41 +199,11 @@ class RoutedItemStorage(
         return extractedTotal
     }
 
-<<<<<<< HEAD
     /**
      * 返回固定槽位表（含空槽）的视图迭代器，槽位稳定、不随状态漂移。
      * 空槽以 blank resource / amount 0 的 view 暴露，便于物流系统发现后续出现的物品。
      */
     override fun iterator(): MutableIterator<StorageView<ItemVariant>> = cachedViews.iterator()
-=======
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> {
-        val views = mutableListOf<StorageView<ItemVariant>>()
-        for (slot in visibleSlots) {
-            val stack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-            if (stack.isEmpty) continue
-            views.add(object : StorageView<ItemVariant> {
-                override fun getResource(): ItemVariant = ItemVariant.of(inventory[slot])
-
-                override fun getAmount(): Long = inventory[slot].count.toLong()
-
-                override fun getCapacity(): Long {
-                    val current = inventory[slot]
-                    return if (current.isEmpty) {
-                        0L
-                    } else {
-                        slotLimitForView(slot, current).toLong()
-                    }
-                }
-
-                override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-                    this@RoutedItemStorage.extract(resource, maxAmount, transaction)
-
-                override fun isResourceBlank(): Boolean = inventory[slot].isEmpty
-            })
-        }
-        return views.iterator()
-    }
->>>>>>> backup/1.21.1
 
     /**
      * 从路由规则派生指定 BE slot 的 [ic2_120.content.screen.slot.SlotSpec]。
@@ -272,16 +213,10 @@ class RoutedItemStorage(
      * - canTake: slot 在 extractSlots 中，或 slot 在某条 insertRoute 的 slotIndices 中（玩家应能取回放入的物品）
      */
     fun deriveSlotSpec(beSlotIndex: Int): ic2_120.content.screen.slot.SlotSpec {
-<<<<<<< HEAD
         val routing = routingBySlot[beSlotIndex]
         val routesForSlot = routing?.routes ?: emptyList()
         val isInsertable = routesForSlot.isNotEmpty()
         val isExtractable = routing?.isExtractable == true || isInsertable
-=======
-        val routesForSlot = insertRoutes.filter { beSlotIndex in it.slotIndices }
-        val isInsertable = routesForSlot.isNotEmpty()
-        val isExtractable = beSlotIndex in extractSlots || isInsertable
->>>>>>> backup/1.21.1
 
         val canInsert: (ItemStack) -> Boolean = if (isInsertable) {
             { stack -> slotValidator(beSlotIndex, stack) && routesForSlot.any { it.matcher(stack) } }
@@ -289,15 +224,7 @@ class RoutedItemStorage(
             { false }
         }
 
-<<<<<<< HEAD
         val maxItemCount = routing?.explicitMaxPerSlot ?: 64
-=======
-        val maxItemCount = if (routesForSlot.isEmpty()) {
-            64
-        } else {
-            routesForSlot.mapNotNull { it.maxPerSlot }.minOrNull() ?: 64
-        }
->>>>>>> backup/1.21.1
 
         val canTake: (net.minecraft.entity.player.PlayerEntity) -> Boolean = if (isExtractable) {
             { true }
@@ -312,20 +239,11 @@ class RoutedItemStorage(
         )
     }
 
-<<<<<<< HEAD
-=======
-    private fun isSlotAvailableForInsert(slot: Int, stack: ItemStack): Boolean {
-        if (slot !in inventory.indices) return false
-        return slotValidator(slot, stack)
-    }
-
->>>>>>> backup/1.21.1
     private fun slotLimit(route: ItemInsertRoute, stack: ItemStack): Int {
         route.maxPerSlot?.let { return it }
         return minOf(maxCountPerStackProvider(), stack.maxCount)
     }
 
-<<<<<<< HEAD
     /**
      * 单个对外可见槽位的 SlottedStorage 单槽视图。所有读写都实时操作底层 [inventory] 并受
      * [insertRoutes] / [extractSlots] 约束：仅当本槽被某条 route 覆盖且 matcher+slotValidator 通过时
@@ -437,16 +355,5 @@ class RoutedItemStorage(
             }
             return moved
         }
-=======
-    private fun slotLimitForView(slot: Int, stack: ItemStack): Int {
-        var maxRouteLimit: Int? = null
-        for (route in insertRoutes) {
-            if (slot !in route.slotIndices) continue
-            if (!route.matcher(stack)) continue
-            val limit = route.maxPerSlot ?: continue
-            maxRouteLimit = if (maxRouteLimit == null) limit else maxOf(maxRouteLimit, limit)
-        }
-        return maxRouteLimit ?: minOf(maxCountPerStackProvider(), stack.maxCount)
->>>>>>> backup/1.21.1
     }
 }

@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/bronze_leggings.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,10 +8,5 @@
     "flat_792d10": "ic2_120:item/item3d/flat_792d10",
     "metal_ee7a39": "ic2_120:item/item3d/metal_ee7a39",
     "metal_ffa34f": "ic2_120:item/item3d/metal_ffa34f"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/armor/bronze_leggings"
->>>>>>> backup/1.21.1
   }
 }

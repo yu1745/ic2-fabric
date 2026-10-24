@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/bronze_plate.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "metal_ff9c3f": "ic2_120:item/item3d/metal_ff9c3f",
     "flat_ffcd98": "ic2_120:item/item3d/flat_ffcd98",
     "flat_de7b1e": "ic2_120:item/item3d/flat_de7b1e"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/resource/plate/bronze"
->>>>>>> backup/1.21.1
   }
 }

@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/recall_scroll.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,11 +8,6 @@
     "flat_493615": "ic2_120:item/item3d/flat_493615",
     "flat_eaeac7": "ic2_120:item/item3d/flat_eaeac7",
     "flat_a7a848": "ic2_120:item/item3d/flat_a7a848"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "minecraft:item/map"
->>>>>>> backup/1.21.1
   },
   "overrides": [
     {

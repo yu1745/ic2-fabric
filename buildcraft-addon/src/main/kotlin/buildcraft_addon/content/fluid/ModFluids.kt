@@ -166,11 +166,7 @@ object ModFluids {
         override fun getFlowing(): Fluid = ref.second
         override fun getBucketItem(): Item = bucketLookup[fluidName] ?: Items.AIR
         override fun toBlockState(state: FluidState): BlockState {
-<<<<<<< HEAD
             val block = Registries.BLOCK.get(Identifier(BuildCraftAddon.MOD_ID, fluidName))
-=======
-            val block = Registries.BLOCK.get(Identifier.of(BuildCraftAddon.MOD_ID, fluidName))
->>>>>>> backup/1.21.1
             return block.defaultState.with(FluidBlock.LEVEL, getBlockStateLevel(state))
         }
         override fun matchesType(fluid: Fluid): Boolean = fluid == ref.first || fluid == ref.second
@@ -180,28 +176,17 @@ object ModFluids {
             Block.dropStacks(state, world, pos, entity)
         }
         override fun canBeReplacedWith(state: FluidState, world: BlockView, pos: net.minecraft.util.math.BlockPos, fluid: Fluid, direction: net.minecraft.util.math.Direction): Boolean = false
-<<<<<<< HEAD
         override fun getFlowSpeed(world: WorldView): Int = 4
-=======
->>>>>>> backup/1.21.1
         override fun getLevelDecreasePerBlock(world: WorldView): Int = 1
         override fun getTickRate(world: WorldView): Int = 5
         override fun getBlastResistance(): Float = 100f
 
         class Still(override val fluidName: String) : BcOilFluid() {
-<<<<<<< HEAD
-=======
-            override fun getMaxFlowDistance(world: WorldView): Int = 4
->>>>>>> backup/1.21.1
             override fun getLevel(state: FluidState): Int = 8
             override fun isStill(state: FluidState): Boolean = true
         }
 
         class Flowing(override val fluidName: String) : BcOilFluid() {
-<<<<<<< HEAD
-=======
-            override fun getMaxFlowDistance(world: WorldView): Int = 4
->>>>>>> backup/1.21.1
             override fun appendProperties(builder: StateManager.Builder<Fluid, FluidState>) {
                 super.appendProperties(builder); builder.add(LEVEL)
             }

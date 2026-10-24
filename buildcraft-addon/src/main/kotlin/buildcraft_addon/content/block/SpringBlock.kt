@@ -27,10 +27,6 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
-<<<<<<< HEAD
-=======
-import net.minecraft.world.WorldView
->>>>>>> backup/1.21.1
 
 enum class SpringType(val fluid: Fluid) : StringIdentifiable {
     WATER(net.minecraft.fluid.Fluids.WATER),
@@ -82,15 +78,9 @@ class SpringBlock : Block(
         world.scheduleBlockTick(pos, this, 20)
     }
 
-<<<<<<< HEAD
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hand: Hand, hit: BlockHitResult): ActionResult {
         if (!world.isClient && state.get(SPRING_TYPE) == SpringType.OIL) {
             val held = player.getStackInHand(hand)
-=======
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (!world.isClient && state.get(SPRING_TYPE) == SpringType.OIL) {
-            val held = player.getStackInHand(Hand.MAIN_HAND)
->>>>>>> backup/1.21.1
             if (held.isOf(net.minecraft.item.Items.GLASS_BOTTLE)) {
                 held.decrement(1)
                 player.giveItemStack(ItemStack(net.minecraft.item.Items.EMERALD))
@@ -107,11 +97,7 @@ class SpringBlock : Block(
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? = null
 
-<<<<<<< HEAD
     override fun getPickStack(world: net.minecraft.world.BlockView, pos: BlockPos, state: BlockState): ItemStack {
-=======
-    override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {
->>>>>>> backup/1.21.1
         return ItemStack(this)
     }
 }

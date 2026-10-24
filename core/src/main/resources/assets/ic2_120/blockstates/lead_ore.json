@@ -1,9 +1,5 @@
 {
   "variants": {
-<<<<<<< HEAD
     "": { "model": "ic2_120:block/resource/ore/lead_ore" }
-=======
-    "": { "model": "ic2:block/resource/ore/lead_ore" }
->>>>>>> backup/1.21.1
   }
 }

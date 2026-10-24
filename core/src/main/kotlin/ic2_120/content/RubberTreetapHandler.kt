@@ -7,7 +7,6 @@ import ic2_120.content.block.RubberLogBlockEntity
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
@@ -26,21 +25,12 @@ import net.minecraft.world.World
  */
 object RubberTreetapHandler {
 
-<<<<<<< HEAD
     private val TREETAP_ID = Identifier(Ic2_120.MOD_ID, "treetap")
     private val ELECTRIC_TREETAP_ID = Identifier(Ic2_120.MOD_ID, "electric_treetap")
     private val RESIN_ID = Identifier(Ic2_120.MOD_ID, "resin")
     private val TREETAP_SOUND = SoundEvent.of(Identifier("ic2", "item.treetap.use"))
     private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(Identifier("ic2", "item.treetap.electric.use"))
     private const val EU_PER_USE = 50L
-=======
-    private val TREETAP_ID = Identifier.of(Ic2_120.MOD_ID, "treetap")
-    private val ELECTRIC_TREETAP_ID = Identifier.of(Ic2_120.MOD_ID, "electric_treetap")
-    private val RESIN_ID = Identifier.of(Ic2_120.MOD_ID, "resin")
-    private val TREETAP_SOUND = SoundEvent.of(Identifier.of("ic2", "item.treetap.use"))
-    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(Identifier.of("ic2", "item.treetap.electric.use"))
-    private const val EU_PER_USE = 500L
->>>>>>> backup/1.21.1
 
     fun isTreetap(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -128,7 +118,7 @@ object RubberTreetapHandler {
                     tool.setEnergy(stack, tool.getEnergy(stack) - EU_PER_USE)
                 }
                 isTreetap(stack) -> {
-                    stack.damage(1, player, if (hand == Hand.MAIN_HAND) EquipmentSlot.MAINHAND else EquipmentSlot.OFFHAND)
+                    stack.damage(1, player) { it.sendToolBreakStatus(hand) }
                 }
             }
 

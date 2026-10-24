@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/block/machine3d/mfsu_chargepad_item.obj",
   "parent": "minecraft:block/block",
@@ -11,7 +10,4 @@
     "uu_off": "ic2_120:block/machine3d/uu_off",
     "screen_off": "ic2_120:block/machine3d/screen_off"
   }
-=======
-  "parent": "ic2:block/wiring/chargepad/mfsu_chargepad"
->>>>>>> backup/1.21.1
 }

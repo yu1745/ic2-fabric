@@ -11,10 +11,7 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
-=======
->>>>>>> backup/1.21.1
 import ic2_120.content.uu.UuTemplateEntry
 import ic2_120.content.uu.findUniqueAdjacentPatternStorage
 import ic2_120.content.uu.setUuTemplate
@@ -33,7 +30,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
@@ -42,7 +38,6 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import io.netty.buffer.Unpooled
 import kotlin.math.ceil
 
 @ModBlockEntity(block = UuScannerBlock::class)
@@ -50,11 +45,7 @@ class UuScannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty = UuScannerBlock.ACTIVE
     override val tier: Int = UuScannerSync.UU_SCANNER_TIER
@@ -66,11 +57,7 @@ class UuScannerBlockEntity(
         const val SLOT_CRYSTAL = 2
         const val INVENTORY_SIZE = 3
         private const val NBT_LAST_COMPLETED_ITEM = "LastCompletedItem"
-<<<<<<< HEAD
         private val crystalMemoryId = Identifier(Ic2_120.MOD_ID, "crystal_memory")
-=======
-        private val crystalMemoryId = Identifier.of(Ic2_120.MOD_ID, "crystal_memory")
->>>>>>> backup/1.21.1
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -80,23 +67,13 @@ class UuScannerBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-<<<<<<< HEAD
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1),
-=======
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) }),
->>>>>>> backup/1.21.1
             ItemInsertRoute(intArrayOf(SLOT_CRYSTAL), matcher = { it.isEmpty || isCrystalMemory(it) })
         ),
         extractSlots = intArrayOf(SLOT_INPUT, SLOT_DISCHARGING, SLOT_CRYSTAL),
         markDirty = { markDirty() }
     )
-<<<<<<< HEAD
-=======
-    private var lastCompletedItemId: String = ""
-    private var cachedTemplate: UuTemplateEntry? = null
->>>>>>> backup/1.21.1
 
     override val routedItemStorage get() = itemStorage
     private var lastCompletedItemId: String = ""
@@ -149,20 +126,14 @@ class UuScannerBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem
-<<<<<<< HEAD
         SLOT_DISCHARGING -> !stack.isEmpty && (stack.item is IBatteryItem || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust)
-=======
-        SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
->>>>>>> backup/1.21.1
         SLOT_CRYSTAL -> stack.isEmpty || isCrystalMemory(stack)
         else -> false
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.uu_scanner")
@@ -170,9 +141,9 @@ class UuScannerBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         UuScannerScreenHandler(syncId, playerInventory, this, pos, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(UuScannerSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -180,9 +151,9 @@ class UuScannerBlockEntity(
         cachedTemplate = if (nbt.contains("CachedTemplate")) UuTemplateEntry.fromNbt(nbt.getCompound("CachedTemplate")) else null
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(UuScannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putString(NBT_LAST_COMPLETED_ITEM, lastCompletedItemId)

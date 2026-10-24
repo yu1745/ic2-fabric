@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/redstone_inverter_upgrade.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -16,10 +15,4 @@
     "glow_ff0000": "ic2_120:item/item3d/glow_ff0000",
     "flat_aa0f01": "ic2_120:item/item3d/flat_aa0f01"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/upgrade/redstone_inverter"
-	}
->>>>>>> backup/1.21.1
 }

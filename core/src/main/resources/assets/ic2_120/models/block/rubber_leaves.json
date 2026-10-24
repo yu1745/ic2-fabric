@@ -1,12 +1,6 @@
 {
-<<<<<<< HEAD
   "parent": "minecraft:block/cube_all",
   "textures": {
     "all": "ic2_120:block/rubber_leaves"
-=======
-  "parent": "minecraft:block/leaves",
-  "textures": {
-    "all": "minecraft:block/oak_leaves"
->>>>>>> backup/1.21.1
   }
 }

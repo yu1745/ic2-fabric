@@ -5,10 +5,6 @@ import buildcraft_addon.content.screen.StoneEngineScreenHandler
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-<<<<<<< HEAD
-=======
-import io.netty.buffer.Unpooled
->>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -19,10 +15,6 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-<<<<<<< HEAD
-=======
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
@@ -57,11 +49,7 @@ class StoneEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory, IKineticMachinePort {
-=======
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf>, IKineticMachinePort {
->>>>>>> backup/1.21.1
 
     constructor(pos: BlockPos, state: BlockState) : this(
         StoneEngineBlockEntity::class.type(), pos, state
@@ -90,17 +78,9 @@ class StoneEngineBlockEntity(
         return StoneEngineScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), propertyDelegate)
     }
 
-<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(2)
-=======
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(2)
-        return buf
->>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.buildcraft_addon.stone_engine")
@@ -334,13 +314,8 @@ class StoneEngineBlockEntity(
     override fun canPlayerUse(player: net.minecraft.entity.player.PlayerEntity): Boolean = true
 
     // === NBT ===
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
@@ -352,7 +327,6 @@ class StoneEngineBlockEntity(
         nbt.putInt("pendingOutputKu", pendingOutputKu)
         val fuelStack = inventory[SLOT_FUEL]
         if (!fuelStack.isEmpty) {
-<<<<<<< HEAD
             val fuelNbt = NbtCompound()
             fuelStack.writeNbt(fuelNbt)
             nbt.put("fuel", fuelNbt)
@@ -361,14 +335,6 @@ class StoneEngineBlockEntity(
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
-=======
-            nbt.put("fuel", fuelStack.encode(lookup))
-        }
-    }
-
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")
@@ -381,11 +347,7 @@ class StoneEngineBlockEntity(
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
         pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
         if (nbt.contains("fuel")) {
-<<<<<<< HEAD
             inventory[SLOT_FUEL] = ItemStack.fromNbt(nbt.getCompound("fuel"))
-=======
-            inventory[SLOT_FUEL] = ItemStack.fromNbt(lookup, nbt.getCompound("fuel")).orElse(ItemStack.EMPTY)
->>>>>>> backup/1.21.1
         }
     }
 }

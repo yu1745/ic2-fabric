@@ -42,26 +42,19 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-<<<<<<< HEAD
 import net.minecraft.item.Items
-=======
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.recipe.input.RecipeInput
->>>>>>> backup/1.21.1
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 /**
  * 固体装罐机方块实体。
@@ -73,13 +66,8 @@ class SolidCannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SolidCannerBlock.ACTIVE
 
@@ -179,25 +167,19 @@ class SolidCannerBlockEntity(
         else -> false
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.solid_canner")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         SolidCannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
-<<<<<<< HEAD
-=======
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
->>>>>>> backup/1.21.1
-
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(SolidCannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -210,9 +192,9 @@ class SolidCannerBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(SolidCannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -251,60 +233,31 @@ class SolidCannerBlockEntity(
             return
         }
 
-<<<<<<< HEAD
         // 配方匹配查询本身用 copyWithCount(1)（每槽 1 个），结果只依赖 (can, food)
         // 物品类型；数量要求由下方 slot0Count/slot1Count 单独检查，故按 item 缓存安全。
         val match = solidCanningRecipeFor(world, tinCan, food)
-=======
-        val recipeInput = object : RecipeInput {
-            override fun getStackInSlot(slot: Int) = when (slot) {
-                0 -> tinCan.copyWithCount(1)
-                1 -> food.copyWithCount(1)
-                else -> ItemStack.EMPTY
-            }
-            override fun getSize() = 2
-            override fun isEmpty() = false
-        }
-        val match = world.recipeManager.getFirstMatch(getRecipeType<SolidCannerRecipe>(), recipeInput, world)
->>>>>>> backup/1.21.1
 
         val result: ItemStack
         val slot0InputCount: Int
         val slot1InputCount: Int
 
         if (match.isPresent) {
-<<<<<<< HEAD
             val recipe = match.get()
             result = recipe.output.copy()
             slot0InputCount = recipe.slot0Count
             slot1InputCount = recipe.slot1Count
         } else if (tinCan.item is EmptyTinCanItem && food.item.foodComponent != null && food.item !is FilledTinCanItem) {
             val canCount = food.item.foodComponent!!.hunger.coerceAtLeast(1)
-=======
-            val recipe = match.get().value
-            result = recipe.output.copy()
-            slot0InputCount = recipe.slot0Count
-            slot1InputCount = recipe.slot1Count
-        } else if (tinCan.item is EmptyTinCanItem && food.get(DataComponentTypes.FOOD) != null) {
-            val canCount = food.get(DataComponentTypes.FOOD)!!.nutrition.coerceAtLeast(1)
->>>>>>> backup/1.21.1
             result = ItemStack(FilledTinCanItem::class.instance(), canCount)
             slot0InputCount = canCount
             slot1InputCount = 1
         } else {
-<<<<<<< HEAD
             resetProgress()
-=======
-            if (sync.progress != 0) sync.progress = 0
->>>>>>> backup/1.21.1
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
-<<<<<<< HEAD
 
-=======
->>>>>>> backup/1.21.1
         if (tinCan.count < slot0InputCount || food.count < slot1InputCount) {
             resetProgress()
             setActiveState(world, pos, state, false)
@@ -393,18 +346,13 @@ class SolidCannerBlockEntity(
 
     private fun isContainerInput(stack: ItemStack): Boolean =
         !stack.isEmpty && (
-            stack.item == Registries.ITEM.get(Identifier.of("ic2_120", "tin_can")) ||
+            stack.item == Registries.ITEM.get(Identifier("ic2_120", "tin_can")) ||
             stack.item is EmptyFuelRodItem
         )
 
     private fun isFoodInput(stack: ItemStack): Boolean =
         !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
-<<<<<<< HEAD
             stack.item !is FilledTinCanItem &&
             (world?.let { SolidCannerRecipe.slot1Ingredients(it).any { ing -> ing.test(stack) } } == true
              || stack.item.foodComponent != null)
-=======
-            (world?.let { SolidCannerRecipe.slot1Ingredients(it).any { ing -> ing.test(stack) } } == true
-             || stack.get(DataComponentTypes.FOOD) != null)
->>>>>>> backup/1.21.1
 }

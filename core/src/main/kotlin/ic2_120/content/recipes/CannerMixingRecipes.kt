@@ -33,42 +33,20 @@ import net.minecraft.util.Identifier
         val inputFluidBuckets: Int = 1
     )
 
-<<<<<<< HEAD
     private val lapisDust by lazy { Registries.ITEM.get(Identifier("ic2_120", "lapis_dust")) }
     private val bioChaff by lazy { Registries.ITEM.get(Identifier("ic2_120", "bio_chaff")) }
     private val cfPowder by lazy { Registries.ITEM.get(Identifier("ic2_120", "cf_powder")) }
     private val grinPowder by lazy { Registries.ITEM.get(Identifier("ic2_120", "grin_powder")) }
     private val peatOre by lazy { Registries.ITEM.get(Identifier("ic2_120", "peat_ore")) }
-=======
-    private val lapisDust by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "lapis_dust")) }
-    private val bioChaff by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "bio_chaff")) }
-    private val cfPowder by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "cf_powder")) }
-    private val grinPowder by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "grin_powder")) }
-    private val peatOre by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore")) }
->>>>>>> backup/1.21.1
 
     private val recipes: List<Recipe> by lazy {
         listOf(
             Recipe(Fluids.WATER, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 8, ModFluids.COOLANT_STILL),
-<<<<<<< HEAD
             Recipe(ModFluids.DISTILLED_WATER_STILL, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 1, ModFluids.COOLANT_STILL),
             Recipe(Fluids.WATER, IngredientInput.item(bioChaff), 1, ModFluids.BIOMASS_STILL),
             Recipe(Fluids.WATER, IngredientInput.item(cfPowder), 1, ModFluids.CONSTRUCTION_FOAM_STILL),
             Recipe(Fluids.WATER, IngredientInput.item(grinPowder), 1, ModFluids.WEED_EX_STILL),
             Recipe(Fluids.WATER, IngredientInput.item(peatOre), 1, ModFluids.BIOMASS_STILL),
-=======
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 8, ModFluids.COOLANT_STILL),
-            Recipe(ModFluids.DISTILLED_WATER_STILL, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 1, ModFluids.COOLANT_STILL),
-            Recipe(ModFluids.DISTILLED_WATER_FLOWING, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 1, ModFluids.COOLANT_STILL),
-            Recipe(Fluids.WATER, IngredientInput.item(bioChaff), 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(bioChaff), 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.WATER, IngredientInput.item(cfPowder), 1, ModFluids.CONSTRUCTION_FOAM_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(cfPowder), 1, ModFluids.CONSTRUCTION_FOAM_STILL),
-            Recipe(Fluids.WATER, IngredientInput.item(grinPowder), 1, ModFluids.WEED_EX_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(grinPowder), 1, ModFluids.WEED_EX_STILL),
-            Recipe(Fluids.WATER, IngredientInput.item(peatOre), 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(peatOre), 1, ModFluids.BIOMASS_STILL)
->>>>>>> backup/1.21.1
         )
     }
 

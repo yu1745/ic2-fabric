@@ -8,23 +8,25 @@ import ic2_120.registry.annotation.ModItem
 import net.minecraft.data.server.recipe.CookingRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.recipe.book.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 粉尘类 ==========
 
 /** 青铜粉 */
 @ModItem(name = "bronze_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/bronze"])
-class BronzeDust : Item(Item.Settings()) {
+class BronzeDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_BRONZE)).criterion(
                     hasItem(SmallBronzeDust::class.instance()), conditionsFromItem(SmallBronzeDust::class.instance())
@@ -59,14 +61,14 @@ class BronzeDust : Item(Item.Settings()) {
 
 /** 粘土粉 */
 @ModItem(name = "clay_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/clay"])
-class ClayDust : Item(Item.Settings())
+class ClayDust : Item(FabricItemSettings())
 
 /** 煤粉 */
 @ModItem(name = "coal_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/coal"])
-class CoalDust : Item(Item.Settings()) {
+class CoalDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 熔炉配方：湿煤粉加热成煤粉 (200 tick = 10秒)
             CookingRecipeJsonBuilder.createSmelting(
                 net.minecraft.recipe.Ingredient.ofItems(CoalFuelDust::class.instance()),
@@ -82,10 +84,10 @@ class CoalDust : Item(Item.Settings()) {
 
 /** 湿煤粉 */
 @ModItem(name = "coal_fuel_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
-class CoalFuelDust : Item(Item.Settings()) {
+class CoalFuelDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, CoalFuelDust::class.instance(), 1)
                 .input(CoalDust::class.instance()).input(Items.WATER_BUCKET)
                 .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
@@ -101,10 +103,10 @@ class CoalFuelDust : Item(Item.Settings()) {
 
 /** 铜粉 */
 @ModItem(name = "copper_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/copper"])
-class CopperDust : Item(Item.Settings()) {
+class CopperDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CopperDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_COPPER)).criterion(
                     hasItem(SmallCopperDust::class.instance()), conditionsFromItem(SmallCopperDust::class.instance())
@@ -130,14 +132,14 @@ class CopperDust : Item(Item.Settings()) {
 
 /** 钻石粉 */
 @ModItem(name = "diamond_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/diamond"])
-class DiamondDust : Item(Item.Settings())
+class DiamondDust : Item(FabricItemSettings())
 
 /** 能量水晶粉 */
 @ModItem(name = "energium_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
-class EnergiumDust : Item(Item.Settings()) {
+class EnergiumDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 交叉摆法：4个钻石粉 + 5个红石粉
             // R D R
             // D R D
@@ -155,10 +157,10 @@ class EnergiumDust : Item(Item.Settings()) {
 
 /** 金粉 */
 @ModItem(name = "gold_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/gold"])
-class GoldDust : Item(Item.Settings()) {
+class GoldDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, GoldDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_GOLD)).criterion(
                     hasItem(SmallGoldDust::class.instance()), conditionsFromItem(SmallGoldDust::class.instance())
@@ -184,10 +186,10 @@ class GoldDust : Item(Item.Settings()) {
 
 /** 铁粉 */
 @ModItem(name = "iron_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/iron"])
-class IronDust : Item(Item.Settings()) {
+class IronDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_IRON)).criterion(
                     hasItem(SmallIronDust::class.instance()), conditionsFromItem(SmallIronDust::class.instance())
@@ -213,10 +215,10 @@ class IronDust : Item(Item.Settings()) {
 
 /** 青金石粉 */
 @ModItem(name = "lapis_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/lapis"])
-class LapisDust : Item(Item.Settings()) {
+class LapisDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LapisDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_LAPIS)).criterion(
                     hasItem(SmallLapisDust::class.instance()), conditionsFromItem(SmallLapisDust::class.instance())
@@ -232,10 +234,10 @@ class LapisDust : Item(Item.Settings()) {
 
 /** 铅粉 */
 @ModItem(name = "lead_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/lead"])
-class LeadDust : Item(Item.Settings()) {
+class LeadDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LeadDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_LEAD)).criterion(
                     hasItem(SmallLeadDust::class.instance()), conditionsFromItem(SmallLeadDust::class.instance())
@@ -261,10 +263,10 @@ class LeadDust : Item(Item.Settings()) {
 
 /** 锂粉 */
 @ModItem(name = "lithium_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/lithium"])
-class LithiumDust : Item(Item.Settings()) {
+class LithiumDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LithiumDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_LITHIUM)).criterion(
                     hasItem(SmallLithiumDust::class.instance()), conditionsFromItem(SmallLithiumDust::class.instance())
@@ -280,10 +282,10 @@ class LithiumDust : Item(Item.Settings()) {
 
 /** 黑曜石粉 */
 @ModItem(name = "obsidian_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/obsidian"])
-class ObsidianDust : Item(Item.Settings()) {
+class ObsidianDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ObsidianDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_OBSIDIAN)).criterion(
                     hasItem(SmallObsidianDust::class.instance()),
@@ -300,14 +302,14 @@ class ObsidianDust : Item(Item.Settings()) {
 
 /** 二氧化硅粉 */
 @ModItem(name = "silicon_dioxide_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/silicon_dioxide"])
-class SiliconDioxideDust : Item(Item.Settings())
+class SiliconDioxideDust : Item(FabricItemSettings())
 
 /** 银粉 */
 @ModItem(name = "silver_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/silver"])
-class SilverDust : Item(Item.Settings()) {
+class SilverDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SilverDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_SILVER)).criterion(
                     hasItem(SmallSilverDust::class.instance()), conditionsFromItem(SmallSilverDust::class.instance())
@@ -333,14 +335,14 @@ class SilverDust : Item(Item.Settings()) {
 
 /** 石粉 */
 @ModItem(name = "stone_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/stone"])
-class StoneDust : Item(Item.Settings())
+class StoneDust : Item(FabricItemSettings())
 
 /** 硫粉 */
 @ModItem(name = "sulfur_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/sulfur"])
-class SulfurDust : Item(Item.Settings()) {
+class SulfurDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SulfurDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_SULFUR)).criterion(
                     hasItem(SmallSulfurDust::class.instance()), conditionsFromItem(SmallSulfurDust::class.instance())
@@ -356,10 +358,10 @@ class SulfurDust : Item(Item.Settings()) {
 
 /** 锡粉 */
 @ModItem(name = "tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/tin"])
-class TinDust : Item(Item.Settings()) {
+class TinDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, TinDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_TIN))
                 .criterion(hasItem(SmallTinDust::class.instance()), conditionsFromItem(SmallTinDust::class.instance()))
@@ -385,10 +387,10 @@ class TinDust : Item(Item.Settings()) {
 
 /** 氢氧化锡粉 */
 @ModItem(name = "hydrated_tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
-class HydratedTinDust : Item(Item.Settings()) {
+class HydratedTinDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 锡粉 + 水桶 -> 氢氧化锡粉 (返回空桶)
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, HydratedTinDust::class.instance(), 1)
                 .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_TIN)).input(Items.WATER_BUCKET)
@@ -406,17 +408,16 @@ class HydratedTinDust : Item(Item.Settings()) {
 
 /** 地狱岩粉 */
 @ModItem(name = "netherrack_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/netherrack"])
-class NetherrackDust : Item(Item.Settings())
+class NetherrackDust : Item(FabricItemSettings())
 
 /** 末影珍珠粉 */
 @ModItem(name = "ender_pearl_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/ender_pearl"])
-class EnderPearlDust : Item(Item.Settings())
+class EnderPearlDust : Item(FabricItemSettings())
 
 // ========== 小撮粉尘类 ==========
 
 /** 小撮青铜粉 */
 @ModItem(name = "small_bronze_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/bronze"])
-<<<<<<< HEAD
 class SmallBronzeDust : Item(FabricItemSettings())
 
 /** 小撮铜粉 */
@@ -458,46 +459,3 @@ class SmallSulfurDust : Item(FabricItemSettings())
 /** 小撮锡粉 */
 @ModItem(name = "small_tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/tin"])
 class SmallTinDust : Item(FabricItemSettings())
-=======
-class SmallBronzeDust : Item(Item.Settings())
-
-/** 小撮铜粉 */
-@ModItem(name = "small_copper_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/copper"])
-class SmallCopperDust : Item(Item.Settings())
-
-/** 小撮金粉 */
-@ModItem(name = "small_gold_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/gold"])
-class SmallGoldDust : Item(Item.Settings())
-
-/** 小撮铁粉 */
-@ModItem(name = "small_iron_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/iron"])
-class SmallIronDust : Item(Item.Settings())
-
-/** 小撮青金石粉 */
-@ModItem(name = "small_lapis_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/lapis"])
-class SmallLapisDust : Item(Item.Settings())
-
-/** 小撮铅粉 */
-@ModItem(name = "small_lead_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/lead"])
-class SmallLeadDust : Item(Item.Settings())
-
-/** 小撮锂粉 */
-@ModItem(name = "small_lithium_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/lithium"])
-class SmallLithiumDust : Item(Item.Settings())
-
-/** 小撮黑曜石粉 */
-@ModItem(name = "small_obsidian_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/obsidian"])
-class SmallObsidianDust : Item(Item.Settings())
-
-/** 小撮银粉 */
-@ModItem(name = "small_silver_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/silver"])
-class SmallSilverDust : Item(Item.Settings())
-
-/** 小撮硫粉 */
-@ModItem(name = "small_sulfur_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/sulfur"])
-class SmallSulfurDust : Item(Item.Settings())
-
-/** 小撮锡粉 */
-@ModItem(name = "small_tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/tin"])
-class SmallTinDust : Item(Item.Settings())
->>>>>>> backup/1.21.1

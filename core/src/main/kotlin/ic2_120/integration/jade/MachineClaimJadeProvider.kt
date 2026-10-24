@@ -21,7 +21,7 @@ import snownee.jade.api.config.IPluginConfig
  */
 object MachineClaimJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val CLAIM_BLOCKED = Identifier("ic2_120", "claim_blocked")
+    private val CLAIM_BLOCKED = Identifier.of("ic2_120", "claim_blocked")
 
     override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
         val be = accessor.blockEntity as? IClaimSensitive ?: return

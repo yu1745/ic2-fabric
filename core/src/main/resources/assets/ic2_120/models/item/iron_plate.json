@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/iron_plate.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "metal_d8d8d8": "ic2_120:item/item3d/metal_d8d8d8",
     "flat_ffffff": "ic2_120:item/item3d/flat_ffffff",
     "flat_9c9c9c": "ic2_120:item/item3d/flat_9c9c9c"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/resource/plate/iron"
->>>>>>> backup/1.21.1
   }
 }

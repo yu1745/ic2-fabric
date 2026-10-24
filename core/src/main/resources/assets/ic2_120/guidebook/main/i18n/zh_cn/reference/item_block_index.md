@@ -258,10 +258,7 @@ navigation:
 | `bronze_leggings` | 青铜护腿 |
 | `bronze_pickaxe` | 青铜镐 |
 | `bronze_plate` | 青铜板 |
-<<<<<<< HEAD
 | `bronze_rotor` | 转子(青铜) |
-=======
->>>>>>> backup/1.21.1
 | `bronze_rotor_blade` | 青铜扇叶 |
 | `bronze_shaft` | 铁柄（青铜） |
 | `bronze_shovel` | 青铜铲 |
@@ -369,10 +366,7 @@ navigation:
 | `flatification_tfbp` | 地形转换模板 - 平地 |
 | `flour` | 面粉 |
 | `foam_sprayer` | 建筑泡沫喷枪 |
-<<<<<<< HEAD
 | `painter` | 刷子 |
-=======
->>>>>>> backup/1.21.1
 | `forge_hammer` | 锻造锤 |
 | `frequency_transmitter` | 遥控器 |
 | `fuel_rod` | 空燃料棒 |
@@ -557,7 +551,3 @@ navigation:
 | `wooden_rotor` | 转子(木) |
 | `wooden_rotor_blade` | 木扇叶 |
 | `wrench` | 扳手 |
-<<<<<<< HEAD
-=======
-
->>>>>>> backup/1.21.1

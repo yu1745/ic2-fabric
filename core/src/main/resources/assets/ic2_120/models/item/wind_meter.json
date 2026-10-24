@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/wind_meter.obj",
   "parent": "ic2_120:item/item3d/display_handheld",
@@ -14,10 +13,5 @@
     "metal_b6b6b6": "ic2_120:item/item3d/metal_b6b6b6",
     "flat_8a8a8a": "ic2_120:item/item3d/flat_8a8a8a",
     "glow_fa8e01": "ic2_120:item/item3d/glow_fa8e01"
-=======
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "ic2:item/tool/electric/wind_meter"
->>>>>>> backup/1.21.1
   }
 }

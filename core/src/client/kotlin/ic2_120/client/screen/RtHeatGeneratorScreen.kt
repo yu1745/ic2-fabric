@@ -26,11 +26,7 @@ class RtHeatGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         // 标题居中于 y=6
@@ -55,10 +51,6 @@ class RtHeatGeneratorScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guinuclearheat.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guinuclearheat.png")
->>>>>>> backup/1.21.1
     }
 }

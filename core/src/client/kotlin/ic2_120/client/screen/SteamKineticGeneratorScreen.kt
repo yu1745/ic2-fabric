@@ -52,11 +52,7 @@ class SteamKineticGeneratorScreen(
 
     // ==== 背景 — 先填充再纹理 ====
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         val left = x; val top = y
         val sync = handler.sync
 
@@ -148,13 +144,8 @@ class SteamKineticGeneratorScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guisteamkineticgenerator.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisteamkineticgenerator.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
->>>>>>> backup/1.21.1
         private val DISTILLED_WATER_TANK_DROPLETS = FluidConstants.BUCKET.toInt()
         private const val PLAYER_INV_Y = 84
         private const val HOTBAR_Y = 142

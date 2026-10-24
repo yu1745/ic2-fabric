@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/circuit.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,10 +11,4 @@
     "flat_bababa": "ic2_120:item/item3d/flat_bababa",
     "flat_d92e2e": "ic2_120:item/item3d/flat_d92e2e"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/circuit"
-	}
->>>>>>> backup/1.21.1
 }

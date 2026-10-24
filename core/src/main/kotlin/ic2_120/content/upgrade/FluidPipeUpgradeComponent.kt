@@ -20,12 +20,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-<<<<<<< HEAD
 import java.util.WeakHashMap
-=======
-import ic2_120.editCustomData
-import ic2_120.getCustomData
->>>>>>> backup/1.21.1
 import kotlin.math.min
 import kotlin.math.pow
 
@@ -35,12 +30,9 @@ object FluidPipeUpgradeComponent {
     private const val NBT_FILTER = "PipeFluidFilter"
     private const val NBT_DIRECTIONS = "PipeFluidDirections"
 
-<<<<<<< HEAD
     private data class ApplyCache(val stacks: Array<ItemStack>)
     private val applyCache = WeakHashMap<Inventory, ApplyCache>()
 
-=======
->>>>>>> backup/1.21.1
     /**
      * 统一入口：机器同时具备 Inventory 与 IFluidPipeUpgradeSupport 时，按升级槽应用流体管道升级。
      */
@@ -51,7 +43,6 @@ object FluidPipeUpgradeComponent {
     fun apply(inventory: Inventory, upgradeSlotIndices: IntArray, machine: Any) {
         if (machine !is IFluidPipeUpgradeSupport) return
 
-<<<<<<< HEAD
         val cached = applyCache[inventory]
         if (cached != null && cached.stacks.size == upgradeSlotIndices.size &&
             upgradeSlotIndices.indices.all { i -> ItemStack.areEqual(cached.stacks[i], inventory.getStack(upgradeSlotIndices[i])) }
@@ -59,8 +50,6 @@ object FluidPipeUpgradeComponent {
 
         val snapshots = Array(upgradeSlotIndices.size) { i -> inventory.getStack(upgradeSlotIndices[i]).copy() }
 
-=======
->>>>>>> backup/1.21.1
         var provider = false
         var receiver = false
         var providerFilter: Fluid? = null
@@ -70,12 +59,7 @@ object FluidPipeUpgradeComponent {
         var ejectorCount = 0
         var pullingCount = 0
 
-<<<<<<< HEAD
         for (stack in snapshots) {
-=======
-        for (idx in upgradeSlotIndices) {
-            val stack = inventory.getStack(idx)
->>>>>>> backup/1.21.1
             if (stack.isEmpty) continue
             when (stack.item) {
                 is FluidEjectorUpgrade -> {
@@ -101,18 +85,11 @@ object FluidPipeUpgradeComponent {
         machine.fluidPipeReceiverSides = receiverSides.toMutableSet()
         machine.fluidPipeEjectorCount = ejectorCount
         machine.fluidPipePullingCount = pullingCount
-<<<<<<< HEAD
         applyCache[inventory] = ApplyCache(snapshots)
     }
 
     fun readFilter(stack: ItemStack): Fluid? {
         val nbt = stack.nbt ?: return null
-=======
-    }
-
-    fun readFilter(stack: ItemStack): Fluid? {
-        val nbt = stack.getCustomData() ?: return null
->>>>>>> backup/1.21.1
         val raw = nbt.getString(NBT_FILTER)
         if (raw.isNullOrBlank()) return null
         val id = Identifier.tryParse(raw) ?: return null
@@ -120,7 +97,6 @@ object FluidPipeUpgradeComponent {
     }
 
     fun writeFilter(stack: ItemStack, fluid: Fluid?) {
-<<<<<<< HEAD
         val nbt = stack.orCreateNbt
         if (fluid == null) {
             nbt.remove(NBT_FILTER)
@@ -131,35 +107,17 @@ object FluidPipeUpgradeComponent {
             nbt.putString(NBT_FILTER, id.toString())
         } else {
             nbt.remove(NBT_FILTER)
-=======
-        stack.editCustomData { nbt ->
-            if (fluid == null) {
-                nbt.remove(NBT_FILTER)
-                return@editCustomData
-            }
-            val id = Registries.FLUID.getId(fluid)
-            if (id.path != "empty") {
-                nbt.putString(NBT_FILTER, id.toString())
-            } else {
-                nbt.remove(NBT_FILTER)
-            }
->>>>>>> backup/1.21.1
         }
     }
 
     fun readDirections(stack: ItemStack): Set<Direction> {
-<<<<<<< HEAD
         val nbt = stack.nbt ?: return emptySet()
-=======
-        val nbt = stack.getCustomData() ?: return emptySet()
->>>>>>> backup/1.21.1
         val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.NbtElement.STRING_TYPE.toInt())
         if (list.isEmpty()) return emptySet()
         return list.mapNotNull { Direction.byName(it.asString()) }.toSet()
     }
 
     fun writeDirections(stack: ItemStack, sides: Set<Direction>) {
-<<<<<<< HEAD
         val nbt = stack.orCreateNbt
         if (sides.isEmpty()) {
             nbt.remove(NBT_DIRECTIONS)
@@ -170,28 +128,12 @@ object FluidPipeUpgradeComponent {
             list.add(net.minecraft.nbt.NbtString.of(side.name.lowercase()))
         }
         nbt.put(NBT_DIRECTIONS, list)
-=======
-        stack.editCustomData { nbt ->
-            if (sides.isEmpty()) {
-                nbt.remove(NBT_DIRECTIONS)
-                return@editCustomData
-            }
-            val list = net.minecraft.nbt.NbtList()
-            for (side in sides) {
-                list.add(net.minecraft.nbt.NbtString.of(side.name.lowercase()))
-            }
-            nbt.put(NBT_DIRECTIONS, list)
-        }
->>>>>>> backup/1.21.1
     }
 
     /**
      * 将储罐中的流体弹出到相邻方块。
-<<<<<<< HEAD
      * 轮询语义：每 tick 遍历全部候选方向，每个候选至多传输 ratePerTick；每 tick 起始方向
      * 轮转一次，避免低吞吐时第一个候选独占；开启方向过滤时，轮转只在过滤后的方向集内进行。
-=======
->>>>>>> backup/1.21.1
      * @param upgradeCount 该机器上 fluid_ejector_upgrade 的数量（决定速率）
      */
     fun ejectFluidToNeighbors(
@@ -206,7 +148,6 @@ object FluidPipeUpgradeComponent {
         if (tank.amount <= 0L || tank.variant.isBlank) return
         val ratePerTick = fluidTransferRate(upgradeCount)
         if (ratePerTick <= 0L) return
-<<<<<<< HEAD
         val dirs = DIRECTION_ORDER.filter {
             (blockedFace == null || it != blockedFace) && (configuredSides.isEmpty() || it in configuredSides)
         }
@@ -228,28 +169,13 @@ object FluidPipeUpgradeComponent {
 
             Transaction.openOuter().use { tx ->
                 val extracted = tank.extract(resource, neighborSpace, tx)
-=======
-        for (dir in Direction.values()) {
-            if (blockedFace != null && dir == blockedFace) continue
-            if (configuredSides.isNotEmpty() && dir !in configuredSides) continue
-            val neighbor = FluidStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
-            val resource = tank.variant
-            if (filter != null && resource.fluid != filter) continue
-            val maxPerTick = minOf(ratePerTick, tank.amount)
-            Transaction.openOuter().use { tx ->
-                val extracted = tank.extract(resource, maxPerTick, tx)
->>>>>>> backup/1.21.1
                 if (extracted <= 0L) return@use
                 val accepted = neighbor.insert(resource, extracted, tx)
                 if (accepted <= 0L) return@use
                 if (accepted < extracted) {
-<<<<<<< HEAD
                     // 回退失败（如输出罐 canInsert=false）时放弃本次传输：不提交任何部分结果，绝不凭空销毁流体
                     val refunded = tank.insert(resource, extracted - accepted, tx)
                     if (refunded < extracted - accepted) return@use
-=======
-                    tank.insert(resource, extracted - accepted, tx)
->>>>>>> backup/1.21.1
                 }
                 tx.commit()
             }
@@ -263,11 +189,8 @@ object FluidPipeUpgradeComponent {
      *
      * [tank] 使用通用 [Storage] 接口，支持 SingleVariantStorage 和多流体储罐。
      * 通过 dry-run transaction 确定剩余容量，不依赖 capacity 字段。
-<<<<<<< HEAD
      * 轮询语义：每 tick 遍历全部候选方向，每个候选至多抽取 ratePerTick；每 tick 起始方向
      * 轮转一次，避免低吞吐时第一个候选独占；开启方向过滤时，轮转只在过滤后的方向集内进行。
-=======
->>>>>>> backup/1.21.1
      * @param upgradeCount 该机器上 fluid_pulling_upgrade 的数量（决定速率）
      */
     fun pullFluidFromNeighbors(
@@ -281,7 +204,6 @@ object FluidPipeUpgradeComponent {
     ) {
         val ratePerTick = fluidTransferRate(upgradeCount)
         if (ratePerTick <= 0L) return
-<<<<<<< HEAD
         val dirs = DIRECTION_ORDER.filter {
             (blockedFace == null || it != blockedFace) && (configuredSides.isEmpty() || it in configuredSides)
         }
@@ -291,11 +213,6 @@ object FluidPipeUpgradeComponent {
         val start = Math.floorMod(world.time, dirs.size.toLong()).toInt()
         for (i in 0 until dirs.size) {
             val dir = dirs[(start + i) % dirs.size]
-=======
-        for (dir in Direction.values()) {
-            if (blockedFace != null && dir == blockedFace) continue
-            if (configuredSides.isNotEmpty() && dir !in configuredSides) continue
->>>>>>> backup/1.21.1
             val neighborPos = pos.offset(dir)
             val neighbor = FluidStorage.SIDED.find(world, neighborPos, dir.opposite) ?: continue
             if (!neighbor.supportsExtraction()) continue
@@ -322,10 +239,7 @@ object FluidPipeUpgradeComponent {
                 if (extracted <= 0) return@use
                 val inserted = tank.insert(resourceToPull, extracted, tx)
                 if (inserted <= 0) return@use
-<<<<<<< HEAD
                 if (inserted < extracted) return@use // 未能全部放入则放弃，避免竞态下凭空消失
-=======
->>>>>>> backup/1.21.1
                 tx.commit()
             }
         }

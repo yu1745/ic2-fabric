@@ -10,10 +10,6 @@ item_ids:
   - minecraft:lava_bucket
   - ic2_120:coal_fuel_dust
   - ic2_120:plant_ball
-<<<<<<< HEAD
-=======
-  - ic2_120:compressed_plants
->>>>>>> backup/1.21.1
   - ic2_120:bio_chaff
   - ic2_120:bio_cell
 ---
@@ -38,17 +34,10 @@ item_ids:
 
 ### Geothermal Generator
 
-<<<<<<< HEAD
 - **Buffer**: 10,000 EU
 - **Generation rate**: 20 EU/t
 - **Fluid use**: 1 bucket (1000 mB) of lava = 24,000 EU
 - **Output time**: 60 seconds (1200 ticks at 20 EU/t)
-=======
-- **Buffer**: 4,000 EU
-- **Generation rate**: 10 EU/t
-- **Fluid use**: 1 bucket (1000 mB) of lava = 20,000 EU
-- **Output time**: about 33 minutes (2000 ticks at 10 EU/t)
->>>>>>> backup/1.21.1
 
 ### Solar Generator
 
@@ -130,26 +119,14 @@ See [Kinetic System](../systems/kinetic_transmission.md)
 |------|---:|
 | 1 coal | 4,000 EU |
 | 1 charcoal | 4,000 EU |
-<<<<<<< HEAD
 | 1 lava bucket | 24,000 EU |
-=======
-| 1 lava bucket | 20,000 EU |
->>>>>>> backup/1.21.1
 | 1 mB biogas | about 60 EU |
 
 ### Wind Generator Altitude Model
 
-<<<<<<< HEAD
 - **Y > 74**: fixed 3 EU/t
 - **Y 74 or below**: no output
 - Weather, wind strength, and nearby obstacles do not affect the direct Wind Generator.
-=======
-- **Altitude formula**: Gaussian, mu=150, sigma=35
-- **Clear weather factor**: 1.0
-- **Rain factor**: 1.2
-- **Thunderstorm factor**: 1.5
-- **Gust factor**: 0.5 ~ 1.5 (updates every 10 seconds)
->>>>>>> backup/1.21.1
 
 ### Rotor Durability (Clear-Weather Baseline)
 

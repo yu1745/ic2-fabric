@@ -39,11 +39,7 @@ class DisplayCountSlot(
         if (i <= 0) return stack
         if (realStack.isEmpty) {
             this.setStack(stack.split(i))
-<<<<<<< HEAD
         } else if (ItemStack.canCombine(realStack, stack)) {
-=======
-        } else if (ItemStack.areItemsAndComponentsEqual(realStack, stack)) {
->>>>>>> backup/1.21.1
             stack.decrement(i)
             realStack.increment(i)
             this.setStack(realStack)

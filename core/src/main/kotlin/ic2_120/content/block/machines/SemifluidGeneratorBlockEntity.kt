@@ -29,10 +29,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-<<<<<<< HEAD
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-=======
->>>>>>> backup/1.21.1
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -41,9 +38,8 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -54,25 +50,14 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.server.world.ServerWorld
-<<<<<<< HEAD
 import ic2_120.content.network.NetworkManager
-=======
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
-import ic2_120.content.network.NetworkManager
-import ic2_120.content.network.SemifluidGeneratorFuelStatePacket
->>>>>>> backup/1.21.1
 
 @ModBlockEntity(block = SemifluidGeneratorBlock::class)
 class SemifluidGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
-=======
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
->>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SemifluidGeneratorBlock.ACTIVE
 
@@ -89,14 +74,6 @@ class SemifluidGeneratorBlockEntity(
     override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeEjectorCount: Int = 0
     override var fluidPipePullingCount: Int = 0
-<<<<<<< HEAD
-=======
-
-    data class FuelProfile(
-        val euPerBucket: Long,
-        val euPerTick: Long
-    )
->>>>>>> backup/1.21.1
 
     companion object {
         const val GENERATOR_TIER = 1
@@ -112,12 +89,6 @@ class SemifluidGeneratorBlockEntity(
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
         const val INVENTORY_SIZE = 7
 
-<<<<<<< HEAD
-=======
-        private val BIOFUEL_PROFILE = FuelProfile(euPerBucket = 32_000L, euPerTick = 16L)
-        private val CREOSOTE_PROFILE = FuelProfile(euPerBucket = 3_200L, euPerTick = 8L)
-
->>>>>>> backup/1.21.1
         /** 从 ModFluids 注册的 tint 颜色映射取色；无匹配则返回默认橙 */
         fun getFuelArgb(fluid: net.minecraft.fluid.Fluid?): Int {
             return when (fluid) {
@@ -137,16 +108,6 @@ class SemifluidGeneratorBlockEntity(
             fluidLookupRegistered = true
         }
 
-<<<<<<< HEAD
-=======
-        fun isSupportedFuelFluid(fluid: net.minecraft.fluid.Fluid): Boolean = getFuelProfile(fluid) != null
-
-        fun getFuelProfile(fluid: net.minecraft.fluid.Fluid): FuelProfile? = when {
-            fluid.isIn(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) -> BIOFUEL_PROFILE
-            fluid.isIn(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT) -> CREOSOTE_PROFILE
-            else -> null
-        }
->>>>>>> backup/1.21.1
     }
 
     override val tier: Int = GENERATOR_TIER
@@ -184,11 +145,7 @@ class SemifluidGeneratorBlockEntity(
 
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
-<<<<<<< HEAD
         override fun canInsert(variant: FluidVariant): Boolean = FluidFuelRegistry.isSupported(variant.fluid) && !variant.isBlank
-=======
-        override fun canInsert(variant: FluidVariant): Boolean = isSupportedFuelFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
->>>>>>> backup/1.21.1
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -222,7 +179,6 @@ class SemifluidGeneratorBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -233,21 +189,12 @@ class SemifluidGeneratorBlockEntity(
                 fuelColorDirty = true
                 actual
             }
-=======
-            amount += actual
-            if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
-            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            sync.fuelFluidRawId = Registries.FLUID.getRawId(variant.fluid)
-            fuelColorDirty = true
-            return actual
->>>>>>> backup/1.21.1
         }
 
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || !FluidFuelRegistry.isSupported(variant.fluid)) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -258,14 +205,6 @@ class SemifluidGeneratorBlockEntity(
                 fuelColorDirty = true
                 actual
             }
-=======
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
-            fuelColorDirty = true
-            return actual
->>>>>>> backup/1.21.1
         }
     }
 
@@ -326,7 +265,7 @@ class SemifluidGeneratorBlockEntity(
         return if (current.isEmpty) {
             setStack(EMPTY_CONTAINER_SLOT, emptyStack.copy())
             true
-        } else if (ItemStack.areItemsAndComponentsEqual(current, emptyStack)) {
+        } else if (ItemStack.canCombine(current, emptyStack)) {
             val toAdd = minOf(emptyStack.count, current.maxCount - current.count)
             if (toAdd > 0) {
                 current.increment(toAdd)
@@ -340,14 +279,12 @@ class SemifluidGeneratorBlockEntity(
         if (emptyStack.isEmpty) return false
         val current = getStack(EMPTY_CONTAINER_SLOT)
         return if (current.isEmpty) true
-        else ItemStack.areItemsAndComponentsEqual(current, emptyStack) && current.count + emptyStack.count <= current.maxCount
+        else ItemStack.canCombine(current, emptyStack) && current.count + emptyStack.count <= current.maxCount
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.semifluid_generator")
@@ -362,22 +299,22 @@ class SemifluidGeneratorBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(SemifluidGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, SemifluidGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
         val fluidId = nbt.getString("FuelFluid")
-        val fluid = if (fluidId.isNullOrBlank()) null else Registries.FLUID.get(Identifier.of(fluidId))
+        val fluid = if (fluidId.isNullOrBlank()) null else Registries.FLUID.get(Identifier(fluidId))
         fuelTankInternal.setStoredFuel(nbt.getLong(NBT_FUEL_AMOUNT), fluid)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(SemifluidGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_FUEL_AMOUNT, fuelTankInternal.amount)
@@ -412,21 +349,12 @@ class SemifluidGeneratorBlockEntity(
         val tankTotalCapacity = 8 * FluidConstants.BUCKET
         if (fuelTankInternal.amount <= tankTotalCapacity - FluidConstants.BUCKET) {
             val fuelFluid = fuelStack.getSemifluidFuelFluid()
-<<<<<<< HEAD
             val fuelProfile = fuelFluid?.let { FluidFuelRegistry.getProfile(it) }
             if (fuelFluid != null && fuelProfile != null) {
                 val emptyContainer = when (fuelStack.item) {
                     Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biofuel_cell")),
                     Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) ->
                         ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
-=======
-            val fuelProfile = fuelFluid?.let { getFuelProfile(it) }
-            if (fuelFluid != null && fuelProfile != null) {
-                val emptyContainer = when (fuelStack.item) {
-                    Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "biofuel_cell")),
-                    Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) ->
-                        ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")))
->>>>>>> backup/1.21.1
                     else -> fuelStack.item.getRecipeRemainder(fuelStack)
                 }
                 if (canInsertEmptyContainer(emptyContainer)) {

@@ -64,11 +64,7 @@ class ScannerScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-<<<<<<< HEAD
         renderBackground(context)
-=======
-        renderBackground(context, mouseX, mouseY, delta)
->>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val stack = handler.playerInventory.getStack(handler.playerInventory.selectedSlot)
@@ -134,27 +130,14 @@ class ScannerScreen(
         scrollOffset = 0.0
     }
 
-<<<<<<< HEAD
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {
-=======
-    override fun mouseScrolled(
-        mouseX: Double,
-        mouseY: Double,
-        horizontalAmount: Double,
-        amount: Double
-    ): Boolean {
->>>>>>> backup/1.21.1
         if (lastResults.isEmpty()) return false
 
         val relX = mouseX - x
         val relY = mouseY - y
         if (relX < RESULTS_X || relX > RESULTS_X + RESULTS_W ||
             relY < RESULTS_Y || relY > RESULTS_Y + RESULTS_H
-<<<<<<< HEAD
         ) return false
-=======
-        ) return super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount)
->>>>>>> backup/1.21.1
 
         val contentH = lastResults.size * 18
         val scrollAreaH = RESULTS_H - 22
@@ -185,11 +168,7 @@ class ScannerScreen(
     }
 
     companion object {
-<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guitoolscanner.png")
-=======
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guitoolscanner.png")
->>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
 
         private const val SCAN_BTN_X = 148

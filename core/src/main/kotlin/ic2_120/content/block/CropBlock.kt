@@ -7,30 +7,27 @@ import ic2_120.content.crop.CropSystem
 import ic2_120.content.crop.CropType
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
-import com.mojang.serialization.MapCodec
 import ic2_120.content.item.CropnalyzerItem
+import ic2_120.content.item.CoffeeBeans
 import ic2_120.content.item.Fertilizer
+import ic2_120.content.item.GrinPowder
+import ic2_120.content.item.Hops
+import ic2_120.content.item.Resin
+import ic2_120.content.item.TerraWart
 import ic2_120.content.item.Weed
 import ic2_120.content.item.WeedEx
 import ic2_120.content.item.WeedingSpade
-import ic2_120.content.item.Resin
-import ic2_120.content.item.CoffeeBeans
-import ic2_120.content.item.Hops
-import ic2_120.content.item.GrinPowder
-import ic2_120.content.item.TerraWart
-import ic2_120.content.item.SmallIronDust
 import ic2_120.content.item.SmallCopperDust
-import ic2_120.content.item.SmallTinDust
-import ic2_120.content.item.SmallLeadDust
 import ic2_120.content.item.SmallGoldDust
+import ic2_120.content.item.SmallIronDust
+import ic2_120.content.item.SmallLeadDust
 import ic2_120.content.item.SmallSilverDust
+import ic2_120.content.item.SmallTinDust
 import ic2_120.registry.instance
-import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import ic2_120.registry.type
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -48,20 +45,17 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.IntProperty
 import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.tag.BlockTags
 import net.minecraft.registry.tag.TagKey
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
-import net.minecraft.util.ItemActionResult
 import net.minecraft.util.ItemScatterer
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Box
-import net.minecraft.util.shape.VoxelShape
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import net.minecraft.nbt.NbtCompound
@@ -88,36 +82,8 @@ class CropBlock : BlockWithEntity(
         }
         .ticksRandomly()
 ) {
-    companion object {
-        val CROP_CODEC: MapCodec<CropBlock> = Block.createCodec { error("CropBlock cannot be deserialized from JSON") }
-
-        fun getShape(state: BlockState): VoxelShape? = null
-        val CROP_TYPE: EnumProperty<CropType> = EnumProperty.of("crop_type", CropType::class.java)
-        val AGE: IntProperty = IntProperty.of("stage", 0, 7)
-
-        fun defaultCropState(type: CropType, age: Int): BlockState =
-            CropBlock::class.instance().defaultState
-                .with(CROP_TYPE, type)
-                .with(AGE, age.coerceIn(0, 7))
-    }
-
-    init {
-        defaultState = stateManager.defaultState.with(CROP_TYPE, CropType.WEED).with(AGE, 0)
-    }
-
-    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
-        super.appendProperties(builder)
-        builder.add(CROP_TYPE, AGE)
-    }
-
-    override fun getCodec(): MapCodec<out BlockWithEntity> = CROP_CODEC
-
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
-<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-=======
-
->>>>>>> backup/1.21.1
     override fun emitsRedstonePower(state: BlockState): Boolean =
         state.get(CROP_TYPE) == CropType.RED_WHEAT
 
@@ -132,6 +98,17 @@ class CropBlock : BlockWithEntity(
         return if (state.get(AGE) >= CropSystem.maxAge(CropType.RED_WHEAT)) 15 else 0
     }
 
+    init {
+        defaultState = stateManager.defaultState
+            .with(CROP_TYPE, CropType.WHEAT)
+            .with(AGE, 0)
+    }
+
+    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(CROP_TYPE, AGE)
+    }
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         CropBlockEntity(pos, state)
 
@@ -141,13 +118,7 @@ class CropBlock : BlockWithEntity(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-<<<<<<< HEAD
         else checkType(type, CropBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
-=======
-        else validateTicker(type, CropBlockEntity::class.type()) { w, p, s, be ->
-            be.tick(w, p, s)
-        }
->>>>>>> backup/1.21.1
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
@@ -155,11 +126,27 @@ class CropBlock : BlockWithEntity(
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
+        hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-        // 1.21.1: onUse 仅为空手交互
+        val stack = player.getStackInHand(hand)
+        // 手持种子扫描仪时，优先走物品 useOnBlock（扫描）逻辑，不触发作物采摘。
+        if (stack.item is CropnalyzerItem) return ActionResult.PASS
+        // 除草铲：由物品 useOnBlock 清除杂草，不走采摘逻辑
+        if (stack.item == WeedingSpade::class.instance()) return ActionResult.PASS
+        // 除草剂：由物品 useOnBlock 直接喷洒，不走采摘逻辑
+        if (stack.item == WeedEx::class.instance()) return ActionResult.PASS
+
         if (world.isClient) return ActionResult.SUCCESS
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS
+        val isCreative = player.abilities.creativeMode
+
+        if (stack.item == Fertilizer::class.instance()) {
+            if (be.applyFertilizerDirect(simulate = false)) {
+                if (!isCreative) stack.decrement(1)
+                return ActionResult.SUCCESS
+            }
+        }
 
         if (!be.canBeHarvested(state)) return ActionResult.PASS
 
@@ -177,49 +164,7 @@ class CropBlock : BlockWithEntity(
         return ActionResult.SUCCESS
     }
 
-    override fun onUseWithItem(
-        stack: ItemStack,
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ItemActionResult {
-        // 这些物品有自己的 useOnBlock，交由物品处理
-        if (stack.item is CropnalyzerItem || stack.item == WeedingSpade::class.instance() || stack.item == WeedEx::class.instance()) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-
-        if (world.isClient) return ItemActionResult.SUCCESS
-        val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        val isCreative = player.abilities.creativeMode
-
-        if (stack.item == Fertilizer::class.instance()) {
-            if (be.applyFertilizerDirect(simulate = false)) {
-                if (!isCreative) stack.decrement(1)
-                return ItemActionResult.SUCCESS
-            }
-        }
-
-        // 手持其他物品时也可以收获
-        if (!be.canBeHarvested(state)) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-
-        val result = be.performHarvest(state) ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        result.drops.forEach { ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), it) }
-        if (result.ageAfterHarvest != null) {
-            world.setBlockState(
-                pos,
-                state.with(CropBlock.AGE, result.ageAfterHarvest.coerceIn(0, 7)),
-                net.minecraft.block.Block.NOTIFY_ALL
-            )
-        } else {
-            world.setBlockState(pos, CropStickBlock.defaultStickState(), net.minecraft.block.Block.NOTIFY_ALL)
-        }
-        return ItemActionResult.SUCCESS
-    }
-
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity): BlockState {
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
         if (world is ServerWorld && !player.isCreative) {
             val be = world.getBlockEntity(pos) as? CropBlockEntity
             if (be != null) {
@@ -236,7 +181,7 @@ class CropBlock : BlockWithEntity(
                 ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), CropStickBlock::class.instance().asItem().defaultStack)
             }
         }
-        return super.onBreak(world, pos, state, player)
+        super.onBreak(world, pos, state, player)
     }
 
     /**
@@ -300,6 +245,16 @@ class CropBlock : BlockWithEntity(
         dropExperience: Boolean
     ) {
         // 不掉落默认战利品表项；种子袋与作物架由 [onBreak] 处理
+    }
+
+    companion object {
+        val CROP_TYPE: EnumProperty<CropType> = EnumProperty.of("crop_type", CropType::class.java)
+        val AGE: IntProperty = IntProperty.of("stage", 0, 7)
+
+        fun defaultCropState(type: CropType, age: Int): BlockState =
+            CropBlock::class.instance().defaultState
+                .with(CROP_TYPE, type)
+                .with(AGE, age.coerceIn(0, 7))
     }
 }
 
@@ -539,8 +494,8 @@ class CropBlockEntity(
         return accepted
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
         nbt.putInt("growth", stats.growth)
         nbt.putInt("gain", stats.gain)
         nbt.putInt("resistance", stats.resistance)
@@ -554,8 +509,8 @@ class CropBlockEntity(
         nbt.putInt("terrain_air_quality", terrainAirQuality)
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
         stats = CropStats(
             growth = nbt.getInt("growth"),
             gain = nbt.getInt("gain"),
@@ -1046,7 +1001,7 @@ class CropBlockEntity(
                         if (world.random.nextInt(4) == 0 && world.getBlockState(targetPos.up()).isAir) {
                             world.setBlockState(targetPos, Blocks.TALL_GRASS.defaultState, net.minecraft.block.Block.NOTIFY_ALL)
                         } else {
-                            world.setBlockState(targetPos, Blocks.SHORT_GRASS.defaultState, net.minecraft.block.Block.NOTIFY_ALL)
+                            world.setBlockState(targetPos, Blocks.GRASS.defaultState, net.minecraft.block.Block.NOTIFY_ALL)
                         }
                     }
                 }
@@ -1137,7 +1092,6 @@ class CropBlockEntity(
 
     companion object {
         const val TICK_RATE = 256
-<<<<<<< HEAD
         private val TAG_ORES_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/iron"))
         private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/iron"))
         private val TAG_ORES_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/copper"))
@@ -1150,20 +1104,6 @@ class CropBlockEntity(
         private val TAG_STORAGE_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/gold"))
         private val TAG_ORES_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/silver"))
         private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/silver"))
-=======
-        private val TAG_ORES_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/iron"))
-        private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/iron"))
-        private val TAG_ORES_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/copper"))
-        private val TAG_STORAGE_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/copper"))
-        private val TAG_ORES_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/tin"))
-        private val TAG_STORAGE_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/tin"))
-        private val TAG_ORES_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/lead"))
-        private val TAG_STORAGE_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/lead"))
-        private val TAG_ORES_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/gold"))
-        private val TAG_STORAGE_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/gold"))
-        private val TAG_ORES_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/silver"))
-        private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/silver"))
->>>>>>> backup/1.21.1
         private val METAL_IRON = MetalRootGroup.IRON
         private val COPPER_BLOCKS = setOf(
             Blocks.COPPER_BLOCK,

@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/small_sulfur_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,10 +9,5 @@
     "flat_d3d92b": "ic2_120:item/item3d/flat_d3d92b",
     "flat_bec21c": "ic2_120:item/item3d/flat_bec21c",
     "flat_7f7f0a": "ic2_120:item/item3d/flat_7f7f0a"
-=======
-  "parent": "ic2:item/default",
-  "textures": {
-    "layer0": "ic2:item/resource/dust/small_sulfur"
->>>>>>> backup/1.21.1
   }
 }

@@ -1,9 +1,5 @@
 {
 	"variants": {
-<<<<<<< HEAD
 		"": { "model": "ic2_120:block/iridium_storage_box" }
-=======
-		"": { "model": "ic2:block/iridium_storage_box" }
->>>>>>> backup/1.21.1
 	}
 }

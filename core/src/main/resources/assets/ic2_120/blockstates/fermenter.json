@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "multipart": [
     {
       "when": {
@@ -116,39 +115,3 @@
     }
   ]
 }
-=======
-  "variants": {
-    "facing=east,active=false": {
-      "model": "ic2:block/machine/processing/advanced/fermenter",
-      "y": 90
-    },
-    "facing=east,active=true": {
-      "model": "ic2:block/machine/processing/advanced/fermenter_active",
-      "y": 90
-    },
-    "facing=north,active=false": {
-      "model": "ic2:block/machine/processing/advanced/fermenter"
-    },
-    "facing=north,active=true": {
-      "model": "ic2:block/machine/processing/advanced/fermenter_active"
-    },
-    "facing=south,active=false": {
-      "model": "ic2:block/machine/processing/advanced/fermenter",
-      "y": 180
-    },
-    "facing=south,active=true": {
-      "model": "ic2:block/machine/processing/advanced/fermenter_active",
-      "y": 180
-    },
-    "facing=west,active=false": {
-      "model": "ic2:block/machine/processing/advanced/fermenter",
-      "y": 270
-    },
-    "facing=west,active=true": {
-      "model": "ic2:block/machine/processing/advanced/fermenter_active",
-      "y": 270
-    }
-  }
-}
-
->>>>>>> backup/1.21.1

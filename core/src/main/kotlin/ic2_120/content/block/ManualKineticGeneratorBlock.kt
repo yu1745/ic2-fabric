@@ -15,6 +15,7 @@ import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -24,9 +25,10 @@ import net.minecraft.state.property.Properties
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
+import java.util.function.Consumer
 
 @ModBlock(name = "manual_kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
@@ -35,7 +37,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ManualKineticGeneratorBlock::class.item(), 1)
                 .pattern("L")
@@ -68,7 +70,6 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
-<<<<<<< HEAD
         checkType(type, ManualKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
@@ -82,13 +83,6 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
-=======
-        validateTicker(type, ManualKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
-            be.tick(w, p, s)
-        }
-
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
->>>>>>> backup/1.21.1
         val be = world.getBlockEntity(pos) as? ManualKineticGeneratorBlockEntity ?: return ActionResult.PASS
 
         // 只有顶部（UP 面）可以插入/转动曲柄
@@ -96,15 +90,15 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
             return ActionResult.PASS
         }
 
-        return be.onUse(player, net.minecraft.util.Hand.MAIN_HAND, world, pos, state)
+        return be.onUse(player, hand, world, pos, state)
     }
 
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity): BlockState {
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? ManualKineticGeneratorBlockEntity
             be?.dropCrank()
         }
-        return super.onBreak(world, pos, state, player)
+        super.onBreak(world, pos, state, player)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")

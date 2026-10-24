@@ -23,8 +23,7 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -52,7 +51,7 @@ import java.util.function.Consumer
  * 进行染色。未固化泡沫和强化泡沫不会被染色，符合原版 IC2 Painter 的目标范围。
  */
 @ModItem(name = "painter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class PainterItem : Item(FabricItemSettings().maxCount(1).maxDamage(MAX_DAMAGE)) {
+class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
 
     override fun getName(stack: ItemStack): Text {
         val color = getColor(stack)
@@ -179,8 +178,8 @@ class PainterItem : Item(FabricItemSettings().maxCount(1).maxDamage(MAX_DAMAGE))
         private fun wallColor(block: Block): DyeColor? = DyeColor.entries.firstOrNull { wallFor(it) === block }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, PainterItem::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, PainterItem::class.instance(), 1)
                 .pattern("II ")
                 .pattern(" IS")
                 .pattern("  I")

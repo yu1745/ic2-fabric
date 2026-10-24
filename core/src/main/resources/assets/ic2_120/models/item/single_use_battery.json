@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/single_use_battery.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,10 +10,4 @@
     "flat_1d1d1d": "ic2_120:item/item3d/flat_1d1d1d",
     "glow_2fff00": "ic2_120:item/item3d/glow_2fff00"
   }
-=======
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/battery/single_use_battery"
-	}
->>>>>>> backup/1.21.1
 }

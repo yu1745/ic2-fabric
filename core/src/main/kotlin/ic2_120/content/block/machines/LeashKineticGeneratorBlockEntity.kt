@@ -16,10 +16,6 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
-<<<<<<< HEAD
-=======
-import net.minecraft.registry.RegistryWrapper
->>>>>>> backup/1.21.1
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -47,11 +43,7 @@ class LeashKineticGeneratorBlockEntity(
     override val tier: Int = 1
     override val activeProperty = LeashKineticGeneratorBlock.ACTIVE
 
-<<<<<<< HEAD
     private val syncedData = SyncedData()
-=======
-    private val syncedData = SyncedData(this)
->>>>>>> backup/1.21.1
     val sync = LeashKineticGeneratorSync(syncedData)
 
     private var pendingOutputKu: Int = 0
@@ -229,13 +221,8 @@ class LeashKineticGeneratorBlockEntity(
         }
     }
 
-<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
-=======
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
         if (nbt.containsUuid("LeashedMobUuid")) {
             leashedMobUuid = nbt.getUuid("LeashedMobUuid")
@@ -247,13 +234,8 @@ class LeashKineticGeneratorBlockEntity(
         syncedData.readNbt(nbt)
     }
 
-<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
-=======
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
->>>>>>> backup/1.21.1
         nbt.putInt("PendingKu", pendingOutputKu)
         leashedMobUuid?.let { nbt.putUuid("LeashedMobUuid", it) }
         knotUuid?.let { nbt.putUuid("KnotUuid", it) }
@@ -261,11 +243,7 @@ class LeashKineticGeneratorBlockEntity(
         syncedData.writeNbt(nbt)
     }
 
-<<<<<<< HEAD
     override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
-=======
-    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
->>>>>>> backup/1.21.1
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 }

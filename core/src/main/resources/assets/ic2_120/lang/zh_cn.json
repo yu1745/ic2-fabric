@@ -639,14 +639,7 @@
   "message.ic2_120.quantum_boots.jump_off": "量子靴子：大跳已关闭",
   "message.ic2_120.jetpack.flight_on": "喷气背包：飞行已开启",
   "message.ic2_120.jetpack.flight_off": "喷气背包：飞行已关闭",
-<<<<<<< HEAD
   "key.ic2_120.toggle_vision": "Alt + 夜视键",
-=======
-  "key.ic2_120.toggle_mode": "功能切换键",
-  "key.ic2_120.toggle_foam_sprayer_mode": "泡沫喷枪模式切换",
-  "key.ic2_120.toggle_vision": "Alt + 夜视键",
-  "key.ic2_120.toggle_bandwidth_hud": "切换带宽 HUD",
->>>>>>> backup/1.21.1
   "category.ic2_120.ic2": "IC2",
   "message.ic2_120.iridium_drill.silk_touch_on": "铱钻头：精准采集已开启",
   "message.ic2_120.iridium_drill.silk_touch_off": "铱钻头：精准采集已关闭",
@@ -740,18 +733,10 @@
   "ic2_120.jade.animal_monitored": "由牲畜监管机管理",
   "ic2_120.jade.animal_water_ok": "水: 充足",
   "ic2_120.jade.animal_water_low": "水: 不足",
-<<<<<<< HEAD
   "ic2_120.jade.animal_thirsty": "干渴",
   "ic2_120.jade.animal_remaining_feed": "还需喂食 %s 次解锁繁殖资格",
   "ic2_120.jade.animal_feed_progress": "喂食进度: %s/%s（解锁繁殖）",
   "ic2_120.jade.animal_fed_full": "已达喂食标准（等待配偶或繁殖空位）",
-=======
-  "ic2_120.jade.animal_weedex_ok": "杀虫剂: 充足",
-  "ic2_120.jade.animal_weedex_low": "杀虫剂: 不足",
-  "ic2_120.jade.animal_thirsty": "干渴",
-  "ic2_120.jade.animal_sick": "生病",
-  "ic2_120.jade.animal_remaining_feed": "还需喂食 %s 次才能长成",
->>>>>>> backup/1.21.1
   "ic2_120.jade.animal_ready_to_breed": "可以繁殖",
   "ic2_120.jade.ku_line": "动能: %s / %s KU/t",
   "ic2_120.jade.ku_loss_line": "损耗: %s KU/格",
@@ -819,11 +804,7 @@
   "crop.ic2_120.cyprium": "铜粉草",
   "crop.ic2_120.dandelion": "蒲公英",
   "crop.ic2_120.dark_oak_sapling": "深色橡树树苗",
-<<<<<<< HEAD
   "crop.ic2_120.eating_plant": "食人花",
-=======
-  "crop.ic2_120.eating_plant": "食人植物",
->>>>>>> backup/1.21.1
   "crop.ic2_120.ferru": "铁粉草",
   "crop.ic2_120.flax": "亚麻",
   "crop.ic2_120.hops": "啤酒花",
@@ -832,7 +813,6 @@
   "crop.ic2_120.nether_wart": "地狱疣",
   "crop.ic2_120.oak_sapling": "橡树树苗",
   "crop.ic2_120.plumbiscus": "铅粉草",
-<<<<<<< HEAD
   "crop.ic2_120.poppy": "玫瑰",
   "crop.ic2_120.potato": "马铃薯",
   "crop.ic2_120.pumpkin": "南瓜",
@@ -843,18 +823,6 @@
   "crop.ic2_120.spruce_sapling": "云杉树苗",
   "crop.ic2_120.stagnium": "锡粉草",
   "crop.ic2_120.sticky_reed": "树脂甘蔗",
-=======
-  "crop.ic2_120.poppy": "罂粟",
-  "crop.ic2_120.potato": "土豆",
-  "crop.ic2_120.pumpkin": "南瓜",
-  "crop.ic2_120.red_mushroom": "红蘑菇",
-  "crop.ic2_120.red_wheat": "红小麦",
-  "crop.ic2_120.reed": "芦苇",
-  "crop.ic2_120.shining": "银粉草",
-  "crop.ic2_120.spruce_sapling": "云杉树苗",
-  "crop.ic2_120.stagnium": "锡粉草",
-  "crop.ic2_120.sticky_reed": "树脂芦苇",
->>>>>>> backup/1.21.1
   "crop.ic2_120.terra_wart": "大地疣",
   "crop.ic2_120.tulip": "郁金香",
   "crop.ic2_120.venomilia": "毒花",
@@ -885,14 +853,8 @@
   "item.ic2_120.animalmatron.tooltip.extra_products": "额外产物（蛋每10分钟、羊毛每2分钟）：",
   "item.ic2_120.animalmatron.tooltip.extra_product_auto": "（自动）",
   "item.ic2_120.animalmatron.tooltip.extra_product_shears": "（需剪刀）",
-<<<<<<< HEAD
   "gui.ic2_120.input_eu": "输入 %s EU/t",
   "gui.ic2_120.consume_eu": "耗能: %s EU/t",
-=======
-
-  "gui.ic2_120.input_eu": "输入 %s EU/t",
-  "gui.ic2_120.consume_eu": "耗能 %s EU/t",
->>>>>>> backup/1.21.1
   "gui.ic2_120.energy_tooltip": "储能: %s / %s EU",
   "gui.ic2_120.upgrade_slots": "可支持的升级",
   "gui.ic2_120.uv_lamp_upgrade": "升级槽",
@@ -993,11 +955,7 @@
   "gui.ic2_120.wind_meter.gust_bonus": "随机增益: %s",
   "gui.ic2_120.wind_meter.effective_wind": "有效风力: %s",
   "gui.ic2_120.wind_meter.rotor_output": "%1$s转子理论输出: %2$s KU/t",
-<<<<<<< HEAD
   "gui.ic2_120.wind_meter.rotor_need_height": "%1$s转子理论输出: %2$s KU/t (不可启动，需Y≥%3$s)",
-=======
-  "gui.ic2_120.wind_meter.rotor_need_height": "%1$s转子理论输出: %2$s KU/t (不可启动，需Y\u2265%3$s)",
->>>>>>> backup/1.21.1
   "gui.ic2_120.wind_meter.rotor_no_weather": "%1$s转子理论输出: %2$s KU/t (此天气下不可启动)",
   "gui.ic2_120.wind_meter.wood": "木",
   "gui.ic2_120.wind_meter.bronze": "青铜",
@@ -1008,10 +966,7 @@
   "gui.ic2_120.matter_generator.mode_normal": "模式: 普通",
   "gui.ic2_120.matter_generator.progress_pct": "进度：%s%%",
   "gui.ic2_120.matter_generator.uptips": "可支持的升级:",
-<<<<<<< HEAD
   "gui.ic2_120.matter_generator.scrap_boost_disabled": "本服禁止了使用废料加速",
-=======
->>>>>>> backup/1.21.1
   "gui.ic2_120.magnetizer.redstone_triggered": "红石: 已触发",
   "gui.ic2_120.magnetizer.redstone_untriggered": "红石: 未触发",
   "gui.ic2_120.magnetizer.fence_count": "栅栏: %s",
@@ -1024,10 +979,7 @@
   "gui.ic2_120.chunk_loader.consume_chunks": "耗能 %1$s EU/t (%2$s 区块)",
   "gui.ic2_120.chunk_loader.loaded": "已加载",
   "gui.ic2_120.chunk_loader.unloaded": "未加载",
-<<<<<<< HEAD
   "gui.ic2_120.chunk_loader.restart_bootstrap_hint": "服务器重启后，需玩家先来到附近加载本区块，区块加载器才会重新启动。",
-=======
->>>>>>> backup/1.21.1
   "gui.ic2_120.uu_scanner.scan_progress": "扫描进度: %1$s / %2$s",
   "gui.ic2_120.uu_scanner.status_no_input": "请放入待扫描物品",
   "gui.ic2_120.uu_scanner.status_not_whitelisted": "物品不在白名单",
@@ -1117,13 +1069,10 @@
   "gui.ic2_120.blast_furnace.air": "压缩空气",
   "gui.ic2_120.blast_furnace.air_tooltip": "压缩空气: %1$s / %2$s mB",
   "gui.ic2_120.blast_furnace.heat_tooltip": "炉内温度: %1$s / %2$s °C",
-<<<<<<< HEAD
   "gui.ic2_120.blast_furnace.heat_info_warmup": "升温至少需要 50 HU/t，温度越高所需越多",
   "gui.ic2_120.blast_furnace.heat_info_maintain": "最终稳定温度完全取决于热量输入",
   "gui.ic2_120.blast_furnace.heat_info_faster": "温度越高，冶炼速度越快",
   "gui.ic2_120.blast_furnace.heat_info_lower": "温度越高，维持温度所需的热量越多",
-=======
->>>>>>> backup/1.21.1
   "gui.ic2_120.blast_furnace.hu_tooltip": "HU 输入: %1$s",
   "gui.ic2_120.coke_kiln.structure_valid": "结构: 有效",
   "gui.ic2_120.coke_kiln.structure_invalid": "结构: 无效",
@@ -1177,21 +1126,10 @@
   "tooltip.ic2_120.weed_ex.amount": "剩余容量: %s/%s mB",
   "tooltip.ic2_120.weed_ex.low": "除草剂不足！",
   "tooltip.ic2_120.pipe.flow_rate": "流量: %s mB/s (%s 桶/秒)",
-<<<<<<< HEAD
   "jei.ic2_120.replicator.uu_cost": "UU消耗：%s uB",
   "tooltip.ic2_120.status.on": "开启",
   "tooltip.ic2_120.status.off": "关闭",
   "block.ic2_120.leash_kinetic_generator": "拴绳动能发生机",
-=======
-
-  "jei.ic2_120.replicator.uu_cost": "UU消耗：%s uB",
-
-  "tooltip.ic2_120.status.on": "开启",
-  "tooltip.ic2_120.status.off": "关闭",
-
-  "block.ic2_120.leash_kinetic_generator": "拴绳动能发生机",
-
->>>>>>> backup/1.21.1
   "gui.ic2_120.leash_kinetic.generated": "生成: %s KU/t",
   "gui.ic2_120.leash_kinetic.output": "输出: %s KU/t",
   "gui.ic2_120.leash_kinetic.animal_status": "动物: %s",
@@ -1202,25 +1140,13 @@
   "gui.ic2_120.leash_kinetic.status": "状态: %s",
   "gui.ic2_120.leash_kinetic.running": "运行中",
   "gui.ic2_120.leash_kinetic.idle": "待机",
-<<<<<<< HEAD
-=======
-
->>>>>>> backup/1.21.1
   "message.ic2_120.leash_kinetic.already_leashed": "该机器已经连接了一只动物!",
   "message.ic2_120.leash_kinetic.attached": "已拴住 %s",
   "message.ic2_120.leash_kinetic.no_mob": "附近没有拴绳的动物",
   "message.ic2_120.leash_kinetic.detached": "已解除拴绳",
-<<<<<<< HEAD
   "ic2_120.jade.leash_kinetic.generated": "生成: %s KU/t",
   "ic2_120.jade.leash_kinetic.velocity": "角速度: %s °/s",
   "ic2_120.jade.leash_kinetic.animal": "动物: %s",
-=======
-
-  "ic2_120.jade.leash_kinetic.generated": "生成: %s KU/t",
-  "ic2_120.jade.leash_kinetic.velocity": "角速度: %s °/s",
-  "ic2_120.jade.leash_kinetic.animal": "动物: %s",
-
->>>>>>> backup/1.21.1
   "ic2_120.jade.teleporter.header": "[传送机诊断]",
   "ic2_120.jade.teleporter.mfe_energy": "相邻储能: %s EU",
   "ic2_120.jade.teleporter.cooldown": "冷却: %s tick",
@@ -1237,7 +1163,6 @@
   "ic2_120.jade.teleporter.check.charging": "充能中",
   "ic2_120.jade.teleporter.check.energy_insufficient": "能量不足 (%s)",
   "ic2_120.jade.teleporter.check.energy_sufficient": "能量充足 (%s)",
-<<<<<<< HEAD
   "ic2_120.jade.electric_heat.buffer": "缓存: %s / %s EU",
   "ic2_120.jade.electric_heat.generating": "产热: %s HU/t",
   "ic2_120.jade.electric_heat.coils": "线圈: %s",
@@ -1246,57 +1171,30 @@
   "ic2_120.jade.electric_heat.stopped_inverted": "状态: 已停机（反转模式下收到红石信号）",
   "key.ic2_120.toggle_speed": "神行键",
   "key.ic2_120.toggle_jump": "大跳键",
-=======
-
-  "key.ic2_120.toggle_speed": "神行键",
-  "key.ic2_120.toggle_jump": "大跳键",
-
->>>>>>> backup/1.21.1
   "tooltip.ic2_120.armor.damage_reduction": "减伤: %s%%",
   "tooltip.ic2_120.quantum_boots.damage_reduction": "减伤: %s%% | 落地免伤",
   "tooltip.ic2_120.quantum_helmet.features": "减伤: %s%% | 水下呼吸 | 夜视 | 饱食不满自动吃满锡罐",
   "tooltip.ic2_120.quantum_helmet.full_set": "全套时: 消除debuff",
-<<<<<<< HEAD
-=======
-
->>>>>>> backup/1.21.1
   "tooltip.ic2_120.quantum_boots.jump": "大跳: %s | 剩余: %s次",
   "tooltip.ic2_120.quantum_leggings.speed": "神行: %s | 剩余: %s",
   "tooltip.ic2_120.quantum_chestplate.flight_time": "飞行剩余: %s",
   "tooltip.ic2_120.quantum_helmet.night_vision": "夜视: %s | 剩余: %s",
   "tooltip.ic2_120.nano_helmet.night_vision": "夜视: %s | 剩余: %s",
-<<<<<<< HEAD
   "tooltip.ic2_120.armor.speed_tier.off": "关",
   "tooltip.ic2_120.armor.speed_tier.1": "1档",
   "tooltip.ic2_120.armor.speed_tier.2": "2档",
-=======
-
-  "tooltip.ic2_120.armor.speed_tier.off": "关",
-  "tooltip.ic2_120.armor.speed_tier.1": "1档",
-  "tooltip.ic2_120.armor.speed_tier.2": "2档",
-
->>>>>>> backup/1.21.1
   "tooltip.ic2_120.armor.key.flight_double_tap": "双击空格飞行",
   "tooltip.ic2_120.armor.key.vision": "夜视按键: ",
   "tooltip.ic2_120.armor.key.speed": "神行按键: ",
   "tooltip.ic2_120.armor.key.jump": "大跳按键: ",
   "item.ic2_120.recall_scroll": "传送卷轴",
-<<<<<<< HEAD
-=======
-
->>>>>>> backup/1.21.1
   "tooltip.ic2_120.harvest": "收获: ",
   "tooltip.ic2_120.harvest.sep": " 或 ",
   "tooltip.ic2_120.harvest.qty_n": " ×%d",
   "tooltip.ic2_120.harvest.qty_age": " ×年龄",
   "tooltip.ic2_120.harvest.qty_rng": " ×%d~%d",
   "tooltip.ic2_120.harvest.chance": " (%d%%)",
-<<<<<<< HEAD
   "tooltip.ic2_120.harvest.note.poisonous_5": "5%概率毒马铃薯",
-=======
-
-  "tooltip.ic2_120.harvest.note.poisonous_5": "5%概率毒土豆",
->>>>>>> backup/1.21.1
   "tooltip.ic2_120.harvest.note.melon_random": "随机西瓜或西瓜片",
   "tooltip.ic2_120.harvest.note.by_age": "数量随生长年龄增加",
   "tooltip.ic2_120.harvest.note.sticky_reed": "成熟时产粘性树脂",
@@ -1314,10 +1212,7 @@
   "tooltip.ic2_120.harvest.note.attacks": "攻击附近生物",
   "gui.ic2_120.animal_slaughterer.need_shears": "需要剪刀才能屠宰动物",
   "gui.ic2_120.animalmatron.need_shears": "需要剪刀才能收获额外产物",
-<<<<<<< HEAD
   "gui.ic2_120.animalmatron.weed_ex_deprecated": "§7此储罐已废弃：除草剂机制已停用，无需灌入任何流体",
-=======
->>>>>>> backup/1.21.1
   "gui.ic2_120.direction.down": "下",
   "gui.ic2_120.direction.up": "上",
   "gui.ic2_120.direction.north": "北",
@@ -1341,7 +1236,6 @@
   "gui.ic2_120.item_upgrade.no_filter": "全部",
   "gui.ic2_120.limiter_cable.limit_value": "限流值: %s EU/t",
   "gui.ic2_120.limiter_cable.limit_unlimited": "限流值: 无限制",
-<<<<<<< HEAD
   "gui.ic2_120.splitter_cable.threshold": "触发阈值: %s",
   "gui.ic2_120.splitter_cable.inverted.on": "反相: 开",
   "gui.ic2_120.splitter_cable.inverted.off": "反相: 关",
@@ -1356,21 +1250,6 @@
   "item.ic2_120.superheated_steam_bucket": "过热蒸汽桶",
   "gui.ic2_120.temperature": "温度: %s°C",
   "gui.ic2_120.heat_progress": "温度: %s°C",
-=======
-
-  "block.ic2_120.steam_generator": "蒸汽发生器",
-  "block.ic2_120.steam_kinetic_generator": "蒸汽动能发生机",
-  "block.ic2_120.condenser": "冷凝器",
-
-  "block.ic2_120.steam": "蒸汽",
-  "block.ic2_120.superheated_steam": "过热蒸汽",
-  "item.ic2_120.steam_bucket": "蒸汽桶",
-  "item.ic2_120.superheated_steam_bucket": "过热蒸汽桶",
-
-  "gui.ic2_120.temperature": "温度: %s°C",
-  "gui.ic2_120.heat_progress": "温度: %s°C",
-  "gui.ic2_120.water": "水",
->>>>>>> backup/1.21.1
   "gui.ic2_120.water_tank": "水罐",
   "gui.ic2_120.steam": "蒸汽",
   "gui.ic2_120.steam_tank": "蒸汽罐",
@@ -1408,7 +1287,6 @@
   "gui.ic2_120.distilled_water": "蒸馏水",
   "gui.ic2_120.generate_ku": "KU 产出: %s KU/t",
   "gui.ic2_120.cooling_rate": "冷却速率: %s mB/t",
-<<<<<<< HEAD
   "gui.ic2_120.tank.level_change": "最近液位变化（平均）",
   "gui.ic2_120.tank.level_change_1s": "1秒: %s",
   "gui.ic2_120.tank.level_change_5s": "5秒: %s",
@@ -1416,10 +1294,6 @@
   "gui.ic2_120.tank.level_change_30s": "30秒: %s",
   "gui.ic2_120.tank.level_change_60s": "60秒: %s",
   "gui.ic2_120.heat_vent_slots": "散热口",
-=======
-  "gui.ic2_120.heat_vent_slots": "散热口",
-  "gui.ic2_120.consume_eu": "耗能: %s EU/t",
->>>>>>> backup/1.21.1
   "gui.ic2_120.slot.vent": "放入散热片以提升冷却速率（每片 +100 mB/t，耗电 2 EU/t）",
   "gui.ic2_120.slot.upgrade": "放入变压器升级以提升电压等级",
   "gui.ic2_120.slot.discharge": "放入电池为机器供电",
@@ -1428,7 +1302,6 @@
   "gui.ic2_120.condenser.no_power_warning": "未安装散热片时可免费被动冷却，安装后必须供电方可运行",
   "death.attack.ic2_120.steam": "%1$s被蒸汽烫死了",
   "death.attack.ic2_120.steam.player": "%1$s在与%2$s战斗时被蒸汽烫死了",
-<<<<<<< HEAD
   "death.attack.nuclear_heat": "%1$s被核反应堆烫死了",
   "death.attack.nuclear_heat.player": "%1$s在与%2$s战斗时被核反应堆烫死了",
   "chat.ic2_120.nuclear_explosion.title": "§4⚠ §c核反应堆爆炸！",
@@ -1484,10 +1357,4 @@
   "jei.ic2_120.coal_water_transform.tooltip": "直接扔进水里（约等待 3 秒）",
   "jei.ic2_120.coal_water_transform.circumstance": "浸入",
   "item.ic2_120.advanced_scanner.tooltip": "OV 扫描器 - 扫描范围更大"
-=======
-  "chat.ic2_120.nuclear_explosion.title": "§4⚠ §c核反应堆爆炸！",
-  "chat.ic2_120.nuclear_explosion.detail": "§c%1$s §7的核反应堆在 §c%2$s §7爆炸了！",
-  "chat.ic2_120.nuclear_explosion.blocks_removed": "§7共移除 §c%1$d §7个方块。",
-  "chat.ic2_120.nuclear_explosion.safety": "§4【安全生产提醒】\n§e管行业必须管安全、管业务必须管安全、管生产经营必须管安全！\n§6安全第一、预防为主、综合治理！\n§a建立健全全员安全生产责任制，构建风险分级管控和隐患排查治理双重预防机制！\n§c主要负责人是第一责任人——请时刻注意安全生产！"
->>>>>>> backup/1.21.1
 }

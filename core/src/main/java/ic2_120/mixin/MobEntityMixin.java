@@ -1,18 +1,12 @@
 package ic2_120.mixin;
 
-<<<<<<< HEAD
 import net.minecraft.entity.Entity;
-=======
->>>>>>> backup/1.21.1
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.GhastEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PhantomEntity;
-<<<<<<< HEAD
 import net.minecraft.entity.player.PlayerEntity;
-=======
->>>>>>> backup/1.21.1
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,12 +18,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * 末影龙不是 MobEntity，无需额外处理。
  *
  * 同时阻止拴绳动能发生机拴住的生物在骑乘（如坐上矿车）时拴绳断裂。
-<<<<<<< HEAD
-=======
- * <p>
- * 注意：1.21.1 将拴绳逻辑提取到 {@code Leashable} 接口，
- * {@code attachLeash} 中的 {@code stopRiding()} 拦截已移至 {@link LeashableMixin}。
->>>>>>> backup/1.21.1
  */
 @Mixin(MobEntity.class)
 public class MobEntityMixin {
@@ -39,11 +27,7 @@ public class MobEntityMixin {
      * @reason 允许拴绳动能发生机拴住怪物
      */
     @Overwrite
-<<<<<<< HEAD
     public boolean canBeLeashedBy(PlayerEntity player) {
-=======
-    public boolean canBeLeashed() {
->>>>>>> backup/1.21.1
         MobEntity self = (MobEntity) (Object) this;
         if (self instanceof WitherEntity
             || self instanceof GhastEntity
@@ -63,17 +47,12 @@ public class MobEntityMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/MobEntity;detachLeash(ZZ)V")
     )
     private void keepLeashOnKineticGenerator(MobEntity instance, boolean sendPacket, boolean dropItem) {
-<<<<<<< HEAD
         if (instance.getHoldingEntity() instanceof ArmorStandEntity) {
-=======
-        if (instance.getLeashHolder() instanceof ArmorStandEntity) {
->>>>>>> backup/1.21.1
             return;
         }
         instance.detachLeash(sendPacket, dropItem);
     }
 
-<<<<<<< HEAD
     /**
      * 区块重新加载时的另一条路径：
      * readLeashNbt() → attachLeash() → stopRiding()
@@ -90,6 +69,4 @@ public class MobEntityMixin {
         }
         instance.stopRiding();
     }
-=======
->>>>>>> backup/1.21.1
 }

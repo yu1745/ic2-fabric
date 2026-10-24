@@ -10,22 +10,11 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.SteamKineticGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
-<<<<<<< HEAD
-=======
-import ic2_120.registry.annotation.ScreenFactory
->>>>>>> backup/1.21.1
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-<<<<<<< HEAD
 import net.minecraft.item.ItemStack
-=======
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
->>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -35,11 +24,7 @@ import net.minecraft.screen.slot.Slot
  * 蒸汽动能发电机 ScreenHandler。
  * 1 个涡轮槽 + 1 个升级槽 + 玩家背包。
  */
-<<<<<<< HEAD
 @ModScreenHandler(block = SteamKineticGeneratorBlock::class, inventorySize = SteamKineticGeneratorBlockEntity.INVENTORY_SIZE)
-=======
-@ModScreenHandler(block = SteamKineticGeneratorBlock::class)
->>>>>>> backup/1.21.1
 class SteamKineticGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -83,11 +68,7 @@ class SteamKineticGeneratorScreenHandler(
                 SLOT_UPGRADE_INDEX -> {
                     if (!insertItem(s, PLAYER_INV_START, PLAYER_INV_END, true)) return ItemStack.EMPTY
                 }
-<<<<<<< HEAD
                 in PLAYER_INV_START until PLAYER_INV_END -> {
-=======
-                in PLAYER_INV_START..PLAYER_INV_END -> {
->>>>>>> backup/1.21.1
                     val storage = itemStorage
                     if (storage == null) return ItemStack.EMPTY
                     if (s.item is SteamTurbine) {
@@ -98,12 +79,9 @@ class SteamKineticGeneratorScreenHandler(
                     }
                 }
                 else -> {
-<<<<<<< HEAD
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-=======
->>>>>>> backup/1.21.1
                     if (!insertItem(s, PLAYER_INV_START, PLAYER_INV_END, false)) return ItemStack.EMPTY
                 }
             }
@@ -133,16 +111,5 @@ class SteamKineticGeneratorScreenHandler(
         const val PLAYER_INV_START = 2
         const val PLAYER_INV_END = 38
 
-<<<<<<< HEAD
-=======
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SteamKineticGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(SteamKineticGeneratorBlockEntity.INVENTORY_SIZE)
-            return SteamKineticGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
->>>>>>> backup/1.21.1
     }
 }

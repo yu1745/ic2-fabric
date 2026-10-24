@@ -79,7 +79,7 @@ class SplitterCableScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guilimitercable.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guilimitercable.png")
         private const val TEX_SIZE = 256
     }
 }
