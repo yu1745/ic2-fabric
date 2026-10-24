@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/advanced_scanner.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,5 +11,10 @@
     "glow_9bd08c": "ic2_120:item/item3d/glow_9bd08c",
     "glow_d06060": "ic2_120:item/item3d/glow_d06060",
     "glow_98bcd2": "ic2_120:item/item3d/glow_98bcd2"
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2_120_industrial_upgrade:item/neutron"
+>>>>>>> backup/1.21.1
   }
 }

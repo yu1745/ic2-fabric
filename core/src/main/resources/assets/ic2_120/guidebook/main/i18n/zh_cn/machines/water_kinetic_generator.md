@@ -12,7 +12,11 @@ item_ids:
 
 <BlockImage id="ic2_120:water_kinetic_generator" p:facing="north" p:active="true" scale="4" />
 
+<<<<<<< HEAD
 水力动能发生机是一台转子型 KU 来源。把 <ItemLink id="ic2_120:wooden_rotor" />、<ItemLink id="ic2_120:bronze_rotor" />、<ItemLink id="ic2_120:iron_rotor" />、<ItemLink id="ic2_120:steel_rotor" /> 或 <ItemLink id="ic2_120:carbon_rotor" /> 装进唯一的转子槽，然后在机器正前方一格的转子平面中布置水。
+=======
+水力动能发生机是一台转子型 KU 来源。把 <ItemLink id="ic2_120:wooden_rotor" />、<ItemLink id="ic2_120:iron_rotor" />、<ItemLink id="ic2_120:steel_rotor" /> 或 <ItemLink id="ic2_120:carbon_rotor" /> 装进唯一的转子槽，然后在机器正前方一格的转子平面中布置水。
+>>>>>>> backup/1.21.1
 
 转子位于机器正面。KU 只会从机器背面输出，因此传动轴或 <ItemLink id="ic2_120:kinetic_generator" /> 要接在背面。动能发电机必须让正面朝向输入的动能线路，并以 4 KU = 1 EU 的比例把 KU 转成 EU。
 
@@ -28,6 +32,7 @@ item_ids:
 
 ## KU 输出
 
+<<<<<<< HEAD
 **KU/t = floor(128 x 转子倍率 x 水流加成)**
 
 | 转子 | 半径 | 倍率 | 静止水 | 流动水加成 |
@@ -37,6 +42,16 @@ item_ids:
 | 铁制 | 1.5 | 2x | 256 KU/t | 384 KU/t |
 | 钢制 | 2.0 | 3x | 384 KU/t | 576 KU/t |
 | 碳纤维 | 2.5 | 4x | 512 KU/t | 768 KU/t |
+=======
+**KU/t = floor(64 x 转子倍率 x 水流加成)**
+
+| 转子 | 半径 | 倍率 | 静止水 | 流动水加成 |
+|------|------|------|--------|------------|
+| 木制 | 1.0 | 1x | 64 KU/t | 96 KU/t |
+| 铁制 | 1.5 | 2x | 128 KU/t | 192 KU/t |
+| 钢制 | 2.0 | 3x | 192 KU/t | 288 KU/t |
+| 碳纤维 | 2.5 | 4x | 256 KU/t | 384 KU/t |
+>>>>>>> backup/1.21.1
 
 界面会分别显示生成 KU 和输出 KU。生成 KU 是当前水环境和转子能产生的量；输出 KU 是本 tick 实际被动能发电机或传动网络抽走的量。如果生成 KU 大于 0 但输出 KU 为 0，说明机器在转，但背面没有东西取走 KU。
 
@@ -56,7 +71,11 @@ item_ids:
 
 ## 转子磨损
 
+<<<<<<< HEAD
 转子只在机器实际生成 KU 时消耗耐久。水力发电的基础磨损为每 tick 1 点耐久；存在流动水加成时，磨损再提高到 1.5 倍。转子耐久耗尽后会损坏，槽位变空。
+=======
+转子只在机器实际生成 KU 时消耗耐久。水力发电的基础磨损为每 tick 2 点耐久；存在流动水加成时，磨损再提高到 1.5 倍。转子耐久耗尽后会损坏，槽位变空。
+>>>>>>> backup/1.21.1
 
 GUI 中的剩余寿命按静止水条件显示，单位为小时。使用流动水加成时，同一转子的实际寿命约为界面显示静水寿命的三分之二。
 
@@ -77,7 +96,10 @@ GUI 中的剩余寿命按静止水条件显示，单位为小时。使用流动�
 ## 相关
 
 - <ItemLink id="ic2_120:wooden_rotor" />
+<<<<<<< HEAD
 - <ItemLink id="ic2_120:bronze_rotor" />
+=======
+>>>>>>> backup/1.21.1
 - <ItemLink id="ic2_120:iron_rotor" />
 - <ItemLink id="ic2_120:steel_rotor" />
 - <ItemLink id="ic2_120:carbon_rotor" />

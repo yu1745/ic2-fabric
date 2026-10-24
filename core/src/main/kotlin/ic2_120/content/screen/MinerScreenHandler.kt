@@ -15,10 +15,18 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
+=======
+
+import net.minecraft.screen.ArrayPropertyDelegate
+import net.minecraft.screen.PropertyDelegate
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.network.PacketByteBuf
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
@@ -38,8 +46,12 @@ class MinerScreenHandler(
     val sync = MinerSync(
         SyncedDataView(propertyDelegate),
         { null },
+<<<<<<< HEAD
         { if (isAdvanced) MinerSync.ADVANCED_CAPACITY else MinerSync.NORMAL_CAPACITY },
         baseCapacity = if (isAdvanced) MinerSync.ADVANCED_CAPACITY else MinerSync.NORMAL_CAPACITY
+=======
+        { MinerSync.BASE_ENERGY_CAPACITY }
+>>>>>>> backup/1.21.1
     )
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
@@ -51,6 +63,10 @@ class MinerScreenHandler(
         if (isAdvanced) {
             // 高级采矿机：无钻头槽
             addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_SCANNER, 8, 26)
+<<<<<<< HEAD
+=======
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 8, 44, 1024)
+>>>>>>> backup/1.21.1
             addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 8, 80)
 
             // 过滤槽 3×5（仅玩家可交互放置，每格限制1个）
@@ -58,7 +74,11 @@ class MinerScreenHandler(
                 val beIndex = BaseMinerBlockEntity.SLOT_ITEM_START + i
                 val spec = SlotSpec(
                     maxItemCount = 1,
+<<<<<<< HEAD
                     canInsert = { stack -> !stack.isEmpty },
+=======
+                    canInsert = { stack -> stack.item is net.minecraft.item.BlockItem },
+>>>>>>> backup/1.21.1
                     canTake = { true }
                 )
                 beSlotToHandlerIndex[beIndex] = slots.size
@@ -220,7 +240,11 @@ class MinerScreenHandler(
     }
 
     private val playerSlotStart: Int
+<<<<<<< HEAD
         get() = if (isAdvanced) 21 else 22
+=======
+        get() = if (isAdvanced) 22 else 22
+>>>>>>> backup/1.21.1
 
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->

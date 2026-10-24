@@ -8,6 +8,10 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
+<<<<<<< HEAD
+=======
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 import net.minecraft.state.property.Properties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -163,8 +167,13 @@ class CreativeEngineBlockEntity(
     }
 
     // === NBT ===
+<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
+=======
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
         nbt.putInt("direction", currentDirection.ordinal)
@@ -173,8 +182,13 @@ class CreativeEngineBlockEntity(
         nbt.putInt("pendingOutputKu", pendingOutputKu)
     }
 
+<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
+=======
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")
         val dirIdx = nbt.getInt("direction")

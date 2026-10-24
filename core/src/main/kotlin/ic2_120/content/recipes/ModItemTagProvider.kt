@@ -1,16 +1,26 @@
 package ic2_120.content.recipes
 
+<<<<<<< HEAD
 import ic2_120.Ic2_120
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
 import net.minecraft.block.Block
+<<<<<<< HEAD
 import net.minecraft.block.Blocks
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.tag.ItemTags
+=======
+import net.minecraft.item.Item
+import net.minecraft.item.Items
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 import net.minecraft.registry.tag.TagKey
 import net.minecraft.util.Identifier
 import java.util.concurrent.CompletableFuture
@@ -52,11 +62,16 @@ class ModItemTagProvider(
                 val parts = tagId.split(":", limit = 2)
                 val namespace = parts[0]
                 val path = if (parts.size == 2) parts[1] else parts[0]
+<<<<<<< HEAD
                 val tagKey = TagKey.of(RegistryKeys.ITEM, Identifier(namespace, path))
+=======
+                val tagKey = TagKey.of(RegistryKeys.ITEM, Identifier.of(namespace, path))
+>>>>>>> backup/1.21.1
                 getOrCreateTagBuilder(tagKey).add(item)
             }
         }
 
+<<<<<<< HEAD
         // 橡胶木系列原木（含 stripped 变体）：填入原版方块/物品标签，并保留 IC2 自用标签。
         listOf("rubber_log", "rubber_wood", "stripped_rubber_log", "stripped_rubber_wood").forEach { path ->
             val block = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, path))
@@ -81,6 +96,8 @@ class ModItemTagProvider(
             }
         }
 
+=======
+>>>>>>> backup/1.21.1
         registerVanillaCompat("ingots/iron", Items.IRON_INGOT)
         registerVanillaCompat("ingots/copper", Items.COPPER_INGOT)
         registerVanillaCompat("ingots/gold", Items.GOLD_INGOT)
@@ -131,6 +148,7 @@ class ModItemTagProvider(
     }
 
     private fun cItem(path: String): TagKey<Item> =
+<<<<<<< HEAD
         TagKey.of(RegistryKeys.ITEM, Identifier("c", path))
 
     private fun forgeItem(path: String): TagKey<Item> =
@@ -138,4 +156,13 @@ class ModItemTagProvider(
 
     private fun compatItem(path: String): TagKey<Item> =
         TagKey.of(RegistryKeys.ITEM, Identifier("ic2_120", "compat/$path"))
+=======
+        TagKey.of(RegistryKeys.ITEM, Identifier.of("c", path))
+
+    private fun forgeItem(path: String): TagKey<Item> =
+        TagKey.of(RegistryKeys.ITEM, Identifier.of("forge", path))
+
+    private fun compatItem(path: String): TagKey<Item> =
+        TagKey.of(RegistryKeys.ITEM, Identifier.of("ic2_120", "compat/$path"))
+>>>>>>> backup/1.21.1
 }

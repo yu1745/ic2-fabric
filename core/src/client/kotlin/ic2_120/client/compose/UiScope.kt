@@ -99,7 +99,7 @@ class UiScope {
      *
      * 最简用法（完整纹理）：
      * ```
-     * Image(Identifier("ic2", "textures/gui/icon.png"), width = 16, height = 16)
+     * Image(Identifier.of("ic2", "textures/gui/icon.png"), width = 16, height = 16)
      * ```
      *
      * Sprite sheet 裁剪：

@@ -20,9 +20,12 @@ enum class CreativeTab(val id: String) {
     /** IC2 高级太阳能物品栏（附属 mod） */
     IC2_SOLAR("ic2_solar"),
 
+<<<<<<< HEAD
     /** 工业升级物品栏（附属 mod） */
     INDUSTRIAL_UPGRADE("industrial_upgrade"),
 
+=======
+>>>>>>> backup/1.21.1
     /** IC2 高级武器物品栏（附属 mod） */
     IC2_ADVANCED_WEAPONS("ic2_advanced_weapons"),
 
@@ -63,7 +66,11 @@ enum class CreativeTab(val id: String) {
      */
     fun getNamespacedId(modId: String): String {
         return when (this) {
+<<<<<<< HEAD
             IC2_MATERIALS, IC2_MACHINES, IC2_TOOLS, IC2_CROP_SEEDS, IC2_SOLAR, INDUSTRIAL_UPGRADE, IC2_ADVANCED_WEAPONS, BUILDCRAFT -> "$modId:$id"
+=======
+            IC2_MATERIALS, IC2_MACHINES, IC2_TOOLS, IC2_CROP_SEEDS, IC2_SOLAR, IC2_ADVANCED_WEAPONS, BUILDCRAFT -> "$modId:$id"
+>>>>>>> backup/1.21.1
             MINECRAFT_BUILDING_BLOCKS, MINECRAFT_DECORATIONS, MINECRAFT_REDSTONE,
             MINECRAFT_TRANSPORTATION, MINECRAFT_MISC, MINECRAFT_FOOD,
             MINECRAFT_TOOLS, MINECRAFT_COMBAT, MINECRAFT_BREWING -> "minecraft:$id"

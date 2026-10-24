@@ -1,5 +1,6 @@
 package ic2_120.content.block
 
+<<<<<<< HEAD
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import ic2_120.content.recipes.ModTags
@@ -30,6 +31,23 @@ import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.Registries
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.registry.tag.BlockTags
+=======
+import com.mojang.serialization.MapCodec
+import ic2_120.Ic2_120
+import ic2_120.config.Ic2Config
+import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
+import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
+import java.util.Optional
+import net.minecraft.block.*
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.BlockEntityTicker
+import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
+>>>>>>> backup/1.21.1
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.state.property.EnumProperty
@@ -40,11 +58,15 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
+<<<<<<< HEAD
 import net.minecraft.world.WorldAccess
 import net.minecraft.world.gen.chunk.ChunkGenerator
 import net.minecraft.world.gen.feature.ConfiguredFeature
 import net.minecraft.server.world.ServerWorld
 import java.util.function.Consumer
+=======
+import net.minecraft.world.gen.feature.ConfiguredFeature
+>>>>>>> backup/1.21.1
 
 // ========== 原木 / 木材 ==========
 
@@ -52,6 +74,7 @@ import java.util.function.Consumer
 @ModBlock(name = "rubber_wood", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
 class RubberWood : PillarBlock(
     AbstractBlock.Settings.copy(Blocks.OAK_LOG).strength(2.0f)
+<<<<<<< HEAD
 ) {
     companion object {
         @RecipeProvider
@@ -65,6 +88,9 @@ class RubberWood : PillarBlock(
         }
     }
 }
+=======
+)
+>>>>>>> backup/1.21.1
 
 /** 橡胶树原木侧面橡胶状态：无槽位、湿（可提取）、干（已提取） */
 enum class RubberFaceState(private val id: String) : StringIdentifiable {
@@ -74,7 +100,12 @@ enum class RubberFaceState(private val id: String) : StringIdentifiable {
 
 /** 橡胶树原木。仅自然生成的原木会随机生成可提取槽位，玩家放置的原木不会产出树脂。 */
 @ModBlock(name = "rubber_log", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+<<<<<<< HEAD
 class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_LOG).strength(2.0f).ticksRandomly()) : PillarBlock(settings), BlockEntityProvider {
+=======
+class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_LOG).strength(2.0f)) : BlockWithEntity(settings) {
+    override fun getCodec(): MapCodec<out BlockWithEntity> = RUBBER_LOG_CODEC
+>>>>>>> backup/1.21.1
 
     init {
         defaultState = stateManager.defaultState
@@ -86,6 +117,7 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
             .with(NATURAL, false)
     }
 
+<<<<<<< HEAD
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(RUBBER_NORTH, RUBBER_SOUTH, RUBBER_EAST, RUBBER_WEST, NATURAL)
@@ -98,6 +130,34 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         super.onBlockAdded(state, world, pos, oldState, notify)
+=======
+    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+        RubberLogBlockEntity(pos, state)
+
+    override fun <T : BlockEntity> getTicker(
+        world: World,
+        state: BlockState,
+        type: BlockEntityType<T>
+    ): BlockEntityTicker<T>? =
+        if (world.isClient) null
+        else validateTicker(type, RubberLogBlockEntity::class.type()){ w, p, s, be -> RubberLogBlockEntity.tick(w, p, s, be) }
+
+    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(Properties.AXIS, RUBBER_NORTH, RUBBER_SOUTH, RUBBER_EAST, RUBBER_WEST, NATURAL)
+    }
+
+    override fun getPlacementState(ctx: ItemPlacementContext): BlockState =
+        defaultState.with(Properties.AXIS, ctx.side.axis)
+
+    override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
+
+    override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+        super.onBlockAdded(state, world, pos, oldState, notify)
+        if (!world.isClient && state.get(NATURAL) && hasNoRubberFaces(state)) {
+            world.setBlockState(pos, initializeNaturalState(state, world.random))
+        }
+>>>>>>> backup/1.21.1
     }
 
     fun getRubberState(state: BlockState, face: Direction): RubberFaceState =
@@ -106,6 +166,7 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
     fun setFaceDry(state: BlockState, face: Direction): BlockState =
         state.with(propFor(face), RubberFaceState.DRY)
 
+<<<<<<< HEAD
     // 对齐 Forge 1.12：破坏含橡胶面的原木有 1/6 概率额外掉落粘性树脂。
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getDroppedStacks(state: BlockState, builder: LootContextParameterSet.Builder): MutableList<ItemStack> {
@@ -136,6 +197,10 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
     }
 
     companion object {
+=======
+    companion object {
+        val RUBBER_LOG_CODEC: MapCodec<RubberLogBlock> = Block.createCodec(::RubberLogBlock)
+>>>>>>> backup/1.21.1
         val RUBBER_NORTH: EnumProperty<RubberFaceState> = EnumProperty.of("rubber_north", RubberFaceState::class.java)
         val RUBBER_SOUTH: EnumProperty<RubberFaceState> = EnumProperty.of("rubber_south", RubberFaceState::class.java)
         val RUBBER_EAST: EnumProperty<RubberFaceState> = EnumProperty.of("rubber_east", RubberFaceState::class.java)
@@ -156,6 +221,7 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
                 state.get(RUBBER_EAST) == RubberFaceState.NONE &&
                 state.get(RUBBER_WEST) == RubberFaceState.NONE
 
+<<<<<<< HEAD
         fun hasDryFace(state: BlockState): Boolean =
             state.get(RUBBER_NORTH) == RubberFaceState.DRY ||
                 state.get(RUBBER_SOUTH) == RubberFaceState.DRY ||
@@ -190,6 +256,8 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
             return false
         }
 
+=======
+>>>>>>> backup/1.21.1
         fun initializeNaturalState(state: BlockState, random: Random): BlockState {
             val faces = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
             val count = pickWetHoleCount(random)
@@ -237,6 +305,7 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
 class StrippedRubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.STRIPPED_OAK_LOG).strength(2.0f)) : PillarBlock(settings)
 
 @ModBlock(name = "stripped_rubber_wood", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+<<<<<<< HEAD
 class StrippedRubberWoodBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.STRIPPED_OAK_WOOD).strength(2.0f)) : PillarBlock(settings) {
     companion object {
         @RecipeProvider
@@ -264,10 +333,17 @@ class RubberPlanksBlock(settings: AbstractBlock.Settings = AbstractBlock.Setting
         }
     }
 }
+=======
+class StrippedRubberWoodBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.STRIPPED_OAK_WOOD).strength(2.0f)) : PillarBlock(settings)
+
+@ModBlock(name = "rubber_planks", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+class RubberPlanksBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(2.0f)) : Block(settings)
+>>>>>>> backup/1.21.1
 
 // ========== 台阶 / 楼梯 ==========
 
 @ModBlock(name = "rubber_slab", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+<<<<<<< HEAD
 class RubberSlabBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_SLAB).strength(2.0f)) : SlabBlock(settings) {
     companion object {
         @RecipeProvider
@@ -294,10 +370,17 @@ class RubberStairsBlock(settings: AbstractBlock.Settings = AbstractBlock.Setting
         }
     }
 }
+=======
+class RubberSlabBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_SLAB).strength(2.0f)) : SlabBlock(settings)
+
+@ModBlock(name = "rubber_stairs", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+class RubberStairsBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_STAIRS).strength(2.0f)) : StairsBlock(Blocks.OAK_PLANKS.defaultState, settings)
+>>>>>>> backup/1.21.1
 
 // ========== 栅栏 / 栅栏门 ==========
 
 @ModBlock(name = "rubber_fence", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+<<<<<<< HEAD
 class RubberFenceBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_FENCE).strength(2.0f)) : FenceBlock(settings) {
     companion object {
         @RecipeProvider
@@ -326,10 +409,17 @@ class RubberFenceGateBlock(settings: AbstractBlock.Settings = AbstractBlock.Sett
         }
     }
 }
+=======
+class RubberFenceBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_FENCE).strength(2.0f)) : FenceBlock(settings)
+
+@ModBlock(name = "rubber_fence_gate", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+class RubberFenceGateBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_FENCE_GATE).strength(2.0f)) : FenceGateBlock(WoodType.OAK, settings)
+>>>>>>> backup/1.21.1
 
 // ========== 门 / 活板门 ==========
 
 @ModBlock(name = "rubber_door", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+<<<<<<< HEAD
 class RubberDoorBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_DOOR).strength(2.0f)) : DoorBlock(settings, BlockSetType.OAK) {
     companion object {
         @RecipeProvider
@@ -357,10 +447,17 @@ class RubberTrapdoorBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
         }
     }
 }
+=======
+class RubberDoorBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_DOOR).strength(2.0f)) : DoorBlock(BlockSetType.OAK, settings)
+
+@ModBlock(name = "rubber_trapdoor", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+class RubberTrapdoorBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_TRAPDOOR).strength(2.0f)) : TrapdoorBlock(BlockSetType.OAK, settings)
+>>>>>>> backup/1.21.1
 
 // ========== 按钮 / 压力板 ==========
 
 @ModBlock(name = "rubber_button", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+<<<<<<< HEAD
 class RubberButtonBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_BUTTON).strength(2.0f)) : ButtonBlock(settings, BlockSetType.OAK, 30, true) {
     companion object {
         @RecipeProvider
@@ -387,10 +484,17 @@ class RubberPressurePlateBlock(settings: AbstractBlock.Settings = AbstractBlock.
         }
     }
 }
+=======
+class RubberButtonBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_BUTTON).strength(2.0f)) : ButtonBlock(BlockSetType.OAK, 30, settings)
+
+@ModBlock(name = "rubber_pressure_plate", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
+class RubberPressurePlateBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_PRESSURE_PLATE).strength(2.0f)) : PressurePlateBlock(BlockSetType.OAK, settings)
+>>>>>>> backup/1.21.1
 
 // ========== 树叶 / 树苗 ==========
 
 /** 橡胶树生成器，用于树苗生长与骨粉催熟。 */
+<<<<<<< HEAD
 internal class RubberSaplingGenerator : net.minecraft.block.sapling.SaplingGenerator() {
     override fun getTreeFeature(random: net.minecraft.util.math.random.Random, bees: Boolean): RegistryKey<ConfiguredFeature<*, *>>? =
         RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, Identifier(Ic2_120.MOD_ID, "rubber_tree"))
@@ -565,12 +669,29 @@ internal object RubberTreeSaplingDrop {
         }
     }
 }
+=======
+private val RUBBER_TREE_KEY: RegistryKey<ConfiguredFeature<*, *>> = RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, Identifier.of(Ic2_120.MOD_ID, "rubber_tree"))
+
+private val RUBBER_SAPLING_GENERATOR = SaplingGenerator(
+    "rubber_tree",
+    Optional.empty<RegistryKey<ConfiguredFeature<*, *>>>(),
+    Optional.of(RUBBER_TREE_KEY),
+    Optional.empty<RegistryKey<ConfiguredFeature<*, *>>>()
+)
+
+@ModBlock(name = "rubber_leaves", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood", generateBlockLootTable = false, renderLayer = "cutout_mipped")
+class RubberLeavesBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_LEAVES).strength(0.2f)) : LeavesBlock(settings)
+>>>>>>> backup/1.21.1
 
 /** 橡胶树苗，支持骨粉催熟与自然生长。 */
 @ModBlock(name = "rubber_sapling", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood", renderLayer = "cutout")
 class RubberSaplingBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_SAPLING).strength(0.0f)
+<<<<<<< HEAD
 ) : SaplingBlock(RubberSaplingGenerator(), settings)
+=======
+) : SaplingBlock(RUBBER_SAPLING_GENERATOR, settings)
+>>>>>>> backup/1.21.1
 
 // ========== 告示牌 ==========
 

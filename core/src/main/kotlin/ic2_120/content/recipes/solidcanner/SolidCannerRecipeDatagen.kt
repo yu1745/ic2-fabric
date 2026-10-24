@@ -9,11 +9,19 @@ import ic2_120.content.item.UraniumFuelRodItem
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
+<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
+=======
+import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
+>>>>>>> backup/1.21.1
 
 /**
  * 固体装罐机配方数据生成（仅燃料棒装填）。
@@ -48,6 +56,7 @@ object SolidCannerRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
+<<<<<<< HEAD
     fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
         entries.forEach { entry ->
             SolidCannerRecipeJsonProvider(
@@ -92,4 +101,23 @@ object SolidCannerRecipeDatagen {
 
         override fun getAdvancementId(): Identifier? = null
     }
+=======
+    fun generateRecipes(exporter: RecipeExporter) {
+        entries.forEach { entry ->
+            val id = Identifier.of("ic2_120", "solid_canning/${entry.name}")
+            exporter.accept(
+                id,
+                SolidCannerRecipe(
+                    id,
+                    entry.slot0Ingredient.toIngredient(),
+                    entry.slot0Count,
+                    entry.slot1Ingredient.toIngredient(),
+                    entry.slot1Count,
+                    ItemStack(entry.outputItem, entry.outputCount)
+                ),
+                null
+            )
+        }
+    }
+>>>>>>> backup/1.21.1
 }

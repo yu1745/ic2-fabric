@@ -1,15 +1,13 @@
 package ic2_120.client
 
 import ic2_120.content.item.MiningLaserItem
-import ic2_120.content.network.NetworkManager
-import io.netty.buffer.Unpooled
+import ic2_120.content.network.ToggleMiningLaserModePayload
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.client.MinecraftClient
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.ActionResult
 import net.minecraft.util.TypedActionResult
 
@@ -49,9 +47,6 @@ object MiningLaserModeHandler {
         val age = MinecraftClient.getInstance().player?.age ?: return
         if (age == lastToggleSentOnPlayerAge) return
         lastToggleSentOnPlayerAge = age
-        ClientPlayNetworking.send(
-            NetworkManager.TOGGLE_MINING_LASER_MODE_PACKET,
-            PacketByteBuf(Unpooled.buffer())
-        )
+        ClientPlayNetworking.send(ToggleMiningLaserModePayload)
     }
 }

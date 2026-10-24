@@ -24,6 +24,10 @@ navigation:
 - [热能系统](systems/heat_system.md)
 - [动能系统](systems/kinetic_transmission.md)
 - [机器系统](systems/machines.md)
+<<<<<<< HEAD
+=======
+- [核反应堆系统](systems/nuclear_reactor.md)
+>>>>>>> backup/1.21.1
 
 ## 参考
 
@@ -166,4 +170,8 @@ navigation:
 
 ### 附属内容
 
+<<<<<<< HEAD
+=======
+- [高级太阳能附属](machines/advanced_solar.md)
+>>>>>>> backup/1.21.1
 - [储物箱](machines/storage_box.md)

@@ -7,7 +7,10 @@ import ic2_120.content.item.Alloy
 import ic2_120.content.item.Resin
 import ic2_120.content.item.RubberItem
 import ic2_120.content.item.Treetap
+<<<<<<< HEAD
 import ic2_120.content.item.HazmatHelmet
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.ConsumeTreetapShapedRecipeDatagen
 import ic2_120.registry.annotation.ModBlock
@@ -36,8 +39,11 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
+<<<<<<< HEAD
 import net.minecraft.loot.context.LootContextParameterSet
 import net.minecraft.world.GameRules
+=======
+>>>>>>> backup/1.21.1
 import net.minecraft.recipe.Ingredient
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
@@ -46,15 +52,16 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.ItemActionResult
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.random.Random
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
@@ -75,7 +82,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class ReinforcedGlassBlock : Block(AbstractBlock.Settings.copy(Blocks.GLASS).strength(5.0f, 1200.0f).nonOpaque().dropsNothing()){
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val glass = Items.GLASS
             val alloy = Alloy::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReinforcedGlassBlock::class.item(), 7)
@@ -101,10 +108,10 @@ class ReinforcedGlassBlock : Block(AbstractBlock.Settings.copy(Blocks.GLASS).str
 )
 class ReinforcedDoorBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_DOOR).strength(25.0f, 1200.0f),
-) : DoorBlock(settings, BlockSetType.IRON) {
+) : DoorBlock(BlockSetType.IRON, settings) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val stone = ReinforcedStoneBlock::class.item()
             val ironDoor = Items.IRON_DOOR
             ShapedRecipeJsonBuilder.create(RecipeCategory.REDSTONE, ReinforcedDoorBlock::class.item(), 1)
@@ -160,6 +167,7 @@ abstract class Ic2FoamBlock(
     override fun getDroppedStacks(state: BlockState, builder: LootContextParameterSet.Builder): MutableList<ItemStack> =
         foamDrops()
 
+<<<<<<< HEAD
     protected abstract fun hardenedState(): BlockState
 
     protected abstract fun foamDrops(): MutableList<ItemStack>
@@ -186,22 +194,29 @@ class FoamBlock(
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
+=======
+    override fun onUseWithItem(
+        stack: ItemStack,
+>>>>>>> backup/1.21.1
         state: BlockState,
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
         hand: Hand,
         hit: BlockHitResult
-    ): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.getStackInHand(hand)
-        if (!stack.isOf(Items.SAND)) return ActionResult.PASS
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
+        if (!stack.isOf(Items.SAND)) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         val wall = LightGrayWallBlock::class.instance().defaultState
         world.setBlockState(pos, wall, Block.NOTIFY_ALL)
         world.playSound(null, pos, SoundEvents.BLOCK_SAND_PLACE, SoundCategory.BLOCKS, 0.85f, 0.9f)
         world.syncWorldEvent(2001, pos, Block.getRawIdFromState(state))
         if (!player.abilities.creativeMode) stack.decrement(1)
-        return ActionResult.CONSUME
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        return ActionResult.PASS
     }
 
 }
@@ -227,24 +242,32 @@ class ReinforcedFoamBlock(
     override fun foamDrops(): MutableList<ItemStack> =
         mutableListOf(ItemStack(IronScaffoldBlock::class.item()))
 
+<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
+=======
+    override fun onUseWithItem(
+        stack: ItemStack,
+>>>>>>> backup/1.21.1
         state: BlockState,
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
         hand: Hand,
         hit: BlockHitResult
-    ): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.getStackInHand(hand)
-        if (!stack.isOf(Items.SAND)) return ActionResult.PASS
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
+        if (!stack.isOf(Items.SAND)) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         val stone = ReinforcedStoneBlock::class.instance().defaultState
         world.setBlockState(pos, stone, Block.NOTIFY_ALL)
         world.playSound(null, pos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 0.85f, 0.85f)
         world.syncWorldEvent(2001, pos, Block.getRawIdFromState(state))
         if (!player.abilities.creativeMode) stack.decrement(1)
-        return ActionResult.CONSUME
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        return ActionResult.PASS
     }
 
 }
@@ -262,7 +285,7 @@ class ResinSheetBlock : Block(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val resin = Resin::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ResinSheetBlock::class.item(), 3)
                 .pattern("xxx")
@@ -287,7 +310,7 @@ class RubberSheetBlock : Block(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val rubber = RubberItem::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RubberSheetBlock::class.item(), 3)
                 .pattern("xxx")
@@ -312,7 +335,7 @@ class WoolSheetBlock : Block(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoolSheetBlock::class.item(), 3)
                 .pattern("xxx")
                 .pattern("xxx")
@@ -459,7 +482,7 @@ class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val ironPlate = IronPlate::class.instance()
             val treetap = Treetap::class.instance()
             ConsumeTreetapShapedRecipeDatagen.offer(
@@ -803,11 +826,35 @@ abstract class Ic2ScaffoldBlock(
 )
 class WoodenScaffoldBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(1.0f).nonOpaque()
+<<<<<<< HEAD
 ) : Ic2ScaffoldBlock(settings, 2) {
+=======
+) : PillarBlock(settings) {
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
+        if (!stack.isOf(Items.STICK) || stack.count <= 2) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        world.setBlockState(pos, ReinforcedWoodenScaffoldBlock::class.instance().defaultState.with(AXIS, state.get(AXIS)), Block.NOTIFY_ALL)
+        world.playSound(null, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 1.0f, 1.0f)
+        if (!player.abilities.creativeMode) stack.decrement(2)
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        return ActionResult.PASS
+    }
+>>>>>>> backup/1.21.1
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenScaffoldBlock::class.item(), 4)
                 .pattern("PPP")
                 .pattern(" S ")
@@ -840,11 +887,35 @@ class ReinforcedWoodenScaffoldBlock(
 )
 class IronScaffoldBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f).nonOpaque()
+<<<<<<< HEAD
 ) : Ic2ScaffoldBlock(settings, 5) {
+=======
+) : PillarBlock(settings) {
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
+        if (!stack.isOf(IronFenceBlock::class.item())) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        world.setBlockState(pos, ReinforcedIronScaffoldBlock::class.instance().defaultState.with(AXIS, state.get(AXIS)), Block.NOTIFY_ALL)
+        world.playSound(null, pos, SoundEvents.BLOCK_METAL_PLACE, SoundCategory.BLOCKS, 1.0f, 1.0f)
+        if (!player.abilities.creativeMode) stack.decrement(1)
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        return ActionResult.PASS
+    }
+>>>>>>> backup/1.21.1
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val ironPlate = IronPlate::class.instance()
             val ironFence = IronFenceBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronScaffoldBlock::class.item(), 16)

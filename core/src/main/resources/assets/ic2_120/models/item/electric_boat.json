@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/electric_boat.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,5 +13,10 @@
     "glow_ffcc33": "ic2_120:item/item3d/glow_ffcc33",
     "flat_787878": "ic2_120:item/item3d/flat_787878",
     "metal_a5a5a7": "ic2_120:item/item3d/metal_a5a5a7"
+=======
+  "parent": "ic2:item/default",
+  "textures": {
+    "layer0": "ic2:item/boat/electric_boat"
+>>>>>>> backup/1.21.1
   }
 }

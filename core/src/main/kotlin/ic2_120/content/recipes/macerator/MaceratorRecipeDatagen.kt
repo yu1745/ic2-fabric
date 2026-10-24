@@ -48,6 +48,7 @@ import ic2_120.content.item.ClayDust
 import ic2_120.content.item.DiamondDust
 import ic2_120.content.item.GrinPowder
 import ic2_120.registry.instance
+<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -55,6 +56,14 @@ import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
+=======
+import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
+>>>>>>> backup/1.21.1
 
 object MaceratorRecipeDatagen {
     data class Entry(
@@ -65,6 +74,7 @@ object MaceratorRecipeDatagen {
         val inputCount: Int = 1
     )
 
+<<<<<<< HEAD
     /** 外部模组配方：直接写物品 ID，避免 AE2 未加载时通过 Registries 得到 air。 */
     private data class ExternalEntry(
         val name: String,
@@ -74,6 +84,8 @@ object MaceratorRecipeDatagen {
         val inputCount: Int = 1
     )
 
+=======
+>>>>>>> backup/1.21.1
     private val entries = listOf(
         // 矿石（tag 包含 deepslate 变体）
         Entry("iron_ore_to_crushed_iron", IngredientInput.tag(ModTags.Compat.Items.ORES_IRON, Items.IRON_ORE), CrushedIron::class.instance(), 2),
@@ -100,11 +112,17 @@ object MaceratorRecipeDatagen {
         Entry("netherrack_to_netherrack_dust", IngredientInput.item(Items.NETHERRACK), NetherrackDust::class.instance(), 1),
         Entry("obsidian_to_obsidian_dust", IngredientInput.item(Items.OBSIDIAN), ObsidianDust::class.instance(), 1),
         Entry("obsidian_plate_to_small_obsidian_dust", IngredientInput.item(ObsidianPlate::class.instance()), SmallObsidianDust::class.instance(), 8),
+<<<<<<< HEAD
         Entry("blaze_rod_to_blaze_powder", IngredientInput.item(Items.BLAZE_ROD), Items.BLAZE_POWDER, 5),
         Entry("coal_to_coal_dust", IngredientInput.item(Items.COAL), CoalDust::class.instance(), 1),
         Entry("coal_block_to_coal_dust", IngredientInput.item(Items.COAL_BLOCK), CoalDust::class.instance(), 9),
         Entry("clay_block_to_clay_dust", IngredientInput.item(Items.CLAY), ClayDust::class.instance(), 2),
         Entry("wool_to_string", IngredientInput.tag(ItemTags.WOOL, Items.WHITE_WOOL), Items.STRING, 4),
+=======
+        Entry("coal_to_coal_dust", IngredientInput.item(Items.COAL), CoalDust::class.instance(), 1),
+        Entry("coal_block_to_coal_dust", IngredientInput.item(Items.COAL_BLOCK), CoalDust::class.instance(), 9),
+        Entry("clay_block_to_clay_dust", IngredientInput.item(Items.CLAY), ClayDust::class.instance(), 2),
+>>>>>>> backup/1.21.1
         // 植物打粉配方
         Entry("plant_ball_to_bio_chaff", IngredientInput.item(PlantBall::class.instance()), BioChaff::class.instance(), 1),
         Entry("pumpkin_to_bio_chaff", IngredientInput.item(Items.PUMPKIN), BioChaff::class.instance(), 1, 8),
@@ -124,8 +142,11 @@ object MaceratorRecipeDatagen {
         Entry("dead_bush_to_bio_chaff", IngredientInput.item(Items.DEAD_BUSH), BioChaff::class.instance(), 1, 8),
         Entry("weed_to_bio_chaff", IngredientInput.item(Weed::class.instance()), BioChaff::class.instance(), 1, 32),
         Entry("diamond_to_diamond_dust", IngredientInput.item(Items.DIAMOND), DiamondDust::class.instance(), 1),
+<<<<<<< HEAD
         Entry("glowstone_to_glowstone_dust", IngredientInput.item(Items.GLOWSTONE), Items.GLOWSTONE_DUST, 4),
         Entry("quartz_block_to_quartz", IngredientInput.item(Items.QUARTZ_BLOCK), Items.QUARTZ, 4),
+=======
+>>>>>>> backup/1.21.1
         // 金属锭 → 粉（用 tag 支持跨 mod 锭）
         Entry("copper_ingot_to_copper_dust", IngredientInput.tag(ModTags.Compat.Items.INGOTS_COPPER, Items.COPPER_INGOT), CopperDust::class.instance(), 1),
         Entry("tin_ingot_to_tin_dust", IngredientInput.tag(ModTags.Compat.Items.INGOTS_TIN, TinIngot::class.instance()), TinDust::class.instance(), 1),
@@ -145,6 +166,7 @@ object MaceratorRecipeDatagen {
         Entry("lapis_plate_to_lapis_dust", IngredientInput.tag(ModTags.Compat.Items.PLATES_LAPIS, LapisPlate::class.instance()), LapisDust::class.instance(), 1)
     )
 
+<<<<<<< HEAD
     private val externalEntries = listOf(
         // Applied Energistics 2：两种水晶分别打成对应的 AE2 粉尘。
         ExternalEntry(
@@ -242,5 +264,23 @@ object MaceratorRecipeDatagen {
         override fun toAdvancementJson(): JsonObject? = null
 
         override fun getAdvancementId(): Identifier? = null
+=======
+    fun allEntries(): List<Entry> = entries
+
+    fun generateRecipes(exporter: RecipeExporter) {
+        entries.forEach { entry ->
+            val id = Identifier.of("ic2_120", "macerating/${entry.name}")
+            exporter.accept(
+                id,
+                MaceratorRecipe(
+                    id,
+                    entry.input.toIngredient(),
+                    ItemStack(entry.output, entry.count),
+                    entry.inputCount
+                ),
+                null
+            )
+        }
+>>>>>>> backup/1.21.1
     }
 }

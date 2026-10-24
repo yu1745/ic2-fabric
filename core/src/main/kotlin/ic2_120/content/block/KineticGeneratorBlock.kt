@@ -16,19 +16,24 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Item
 import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
+import net.minecraft.util.Formatting
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+<<<<<<< HEAD
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.client.item.TooltipContext
@@ -37,6 +42,8 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.world.BlockView
 import java.util.function.Consumer
+=======
+>>>>>>> backup/1.21.1
 
 @ModBlock(name = "kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -50,7 +57,11 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque())
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, KineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+=======
+        else validateTicker(type, KineticGeneratorBlockEntity::class.type()){ w, p, s, be ->
+>>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -59,6 +70,7 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque())
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+<<<<<<< HEAD
     @Environment(EnvType.CLIENT)
     override fun appendTooltip(
         stack: ItemStack,
@@ -79,6 +91,19 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque())
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+    override fun appendTooltip(
+        stack: ItemStack,
+        context: Item.TooltipContext,
+        tooltip: MutableList<Text>,
+        type: TooltipType
+    ) {
+        super.appendTooltip(stack, context, tooltip, type)
+        tooltip.add(Text.translatable("tooltip.ic2_120.kinetic_generator.ratio").formatted(Formatting.GRAY))
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -99,7 +124,7 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque())
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val generator = GeneratorBlock::class.item()
             val motor = ElectricMotor::class.instance()
             val crank = IronCrankHandle::class.instance()
@@ -115,4 +140,3 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque())
         }
     }
 }
-

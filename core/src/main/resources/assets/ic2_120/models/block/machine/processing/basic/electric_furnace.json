@@ -1,6 +1,7 @@
 {
   "parent": "minecraft:block/cube",
   "textures": {
+<<<<<<< HEAD
     "particle": "ic2_120:block/machine/processing/basic/electric_furnace_leftrightback",
     "down": "ic2_120:block/machine/processing/basic/electric_furnace_bottom",
     "up": "ic2_120:block/machine/processing/basic/electric_furnace_top",
@@ -8,5 +9,14 @@
     "east": "ic2_120:block/machine/processing/basic/electric_furnace_leftrightback",
     "south": "ic2_120:block/machine/processing/basic/electric_furnace_leftrightback",
     "west": "ic2_120:block/machine/processing/basic/electric_furnace_leftrightback"
+=======
+    "particle": "ic2:block/machine/processing/basic/electric_furnace_leftrightback",
+    "down": "ic2:block/machine/processing/basic/electric_furnace_bottom",
+    "up": "ic2:block/machine/processing/basic/electric_furnace_top",
+    "north": "ic2:block/machine/processing/basic/electric_furnace_front",
+    "east": "ic2:block/machine/processing/basic/electric_furnace_leftrightback",
+    "south": "ic2:block/machine/processing/basic/electric_furnace_leftrightback",
+    "west": "ic2:block/machine/processing/basic/electric_furnace_leftrightback"
+>>>>>>> backup/1.21.1
   }
 }

@@ -1,3 +1,7 @@
 {
+<<<<<<< HEAD
   "parent": "ic2_120:block/machine/steam/coke_kiln"
+=======
+  "parent": "ic2:block/machine/steam/coke_kiln"
+>>>>>>> backup/1.21.1
 }

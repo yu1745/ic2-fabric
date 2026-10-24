@@ -250,8 +250,11 @@ object UuReplicationCommand {
 
         for (i in startIndex until endIndex) {
             val (itemId, cost) = allCosts[i]
+<<<<<<< HEAD
             val isWhitelist = itemId in whitelistIds
             val source2 = if (isWhitelist) "白" else "动"
+=======
+>>>>>>> backup/1.21.1
             val itemDisplay: Text = Identifier.tryParse(itemId)?.let {
                 val item = Registries.ITEM.get(it)
                 if (item !== Items.AIR) {
@@ -263,7 +266,11 @@ object UuReplicationCommand {
             source.sendFeedback(
                 {
                     Text.literal("")
+<<<<<<< HEAD
                         .append(Text.literal("[$source2] ").formatted(if (isWhitelist) Formatting.YELLOW else Formatting.GREEN))
+=======
+                        .append(Text.literal("• ").formatted(Formatting.GRAY))
+>>>>>>> backup/1.21.1
                         .append(itemDisplay)
                         .append(Text.literal(": ").formatted(Formatting.GRAY))
                         .append(Text.literal("$cost uB").formatted(Formatting.AQUA))

@@ -16,11 +16,10 @@ import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 /**
  * 反应堆红石接口。
@@ -38,13 +37,17 @@ class ReactorRedstonePortBlock(settings: AbstractBlock.Settings = ReactorShellBl
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, ReactorRedstonePortBlockEntity::class.type()) { w, p, s, be ->
+=======
+        else validateTicker(type, ReactorRedstonePortBlockEntity::class.type()){ w, p, s, be ->
+>>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorRedstonePortBlock::class.item(), 1)

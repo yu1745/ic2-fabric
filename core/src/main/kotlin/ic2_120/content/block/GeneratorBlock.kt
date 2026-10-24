@@ -17,7 +17,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -30,7 +30,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 /**
  * 火力发电机方块。燃烧燃料产生 EU，支持 facing 与 active 状态。
@@ -47,13 +46,18 @@ class GeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, GeneratorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+=======
+        else validateTicker(type, GeneratorBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
+>>>>>>> backup/1.21.1
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -63,6 +67,9 @@ class GeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -83,7 +90,7 @@ class GeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val battery = ReBatteryItem::class.instance()
             val ironPlate = IronPlate::class.instance()
             val ironFurnace = IronFurnaceBlock::class.item()

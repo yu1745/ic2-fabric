@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/solar_helmet.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,3 +13,10 @@
     "flat_3a3a3a": "ic2_120:item/item3d/flat_3a3a3a"
   }
 }
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/armor/solar_helmet"
+  }
+}
+>>>>>>> backup/1.21.1

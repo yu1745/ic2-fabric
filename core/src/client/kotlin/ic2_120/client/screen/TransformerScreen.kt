@@ -62,7 +62,11 @@ class TransformerScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val currentMode = handler.sync.getMode()
@@ -103,8 +107,13 @@ class TransformerScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guitransfomer.png")
         private val WRENCH = Identifier("ic2_120", "textures/item/tool/wrench.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guitransfomer.png")
+        private val WRENCH = Identifier.of("ic2", "textures/item/tool/wrench.png")
+>>>>>>> backup/1.21.1
         private const val INPUT_OUTPUT_COLOR = 0xFF90EE90.toInt()
     }
 }

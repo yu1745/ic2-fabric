@@ -41,12 +41,15 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = MetalFormerBlock::class)
 @ModMachineRecipeBinding(MetalFormerRecipeSerializer::class)
@@ -54,8 +57,13 @@ class MetalFormerBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
+<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+=======
+) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = MetalFormerBlock.ACTIVE
 
@@ -158,9 +166,11 @@ class MetalFormerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.metal_former")
@@ -175,9 +185,9 @@ class MetalFormerBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MetalFormerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -191,9 +201,9 @@ class MetalFormerBlockEntity(
         sync.setMode(MetalFormerSync.Mode.fromId(nbt.getInt(MetalFormerSync.NBT_MODE)))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MetalFormerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -246,7 +256,24 @@ class MetalFormerBlockEntity(
         }
 
         val currentMode = sync.getMode()
+<<<<<<< HEAD
         val recipe = findRecipe(world, input, currentMode)
+=======
+
+        // 根据当前模式获取对应的配方类
+        val recipeType = when (currentMode) {
+            MetalFormerSync.Mode.ROLLING -> ic2_120.content.recipes.metalformer.RollingRecipe::class
+            MetalFormerSync.Mode.CUTTING -> ic2_120.content.recipes.metalformer.CuttingRecipe::class
+            MetalFormerSync.Mode.EXTRUDING -> ic2_120.content.recipes.metalformer.ExtrudingRecipe::class
+        }
+
+        // 通过 RecipeManager 查找配方
+        val recipeManager = world.recipeManager ?: return
+        val recipeInput = MetalFormerRecipe.Input(input)
+        // 遍历所有匹配该 RecipeType 的配方，找到当前模式对应的
+        val recipe = recipeManager.listAllOfType(getRecipeType<MetalFormerRecipe>())
+            .firstOrNull { entry -> entry.value::class.java == recipeType.java && entry.value.matches(recipeInput, world) }?.value
+>>>>>>> backup/1.21.1
         val result = recipe?.let { MetalFormerRecipe.getOutput(it) } ?: run {
             resetProgress()
             setActiveState(world, pos, state, false)
@@ -323,6 +350,7 @@ class MetalFormerBlockEntity(
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
 
+<<<<<<< HEAD
     // 配方缓存：MetalFormerRecipe.matches 只检查物品类型（不看数量），且结果同时
     // 依赖输入物品与当前模式（rolling/cutting/extruding），因此按 (item, mode) 缓存。
     // listAllOfType 每 tick 全量遍历所有金属成型配方，命中缓存可完全跳过。
@@ -352,6 +380,14 @@ class MetalFormerBlockEntity(
         cachedQueryMode = mode
         cachedRecipe = recipe
         return recipe
+=======
+    private fun isRecipeInput(stack: ItemStack): Boolean {
+        if (!isInputItem(stack)) return false
+        val currentWorld = world ?: return true
+        val input = MetalFormerRecipe.Input(stack.copyWithCount(1))
+        val recipes = currentWorld.recipeManager.listAllOfType(getRecipeType<MetalFormerRecipe>())
+        return recipes.any { entry: net.minecraft.recipe.RecipeEntry<MetalFormerRecipe> -> entry.value.matches(input, currentWorld) }
+>>>>>>> backup/1.21.1
     }
 
     private fun isRecipeInput(stack: ItemStack): Boolean {

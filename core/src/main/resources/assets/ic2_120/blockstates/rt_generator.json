@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "multipart": [
     {
       "apply": {
@@ -22,4 +23,10 @@
       }
     }
   ]
+=======
+  "variants": {
+    "active=false": { "model": "ic2:block/generator/electric/rt_generator" },
+    "active=true": { "model": "ic2:block/generator/electric/rt_generator_active" }
+  }
+>>>>>>> backup/1.21.1
 }

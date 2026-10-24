@@ -1,3 +1,7 @@
 {
+<<<<<<< HEAD
   "parent": "ic2_120:block/machine/machine"
+=======
+  "parent": "ic2:block/machine/machine"
+>>>>>>> backup/1.21.1
 }

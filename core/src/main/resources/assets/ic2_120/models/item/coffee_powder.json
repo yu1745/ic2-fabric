@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/coffee_powder.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,4 +11,10 @@
     "flat_442000": "ic2_120:item/item3d/flat_442000",
     "flat_703400": "ic2_120:item/item3d/flat_703400"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/crop/coffee_powder"
+	}
+>>>>>>> backup/1.21.1
 }

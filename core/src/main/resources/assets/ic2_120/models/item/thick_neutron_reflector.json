@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/thick_neutron_reflector.obj",
@@ -10,3 +11,6 @@
     "flat_777777": "ic2_120:item/item3d/flat_777777"
   }
 }
+=======
+{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/thick_neutron_reflector"}}
+>>>>>>> backup/1.21.1

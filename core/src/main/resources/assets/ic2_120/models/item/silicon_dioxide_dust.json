@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/silicon_dioxide_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,5 +12,10 @@
     "flat_bd93a5": "ic2_120:item/item3d/flat_bd93a5",
     "flat_7b594d": "ic2_120:item/item3d/flat_7b594d",
     "flat_bfa9a1": "ic2_120:item/item3d/flat_bfa9a1"
+=======
+  "parent": "ic2:item/default",
+  "textures": {
+    "layer0": "ic2:item/resource/dust/silicon_dioxide"
+>>>>>>> backup/1.21.1
   }
 }

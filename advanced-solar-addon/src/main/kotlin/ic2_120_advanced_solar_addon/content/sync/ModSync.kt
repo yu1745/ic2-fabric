@@ -8,22 +8,35 @@ import net.minecraft.util.math.Direction
 class SolarPanelSync(
     schema: SyncSchema,
     capacity: Long,
+<<<<<<< HEAD
     /** 每 tick 最大输出 EU/t（默认由 SolarPanelBlockEntity 按 tier 传入，变体可覆盖）。 */
     maxOutputPerTick: Long,
+=======
+    tier: Int,
+>>>>>>> backup/1.21.1
     private val getFacing: () -> Direction,
     currentTickProvider: () -> Long?
 ) : TickLimitedSidedEnergyContainer(
     baseCapacity = capacity,
     maxInsertPerTick = 0L,
+<<<<<<< HEAD
     maxExtractPerTick = maxOutputPerTick,
+=======
+    maxExtractPerTick = EnergyTier.euPerTickFromTier(tier),
+>>>>>>> backup/1.21.1
     currentTickProvider = currentTickProvider
 ) {
     companion object {
         const val NBT_ENERGY = "Energy"
     }
 
+<<<<<<< HEAD
     private val minOutput = maxOutputPerTick
     private val maxExtract = maxOutputPerTick
+=======
+    private val minOutput = EnergyTier.euPerTickFromTier(tier)
+    private val maxExtract = EnergyTier.euPerTickFromTier(tier)
+>>>>>>> backup/1.21.1
 
     var energy by schema.int("Energy")
     var capacitySync by schema.int("Capacity")
@@ -41,20 +54,30 @@ class SolarPanelSync(
         if (amount >= minOutput) maxExtract else 0L
 
     override fun onEnergyCommitted() {
+<<<<<<< HEAD
         val currentEnergy = amount.toInt().coerceIn(0, Int.MAX_VALUE)
         if (energy != currentEnergy) energy = currentEnergy
 
         val currentCapacity = capacity.toInt().coerceIn(0, Int.MAX_VALUE)
         if (capacitySync != currentCapacity) capacitySync = currentCapacity
+=======
+        energy = amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        capacitySync = this@SolarPanelSync.capacity.toInt().coerceIn(0, Int.MAX_VALUE)
+>>>>>>> backup/1.21.1
     }
 
     fun syncCurrentTickFlow() {
         finalizeFlowSnapshot()
+<<<<<<< HEAD
         val generated = getLastGeneratedAmount().toInt()
         if (avgInserted != generated) avgInserted = generated
 
         val extracted = getLastExtractedAmount().toInt()
         if (avgExtracted != extracted) avgExtracted = extracted
+=======
+        avgInserted = getLastGeneratedAmount().toInt()
+        avgExtracted = getLastExtractedAmount().toInt()
+>>>>>>> backup/1.21.1
     }
 }
 

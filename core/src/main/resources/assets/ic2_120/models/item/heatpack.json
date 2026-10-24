@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/heatpack.obj",
@@ -11,3 +12,6 @@
     "glow_d91919": "ic2_120:item/item3d/glow_d91919"
   }
 }
+=======
+{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/heatpack"}}
+>>>>>>> backup/1.21.1

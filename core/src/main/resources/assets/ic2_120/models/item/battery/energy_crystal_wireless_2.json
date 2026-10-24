@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/battery/energy_crystal_wireless_2.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -15,4 +16,10 @@
     "flat_ffffff": "ic2_120:item/item3d/flat_ffffff",
     "glow_c00000": "ic2_120:item/item3d/glow_c00000"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/battery/charging_energy_crystal_2"
+	}
+>>>>>>> backup/1.21.1
 }

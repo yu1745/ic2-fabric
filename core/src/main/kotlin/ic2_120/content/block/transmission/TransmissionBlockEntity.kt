@@ -10,6 +10,12 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
+<<<<<<< HEAD
+=======
+import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
+import net.minecraft.registry.Registry
+>>>>>>> backup/1.21.1
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 
@@ -54,17 +60,17 @@ class TransmissionBlockEntity(
         world.chunkManager.markForUpdate(pos)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         currentKu = nbt.getInt("CurrentKu").coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putInt("CurrentKu", currentKu)
     }
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 
@@ -74,6 +80,38 @@ class TransmissionBlockEntity(
     }
 
     companion object {
+<<<<<<< HEAD
         val TYPE: BlockEntityType<TransmissionBlockEntity> get() = TransmissionBlockEntity::class.type()
+=======
+        lateinit var TYPE: BlockEntityType<TransmissionBlockEntity>
+            private set
+
+        fun register(modId: String) {
+            val blockIds = listOf(
+                Identifier.of(modId, "wood_transmission_shaft"),
+                Identifier.of(modId, "iron_transmission_shaft"),
+                Identifier.of(modId, "steel_transmission_shaft"),
+                Identifier.of(modId, "carbon_transmission_shaft"),
+                Identifier.of(modId, "bevel_gear")
+            )
+
+            val blocks = blockIds.mapNotNull { id -> Registries.BLOCK.getOrEmpty(id).orElse(null) }
+            require(blocks.size == blockIds.size) {
+                "注册传动系统 BlockEntity 失败：找不到部分方块。需要: ${blockIds.joinToString()}"
+            }
+
+            val factory = FabricBlockEntityTypeBuilder.Factory { pos: BlockPos, state: BlockState ->
+                TransmissionBlockEntity(pos, state)
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            val type = FabricBlockEntityTypeBuilder.create(factory, *blocks.toTypedArray())
+                .build() as BlockEntityType<TransmissionBlockEntity>
+
+            TYPE = type
+            Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier.of(modId, "transmission"), type)
+            ic2_120.registry.ClassScanner.registerBlockEntityType(TransmissionBlockEntity::class, type)
+        }
+>>>>>>> backup/1.21.1
     }
 }

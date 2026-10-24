@@ -37,7 +37,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -47,6 +47,9 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = CropHarvesterBlock::class)
 class CropHarvesterBlockEntity(
@@ -59,8 +62,12 @@ class CropHarvesterBlockEntity(
     IEnergyStorageUpgradeSupport,
     IEjectorUpgradeSupport,
     ITransformerUpgradeSupport,
+<<<<<<< HEAD
     IOverclockerUpgradeSupport,
     ExtendedScreenHandlerFactory {
+=======
+    ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CropHarvesterBlock.ACTIVE
     override val tier: Int = CROP_HARVESTER_TIER
@@ -136,9 +143,11 @@ class CropHarvesterBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.crop_harvester")
@@ -153,9 +162,9 @@ class CropHarvesterBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CropHarvesterSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -170,9 +179,9 @@ class CropHarvesterBlockEntity(
         workOffset = nbt.getInt(NBT_WORK_OFFSET).coerceIn(0, WORK_INTERVAL_TICKS - 1)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropHarvesterSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_SCAN_X, scanX)
@@ -298,7 +307,7 @@ class CropHarvesterBlockEntity(
             if (remaining.isEmpty) break
             val existing = getStack(slot)
             if (existing.isEmpty) continue
-            if (!ItemStack.canCombine(existing, remaining)) continue
+            if (!ItemStack.areItemsAndComponentsEqual(existing, remaining)) continue
             val limit = minOf(existing.maxCount, maxCountPerStack)
             val room = (limit - existing.count).coerceAtLeast(0)
             if (room <= 0) continue

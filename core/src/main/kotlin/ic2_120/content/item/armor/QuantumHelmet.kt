@@ -17,23 +17,24 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffectCategory
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
-import java.util.function.Consumer
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 量子头盔 (Quantum Helmet)
@@ -61,7 +62,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_helmet", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)) {
+class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
 
     companion object {
         private const val FOOD_FILL_COST = 1000L
@@ -79,14 +80,13 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
             get() = Ic2Config.current.armor.quantumHelmet.nightVisionDurationSeconds
 
         fun toggleNightVision(stack: ItemStack): Boolean {
-            val nbt = stack.orCreateNbt
-            val enabled = !nbt.getBoolean(NIGHT_VISION_KEY)
-            nbt.putBoolean(NIGHT_VISION_KEY, enabled)
+            val enabled = !(stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false)
+            stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, enabled) }
             return enabled
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val glass = ReinforcedGlassBlock::class.item()
             val nano = NanoHelmet::class.instance()
             val adv = AdvancedCircuit::class.instance()
@@ -112,31 +112,35 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: net.minecraft.world.World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
 
         val player = entity as? PlayerEntity ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
 
-        val nbt = stack.orCreateNbt
+        val nbt = stack.getCustomData()
         var energy = getEnergy(stack)
 
         // 功能 1: 水下呼吸（复用 HazmatHelmet 逻辑）
         if (player.isTouchingWater && player.air <= AIR_THRESHOLD) {
-            val cooldown = nbt.getInt(AIR_CHECK_COOLDOWN_KEY)
+            val cooldown = nbt?.getInt(AIR_CHECK_COOLDOWN_KEY) ?: 0
             if (cooldown <= 0) {
                 if (consumeAirCellIfAvailable(player)) {
                     player.air = player.maxAir
-                    nbt.putInt(AIR_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
+                    stack.editCustomData { it.putInt(AIR_CHECK_COOLDOWN_KEY, 20) }  // 1 秒冷却
                 }
             } else {
-                nbt.putInt(AIR_CHECK_COOLDOWN_KEY, cooldown - 1)
+                stack.editCustomData { it.putInt(AIR_CHECK_COOLDOWN_KEY, cooldown - 1) }
             }
         }
 
         // 功能 2: 夜视（使用余数累加器精确消耗）
+<<<<<<< HEAD
         if (nbt.getBoolean(NIGHT_VISION_KEY)) {
+=======
+        if (nbt?.getBoolean(NIGHT_VISION_KEY) == true) {
+>>>>>>> backup/1.21.1
             if (energy > 0) {
                 var remainder = nbt.getDouble(NV_REMAINDER_KEY)
                 remainder += nightVisionCostPerTick
@@ -155,7 +159,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
                 }
                 nbt.putDouble(NV_REMAINDER_KEY, remainder - (if (toConsume > 0 && energy > 0) toConsume else 0))
             } else {
-                nbt.putBoolean(NIGHT_VISION_KEY, false)
+                stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, false) }
                 player.removeStatusEffect(StatusEffects.NIGHT_VISION)
             }
         }
@@ -164,16 +168,16 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         if (player.hungerManager.foodLevel < 20 &&
             energy >= FOOD_FILL_COST
         ) {
-            val cooldown = nbt.getInt(FOOD_CHECK_COOLDOWN_KEY)
+            val cooldown = nbt?.getInt(FOOD_CHECK_COOLDOWN_KEY) ?: 0
             if (cooldown <= 0) {
                 if (consumeFilledTinCanIfAvailable(player)) {
                     energy -= FOOD_FILL_COST
                     player.hungerManager.foodLevel = 20
                     player.hungerManager.saturationLevel = 5f
-                    nbt.putInt(FOOD_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
+                    stack.editCustomData { it.putInt(FOOD_CHECK_COOLDOWN_KEY, 20) }  // 1 秒冷却
                 }
             } else {
-                nbt.putInt(FOOD_CHECK_COOLDOWN_KEY, cooldown - 1)
+                stack.editCustomData { it.putInt(FOOD_CHECK_COOLDOWN_KEY, cooldown - 1) }
             }
         }
 
@@ -196,8 +200,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
     }
 
     private fun consumeAirCellIfAvailable(player: PlayerEntity): Boolean {
-        val airCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "air_cell"))
-        val emptyCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val airCellItem = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "air_cell"))
+        val emptyCellItem = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell"))
         val slot = player.inventory.main.find { !it.isEmpty && it.item === airCellItem }
         if (slot != null) {
             slot.decrement(1)
@@ -211,8 +215,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
     }
 
     private fun consumeFilledTinCanIfAvailable(player: PlayerEntity): Boolean {
-        val filledCanItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "filled_tin_can"))
-        val emptyCanItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "tin_can"))
+        val filledCanItem = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "filled_tin_can"))
+        val emptyCanItem = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "tin_can"))
         val slot = player.inventory.main.find { !it.isEmpty && it.item === filledCanItem }
         if (slot != null) {
             slot.decrement(1)
@@ -225,7 +229,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         return false
     }
 
-    private fun applyNightVisionEffect(player: PlayerEntity, world: World) {
+    private fun applyNightVisionEffect(player: PlayerEntity, world: net.minecraft.world.World) {
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
@@ -236,9 +240,9 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
-        val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
+        val nvEnabled = stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {

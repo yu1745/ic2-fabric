@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿package ic2_120.content.block.machines
+=======
+package ic2_120.content.block.machines
+>>>>>>> backup/1.21.1
 
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CropBlock
@@ -10,7 +14,10 @@ import ic2_120.content.item.OverclockerUpgrade
 import ic2_120.content.screen.UvLampScreenHandler
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.content.sync.UvLampSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
@@ -19,6 +26,10 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
+<<<<<<< HEAD
+=======
+import io.netty.buffer.Unpooled
+>>>>>>> backup/1.21.1
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -27,6 +38,10 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
+<<<<<<< HEAD
+=======
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.screen.ScreenHandler
@@ -48,7 +63,11 @@ class UvLampBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
+<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+=======
+) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
@@ -62,9 +81,13 @@ class UvLampBlockEntity(
         extractSlots = intArrayOf(SLOT_UPGRADE),
         markDirty = { markDirty() }
     )
+<<<<<<< HEAD
 
     override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData()
+=======
+    val syncedData = SyncedData(this)
+>>>>>>> backup/1.21.1
 
     @RegisterEnergy
     val sync = UvLampSync(syncedData, { world?.time })
@@ -97,9 +120,17 @@ class UvLampBlockEntity(
 
     // ========== ScreenHandler ==========
 
+<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+=======
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.size())
+        return buf
+>>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.uv_lamp")
@@ -116,16 +147,28 @@ class UvLampBlockEntity(
 
     // ========== NBT ==========
 
+<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         Inventories.writeNbt(nbt, inventory)
+=======
+    override fun writeNbt(nbt: NbtCompound, registryLookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, registryLookup)
+        Inventories.writeNbt(nbt, inventory, registryLookup)
+>>>>>>> backup/1.21.1
         syncedData.writeNbt(nbt)
         nbt.putLong(UvLampSync.NBT_ENERGY_STORED, sync.amount)
     }
 
+<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         Inventories.readNbt(nbt, inventory)
+=======
+    override fun readNbt(nbt: NbtCompound, registryLookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, registryLookup)
+        Inventories.readNbt(nbt, inventory, registryLookup)
+>>>>>>> backup/1.21.1
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(UvLampSync.NBT_ENERGY_STORED))
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)

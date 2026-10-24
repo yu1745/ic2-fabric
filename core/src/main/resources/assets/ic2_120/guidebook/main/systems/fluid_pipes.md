@@ -106,8 +106,11 @@ Right-click a Pump Attachment to open its GUI and configure a **filter sample**:
 
 All of this is built on Fabric's fluid API (`FluidStorage.SIDED`), so any third-party container that implements the API is supported.
 
+<<<<<<< HEAD
 The transport system does not split fluids into global "gas" and "liquid" categories. Water, steam, compressed air, and third-party fluids all travel as Fabric `FluidVariant` values. Each machine or tank decides which specific fluids it accepts through its own storage rules.
 
+=======
+>>>>>>> backup/1.21.1
 #### Mixed-Fluid Protection
 
 Within a single network and tick, only **one type of fluid** is transferred. If multiple Pump Attachments try to pull different fluids:

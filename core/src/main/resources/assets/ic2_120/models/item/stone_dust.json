@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/stone_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -8,5 +9,10 @@
     "flat_8c8c8c": "ic2_120:item/item3d/flat_8c8c8c",
     "flat_9b9b9b": "ic2_120:item/item3d/flat_9b9b9b",
     "flat_626262": "ic2_120:item/item3d/flat_626262"
+=======
+  "parent": "ic2:item/default",
+  "textures": {
+    "layer0": "ic2:item/resource/dust/stone"
+>>>>>>> backup/1.21.1
   }
 }

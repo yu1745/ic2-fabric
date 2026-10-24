@@ -1,6 +1,5 @@
 package ic2_120.content.item.energy
 
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack

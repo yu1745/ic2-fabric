@@ -46,6 +46,7 @@ object SlotMoveHelper {
     }
 
     private fun insertFromRoute(stack: ItemStack, slot: Slot, maxPerSlot: Int?): Boolean {
+<<<<<<< HEAD
         // 直接读槽位背后的真实库存（而非 slot.stack）：DisplayCountSlot.getStack
         // 在真实数量超过展示上限时返回 count 被篡改的副本，若对其 increment/decrement
         // 增量会落在副本上而源被扣减——物品凭空消失。
@@ -55,11 +56,18 @@ object SlotMoveHelper {
         val realStack = slot.inventory.getStack(slot.index)
         // 源槽守卫：目标槽即源槽（同一实例）时拒绝——同实例合并是历史复制 bug 的根因。
         if (realStack === stack) return false
+=======
+        val slotStack = slot.stack
+>>>>>>> backup/1.21.1
         val effectiveLimit = maxPerSlot ?: slot.maxItemCount
         val slotLimit = effectiveLimit
         if (slotLimit <= 0) return false
 
+<<<<<<< HEAD
         if (realStack.isEmpty) {
+=======
+        if (slotStack.isEmpty) {
+>>>>>>> backup/1.21.1
             val moveCount = minOf(slotLimit, stack.count)
             if (moveCount <= 0) return false
             val moved = stack.copy()
@@ -70,14 +78,24 @@ object SlotMoveHelper {
             return true
         }
 
+<<<<<<< HEAD
         if (!ItemStack.canCombine(realStack, stack)) return false
 
         val space = (slotLimit - realStack.count).coerceAtLeast(0)
+=======
+        if (!ItemStack.areEqual(slotStack, stack)) return false
+
+        val space = (slotLimit - slotStack.count).coerceAtLeast(0)
+>>>>>>> backup/1.21.1
         if (space <= 0) return false
 
         val moveCount = minOf(space, stack.count)
         if (moveCount <= 0) return false
+<<<<<<< HEAD
         realStack.increment(moveCount)
+=======
+        slotStack.increment(moveCount)
+>>>>>>> backup/1.21.1
         stack.decrement(moveCount)
         slot.markDirty()
         return true

@@ -13,20 +13,21 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
-import java.util.function.Consumer
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 纳米头盔 (Nano Helmet)
@@ -51,7 +52,7 @@ import java.util.function.Consumer
  * - 能量从所有纳米装备均匀扣除
  */
 @ModItem(name = "nano_helmet", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)) {
+class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
 
     companion object {
         private const val NIGHT_VISION_DURATION = 220
@@ -66,14 +67,13 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
             get() = Ic2Config.current.armor.nightVision.nanoHelmetDurationSeconds
 
         fun toggleNightVision(stack: ItemStack): Boolean {
-            val nbt = stack.orCreateNbt
-            val enabled = !nbt.getBoolean(NIGHT_VISION_KEY)
-            nbt.putBoolean(NIGHT_VISION_KEY, enabled)
+            val enabled = !(stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false)
+            stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, enabled) }
             return enabled
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = CarbonPlate::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             val goggles = NightVisionGoggles::class.instance()
@@ -93,38 +93,49 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: net.minecraft.world.World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
 
         val player = entity as? PlayerEntity ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
 
-        val nbt = stack.orCreateNbt
-        if (!nbt.getBoolean(NIGHT_VISION_KEY)) return
+        if (stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) != true) return
 
         val energy = getEnergy(stack)
         if (energy <= 0) {
             setEnergy(stack, 0)
-            nbt.putBoolean(NIGHT_VISION_KEY, false)
+            stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, false) }
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
             return
         }
 
         // 使用余数累加器消耗能量
+<<<<<<< HEAD
         var remainder = nbt.getDouble(NV_REMAINDER_KEY)
+=======
+        var remainder = stack.getCustomData()?.getDouble(NV_REMAINDER_KEY) ?: 0.0
+>>>>>>> backup/1.21.1
         remainder += nightVisionCostPerTick
         val toConsume = remainder.toLong()
         if (toConsume > 0) {
             if (energy < toConsume) {
                 setEnergy(stack, 0)
+<<<<<<< HEAD
                 nbt.putBoolean(NIGHT_VISION_KEY, false)
+=======
+                stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, false) }
+>>>>>>> backup/1.21.1
                 player.removeStatusEffect(StatusEffects.NIGHT_VISION)
                 return
             }
             setEnergy(stack, energy - toConsume)
         }
+<<<<<<< HEAD
         nbt.putDouble(NV_REMAINDER_KEY, remainder - toConsume)
+=======
+        stack.editCustomData { it.putDouble(NV_REMAINDER_KEY, remainder - toConsume) }
+>>>>>>> backup/1.21.1
 
         // 光线检测（复用 NightVisionGoggles 逻辑）
         val brightness = world.getLightLevel(player.blockPos)
@@ -143,9 +154,9 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
-        val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
+        val nvEnabled = stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {

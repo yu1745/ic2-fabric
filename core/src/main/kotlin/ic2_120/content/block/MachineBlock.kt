@@ -1,7 +1,9 @@
 package ic2_120.content.block
 
+import com.mojang.serialization.MapCodec
 import ic2_120.Ic2_120
 import net.minecraft.block.AbstractBlock
+import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.BlockWithEntity
@@ -35,14 +37,18 @@ abstract class MachineBlock(settings: AbstractBlock.Settings = defaultMachineSet
         /** 机器方块的默认设置：铁方块硬度（5.0f, 6.0f） */
         fun defaultMachineSettings(): AbstractBlock.Settings =
             AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+
+        val MACHINE_CODEC: MapCodec<MachineBlock> = Block.createCodec { error("MachineBlock cannot be deserialized from JSON") }
     }
+
+    override fun getCodec(): MapCodec<out BlockWithEntity> = MACHINE_CODEC
 
     /**
      * 非扳手拆卸时掉落的物品（默认基础机器外壳）。
      * 子类可覆写以改为高级机器外壳或其他物品。
      */
     open fun getCasingDrop(): Item =
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "machine"))
+        Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "machine"))
 
     init {
         defaultState = stateManager.defaultState.with(Properties.HORIZONTAL_FACING, Direction.NORTH)
@@ -103,14 +109,18 @@ abstract class DirectionalMachineBlock(settings: AbstractBlock.Settings = defaul
         /** 机器方块的默认设置：铁方块硬度（5.0f, 6.0f） */
         fun defaultMachineSettings(): AbstractBlock.Settings =
             AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+
+        val DIRECTIONAL_CODEC: MapCodec<DirectionalMachineBlock> = Block.createCodec { error("DirectionalMachineBlock cannot be deserialized from JSON") }
     }
+
+    override fun getCodec(): MapCodec<out BlockWithEntity> = DIRECTIONAL_CODEC
 
     /**
      * 非扳手拆卸时掉落的物品（默认基础机器外壳）。
      * 子类可覆写以改为高级机器外壳或其他物品。
      */
     open fun getCasingDrop(): Item =
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "machine"))
+        Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "machine"))
 
     init {
         defaultState = stateManager.defaultState.with(Properties.FACING, Direction.NORTH)

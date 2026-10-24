@@ -16,7 +16,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
@@ -29,7 +29,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -50,13 +49,18 @@ class BlockCutterBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, BlockCutterBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+=======
+        else validateTicker(type, BlockCutterBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
+>>>>>>> backup/1.21.1
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -66,6 +70,9 @@ class BlockCutterBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -89,7 +96,7 @@ class BlockCutterBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
          * 为 ClassScanner 生成配方
          */
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val motor = ElectricMotor::class.instance()

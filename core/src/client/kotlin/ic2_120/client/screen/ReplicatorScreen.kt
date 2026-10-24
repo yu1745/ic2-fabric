@@ -4,13 +4,20 @@ import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.block.ReplicatorBlock
+<<<<<<< HEAD
 import ic2_120.content.network.NetworkManager
+=======
+import ic2_120.content.network.SelectTemplatePayload
+>>>>>>> backup/1.21.1
 import ic2_120.content.screen.ReplicatorScreenHandler
 import ic2_120.content.sync.ReplicatorSync
 import ic2_120.content.uu.UuTemplateEntry
 import ic2_120.content.uu.findUniqueAdjacentPatternStorage
 import ic2_120.registry.annotation.ModScreen
+<<<<<<< HEAD
 import io.netty.buffer.Unpooled
+=======
+>>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.MinecraftClient
@@ -20,7 +27,10 @@ import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
 import net.minecraft.network.PacketByteBuf
+=======
+>>>>>>> backup/1.21.1
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
@@ -81,7 +91,11 @@ class ReplicatorScreen(
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         updateButtons()
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -274,10 +288,14 @@ class ReplicatorScreen(
     private fun navigateTemplate(delta: Int) {
         if (templates.isEmpty()) return
         val newIndex = ((selectedIndex + delta) % templates.size + templates.size) % templates.size
+<<<<<<< HEAD
         val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(handler.blockPos)
         buf.writeVarInt(newIndex)
         ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
+=======
+        ClientPlayNetworking.send(SelectTemplatePayload(handler.blockPos, newIndex))
+>>>>>>> backup/1.21.1
         // 更新本地显示
         val template = templates.getOrNull(newIndex)
         if (template != null) {
@@ -316,8 +334,13 @@ class ReplicatorScreen(
 
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guirguireplicator.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guirguireplicator.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+>>>>>>> backup/1.21.1
         private const val TEX_SIZE = 256
 
         private const val MODE_TEX_U = 198

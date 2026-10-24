@@ -6,7 +6,11 @@
 
 ## 1. 先看这里
 
+<<<<<<< HEAD
 - 辅助资料（assets 清单 / Fabric API 报告 / 归档）：`docs/README.md`
+=======
+- 文档总入口：`docs/README.md`
+>>>>>>> backup/1.21.1
 - **main → 1.21.1 迁移 cherry-pick：`docs/guides/branch-cherry-pick-guide.md`（每次 cherry-pick 前必读，否则必踩坑）**
 - 新机器实现：`docs/guides/machine-implementation-guide.md`
 - 3D 机器模型（OBJ 加载器、共享机身、动画、游戏内截图闭环）：`docs/guides/model3d-pipeline.md`
@@ -15,7 +19,10 @@
 - mcdebug 测试编写：`core/src/mcdebugTest/kotlin/`（Kotlin + JUnit 5，mcdebug-cli 0.5.0）+ `docs/guides/mcdebug-test-guide.md`（test 矩阵、be.tick 驱动、slot 速查、踩过的坑）
 - 新物品实现：`docs/guides/item-implemented.md`
 - 传送卷轴：`docs/guides/recall-scroll.md`
+<<<<<<< HEAD
 - 方块掉落机制选型：`docs/guides/block-drop-pathways.md`（破坏掉落途径全景，新增方块时对照）
+=======
+>>>>>>> backup/1.21.1
 - 注解注册系统：`docs/registry/CLASS_BASED_REGISTRY.md`
 
 ## 2. 硬性约束
@@ -119,6 +126,7 @@
 
 ## 9. 分支同步管理
 
+<<<<<<< HEAD
 > 🛑 **分支同步状态机制已暂停（2026-07-01 起）**
 > - 不再为每个 main commit 登记同步状态，不再维护 `docs/branch-sync-status.md` / `docs/branch-sync-archive.md`。
 > - 提交时**无需**再附单独的「同步状态」commit；§9.1 的登记流程与 §9.2 的计数/归档规则**停止执行**。
@@ -138,10 +146,27 @@
 4. `git commit` 同步状态更新（**单独提交，不与功能 commit 混在一起**）
 
 > 解封后的同步流程（原双向 cherry-pick 流程）见 `docs/guides/branch-cherry-pick-guide.md` 顶部归档说明。
+=======
+本项目维护 `main`（1.20.1）和 `1.21.1` 两个分支，commit 必须双向同步。
+
+### 9.1 提交 → 同步的完整流程（严格按顺序执行）
+
+1. 在 main 上完成功能开发，`git commit`（一次性干净提交，禁止修修补补的 fixup commit）
+2. 立即记录同步状态：在 `docs/branch-sync-status.md` 末尾添加新条目，需标注 ❌ （未同步）
+3. `git commit` 同步状态更新（**单独提交，不与功能 commit 混在一起**）
+4. 切换到 1.21.1：`git checkout 1.21.1`
+5. Cherry-pick：`git cherry-pick <功能 commit 的 SHA>`
+6. 解决冲突后，**必须跑 datagen（全项目）**：`./gradlew runDatagen`
+7. `git add -A && git commit`（提交 datagen 刷新结果）
+8. 切回 main：`git checkout main`
+9. 更新同步状态：将之前标记 ❌ 的条目改为 ✅，确保总览计数正确
+10. `git commit` 同步状态更新（**单独提交**）
+>>>>>>> backup/1.21.1
 
 ### 9.2 同步状态表
 
 - 文件：`docs/branch-sync-status.md`
+<<<<<<< HEAD
 - 记录格式：commit SHA、说明、状态标记（见下）、备注
 - 状态标记：
   - ✅ 已同步到 1.21.1（封存前的历史 commit）
@@ -157,6 +182,14 @@
 ### 9.3 Cherry-pick 注意事项（封存期不执行，解封后参考）
 
 > ⚠️ **未来解封后执行 cherry-pick 之前必读 `docs/guides/branch-cherry-pick-guide.md`**——基于 193 条历史同步条目归纳的 5 大类真实坑（API 重命名、NBT/DataComponent、CustomPayload 网络包、datagen 路径、merge commit / PR 误删 / 单源真相），每类都有 entry 编号做证据。读完再动手能避免 80% 重复踩坑。
+=======
+- 记录格式：commit SHA、说明、是否已在 1.21.1（✅/❌）、备注
+- **总览计数必须与逐 commit 清单保持一致**（示例：共 25 个 commit，24 个已同步，1 个待同步 → 不要写成"全部已同步"）
+
+### 9.3 Cherry-pick 注意事项
+
+> ⚠️ **执行 §9.1 步骤 5 之前必读 `docs/guides/branch-cherry-pick-guide.md`**——基于 193 条历史同步条目归纳的 5 大类真实坑（API 重命名、NBT/DataComponent、CustomPayload 网络包、datagen 路径、merge commit / PR 误删 / 单源真相），每类都有 entry 编号做证据。读完再动手能避免 80% 重复踩坑。
+>>>>>>> backup/1.21.1
 > 配套：API 细节查询表见 `docs/migration-1.20.1-to-1.21.1.md`（Identifier.of、validateTicker、RecipeExporter、onUse 无 Hand、CustomPayload 等的具体写法）。
 
 1. 1.21.1 的 data 目录使用单数（`advancement/`、`recipe/`、`loot_table/`），main 使用复数（`advancements/`、`recipes/`、`loot_tables/`）
@@ -185,7 +218,11 @@
 6. 构建验证
 
 ### 提交前确认
+<<<<<<< HEAD
 - 干净的功能 commit，没有 fixup/amend（分支同步状态机制已暂停，无需附同步状态 commit）
+=======
+- 只有一个功能 commit + 一个同步状态 commit，没有 fixup/amend
+>>>>>>> backup/1.21.1
 
 ## 12. 源码参考（MC 源码 & Fabric API）
 
@@ -223,6 +260,7 @@ grep $'\tmethod_XXXXX\t' mappings/mappings.tiny # 查方法名
 git clone -b 1.20.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.20.1
 git clone -b 1.21.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.21.1
 ```
+<<<<<<< HEAD
 
 ### FTB Chunks / FTB Library 源码
 
@@ -234,3 +272,5 @@ git clone --depth 1 https://github.com/FTBTeam/FTB-Library.git ../ftb-library-sr
 `
 
 当前副本位于 `../ftb-chunks-src` 和 `../ftb-library-src`。
+=======
+>>>>>>> backup/1.21.1

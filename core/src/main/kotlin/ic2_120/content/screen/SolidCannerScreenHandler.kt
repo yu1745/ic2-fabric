@@ -13,13 +13,26 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
+<<<<<<< HEAD
 import net.minecraft.item.ItemStack
+=======
+import net.minecraft.inventory.SimpleInventory
+import net.minecraft.item.ItemStack
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.screen.ArrayPropertyDelegate
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
+<<<<<<< HEAD
 
 @ModScreenHandler(block = SolidCannerBlock::class, inventorySize = SolidCannerBlockEntity.INVENTORY_SIZE)
+=======
+import ic2_120.registry.annotation.ScreenFactory
+
+@ModScreenHandler(block = SolidCannerBlock::class)
+>>>>>>> backup/1.21.1
 class SolidCannerScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -86,12 +99,16 @@ class SolidCannerScreenHandler(
                     val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
+<<<<<<< HEAD
                 else -> {
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
+=======
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+>>>>>>> backup/1.21.1
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -121,7 +138,20 @@ class SolidCannerScreenHandler(
         const val SLOT_UPGRADE_INDEX_START = 4
         const val SLOT_UPGRADE_INDEX_END = 7
         const val PLAYER_INV_START = 8
+<<<<<<< HEAD
         const val HOTBAR_END = 44
 
+=======
+        const val HOTBAR_END = 43
+
+        @ScreenFactory
+        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SolidCannerScreenHandler {
+            val pos = buf.readBlockPos()
+            val propertyCount = buf.readVarInt()
+            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
+            val blockInv = SimpleInventory(SolidCannerBlockEntity.INVENTORY_SIZE)
+            return SolidCannerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
+        }
+>>>>>>> backup/1.21.1
     }
 }

@@ -15,7 +15,11 @@ item_ids:
 
 <BlockImage id="ic2_120:batbox_chargepad" scale="4" />
 
+<<<<<<< HEAD
 Chargepads are horizontal energy storage blocks with a charging surface. They keep the same capacity, side rules, charge slot, and fuel slot as the matching BatBox, CESU, MFE, or MFSU, then add automatic charging for players standing on top. Chargepads can rotate horizontally in four directions, but cannot face up or down.
+=======
+Chargepads are energy storage blocks with a charging surface. They keep the same capacity, side rules, charge slot, and fuel slot as the matching BatBox, CESU, MFE, or MFSU, then add automatic charging for players standing on top.
+>>>>>>> backup/1.21.1
 
 ## Block View
 

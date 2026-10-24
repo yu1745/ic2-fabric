@@ -69,7 +69,7 @@ object PipeColorProvider {
         var registeredBlockCount = 0
         var registeredItemCount = 0
         for (pipeId in pipeIds) {
-            val id = Identifier("ic2_120", pipeId)
+            val id = Identifier.of("ic2_120", pipeId)
 
             val block = Registries.BLOCK.getOrEmpty(id)
             if (block.isPresent) {

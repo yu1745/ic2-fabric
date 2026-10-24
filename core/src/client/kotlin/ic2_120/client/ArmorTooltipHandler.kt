@@ -26,33 +26,49 @@ import net.minecraft.util.Formatting
 object ArmorTooltipHandler {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, context, type ->
+        ItemTooltipCallback.EVENT.register { stack, context, type, tooltip ->
             val item = stack.item
 
             // 喷气背包：双击空格
             if (item is JetpackItem || item is ElectricJetpack) {
+<<<<<<< HEAD
                 type.add(Text.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(Formatting.GRAY))
+=======
+                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(Formatting.GRAY))
+>>>>>>> backup/1.21.1
             }
 
             // 夜视仪、纳米/量子头盔：N 键
             if (item is NightVisionGoggles || item is NanoHelmet || item is QuantumHelmet) {
                 val key = ArmorKeybinds.getVisionKey()
                 val name = key.boundKeyLocalizedText.string
+<<<<<<< HEAD
                 type.add(Text.translatable("tooltip.ic2_120.armor.key.vision").formatted(Formatting.GRAY)
+=======
+                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.vision").formatted(Formatting.GRAY)
+>>>>>>> backup/1.21.1
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }
 
             // 量子胸甲：双击空格
             if (item is QuantumChestplate) {
+<<<<<<< HEAD
                 type.add(Text.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(Formatting.GRAY))
+=======
+                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(Formatting.GRAY))
+>>>>>>> backup/1.21.1
             }
 
             // 量子护腿：L 键
             if (item is QuantumLeggings) {
                 val key = ArmorKeybinds.getSpeedKey()
                 val name = key.boundKeyLocalizedText.string
+<<<<<<< HEAD
                 type.add(Text.translatable("tooltip.ic2_120.armor.key.speed").formatted(Formatting.GRAY)
+=======
+                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.speed").formatted(Formatting.GRAY)
+>>>>>>> backup/1.21.1
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }
@@ -61,7 +77,11 @@ object ArmorTooltipHandler {
             if (item is QuantumBoots) {
                 val key = ArmorKeybinds.getJumpKey()
                 val name = key.boundKeyLocalizedText.string
+<<<<<<< HEAD
                 type.add(Text.translatable("tooltip.ic2_120.armor.key.jump").formatted(Formatting.GRAY)
+=======
+                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.jump").formatted(Formatting.GRAY)
+>>>>>>> backup/1.21.1
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }

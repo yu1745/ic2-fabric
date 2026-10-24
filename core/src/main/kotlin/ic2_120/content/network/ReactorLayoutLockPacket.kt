@@ -2,16 +2,33 @@ package ic2_120.content.network
 
 import net.minecraft.item.Item
 import net.minecraft.network.PacketByteBuf
+<<<<<<< HEAD
+=======
+import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.packet.CustomPayload
+>>>>>>> backup/1.21.1
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 
+<<<<<<< HEAD
 class ReactorLayoutLockPacket(
     val pos: BlockPos,
     val lockedSlots: Map<Int, Item>
 ) {
     companion object {
         val ID: Identifier = Identifier("ic2_120", "reactor_layout_lock")
+=======
+class ReactorLayoutLockPacket(val pos: BlockPos, val lockedSlots: Map<Int, Item>) : CustomPayload {
+    override fun getId(): CustomPayload.Id<*> = ID
+
+    companion object {
+        val ID = CustomPayload.Id<ReactorLayoutLockPacket>(Identifier.of("ic2_120", "reactor_layout_lock"))
+        val CODEC: PacketCodec<PacketByteBuf, ReactorLayoutLockPacket> = PacketCodec.of(
+            { value, buf -> write(value, buf) },
+            { read(it) }
+        )
+>>>>>>> backup/1.21.1
 
         fun read(buf: PacketByteBuf): ReactorLayoutLockPacket {
             val pos = buf.readBlockPos()

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "ic2_120_advanced_solar_addon",
-  "version": "${version}",
+  "version": "v0.1a",
   "name": "IC2R Advanced Solar Addon",
   "description": "Advanced Solar Panels addon for IC2 Fabric",
   "authors": ["stardust"],
@@ -41,7 +41,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.18.0",
-    "minecraft": "~1.20.1",
+    "minecraft": "1.21.1",
     "java": ">=17",
     "fabric-api": "*",
     "fabric-language-kotlin": "*",

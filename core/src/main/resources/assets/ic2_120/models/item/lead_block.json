@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 { "parent": "ic2_120:block/resource/lead_block" }
+=======
+{ "parent": "ic2:block/resource/lead_block" }
+>>>>>>> backup/1.21.1

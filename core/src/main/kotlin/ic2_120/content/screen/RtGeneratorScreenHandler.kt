@@ -14,8 +14,14 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
+=======
+
+import net.minecraft.screen.ArrayPropertyDelegate
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 
@@ -77,7 +83,11 @@ class RtGeneratorScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
+<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
+=======
+                index in PLAYER_INV_START..HOTBAR_END -> {
+>>>>>>> backup/1.21.1
                     val storage = itemStorage
                     if (storage == null) return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
@@ -86,9 +96,12 @@ class RtGeneratorScreenHandler(
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
+<<<<<<< HEAD
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
+=======
+>>>>>>> backup/1.21.1
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
@@ -112,5 +125,16 @@ class RtGeneratorScreenHandler(
         const val HOTBAR_END = 42
         const val SLOT_SIZE = 18
 
+<<<<<<< HEAD
+=======
+        @ScreenFactory
+        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): RtGeneratorScreenHandler {
+            val pos = buf.readBlockPos()
+            val propertyCount = buf.readVarInt()
+            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
+            val blockInv = SimpleInventory(6)
+            return RtGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
+        }
+>>>>>>> backup/1.21.1
     }
 }

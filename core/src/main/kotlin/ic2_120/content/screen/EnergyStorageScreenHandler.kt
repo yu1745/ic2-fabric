@@ -16,11 +16,12 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.util.Identifier
@@ -87,10 +88,17 @@ class EnergyStorageScreenHandler(
 
         // 4 个玩家装备槽（横列，1px 间距），MFE/MFSU 专用
         if (config.useEquipmentSlots) {
+<<<<<<< HEAD
             addSlot(armorSlot(playerInventory, 39, 8, 84, EquipmentSlot.HEAD))   // 头盔
             addSlot(armorSlot(playerInventory, 38, 26, 84, EquipmentSlot.CHEST))  // 胸甲
             addSlot(armorSlot(playerInventory, 37, 44, 84, EquipmentSlot.LEGS))   // 护腿
             addSlot(armorSlot(playerInventory, 36, 62, 84, EquipmentSlot.FEET))   // 靴子
+=======
+            addSlot(Slot(playerInventory, 39, 8, 84))   // 头盔
+            addSlot(Slot(playerInventory, 38, 26, 84))  // 胸甲
+            addSlot(Slot(playerInventory, 37, 44, 84))  // 护腿
+            addSlot(Slot(playerInventory, 36, 62, 84))  // 靴子
+>>>>>>> backup/1.21.1
         }
 
         for (row in 0 until 3) {
@@ -100,6 +108,7 @@ class EnergyStorageScreenHandler(
         }
         for (col in 0 until 9) {
             addSlot(Slot(playerInventory, col, 8 + col * 18, 172))
+<<<<<<< HEAD
         }
     }
 
@@ -124,7 +133,16 @@ class EnergyStorageScreenHandler(
         override fun canInsert(stack: ItemStack): Boolean {
             val item = stack.item
             return item is ArmorItem && item.type.getEquipmentSlot() == equipmentSlot
+=======
+>>>>>>> backup/1.21.1
         }
+    }
+
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -165,12 +183,21 @@ class EnergyStorageScreenHandler(
         return stack
     }
 
+<<<<<<< HEAD
    val playerInventorySlotStart: Int get() = machineSlotCount + (if (config.useEquipmentSlots) 4 else 0)
 
    private val hotbarEnd: Int
        get() = playerInventorySlotStart + 35
 
    override fun canUse(player: PlayerEntity): Boolean =
+=======
+    val playerInventorySlotStart: Int get() = machineSlotCount + (if (config.useEquipmentSlots) 4 else 0)
+
+    private val hotbarEnd: Int
+        get() = playerInventorySlotStart + 35
+
+    override fun canUse(player: PlayerEntity): Boolean =
+>>>>>>> backup/1.21.1
         context.get({ world, pos ->
             val block = world.getBlockState(pos).block
             (block is ic2_120.content.block.storage.EnergyStorageBlock || block is ChargepadBlock) &&
@@ -206,7 +233,7 @@ class EnergyStorageScreenHandler(
             val ctx = ScreenHandlerContext.create(playerInventory.player.world, pos)
             val blockInv = SimpleInventory(slotCount.coerceAtLeast(1))
             val blockId = Registries.BLOCK.getId(playerInventory.player.world.getBlockState(pos).block)
-            val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier(blockId.namespace, blockId.path))
+            val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier.of(blockId.namespace, blockId.path))
                 ?: error("ScreenHandler type not found for $blockId")
             @Suppress("UNCHECKED_CAST")
             return EnergyStorageScreenHandler(

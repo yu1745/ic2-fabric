@@ -4,11 +4,12 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 电池物品基类
@@ -29,7 +30,7 @@ abstract class BatteryItemBase(
     override val tier: Int,
     override val maxCapacity: Long,
     override val canChargeWireless: Boolean,
-    settings: FabricItemSettings = FabricItemSettings()
+    settings: Item.Settings = Item.Settings()
 ) : Item(settings), IBatteryItem {
 
     companion object {
@@ -40,8 +41,7 @@ abstract class BatteryItemBase(
          * 从物品栈获取电量
          */
         fun getEnergy(stack: ItemStack): Long {
-            val nbt = stack.orCreateNbt
-            return nbt.getLong(ENERGY_KEY)
+            return stack.getCustomData()?.getLong(ENERGY_KEY) ?: 0L
         }
 
         /**
@@ -51,9 +51,8 @@ abstract class BatteryItemBase(
          * @param maxCapacity 最大容量（用于限制上限）
          */
         fun setEnergy(stack: ItemStack, energy: Long, maxCapacity: Long) {
-            val nbt = stack.orCreateNbt
             val clampedEnergy = energy.coerceIn(0, maxCapacity)
-            nbt.putLong(ENERGY_KEY, clampedEnergy)
+            stack.editCustomData { it.putLong(ENERGY_KEY, clampedEnergy) }
         }
 
         /**
@@ -96,11 +95,11 @@ abstract class BatteryItemBase(
      */
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
 
         val energy = getCurrentCharge(stack)
         val ratio = getChargeRatio(stack)

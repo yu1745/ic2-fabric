@@ -1,3 +1,7 @@
 {
+<<<<<<< HEAD
   "parent": "ic2_120:block/resource/ore/deepslate_lead_ore"
+=======
+  "parent": "ic2:block/resource/ore/deepslate_lead_ore"
+>>>>>>> backup/1.21.1
 }

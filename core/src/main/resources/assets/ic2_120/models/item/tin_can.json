@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/tin_can.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,4 +11,10 @@
     "flat_989898": "ic2_120:item/item3d/flat_989898",
     "flat_a9a9a9": "ic2_120:item/item3d/flat_a9a9a9"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/crafting/tin_can"
+	}
+>>>>>>> backup/1.21.1
 }

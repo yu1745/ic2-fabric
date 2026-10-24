@@ -1,6 +1,13 @@
 {
+<<<<<<< HEAD
   "parent": "ic2_120:item/cell3d/display",
   "textures": {
     "particle": "ic2_120:block/machine3d/steel"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/cell/ref_bio_cell"
+	}
+>>>>>>> backup/1.21.1
 }

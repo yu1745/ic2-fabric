@@ -12,6 +12,11 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
+=======
+import net.minecraft.network.PacketByteBuf
+
+>>>>>>> backup/1.21.1
 import net.minecraft.registry.Registries
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler

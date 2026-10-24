@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/uu_matter_bucket.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,4 +13,10 @@
     "glow_7f007d": "ic2_120:item/item3d/glow_7f007d",
     "flat_353535": "ic2_120:item/item3d/flat_353535"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/bucket/uu_matter"
+	}
+>>>>>>> backup/1.21.1
 }

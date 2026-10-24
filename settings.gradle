@@ -6,7 +6,6 @@ pluginManagement {
 		}
 		mavenCentral()
 		gradlePluginPortal()
-		maven { url = 'https://jitpack.io' }
 	}
 }
 
@@ -15,3 +14,4 @@ include 'advanced-solar-addon'
 include 'advanced-weapons-addon'
 include 'buildcraft-addon'
 include 'industrial-upgrade-addon'
+include 'addon-template'

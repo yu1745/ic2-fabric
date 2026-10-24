@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 { "parent": "ic2_120:block/crop/wheat_0" }
+=======
+{ "parent": "ic2:block/crop/wheat_0" }
+>>>>>>> backup/1.21.1

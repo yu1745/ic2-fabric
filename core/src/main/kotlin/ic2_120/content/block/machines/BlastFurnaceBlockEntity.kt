@@ -11,7 +11,10 @@ import ic2_120.content.item.EjectorUpgrade
 import ic2_120.content.item.PullingUpgrade
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipe
@@ -26,6 +29,10 @@ import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.ModMachineRecipeBinding
 import ic2_120.registry.type
+<<<<<<< HEAD
+=======
+import io.netty.buffer.Unpooled
+>>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -44,6 +51,10 @@ import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
+<<<<<<< HEAD
+=======
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -58,6 +69,7 @@ import net.minecraft.world.World
  *
  * 从背面接收热量（HU），消耗铁质材料与压缩空气，产出钢锭和炉渣。
  *
+<<<<<<< HEAD
  * HU 缓存上限 1,280 HU。温度 0–1,700。
  *
  * 纯 HU 累积温度模型：温度变化完全由 HU 流入/流出驱动，不再使用固定 tick 计数表。
@@ -69,6 +81,17 @@ import net.minecraft.world.World
  *
  * 温度逻辑每 tick 独立运行，工作时不再冻结温度。
  * 工作条件：温度 ≥ 1401 且有材料、产物可接收、压缩空气充足。炼钢仅消耗压缩空气，不额外消耗 HU。
+=======
+ * HU 储值上限 1,000 HU。温度 0–1,700。
+ *
+ * 升温消耗 HU：
+ * - 0–1400：100 HU/tick
+ * - 1401–1500：80 HU/tick
+ * - 1501–1600：60 HU/tick
+ * - 1601–1700：40 HU/tick
+ *
+ * 工作条件：温度 > 1400。工作时温度冻结，持续消耗对应温度段的 HU 维持。
+>>>>>>> backup/1.21.1
  *
  * 每钢锭空气消耗随温度线性递减（单位 droplets）：
  * - 1401→1500：486,000→421,200 droplets（显示约 6000→5200 mB）
@@ -89,7 +112,11 @@ class BlastFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
+<<<<<<< HEAD
 ) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+=======
+) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = BlastFurnaceBlock.ACTIVE
     override fun getInventory(): Inventory = this
@@ -110,6 +137,7 @@ class BlastFurnaceBlockEntity(
 
         private const val NBT_HU_RECEIVED = "HuReceived"
         private const val NBT_TEMPERATURE = "Temperature"
+<<<<<<< HEAD
         private const val NBT_HEAT_ACCUM = "HeatAccum"
         private const val NBT_AIR_AMOUNT = "AirAmount"
         private const val NBT_HU_BUFFER = "HuBuffer"
@@ -127,6 +155,16 @@ class BlastFurnaceBlockEntity(
         /** 散热定点精度倍数（散热值 ×1000 存为整数，避免浮点） */
         private const val DISSIPATION_SCALE = 1000
 
+=======
+        private const val NBT_TEMP_PROGRESS = "TempProgress"
+        private const val NBT_TEMP_DECAY = "TempDecay"
+        private const val NBT_AIR_AMOUNT = "AirAmount"
+        private const val NBT_HU_BUFFER = "HuBuffer"
+
+        /** HU 缓存容量：1280 HU = 16 tick × 80 HU/tick（恰好覆盖 1401 的 1 度温度衰减窗口） */
+        const val HU_BUFFER_CAPACITY: Long = 1280L
+
+>>>>>>> backup/1.21.1
         @Volatile
         private var fluidLookupRegistered = false
 
@@ -140,8 +178,11 @@ class BlastFurnaceBlockEntity(
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+<<<<<<< HEAD
     private var cachedRecipeItem: net.minecraft.item.Item? = null
     private var cachedRecipe: BlastFurnaceRecipe? = null
+=======
+>>>>>>> backup/1.21.1
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -155,16 +196,25 @@ class BlastFurnaceBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT_STEEL, SLOT_OUTPUT_SLAG, SLOT_OUTPUT_EMPTY),
         markDirty = { markDirty() }
     )
+<<<<<<< HEAD
 
     override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData()
+=======
+    val syncedData = SyncedData(this)
+>>>>>>> backup/1.21.1
     val sync = BlastFurnaceSync(syncedData)
 
     private var huReceivedThisTick: Long = 0L
     private var huBuffer: Long = 0L  // HU 缓存，上限 HU_BUFFER_CAPACITY (1280)
     private var temperature: Int = 0
+<<<<<<< HEAD
     /** 升温/降温累积进度（单位 = 净HU × DISSIPATION_SCALE，正值趋近 +HEAT_PER_DEGREE*SCALE 升温，负值趋近 -... 降温） */
     private var heatAccum: Long = 0L
+=======
+    private var tempProgress: Int = 0
+    private var tempDecayProgress: Int = 0
+>>>>>>> backup/1.21.1
     private var heatReceivedLastTick: Boolean = false
 
     // 当前钢锭已消耗的空气 droplet 数（用于滞后耗尽模型）
@@ -187,6 +237,7 @@ class BlastFurnaceBlockEntity(
         fun tryConsumeAir(droplets: Long): Long {
             if (droplets <= 0L || amount <= 0L) return 0L
             val actual = minOf(droplets, amount)
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -195,6 +246,12 @@ class BlastFurnaceBlockEntity(
                 sync.airAmount = amount.toInt().coerceAtLeast(0)
                 actual
             }
+=======
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            sync.airAmount = amount.toInt().coerceAtLeast(0)
+            return actual
+>>>>>>> backup/1.21.1
         }
 
         fun tryFillAir(droplets: Long): Long {
@@ -202,6 +259,7 @@ class BlastFurnaceBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(droplets, space)
             if (actual <= 0L) return 0L
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -210,6 +268,12 @@ class BlastFurnaceBlockEntity(
                 sync.airAmount = amount.toInt().coerceAtLeast(0)
                 actual
             }
+=======
+            amount += actual
+            if (variant.isBlank) variant = FluidVariant.of(ModFluids.COMPRESSED_AIR_STILL)
+            sync.airAmount = amount.toInt().coerceAtLeast(0)
+            return actual
+>>>>>>> backup/1.21.1
         }
 
         fun remainingSpace(): Long = tankCapacity - amount
@@ -256,9 +320,17 @@ class BlastFurnaceBlockEntity(
         else -> false
     }
 
+<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+=======
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.size())
+        return buf
+>>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.blast_furnace")
@@ -267,6 +339,7 @@ class BlastFurnaceBlockEntity(
         BlastFurnaceScreenHandler(syncId, playerInventory, this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
+<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         Inventories.readNbt(nbt, inventory)
@@ -290,13 +363,36 @@ class BlastFurnaceBlockEntity(
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         Inventories.writeNbt(nbt, inventory)
+=======
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
+        syncedData.readNbt(nbt)
+        temperature = nbt.getInt(NBT_TEMPERATURE).coerceIn(0, BlastFurnaceSync.TEMP_MAX)
+        tempProgress = nbt.getInt(NBT_TEMP_PROGRESS).coerceAtLeast(0)
+        tempDecayProgress = nbt.getInt(NBT_TEMP_DECAY).coerceAtLeast(0)
+        huBuffer = nbt.getLong(NBT_HU_BUFFER).coerceIn(0L, HU_BUFFER_CAPACITY)
+        sync.temperature = temperature
+        airTankInternal.setStoredAir(nbt.getLong(NBT_AIR_AMOUNT).coerceAtLeast(0L))
+    }
+
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
+>>>>>>> backup/1.21.1
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_HU_RECEIVED, huReceivedThisTick)
         nbt.putLong(NBT_HU_BUFFER, huBuffer)
         nbt.putInt(NBT_TEMPERATURE, temperature)
+<<<<<<< HEAD
         nbt.putLong(NBT_HEAT_ACCUM, heatAccum)
         nbt.putLong(NBT_AIR_AMOUNT, airTankInternal.amount)
         nbt.putLong(NBT_AIR_CONSUMED, airConsumedThisSteel)
+=======
+        nbt.putInt(NBT_TEMP_PROGRESS, tempProgress)
+        nbt.putInt(NBT_TEMP_DECAY, tempDecayProgress)
+        nbt.putLong(NBT_AIR_AMOUNT, airTankInternal.amount)
+>>>>>>> backup/1.21.1
     }
 
     override fun receiveHeatInternal(hu: Long): Long {
@@ -317,6 +413,7 @@ class BlastFurnaceBlockEntity(
 
     private fun getRecipeForInput(input: ItemStack): BlastFurnaceRecipe? {
         if (input.isEmpty) return null
+<<<<<<< HEAD
         if (cachedRecipeItem === input.item) return cachedRecipe
         val inv = BlastFurnaceRecipe.Input(input)
         val recipeManager = world?.recipeManager ?: return null
@@ -341,6 +438,37 @@ class BlastFurnaceBlockEntity(
         } else {
             50L * DISSIPATION_SCALE + (t - BlastFurnaceSync.TEMP_WORK_MIN).toLong() * 50L * DISSIPATION_SCALE / (BlastFurnaceSync.TEMP_MAX - BlastFurnaceSync.TEMP_WORK_MIN)
         }
+=======
+        val inv = BlastFurnaceRecipe.Input(input)
+        val recipeManager = world?.recipeManager ?: return null
+        return recipeManager.getFirstMatch(getRecipeType<BlastFurnaceRecipe>(), inv, world ?: return null)
+            .map { it.value }
+            .orElse(null)
+    }
+
+    /** 当前温度下每 tick 升温 / 维持所需 HU */
+    private fun getHuPerTick(temp: Int): Int = when {
+        temp >= 1601 -> 40
+        temp >= 1501 -> 60
+        temp >= 1401 -> 80
+        else -> 100
+    }
+
+    /** 当前温度下每升高 1 温度值所需 tick 数 */
+    private fun getTicksPerTemp(temp: Int): Int = when {
+        temp >= 1601 -> 56   // 2.8s
+        temp >= 1501 -> 32   // 1.6s
+        temp >= 1401 -> 20   // 1.0s
+        else -> 14           // 0.7s (0–1400)
+    }
+
+    /** 当前温度下 HU 不足时每下降 1 温度值所需 tick 数 */
+    private fun getTicksPerDecay(temp: Int): Int = when {
+        temp >= 1601 -> 6    // 0.3s
+        temp >= 1501 -> 10   // 0.5s
+        temp >= 1401 -> 16   // 0.8s
+        else -> 20           // 1.0s (0–1400)
+>>>>>>> backup/1.21.1
     }
 
     /** 当前温度下的加工总 tick 数（三段线性插值） */
@@ -362,6 +490,7 @@ class BlastFurnaceBlockEntity(
 
         fillAirTankFromSlot()
 
+<<<<<<< HEAD
         // 当前温度下的散热（维持需求，定点 ×DISSIPATION_SCALE）
         val dissipation = getDissipation(temperature)
         // 每度累积阈值（定点）：HEAT_PER_DEGREE × SCALE
@@ -412,14 +541,67 @@ class BlastFurnaceBlockEntity(
         // HU 只用于升温/维持（见上方），工作仅消耗压缩空气。
         // progressMax 在温度逻辑之后计算，确保用更新后的温度（避免温度刚跨过 1401 时 progressMax=0 导致除零）。
         val progressMax = getProgressMax(temperature)
+=======
+        val huPerTick = getHuPerTick(temperature)
+        val progressMax = getProgressMax(temperature)
+        sync.warmActive = if (huBuffer >= huPerTick) 1 else 0
+
+>>>>>>> backup/1.21.1
         val hasInput = !input.isEmpty && getRecipeForInput(input) != null
         val canAcceptOutput = canAcceptOutput(outputSteel, outputSlag)
         val canWork = temperature >= BlastFurnaceSync.TEMP_WORK_MIN && hasInput && canAcceptOutput
 
         if (canWork) {
+<<<<<<< HEAD
             // 消耗压缩空气，空气不足则不推进进度（不产出）
             if (!consumeAirForTick(progressMax)) {
                 markDirtyThrottled()
+=======
+            // HU 不足以维持当前温度：清空缓存，触发温度衰减
+            if (huBuffer < huPerTick) {
+                huBuffer = 0L
+                applyTemperatureDecay()
+                if (temperature < BlastFurnaceSync.TEMP_WORK_MIN && sync.progress != 0) {
+                    sync.progress = 0
+                    airConsumedThisSteel = 0L
+                }
+                setActiveState(world, pos, state, false)
+                sync.huInput = huBuffer.toInt()
+                huReceivedThisTick = 0L
+                heatReceivedLastTick = false
+                return
+            }
+
+            // HU 充足，消耗 HU 维持温度
+            huBuffer -= huPerTick
+            tempDecayProgress = 0
+
+            // 无材料：重置进度
+            if (!hasInput) {
+                if (sync.progress != 0) sync.progress = 0
+                markDirty()
+                setActiveState(world, pos, state, false)
+                sync.huInput = huBuffer.toInt()
+                huReceivedThisTick = 0L
+                heatReceivedLastTick = false
+                return
+            }
+
+            // 产物满
+            if (!canAcceptOutput) {
+                markDirty()
+                setActiveState(world, pos, state, false)
+                sync.huInput = huBuffer.toInt()
+                huReceivedThisTick = 0L
+                heatReceivedLastTick = false
+                return
+            }
+
+            // 消耗压缩空气
+            if (!consumeAirForTick(progressMax)) {
+                // 空气不足：不推进进度
+                markDirty()
+>>>>>>> backup/1.21.1
                 setActiveState(world, pos, state, false)
                 sync.huInput = huBuffer.toInt()
                 huReceivedThisTick = 0L
@@ -440,8 +622,13 @@ class BlastFurnaceBlockEntity(
                 else outputSlag.increment(slagOutput.count)
                 sync.progress = 0
                 airConsumedThisSteel = 0L
+<<<<<<< HEAD
                 markDirtyThrottled()
                 setActiveState(world, pos, state, true)
+=======
+                markDirty()
+                setActiveState(world, pos, state, false)
+>>>>>>> backup/1.21.1
                 sync.huInput = huBuffer.toInt()
                 huReceivedThisTick = 0L
                 heatReceivedLastTick = false
@@ -449,6 +636,7 @@ class BlastFurnaceBlockEntity(
             }
 
             sync.progress = nextProgress
+<<<<<<< HEAD
             markDirtyThrottled()
             setActiveState(world, pos, state, true)
         } else {
@@ -459,6 +647,41 @@ class BlastFurnaceBlockEntity(
         }
 
         markDirty()
+=======
+            markDirty()
+            setActiveState(world, pos, state, true)
+        } else {
+            // 不工作
+            if (sync.progress != 0) sync.progress = 0
+            airConsumedThisSteel = 0L
+
+            if (huBuffer >= huPerTick && temperature < BlastFurnaceSync.TEMP_MAX) {
+                // HU 充足且未达上限：消耗 HU，累积温度进度
+                huBuffer -= huPerTick
+                tempDecayProgress = 0
+                tempProgress++
+                val ticksPerTemp = getTicksPerTemp(temperature)
+                if (tempProgress >= ticksPerTemp) {
+                    temperature++
+                    tempProgress = 0
+                    sync.temperature = temperature
+                }
+                markDirty()
+            } else if (huBuffer >= huPerTick) {
+                // 已达温度上限（temperature >= TEMP_MAX）：消耗 HU 维持温度，不衰减
+                huBuffer -= huPerTick
+                tempDecayProgress = 0
+                tempProgress = 0
+                markDirty()
+            } else {
+                // HU 不足：清空缓存，温度衰减
+                if (huBuffer > 0L) huBuffer = 0L
+                applyTemperatureDecay()
+            }
+            setActiveState(world, pos, state, false)
+        }
+
+>>>>>>> backup/1.21.1
         sync.huInput = huBuffer.toInt()
         huReceivedThisTick = 0L
         heatReceivedLastTick = false
@@ -466,7 +689,10 @@ class BlastFurnaceBlockEntity(
 
     /** 按当前温度 / 进度消耗压缩空气，返回是否成功消耗（可用于推进进度） */
     private fun consumeAirForTick(progressMax: Int): Boolean {
+<<<<<<< HEAD
         if (progressMax <= 0) return false  // 防御：温度低于工作阈值时不应调用
+=======
+>>>>>>> backup/1.21.1
         val airPerSteel = BlastFurnaceSync.getAirPerSteelDroplets(temperature).toLong()
         // 当前进度应消耗的 droplet 总量
         val expected = airPerSteel * sync.progress / progressMax
@@ -488,9 +714,15 @@ class BlastFurnaceBlockEntity(
 
         // AirCell / FluidCellItem[compressed_air]：消耗 1 个，返还 empty_cell
         if (airItem is AirCell || airItem is FluidCellItem) {
+<<<<<<< HEAD
             if (airItem is FluidCellItem && !isCompressedAirFluidCellCached(airSlot)) return
             val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
             val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+=======
+            if (airItem is FluidCellItem && !isCompressedAirFluidCell(airSlot)) return
+            val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
+            val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")))
+>>>>>>> backup/1.21.1
             val canAcceptEmpty = emptySlot.isEmpty ||
                 (ItemStack.areItemsEqual(emptySlot, emptyCell) && emptySlot.count + 1 <= emptyCell.maxCount)
             if (!canAcceptEmpty) return
@@ -504,12 +736,17 @@ class BlastFurnaceBlockEntity(
         }
 
         // 任意 Fabric Transfer API 流体容器：尝试提取 1 桶 compressed_air
+<<<<<<< HEAD
         @Suppress("DEPRECATION")
         val ctx = ContainerItemContext.withInitial(airSlot.copyWithCount(1))
+=======
+        val ctx = ContainerItemContext.withConstant(airSlot)
+>>>>>>> backup/1.21.1
         val storage = ctx.find(FluidStorage.ITEM) ?: return
         Transaction.openOuter().use { tx ->
             for (view in storage) {
                 if (view.isResourceBlank || view.amount < FluidConstants.BUCKET) continue
+<<<<<<< HEAD
                 val containedFluid = view.resource
                 if (!ModFluids.isCompressedAir(containedFluid.fluid)) continue
                 val extracted = view.extract(containedFluid, FluidConstants.BUCKET, tx)
@@ -527,6 +764,15 @@ class BlastFurnaceBlockEntity(
                 if (airSlot.isEmpty) setStack(SLOT_AIR_INPUT, ItemStack.EMPTY)
                 if (emptyOutput.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyContainer)
                 else emptyOutput.increment(emptyContainer.count)
+=======
+                if (!ModFluids.isCompressedAir(view.resource.fluid)) continue
+                val extracted = view.extract(view.resource, FluidConstants.BUCKET, tx)
+                if (extracted < FluidConstants.BUCKET) continue
+                tx.commit()
+                airSlot.decrement(1)
+                val remaining = ctx.itemVariant.toStack(ctx.amount.toInt().coerceAtLeast(0))
+                setStack(SLOT_AIR_INPUT, if (airSlot.isEmpty) ItemStack.EMPTY else remaining)
+>>>>>>> backup/1.21.1
                 airTankInternal.tryFillAir(FluidConstants.BUCKET)
                 return
             }
@@ -540,7 +786,11 @@ class BlastFurnaceBlockEntity(
             return ModFluids.isCompressedAir(variant.fluid)
         }
         // 再检查任意 Fabric Transfer API 流体容器
+<<<<<<< HEAD
         val storage = ContainerItemContext.withConstant(stack).find(FluidStorage.ITEM) ?: return false
+=======
+        val storage = FluidStorage.ITEM.find(stack, null) ?: return false
+>>>>>>> backup/1.21.1
         for (view in storage) {
             if (!view.isResourceBlank && view.amount >= FluidConstants.BUCKET && ModFluids.isCompressedAir(view.resource.fluid)) {
                 return true
@@ -549,6 +799,7 @@ class BlastFurnaceBlockEntity(
         return false
     }
 
+<<<<<<< HEAD
     // 压缩空气判定缓存：fillAirTankFromSlot 每 tick 调用，而任意流体容器的判定需要
     // 创建 ContainerItemContext + 遍历 fluid storage views，开销不小。槽位物品未变时
     // （ItemStack 相等含 item/count/NBT）结果必然不变，直接复用缓存跳过重复遍历。
@@ -561,6 +812,20 @@ class BlastFurnaceBlockEntity(
         cachedAirCheckStack = stack.copy()
         cachedAirIsCompressed = result
         return result
+=======
+    /** HU 不足时温度衰减，达到阈值后温度 -1。温度到 0 后不再衰减。 */
+    private fun applyTemperatureDecay() {
+        if (temperature <= 0) return
+        tempDecayProgress++
+        val ticksPerDecay = getTicksPerDecay(temperature)
+        if (tempDecayProgress >= ticksPerDecay) {
+            temperature--
+            tempDecayProgress = 0
+            tempProgress = 0
+            sync.temperature = temperature
+            markDirty()
+        }
+>>>>>>> backup/1.21.1
     }
 
     private fun canAcceptOutput(steel: ItemStack, slag: ItemStack): Boolean {

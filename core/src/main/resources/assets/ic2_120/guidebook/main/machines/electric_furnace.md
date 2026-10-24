@@ -40,7 +40,11 @@ The input must have a vanilla `smelting` recipe. When the output slot is blocked
 
 ## Upgrades and Automation
 
+<<<<<<< HEAD
 The Electric Furnace accepts overclocker, energy storage, transformer, ejector, and pulling upgrades. Overclockers increase speed and energy use: each one shortens processing time to 70% (speed ×1/0.7) and multiplies energy cost by 1.6; progress and energy are accumulated as floats with the fractional remainder carried across ticks. Energy storage upgrades add 10,000 EU capacity each. Transformer upgrades raise the accepted input tier. Ejector upgrades push output to nearby inventories, while pulling upgrades pull valid smelting inputs from nearby inventories.
+=======
+The Electric Furnace accepts overclocker, energy storage, transformer, ejector, and pulling upgrades. Overclockers raise EU/t cost and apply a speed multiplier; progress advances in whole-number steps. Energy storage upgrades add 10,000 EU capacity each. Transformer upgrades raise the accepted input tier. Ejector upgrades push output to nearby inventories, while pulling upgrades pull valid smelting inputs from nearby inventories.
+>>>>>>> backup/1.21.1
 
 External item transfer can insert valid upgrades, one battery, or valid smelting inputs from any side, and can extract only the output slot.
 

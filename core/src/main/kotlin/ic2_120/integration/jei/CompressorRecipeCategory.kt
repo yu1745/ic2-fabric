@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package ic2_120.integration.jei
+=======
+package ic2_120_advanced_solar_addon.integration.jei
+>>>>>>> backup/1.21.1
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder
 import mezz.jei.api.gui.drawable.IDrawable
@@ -10,7 +14,18 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+<<<<<<< HEAD
 
+=======
+import java.text.NumberFormat
+
+<<<<<<<< HEAD:advanced-solar-addon/src/main/kotlin/ic2_120_advanced_solar_addon/integration/jei/MolecularTransformerRecipeCategory.kt
+class MolecularTransformerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MolecularTransformerJeiRecipe> {
+    private val background: IDrawable = guiHelper.createBlankDrawable(140, 54)
+    private val icon: IDrawable = guiHelper.createDrawableItemStack(
+        ItemStack(Registries.ITEM.get(Identifier("ic2_120_advanced_solar_addon", "molecular_transformer")))
+========
+>>>>>>> backup/1.21.1
 /**
  * 压缩机 JEI 分类 — 使用真实机器纹理 [guicompressor.png] 作为背景。
  *
@@ -19,6 +34,7 @@ import net.minecraft.util.Identifier
  */
 class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CompressorJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
+<<<<<<< HEAD
         Identifier("ic2", "textures/gui/guicompressor.png"),
         30, 5, 118, 78
     )
@@ -29,6 +45,19 @@ class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Compress
     override fun getRecipeType() = Ic2JeiRecipeTypes.COMPRESSOR
 
     override fun getTitle(): Text = Text.translatable("block.ic2_120.compressor")
+=======
+        Identifier.of("ic2", "textures/gui/guicompressor.png"),
+        30, 5, 118, 78
+    )
+    private val icon: IDrawable = guiHelper.createDrawableItemStack(
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "compressor")))
+>>>>>>>> backup/1.21.1:core/src/main/kotlin/ic2_120/integration/jei/CompressorRecipeCategory.kt
+    )
+
+    override fun getRecipeType() = Ic2AdvancedSolarAddonJeiRecipeTypes.MOLECULAR_TRANSFORMER
+
+    override fun getTitle(): Text = Text.translatable("block.ic2_120_advanced_solar_addon.molecular_transformer")
+>>>>>>> backup/1.21.1
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
@@ -37,9 +66,25 @@ class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Compress
 
     override fun setRecipe(
         builder: IRecipeLayoutBuilder,
+<<<<<<< HEAD
         recipe: CompressorJeiRecipe,
         focuses: IFocusGroup
     ) {
+=======
+        recipe: MolecularTransformerJeiRecipe,
+        focuses: IFocusGroup
+    ) {
+<<<<<<<< HEAD:advanced-solar-addon/src/main/kotlin/ic2_120_advanced_solar_addon/integration/jei/MolecularTransformerRecipeCategory.kt
+        builder.addSlot(RecipeIngredientRole.INPUT, 20, 18)
+            .addItemStack(recipe.input)
+
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 102, 18)
+            .addItemStack(recipe.output)
+            .addRichTooltipCallback { _, tooltip ->
+                tooltip.add(Text.translatable("jei.ic2_120_advanced_solar_addon.molecular_transformer.energy", NumberFormat.getIntegerInstance().format(recipe.energy)))
+            }
+========
+>>>>>>> backup/1.21.1
         // 输入槽 — 与纹理中 (58, 15) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 28, 10)
             .addItemStacks(recipe.input)
@@ -53,5 +98,9 @@ class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Compress
             builder.addSlot(RecipeIngredientRole.OUTPUT, 86, 47)
                 .addItemStack(recipe.containerReturn)
         }
+<<<<<<< HEAD
+=======
+>>>>>>>> backup/1.21.1:core/src/main/kotlin/ic2_120/integration/jei/CompressorRecipeCategory.kt
+>>>>>>> backup/1.21.1
     }
 }

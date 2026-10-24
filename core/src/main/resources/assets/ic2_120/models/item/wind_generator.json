@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/block/machine3d/wind_generator_item.obj",
   "parent": "minecraft:block/block",
@@ -14,4 +15,7 @@
     "lamp_off": "ic2_120:block/machine3d/lamp_off",
     "gauge": "ic2_120:block/machine3d/gauge"
   }
+=======
+  "parent": "ic2:block/generator/electric/wind_generator"
+>>>>>>> backup/1.21.1
 }

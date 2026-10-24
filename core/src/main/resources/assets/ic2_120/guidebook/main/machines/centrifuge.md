@@ -55,7 +55,11 @@ Shift-clicking routes upgrades to the upgrade slots, batteries to the battery sl
 
 The Thermal Centrifuge supports Overclocker, Transformer, Energy Storage, Ejector, and Pulling upgrades.
 
+<<<<<<< HEAD
 - Overclockers increase processing speed and processing energy use: each one shortens processing time to 70% (speed ×1/0.7) and multiplies energy cost by 1.6; progress and energy are accumulated as floats. The 1 EU/t heating cost is not overclocked.
+=======
+- Overclockers increase processing speed and processing energy use. The 1 EU/t heating cost is not overclocked.
+>>>>>>> backup/1.21.1
 - Transformer upgrades raise the accepted input tier by one level each, increasing the input limit from the base 128 EU/t.
 - Energy Storage upgrades add 10,000 EU of buffer each.
 - Ejector upgrades push items from the three output slots into adjacent inventories, with optional item filter and side settings.

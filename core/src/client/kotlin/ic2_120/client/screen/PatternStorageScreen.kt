@@ -2,17 +2,27 @@ package ic2_120.client.screen
 
 import ic2_120.client.t
 import ic2_120.content.block.PatternStorageBlock
+<<<<<<< HEAD
 import ic2_120.content.network.NetworkManager
+=======
+import ic2_120.content.network.SelectTemplatePayload
+>>>>>>> backup/1.21.1
 import ic2_120.content.screen.PatternStorageScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.uu.UuTemplateEntry
 import ic2_120.registry.annotation.ModScreen
+<<<<<<< HEAD
 import io.netty.buffer.Unpooled
+=======
+>>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
 import net.minecraft.network.PacketByteBuf
+=======
+>>>>>>> backup/1.21.1
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
@@ -36,7 +46,11 @@ class PatternStorageScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -134,10 +148,14 @@ class PatternStorageScreen(
     private fun navigateTemplate(delta: Int) {
         if (templates.isEmpty()) return
         val newIndex = ((selectedIndex + delta) % templates.size + templates.size) % templates.size
+<<<<<<< HEAD
         val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(handler.blockPos)
         buf.writeVarInt(newIndex)
         ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
+=======
+        ClientPlayNetworking.send(SelectTemplatePayload(handler.blockPos, newIndex))
+>>>>>>> backup/1.21.1
     }
 
     private fun templateToStack(template: UuTemplateEntry): ItemStack {
@@ -147,7 +165,11 @@ class PatternStorageScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guipatternstorage.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guipatternstorage.png")
+>>>>>>> backup/1.21.1
         private const val TEX_SIZE = 256
 
         private const val TEMPLATE_ITEM_X = 18

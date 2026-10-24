@@ -15,7 +15,11 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+=======
+import net.minecraft.data.server.recipe.RecipeExporter
+>>>>>>> backup/1.21.1
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -24,17 +28,27 @@ import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
+<<<<<<< HEAD
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import java.util.function.Consumer
+=======
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
+>>>>>>> backup/1.21.1
 
 // i18n: block.ic2_120_advanced_solar_addon.quantum_solar_panel
 // zh_cn: 量子太阳能发电机
 // en_us: Quantum Solar Panel
 @ModBlock(name = "quantum_solar_panel", registerItem = true, tab = CreativeTab.IC2_SOLAR, group = "solar_panel")
+<<<<<<< HEAD
 open class QuantumSolarPanelBlock : MachineBlock() {
+=======
+class QuantumSolarPanelBlock : MachineBlock() {
+>>>>>>> backup/1.21.1
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         QuantumSolarPanelBlockEntity(pos, state)
@@ -45,20 +59,30 @@ open class QuantumSolarPanelBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, QuantumSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+=======
+        else validateTicker(type, QuantumSolarPanelBlockEntity::class.type()) { w: World, p: BlockPos, s: BlockState, be -> be.tick(w, p, s) }
+>>>>>>> backup/1.21.1
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? NamedScreenHandlerFactory
     }
 
+<<<<<<< HEAD
     @Deprecated("Override without Hand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
+=======
+>>>>>>> backup/1.21.1
     override fun onUse(
         state: BlockState,
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
+<<<<<<< HEAD
         hand: Hand,
+=======
+>>>>>>> backup/1.21.1
         hit: BlockHitResult
     ): ActionResult {
         if (!world.isClient) {
@@ -81,7 +105,11 @@ open class QuantumSolarPanelBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
+<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+=======
+        fun generateRecipes(exporter: RecipeExporter) {
+>>>>>>> backup/1.21.1
             val ultimateSolar = UltimateSolarPanelBlock::class.item()
             val quantumCore = QuantumCore::class.instance()
 

@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/block/machine3d/electric_furnace_item.obj",
   "parent": "minecraft:block/block",
@@ -13,4 +14,7 @@
     "coil_off": "ic2_120:block/machine3d/coil_off",
     "lamp_off": "ic2_120:block/machine3d/lamp_off"
   }
+=======
+  "parent": "ic2_120:block/machine/processing/basic/electric_furnace"
+>>>>>>> backup/1.21.1
 }

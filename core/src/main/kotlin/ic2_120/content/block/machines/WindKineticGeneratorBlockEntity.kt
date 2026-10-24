@@ -20,11 +20,12 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -45,13 +46,17 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.floor
 import kotlin.math.sin
+import ic2_120.editCustomData
+import ic2_120.getCustomData
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 @ModBlockEntity(block = WindKineticGeneratorBlock::class)
 class WindKineticGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, IKineticMachinePort, IKineticRotorProvider,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = WindKineticGeneratorBlock.ACTIVE
 
@@ -223,7 +228,7 @@ class WindKineticGeneratorBlockEntity(
     fun getRotorRemainingClearHours(): Double {
         val rotor = inventory[ROTOR_SLOT]
         if (rotor.isEmpty || !rotor.isDamageable) return 0.0
-        val remainder = rotor.nbt?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
+        val remainder = rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
         return ((rotor.maxDamage - rotor.damage).toDouble() - remainder).coerceAtLeast(0.0) / TICKS_PER_HOUR
     }
 
@@ -405,26 +410,27 @@ class WindKineticGeneratorBlockEntity(
      */
     private fun applyRotorWear(rotor: ItemStack, wearMultiplier: Double): Boolean {
         if (!rotor.isDamageable || wearMultiplier <= 0.0) return false
-        val nbt = rotor.orCreateNbt
-        val accumulated = (nbt.getDouble(ROTOR_WEAR_REMAINDER_KEY) + wearMultiplier).coerceAtLeast(0.0)
+        val accumulated = ((rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0) + wearMultiplier).coerceAtLeast(0.0)
         val wear = floor(accumulated).toInt()
         val remainder = accumulated - wear
 
         if (wear <= 0) {
-            nbt.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder)
+            rotor.editCustomData { it.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder) }
             return false
         }
 
         if (rotor.damage + wear >= rotor.maxDamage) {
-            nbt.remove(ROTOR_WEAR_REMAINDER_KEY)
+            rotor.editCustomData { it.remove(ROTOR_WEAR_REMAINDER_KEY) }
             return true
         }
 
         rotor.damage += wear
-        if (remainder > 0.0) {
-            nbt.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder)
-        } else {
-            nbt.remove(ROTOR_WEAR_REMAINDER_KEY)
+        rotor.editCustomData { nbt ->
+            if (remainder > 0.0) {
+                nbt.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder)
+            } else {
+                nbt.remove(ROTOR_WEAR_REMAINDER_KEY)
+            }
         }
         markDirty()
         return false
@@ -686,27 +692,29 @@ class WindKineticGeneratorBlockEntity(
 
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         // Inventories.readNbt 不会在 nbt 中缺失该槽位时自动清空旧值，先清槽避免客户端残留渲染状态
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.wind_kinetic_generator")

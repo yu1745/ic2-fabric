@@ -25,12 +25,10 @@ import ic2_120.registry.recipeId
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 // ========== 普通充电电池 ==========
 
@@ -47,7 +45,7 @@ class ReBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val tinCable = InsulatedTinCableBlock::class.item()
             val copperCable = InsulatedCopperCableBlock::class.item()
             val tinCasing = TinCasing::class.instance()
@@ -88,7 +86,7 @@ class AdvancedReBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val copperCable = InsulatedCopperCableBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedReBatteryItem::class.instance(), 1)
                 .pattern("WBW")
@@ -108,16 +106,132 @@ class AdvancedReBatteryItem : BatteryItemBase(
  * 能量水晶（Energy Crystal）
  *
  * @spec 等级3, 容量1,000,000 EU, 速度512 EU/t
+ *
+ * 右键使用可给背包中其他带电物品充电
  */
 @ModItem(name = "energy_crystal", tab = CreativeTab.IC2_MATERIALS, group = "battery")
 class EnergyCrystalItem : BatteryItemBase(
     name = "energy_crystal", tier = 3, maxCapacity = 1_000_000, canChargeWireless = false
-)
+) {
+    override fun use(world: net.minecraft.world.World, user: net.minecraft.entity.player.PlayerEntity, hand: net.minecraft.util.Hand): net.minecraft.util.TypedActionResult<net.minecraft.item.ItemStack> {
+        val crystal = user.getStackInHand(hand)
+        if (world.isClient) return net.minecraft.util.TypedActionResult.success(crystal)
+
+        // 获取水晶当前电量
+        val availableEnergy = getCurrentCharge(crystal)
+        if (availableEnergy <= 0) {
+            user.sendMessage(net.minecraft.text.Text.literal("§c能量水晶电量不足！"), true)
+            return net.minecraft.util.TypedActionResult.fail(crystal)
+        }
+
+        var totalCharged = 0L
+        var itemsCharged = 0
+        var energyRemaining = availableEnergy
+
+        // 遍历玩家主背包
+        for (slot in 0..<user.inventory.main.size) {
+            if (energyRemaining <= 0) break
+
+            // 跳过当前手持的水晶
+            val stack = user.inventory.main[slot]
+            if (stack.isEmpty || stack === crystal) continue
+
+            // 检查物品是否可以被充电
+            if (!stack.canBeCharged()) continue
+
+            // 获取目标物品的电池接口
+            val targetBattery = stack.item as? IBatteryItem
+            val targetTool = stack.item as? IElectricTool
+
+            // 计算可以充入的电量
+            val targetCurrent = targetBattery?.getCurrentCharge(stack) ?: targetTool?.getEnergy(stack) ?: 0
+            val targetMax = targetBattery?.maxCapacity ?: targetTool?.getMaxEnergy() ?: 0
+            val canAccept = targetMax - targetCurrent
+
+            if (canAccept > 0) {
+                // 计算实际充入电量（受水晶剩余电量和目标容量限制）
+                val toCharge = minOf(energyRemaining, canAccept)
+
+                // 执行充电
+                targetBattery?.charge(stack, toCharge)
+                    ?: targetTool?.setEnergy(stack, targetCurrent + toCharge)
+
+                energyRemaining -= toCharge
+                totalCharged += toCharge
+                itemsCharged++
+            }
+        }
+
+        // 遍历玩家护甲栏
+        for (slot in 0..<user.inventory.armor.size) {
+            if (energyRemaining <= 0) break
+
+            val stack = user.inventory.armor[slot]
+            if (stack.isEmpty || !stack.canBeCharged()) continue
+
+            val targetBattery = stack.item as? IBatteryItem
+            val targetTool = stack.item as? IElectricTool
+
+            val targetCurrent = targetBattery?.getCurrentCharge(stack) ?: targetTool?.getEnergy(stack) ?: 0
+            val targetMax = targetBattery?.maxCapacity ?: targetTool?.getMaxEnergy() ?: 0
+            val canAccept = targetMax - targetCurrent
+
+            if (canAccept > 0) {
+                val toCharge = minOf(energyRemaining, canAccept)
+                targetBattery?.charge(stack, toCharge)
+                    ?: targetTool?.setEnergy(stack, targetCurrent + toCharge)
+                energyRemaining -= toCharge
+                totalCharged += toCharge
+                itemsCharged++
+            }
+        }
+
+        // 遍历副手
+        val offhandStack = user.offHandStack
+        if (energyRemaining > 0 && !offhandStack.isEmpty && offhandStack.canBeCharged() && offhandStack !== crystal) {
+            val targetBattery = offhandStack.item as? IBatteryItem
+            val targetTool = offhandStack.item as? IElectricTool
+
+            val targetCurrent = targetBattery?.getCurrentCharge(offhandStack) ?: targetTool?.getEnergy(offhandStack) ?: 0
+            val targetMax = targetBattery?.maxCapacity ?: targetTool?.getMaxEnergy() ?: 0
+            val canAccept = targetMax - targetCurrent
+
+            if (canAccept > 0) {
+                val toCharge = minOf(energyRemaining, canAccept)
+                targetBattery?.charge(offhandStack, toCharge)
+                    ?: targetTool?.setEnergy(offhandStack, targetCurrent + toCharge)
+                energyRemaining -= toCharge
+                totalCharged += toCharge
+                itemsCharged++
+            }
+        }
+
+        // 更新水晶电量
+        val usedEnergy = availableEnergy - energyRemaining
+        if (usedEnergy > 0) {
+            setCurrentCharge(crystal, energyRemaining)
+
+            // 发送反馈消息
+            val formattedEnergy = "%,d".format(usedEnergy)
+            val percentUsed = (usedEnergy * 100 / maxCapacity).toInt()
+            user.sendMessage(
+                net.minecraft.text.Text.literal("§a已充能 $itemsCharged 件物品，消耗 §e$formattedEnergy EU§a (${percentUsed}%)"),
+                true
+            )
+        } else {
+            user.sendMessage(net.minecraft.text.Text.literal("§c没有物品需要充电！"), true)
+        }
+
+        return net.minecraft.util.TypedActionResult.success(crystal)
+    }
+}
 
 /**
  * 蓝波顿水晶（Lapotron Crystal）
  *
  * @spec 等级4, 容量10,000,000 EU, 速度2,048 EU/t
+ *
+ * 右键使用可给背包中其他带电物品充电
  */
 @ModItem(name = "lapotron_crystal", tab = CreativeTab.IC2_MATERIALS, group = "battery")
 class LapotronCrystalItem : BatteryItemBase(
@@ -125,7 +239,7 @@ class LapotronCrystalItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 含能量水晶：使用 battery_energy_shaped 继承输入水晶电量
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -139,6 +253,118 @@ class LapotronCrystalItem : BatteryItemBase(
                 )
             )
         }
+    }
+
+    override fun use(world: net.minecraft.world.World, user: net.minecraft.entity.player.PlayerEntity, hand: net.minecraft.util.Hand): net.minecraft.util.TypedActionResult<net.minecraft.item.ItemStack> {
+        val crystal = user.getStackInHand(hand)
+        if (world.isClient) return net.minecraft.util.TypedActionResult.success(crystal)
+
+        // 获取水晶当前电量
+        val availableEnergy = getCurrentCharge(crystal)
+        if (availableEnergy <= 0) {
+            user.sendMessage(net.minecraft.text.Text.literal("§c蓝波顿水晶电量不足！"), true)
+            return net.minecraft.util.TypedActionResult.fail(crystal)
+        }
+
+        var totalCharged = 0L
+        var itemsCharged = 0
+        var energyRemaining = availableEnergy
+
+        // 遍历玩家主背包
+        for (slot in 0..<user.inventory.main.size) {
+            if (energyRemaining <= 0) break
+
+            // 跳过当前手持的水晶
+            val stack = user.inventory.main[slot]
+            if (stack.isEmpty || stack === crystal) continue
+
+            // 检查物品是否可以被充电
+            if (!stack.canBeCharged()) continue
+
+            // 获取目标物品的电池接口
+            val targetBattery = stack.item as? IBatteryItem
+            val targetTool = stack.item as? IElectricTool
+
+            // 计算可以充入的电量
+            val targetCurrent = targetBattery?.getCurrentCharge(stack) ?: targetTool?.getEnergy(stack) ?: 0
+            val targetMax = targetBattery?.maxCapacity ?: targetTool?.getMaxEnergy() ?: 0
+            val canAccept = targetMax - targetCurrent
+
+            if (canAccept > 0) {
+                // 计算实际充入电量（受水晶剩余电量和目标容量限制）
+                val toCharge = minOf(energyRemaining, canAccept)
+
+                // 执行充电
+                targetBattery?.charge(stack, toCharge)
+                    ?: targetTool?.setEnergy(stack, targetCurrent + toCharge)
+
+                energyRemaining -= toCharge
+                totalCharged += toCharge
+                itemsCharged++
+            }
+        }
+
+        // 遍历玩家护甲栏
+        for (slot in 0..<user.inventory.armor.size) {
+            if (energyRemaining <= 0) break
+
+            val stack = user.inventory.armor[slot]
+            if (stack.isEmpty || !stack.canBeCharged()) continue
+
+            val targetBattery = stack.item as? IBatteryItem
+            val targetTool = stack.item as? IElectricTool
+
+            val targetCurrent = targetBattery?.getCurrentCharge(stack) ?: targetTool?.getEnergy(stack) ?: 0
+            val targetMax = targetBattery?.maxCapacity ?: targetTool?.getMaxEnergy() ?: 0
+            val canAccept = targetMax - targetCurrent
+
+            if (canAccept > 0) {
+                val toCharge = minOf(energyRemaining, canAccept)
+                targetBattery?.charge(stack, toCharge)
+                    ?: targetTool?.setEnergy(stack, targetCurrent + toCharge)
+                energyRemaining -= toCharge
+                totalCharged += toCharge
+                itemsCharged++
+            }
+        }
+
+        // 遍历副手
+        val offhandStack = user.offHandStack
+        if (energyRemaining > 0 && !offhandStack.isEmpty && offhandStack.canBeCharged() && offhandStack !== crystal) {
+            val targetBattery = offhandStack.item as? IBatteryItem
+            val targetTool = offhandStack.item as? IElectricTool
+
+            val targetCurrent = targetBattery?.getCurrentCharge(offhandStack) ?: targetTool?.getEnergy(offhandStack) ?: 0
+            val targetMax = targetBattery?.maxCapacity ?: targetTool?.getMaxEnergy() ?: 0
+            val canAccept = targetMax - targetCurrent
+
+            if (canAccept > 0) {
+                val toCharge = minOf(energyRemaining, canAccept)
+                targetBattery?.charge(offhandStack, toCharge)
+                    ?: targetTool?.setEnergy(offhandStack, targetCurrent + toCharge)
+                energyRemaining -= toCharge
+                totalCharged += toCharge
+                itemsCharged++
+            }
+        }
+
+        // 更新水晶电量
+        val usedEnergy = availableEnergy - energyRemaining
+        if (usedEnergy > 0) {
+            setCurrentCharge(crystal, energyRemaining)
+
+            // 发送反馈消息
+            val formattedEnergy = "%,d".format(usedEnergy)
+            val percentUsed = (usedEnergy * 100 / maxCapacity).toInt()
+            user.sendMessage(
+                net.minecraft.text.Text.literal("§a已充能 $itemsCharged 件物品，消耗 §e$formattedEnergy EU§a (${percentUsed}%)"),
+                true
+            )
+        } else {
+            user.sendMessage(net.minecraft.text.Text.literal("§c没有物品需要充电！"), true)
+        }
+
+        return net.minecraft.util.TypedActionResult.success(crystal)
     }
 }
 
@@ -155,7 +381,7 @@ class ReBatteryWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四角电路板，四边充电电池，中心空
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -182,7 +408,7 @@ class AdvancedReBatteryWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四角热交换器，四边高级充电电池，中心无线充电电池（等级1）
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -210,7 +436,7 @@ class EnergyCrystalWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四角元件热交换器，四边能量水晶，中心高级无线充电电池
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -238,7 +464,7 @@ class LapotronCrystalWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四角高级热交换器，四边兰波顿水晶，中心无线能量水晶
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -270,7 +496,7 @@ class SingleUseBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val copperCable = InsulatedCopperCableBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SingleUseBatteryItem::class.instance(), 8)
                 .pattern(" W ")

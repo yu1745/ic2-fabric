@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/block/machine3d/water_kinetic_generator_item.obj",
   "parent": "minecraft:block/block",
@@ -15,3 +16,7 @@
     "liquid": "ic2_120:block/machine3d/liquid"
   }
 }
+=======
+  "parent": "ic2:block/generator/kinetic/water_kinetic_generator"
+}
+>>>>>>> backup/1.21.1

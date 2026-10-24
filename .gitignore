@@ -43,24 +43,10 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
-
-# node
-
-node_modules/
 .claude/
-.codex*/
 
 # deploy
 
-/deploy
-/deploy.ps1
+deploy/
 r
 .playwright-cli/
-.zcode/
-
-# 构建产物（build.sh 输出）
-dist/
-
-# local vector index cache
-.zvec-grep/
-__pycache__/

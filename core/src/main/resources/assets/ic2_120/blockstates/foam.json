@@ -1,5 +1,10 @@
 {
   "variants": {
+<<<<<<< HEAD
     "": { "model": "ic2_120:block/foam" }
+=======
+    "curing_scheduled=false": { "model": "ic2_120:block/foam" },
+    "curing_scheduled=true": { "model": "ic2_120:block/foam" }
+>>>>>>> backup/1.21.1
   }
 }

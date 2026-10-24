@@ -3,7 +3,10 @@ package ic2_120.client.screen
 import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.t
 import ic2_120.content.block.WindGeneratorBlock
+<<<<<<< HEAD
 import ic2_120.content.block.machines.WindGeneratorBlockEntity
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.WindGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
@@ -25,12 +28,23 @@ class WindGeneratorScreen(
         backgroundHeight = GUI_SIZE.height
     }
 
+<<<<<<< HEAD
+=======
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
+>>>>>>> backup/1.21.1
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -43,6 +57,7 @@ class WindGeneratorScreen(
         val outputRate = handler.sync.getSyncedExtractedAmount()
         val inputText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
+<<<<<<< HEAD
         val statusKey = if (handler.sync.status == WindGeneratorBlockEntity.STATUS_TOO_LOW) {
             "gui.ic2_120.wind_generator.too_low"
         } else {
@@ -61,12 +76,22 @@ class WindGeneratorScreen(
             if (handler.sync.status == WindGeneratorBlockEntity.STATUS_TOO_LOW) 0xFF5555 else 0x55FF55,
             false
         )
+=======
+        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
+        val sideTextX = left - sideTextWidth - 4
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
+>>>>>>> backup/1.21.1
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiwindgenerator.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiwindgenerator.png")
+>>>>>>> backup/1.21.1
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD
 

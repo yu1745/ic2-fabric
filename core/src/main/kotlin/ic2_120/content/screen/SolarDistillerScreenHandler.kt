@@ -9,17 +9,32 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+<<<<<<< HEAD
+=======
+import ic2_120.registry.annotation.ScreenFactory
+>>>>>>> backup/1.21.1
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
+<<<<<<< HEAD
 import net.minecraft.item.ItemStack
+=======
+import net.minecraft.inventory.SimpleInventory
+import net.minecraft.item.ItemStack
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.screen.ArrayPropertyDelegate
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 
+<<<<<<< HEAD
 @ModScreenHandler(block = SolarDistillerBlock::class, inventorySize = SolarDistillerBlockEntity.INVENTORY_SIZE)
+=======
+@ModScreenHandler(block = SolarDistillerBlock::class)
+>>>>>>> backup/1.21.1
 class SolarDistillerScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -86,12 +101,16 @@ class SolarDistillerScreenHandler(
                 )
                 if (!moved) return ItemStack.EMPTY
             }
+<<<<<<< HEAD
             else -> {
                 // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                 // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                 if (index >= PLAYER_INV_START) return ItemStack.EMPTY
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
             }
+=======
+            else -> if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
+>>>>>>> backup/1.21.1
         }
 
         if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
@@ -118,5 +137,16 @@ class SolarDistillerScreenHandler(
         const val PLAYER_INV_START = 6
         const val HOTBAR_END = 41
 
+<<<<<<< HEAD
+=======
+        @ScreenFactory
+        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SolarDistillerScreenHandler {
+            val pos = buf.readBlockPos()
+            val propertyCount = buf.readVarInt()
+            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
+            val blockInv = SimpleInventory(SolarDistillerBlockEntity.INVENTORY_SIZE)
+            return SolarDistillerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
+        }
+>>>>>>> backup/1.21.1
     }
 }

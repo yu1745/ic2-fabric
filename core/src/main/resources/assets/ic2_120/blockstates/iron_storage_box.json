@@ -1,5 +1,9 @@
 {
 	"variants": {
+<<<<<<< HEAD
 		"": { "model": "ic2_120:block/iron_storage_box" }
+=======
+		"": { "model": "ic2:block/iron_storage_box" }
+>>>>>>> backup/1.21.1
 	}
 }

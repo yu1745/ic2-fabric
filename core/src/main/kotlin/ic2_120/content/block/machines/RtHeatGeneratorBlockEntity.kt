@@ -21,14 +21,17 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 放射性同位素温差加热机（RTG）：
@@ -42,7 +45,11 @@ class RtHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
+<<<<<<< HEAD
 ) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+=======
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = RtHeatGeneratorBlock.ACTIVE
 
@@ -55,7 +62,7 @@ class RtHeatGeneratorBlockEntity(
         const val INVENTORY_SIZE = FUEL_SLOT_COUNT
 
         private val RTG_PELLET_ITEM = lazy {
-            Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "rtg_pellet"))
+            Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "rtg_pellet"))
         }
 
         fun isRtgPellet(stack: ItemStack): Boolean =
@@ -98,9 +105,11 @@ class RtHeatGeneratorBlockEntity(
     fun countPelletSlots(): Int =
         (FUEL_SLOT_START..FUEL_SLOT_END).count { !getStack(it).isEmpty }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.rt_heat_generator")
@@ -134,15 +143,15 @@ class RtHeatGeneratorBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean =
         slot in FUEL_SLOT_START..FUEL_SLOT_END && !stack.isEmpty && isRtgPellet(stack)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 

@@ -1,12 +1,19 @@
 package buildcraft_addon.content.blockentity
 
+<<<<<<< HEAD
 import ic2_120.integration.ftbchunks.ClaimProtection
 
+=======
+>>>>>>> backup/1.21.1
 import buildcraft_addon.content.block.RFEngineBlock
 import buildcraft_addon.content.screen.RFEngineScreenHandler
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
+<<<<<<< HEAD
+=======
+import io.netty.buffer.Unpooled
+>>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -16,6 +23,10 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
+<<<<<<< HEAD
+=======
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
@@ -51,7 +62,11 @@ class RFEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
+<<<<<<< HEAD
 ) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory, Inventory, IKineticMachinePort {
+=======
+) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory<PacketByteBuf>, Inventory, IKineticMachinePort {
+>>>>>>> backup/1.21.1
 
     constructor(pos: BlockPos, state: BlockState) : this(
         RFEngineBlockEntity::class.type(), pos, state
@@ -91,9 +106,17 @@ class RFEngineBlockEntity(
         return RFEngineScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), propertyDelegate)
     }
 
+<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(2)
+=======
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(2)
+        return buf
+>>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.buildcraft_addon.rf_engine")
@@ -235,8 +258,11 @@ class RFEngineBlockEntity(
 
         // 过热爆炸
         if (heat >= MAX_HEAT_RF) {
+<<<<<<< HEAD
             if (!ClaimProtection.allAllowedUuid(world, listOf(pos), null, ClaimProtection.EDIT_BLOCK) ||
                 !ClaimProtection.explosionCubeAllowed(world, pos, 4.0f, null)) return
+=======
+>>>>>>> backup/1.21.1
             world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.World.ExplosionSourceType.BLOCK)
             world.breakBlock(pos, false)
         }
@@ -285,8 +311,13 @@ class RFEngineBlockEntity(
     }
 
     // === NBT ===
+<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
+=======
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
@@ -298,17 +329,29 @@ class RFEngineBlockEntity(
         nbt.putInt("currentRF", currentRF)
         val invNbt = NbtCompound()
         for (i in 0..3) {
+<<<<<<< HEAD
             val slotNbt = NbtCompound()
             if (!upgradeInventory[i].isEmpty) {
                 upgradeInventory[i].writeNbt(slotNbt)
             }
             invNbt.put("slot_$i", slotNbt)
+=======
+            invNbt.put(
+                "slot_$i",
+                if (upgradeInventory[i].isEmpty) NbtCompound() else upgradeInventory[i].encode(lookup)
+            )
+>>>>>>> backup/1.21.1
         }
         nbt.put("upgradeInventory", invNbt)
     }
 
+<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
+=======
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")
@@ -324,7 +367,11 @@ class RFEngineBlockEntity(
             val invNbt = nbt.getCompound("upgradeInventory")
             for (i in 0..3) {
                 if (invNbt.contains("slot_$i")) {
+<<<<<<< HEAD
                     upgradeInventory[i] = ItemStack.fromNbt(invNbt.getCompound("slot_$i"))
+=======
+                    upgradeInventory[i] = ItemStack.fromNbt(lookup, invNbt.getCompound("slot_$i")).orElse(ItemStack.EMPTY)
+>>>>>>> backup/1.21.1
                 }
             }
         }

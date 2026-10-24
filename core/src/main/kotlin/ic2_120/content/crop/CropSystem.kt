@@ -318,12 +318,21 @@ object CropSystem {
         CropType.BROWN_MUSHROOM -> listOf(HItem(Items.BROWN_MUSHROOM))
         CropType.NETHER_WART -> listOf(HItem(Items.NETHER_WART))
         CropType.TERRA_WART -> listOf(HItem(TerraWart::class.instance()))
+<<<<<<< HEAD
         CropType.OAK_SAPLING -> listOf(HItem(Items.OAK_LOG))
         CropType.SPRUCE_SAPLING -> listOf(HItem(Items.SPRUCE_LOG))
         CropType.BIRCH_SAPLING -> listOf(HItem(Items.BIRCH_LOG))
         CropType.JUNGLE_SAPLING -> listOf(HItem(Items.JUNGLE_LOG))
         CropType.ACACIA_SAPLING -> listOf(HItem(Items.ACACIA_LOG))
         CropType.DARK_OAK_SAPLING -> listOf(HItem(Items.DARK_OAK_LOG))
+=======
+        CropType.OAK_SAPLING -> listOf(HItem(Items.OAK_SAPLING))
+        CropType.SPRUCE_SAPLING -> listOf(HItem(Items.SPRUCE_SAPLING))
+        CropType.BIRCH_SAPLING -> listOf(HItem(Items.BIRCH_SAPLING))
+        CropType.JUNGLE_SAPLING -> listOf(HItem(Items.JUNGLE_SAPLING))
+        CropType.ACACIA_SAPLING -> listOf(HItem(Items.ACACIA_SAPLING))
+        CropType.DARK_OAK_SAPLING -> listOf(HItem(Items.DARK_OAK_SAPLING))
+>>>>>>> backup/1.21.1
         CropType.FERRU -> listOf(HItem(SmallIronDust::class.instance()))
         CropType.CYPRIUM -> listOf(HItem(SmallCopperDust::class.instance()))
         CropType.STAGNIUM -> listOf(HItem(SmallTinDust::class.instance()))
@@ -346,8 +355,12 @@ object CropSystem {
         CropType.VENOMILIA -> listOf("venomilia")
         CropType.OAK_SAPLING -> listOf("sapling_apple")
         CropType.SPRUCE_SAPLING, CropType.BIRCH_SAPLING, CropType.JUNGLE_SAPLING,
+<<<<<<< HEAD
         CropType.ACACIA_SAPLING -> listOf("sapling_bonus")
         CropType.DARK_OAK_SAPLING -> listOf("sapling_apple")
+=======
+        CropType.ACACIA_SAPLING, CropType.DARK_OAK_SAPLING -> listOf("sapling_bonus")
+>>>>>>> backup/1.21.1
         CropType.FERRU -> listOf("root_iron")
         CropType.CYPRIUM -> listOf("root_copper")
         CropType.STAGNIUM -> listOf("root_tin")

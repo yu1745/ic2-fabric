@@ -43,7 +43,11 @@ data class MolecularTransformerConfig(
 private val defaultRecipes = listOf(
     // ====== 特殊产物 ======
     MolecularTransformerRecipeConfig("minecraft:wither_skeleton_skull", "minecraft:nether_star", 250_000_000),
+<<<<<<< HEAD
     MolecularTransformerRecipeConfig("minecraft:iron_ingot", "ic2_120_advanced_solar_addon:iridium_ingot", 9_000_000),
+=======
+    MolecularTransformerRecipeConfig("minecraft:iron_ingot", "ic2_120:iridium_ore_item", 9_000_000),
+>>>>>>> backup/1.21.1
 
     // ====== 基础转化 ======
     MolecularTransformerRecipeConfig("minecraft:charcoal", "minecraft:coal", 60_000),
@@ -150,6 +154,7 @@ object Ic2AdvancedSolarAddonConfig {
         return true
     }
 
+<<<<<<< HEAD
     /**
      * 供附属 mod 追加一条完整的分子重组仪配方到配置文件。
      *
@@ -216,6 +221,8 @@ object Ic2AdvancedSolarAddonConfig {
         return true
     }
 
+=======
+>>>>>>> backup/1.21.1
     fun removeRecipe(inputId: String): Boolean {
         val normalizedId = inputId.trim()
         if (normalizedId.isEmpty()) return false

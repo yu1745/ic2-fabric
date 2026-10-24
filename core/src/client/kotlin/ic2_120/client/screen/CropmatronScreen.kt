@@ -24,12 +24,20 @@ class CropmatronScreen(
 
     private val waterSprite by lazy {
         MinecraftClient.getInstance()
+<<<<<<< HEAD
             .getSpriteAtlas(Identifier("minecraft", "textures/atlas/blocks.png"))
+=======
+            .getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png"))
+>>>>>>> backup/1.21.1
             .apply(WATER_STILL_ID)
     }
     private val weedExSprite by lazy {
         MinecraftClient.getInstance()
+<<<<<<< HEAD
             .getSpriteAtlas(Identifier("minecraft", "textures/atlas/blocks.png"))
+=======
+            .getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png"))
+>>>>>>> backup/1.21.1
             .apply(WEED_EX_STILL_ID)
     }
 
@@ -55,7 +63,11 @@ class CropmatronScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -206,10 +218,17 @@ class CropmatronScreen(
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val WATER_TANK_DROPLETS = (FluidConstants.BUCKET * CropmatronSync.WATER_TANK_CAPACITY_BUCKETS).toInt()
         private val WEED_EX_TANK_DROPLETS = (FluidConstants.BUCKET * CropmatronSync.WEED_EX_TANK_CAPACITY_BUCKETS).toInt()
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiregulation.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private val WATER_STILL_ID = Identifier("minecraft", "block/water_still")
         private val WEED_EX_STILL_ID = Identifier("ic2", "block/fluid/weed_ex_still")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiregulation.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val WATER_STILL_ID = Identifier.of("minecraft", "block/water_still")
+        private val WEED_EX_STILL_ID = Identifier.of("ic2", "block/fluid/weed_ex_still")
+>>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (180,3)-(194,16) = 14x13

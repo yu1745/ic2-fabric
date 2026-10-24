@@ -2,9 +2,13 @@ package ic2_120.content.command
 
 import com.mojang.brigadier.Command
 import ic2_120.config.Ic2Config
+<<<<<<< HEAD
 import ic2_120.content.network.ConfigSyncHelper
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.content.network.ConfigSyncPacket
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.text.Text
 
@@ -20,6 +24,7 @@ object ConfigCommand {
                                 val source = context.source
                                 try {
                                     Ic2Config.reloadOrThrow()
+<<<<<<< HEAD
                                     val configJson = Ic2Config.prettyCurrentConfig()
                                     val replicationCostsJson = Ic2Config.prettyAllReplicationCosts()
                                     for (player in source.server.playerManager.playerList) {
@@ -29,6 +34,19 @@ object ConfigCommand {
                                             ConfigSyncPacket.REPLICATION_COSTS_ID,
                                             replicationCostsJson
                                         )
+=======
+                                    val json = Ic2Config.prettyCurrentConfig()
+                                    val bytes = json.toByteArray(Charsets.UTF_8)
+                                    val totalChunks = (bytes.size + ConfigSyncPacket.MAX_CHUNK_BYTES - 1) / ConfigSyncPacket.MAX_CHUNK_BYTES
+                                    var offset = 0
+                                    for (index in 0 until totalChunks) {
+                                        val size = minOf(ConfigSyncPacket.MAX_CHUNK_BYTES, bytes.size - offset)
+                                        val chunk = bytes.copyOfRange(offset, offset + size)
+                                        for (player in source.server.playerManager.playerList) {
+                                            ServerPlayNetworking.send(player, ConfigSyncPacket(totalChunks, index, chunk))
+                                        }
+                                        offset += size
+>>>>>>> backup/1.21.1
                                     }
                                     source.sendFeedback(
                                         {

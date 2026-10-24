@@ -26,7 +26,11 @@ class SolarGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val isGenerating = handler.sync.isGenerating != 0
@@ -52,6 +56,10 @@ class SolarGeneratorScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guisolargenerator.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisolargenerator.png")
+>>>>>>> backup/1.21.1
     }
 }

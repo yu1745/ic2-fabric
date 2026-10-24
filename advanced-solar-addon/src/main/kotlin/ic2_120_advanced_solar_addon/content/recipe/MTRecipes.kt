@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Identifier
 import net.minecraft.registry.Registries
+<<<<<<< HEAD
 import org.slf4j.LoggerFactory
 
 object MTRecipes {
@@ -19,12 +20,19 @@ object MTRecipes {
      */
     private val extensionRecipes = mutableListOf<ExtensionRecipe>()
 
+=======
+
+object MTRecipes {
+    private val recipes = mutableListOf<MTRecipe>()
+
+>>>>>>> backup/1.21.1
     data class MTRecipe(
         val input: ItemStack,
         val output: ItemStack,
         val energy: Long
     )
 
+<<<<<<< HEAD
     /**
      * 附属扩展配方的默认值（input/output 用物品 id 字符串表示，便于配置覆盖查找）。
      */
@@ -35,6 +43,8 @@ object MTRecipes {
         val outputCount: Int = 1
     )
 
+=======
+>>>>>>> backup/1.21.1
     fun init() {
         loadFromConfig()
     }
@@ -44,7 +54,10 @@ object MTRecipes {
         for (configRecipe in Ic2AdvancedSolarAddonConfig.getMolecularTransformerRecipes()) {
             addRecipe(configRecipe.input, configRecipe.output, configRecipe.energy, configRecipe.outputCount)
         }
+<<<<<<< HEAD
         reinjectExtensionRecipes()
+=======
+>>>>>>> backup/1.21.1
     }
 
     fun loadFromSync(entries: List<MTRecipeEntry>) {
@@ -52,6 +65,7 @@ object MTRecipes {
         for (entry in entries) {
             addRecipe(entry.inputId, entry.outputId, entry.energy, entry.outputCount)
         }
+<<<<<<< HEAD
         reinjectExtensionRecipes()
     }
 
@@ -121,11 +135,14 @@ object MTRecipes {
         if (inItem == Items.AIR || outItem == Items.AIR || energy <= 0) return false
         recipes.add(MTRecipe(input.copy(), output.copy(), energy))
         return true
+=======
+>>>>>>> backup/1.21.1
     }
 
     private fun addRecipe(inputId: String, outputId: String, energy: Long, outputCount: Int = 1) {
         val inId = Identifier.tryParse(inputId)
         val outId = Identifier.tryParse(outputId)
+<<<<<<< HEAD
         if (inId == null || outId == null) {
             LOGGER.warn("MT recipe dropped (invalid id): {} -> {}", inputId, outputId)
             return
@@ -149,11 +166,28 @@ object MTRecipes {
             output = ItemStack(outputItem, outputCount.coerceIn(1, 64)),
             energy = energy
         ))
+=======
+        if (inId != null && outId != null) {
+            val inputItem = Registries.ITEM.get(inId)
+            val outputItem = Registries.ITEM.get(outId)
+            if (inputItem != Items.AIR && outputItem != Items.AIR && energy > 0) {
+                recipes.add(MTRecipe(
+                    input = ItemStack(inputItem),
+                    output = ItemStack(outputItem, outputCount.coerceIn(1, 64)),
+                    energy = energy
+                ))
+            }
+        }
+>>>>>>> backup/1.21.1
     }
 
     fun findRecipe(input: ItemStack): MTRecipe? {
         return recipes.find { recipe ->
+<<<<<<< HEAD
             ItemStack.canCombine(recipe.input, input) && input.count >= recipe.input.count
+=======
+            ItemStack.areItemsAndComponentsEqual(recipe.input, input) && input.count >= recipe.input.count
+>>>>>>> backup/1.21.1
         }
     }
 

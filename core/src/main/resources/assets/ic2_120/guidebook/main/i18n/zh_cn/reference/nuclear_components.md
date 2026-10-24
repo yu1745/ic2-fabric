@@ -43,7 +43,13 @@ item_ids:
   - ic2_120:uranium
   - ic2_120:uranium_235
   - ic2_120:uranium_238
+<<<<<<< HEAD
   - ic2_120:mox
+=======
+  - ic2_120:uranium_pellet
+  - ic2_120:mox
+  - ic2_120:mox_pellet
+>>>>>>> backup/1.21.1
   - ic2_120:plutonium
   - ic2_120:rtg_pellet
   - ic2_120:containment_box
@@ -51,7 +57,11 @@ item_ids:
 
 # 核电方块与组件
 
+<<<<<<< HEAD
 核电由反应堆方块、外部接口和内部组件组成。先读 [核反应堆](../machines/nuclear_reactor.md)，再用本页核对组件职责。
+=======
+核电由反应堆方块、外部接口和内部组件组成。先读 [核反应堆系统](../systems/nuclear_reactor.md)，再用本页核对组件职责。
+>>>>>>> backup/1.21.1
 
 ## 反应堆方块
 

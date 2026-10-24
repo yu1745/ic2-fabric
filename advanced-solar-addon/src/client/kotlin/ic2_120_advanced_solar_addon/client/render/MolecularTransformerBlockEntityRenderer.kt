@@ -11,8 +11,11 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.RotationAxis
+<<<<<<< HEAD
 import org.joml.Matrix3f
 import org.joml.Matrix4f
+=======
+>>>>>>> backup/1.21.1
 
 class MolecularTransformerBlockEntityRenderer(
     context: BlockEntityRendererFactory.Context
@@ -123,45 +126,72 @@ class MolecularTransformerBlockEntityRenderer(
         sizeX: Int, sizeY: Int, sizeZ: Int
     ) {
         val entry = matrices.peek()
+<<<<<<< HEAD
         val pos = entry.positionMatrix
         val norm = entry.normalMatrix
+=======
+>>>>>>> backup/1.21.1
 
         val x1 = coords[0]; val y1 = coords[1]; val z1 = coords[2]
         val x2 = coords[3]; val y2 = coords[4]; val z2 = coords[5]
         val w = sizeX.toFloat(); val h = sizeY.toFloat(); val d = sizeZ.toFloat()
 
         // Top (+Y)
+<<<<<<< HEAD
         quad(vc, pos, norm, light, overlay,
+=======
+        quad(vc, entry, light, overlay,
+>>>>>>> backup/1.21.1
             x1, y2, z2,  x2, y2, z2,  x2, y2, z1,  x1, y2, z1,
             (texU+d)/TW, texV/TH, (texU+d+w)/TW, (texV+d)/TH,
             0f, 1f, 0f)
 
         // Bottom (-Y)
+<<<<<<< HEAD
         quad(vc, pos, norm, light, overlay,
+=======
+        quad(vc, entry, light, overlay,
+>>>>>>> backup/1.21.1
             x1, y1, z1,  x2, y1, z1,  x2, y1, z2,  x1, y1, z2,
             (texU+d+w)/TW, texV/TH, (texU+d+2*w)/TW, (texV+d)/TH,
             0f, -1f, 0f)
 
         // North (-Z)
+<<<<<<< HEAD
         quad(vc, pos, norm, light, overlay,
+=======
+        quad(vc, entry, light, overlay,
+>>>>>>> backup/1.21.1
             x2, y2, z1,  x1, y2, z1,  x1, y1, z1,  x2, y1, z1,
             (texU+d+w)/TW, (texV+d)/TH, (texU+d)/TW, (texV+d+h)/TH,
             0f, 0f, -1f)
 
         // South (+Z)
+<<<<<<< HEAD
         quad(vc, pos, norm, light, overlay,
+=======
+        quad(vc, entry, light, overlay,
+>>>>>>> backup/1.21.1
             x1, y2, z2,  x2, y2, z2,  x2, y1, z2,  x1, y1, z2,
             (texU+d)/TW, (texV+d)/TH, (texU+d+w)/TW, (texV+d+h)/TH,
             0f, 0f, 1f)
 
         // West (-X)
+<<<<<<< HEAD
         quad(vc, pos, norm, light, overlay,
+=======
+        quad(vc, entry, light, overlay,
+>>>>>>> backup/1.21.1
             x1, y2, z1,  x1, y2, z2,  x1, y1, z2,  x1, y1, z1,
             texU/TW, (texV+d)/TH, (texU+d)/TW, (texV+d+h)/TH,
             -1f, 0f, 0f)
 
         // East (+X)
+<<<<<<< HEAD
         quad(vc, pos, norm, light, overlay,
+=======
+        quad(vc, entry, light, overlay,
+>>>>>>> backup/1.21.1
             x2, y2, z2,  x2, y2, z1,  x2, y1, z1,  x2, y1, z2,
             (texU+d+w)/TW, (texV+d)/TH, (texU+d+w+d)/TW, (texV+d+h)/TH,
             1f, 0f, 0f)
@@ -169,7 +199,11 @@ class MolecularTransformerBlockEntityRenderer(
 
     private fun quad(
         vc: VertexConsumer,
+<<<<<<< HEAD
         pos: Matrix4f, norm: Matrix3f,
+=======
+        entry: MatrixStack.Entry,
+>>>>>>> backup/1.21.1
         light: Int, overlay: Int,
         x0: Float, y0: Float, z0: Float,
         x1: Float, y1: Float, z1: Float,
@@ -178,27 +212,46 @@ class MolecularTransformerBlockEntityRenderer(
         u0: Float, v0: Float, u1: Float, v1: Float,
         nx: Float, ny: Float, nz: Float
     ) {
+<<<<<<< HEAD
         vertex(vc, pos, norm, x0, y0, z0, u0, v0, nx, ny, nz, light, overlay)
         vertex(vc, pos, norm, x1, y1, z1, u1, v0, nx, ny, nz, light, overlay)
         vertex(vc, pos, norm, x2, y2, z2, u1, v1, nx, ny, nz, light, overlay)
         vertex(vc, pos, norm, x3, y3, z3, u0, v1, nx, ny, nz, light, overlay)
+=======
+        vertex(vc, entry, x0, y0, z0, u0, v0, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x1, y1, z1, u1, v0, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x2, y2, z2, u1, v1, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x3, y3, z3, u0, v1, nx, ny, nz, light, overlay)
+>>>>>>> backup/1.21.1
     }
 
     private fun vertex(
         vc: VertexConsumer,
+<<<<<<< HEAD
         pos: Matrix4f, norm: Matrix3f,
+=======
+        entry: MatrixStack.Entry,
+>>>>>>> backup/1.21.1
         x: Float, y: Float, z: Float,
         u: Float, v: Float,
         nx: Float, ny: Float, nz: Float,
         light: Int, overlay: Int
     ) {
+<<<<<<< HEAD
         vc.vertex(pos, x, y, z)
+=======
+        vc.vertex(entry.positionMatrix, x, y, z)
+>>>>>>> backup/1.21.1
             .color(255, 255, 255, 255)
             .texture(u, v)
             .overlay(overlay)
             .light(light)
+<<<<<<< HEAD
             .normal(norm, nx, ny, nz)
             .next()
+=======
+            .normal(entry, nx, ny, nz)
+>>>>>>> backup/1.21.1
     }
 
     private fun renderActiveCore(

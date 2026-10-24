@@ -25,7 +25,7 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -34,13 +34,16 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = StirlingGeneratorBlock::class)
 class StirlingGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IGenerator, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IGenerator, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = StirlingGeneratorBlock.ACTIVE
 
@@ -57,7 +60,11 @@ class StirlingGeneratorBlockEntity(
 
     override val tier: Int = STIRLING_TIER
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+<<<<<<< HEAD
     val syncedData = SyncedData()
+=======
+    val syncedData = SyncedData(this)
+>>>>>>> backup/1.21.1
 
     @RegisterEnergy
     val sync = StirlingGeneratorSync(
@@ -88,9 +95,11 @@ class StirlingGeneratorBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = false
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.stirling_generator")
@@ -104,9 +113,9 @@ class StirlingGeneratorBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(StirlingGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, StirlingGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -115,9 +124,9 @@ class StirlingGeneratorBlockEntity(
         sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(StirlingGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_HEAT_BUFFERED, heatBuffered)

@@ -24,10 +24,9 @@ import net.minecraft.state.property.Properties
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 @ModBlock(name = "wind_kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -37,7 +36,7 @@ class WindKineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaqu
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WindKineticGeneratorBlock::class.item(), 1)
                 .pattern("   ")
                 .pattern("SCS")
@@ -69,6 +68,7 @@ class WindKineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaqu
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, WindKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
@@ -82,10 +82,17 @@ class WindKineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaqu
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+        else validateTicker(type, WindKineticGeneratorBlockEntity::class.type()){ w, p, s, be ->
+            be.tick(w, p, s)
+        }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         val be = world.getBlockEntity(pos) as? WindKineticGeneratorBlockEntity ?: return ActionResult.PASS
         if (world.isClient) return ActionResult.SUCCESS
 
-        val interaction = be.onUse(player, hand)
+        val interaction = be.onUse(player, net.minecraft.util.Hand.MAIN_HAND)
         if (interaction != ActionResult.PASS) return interaction
 
         player.openHandledScreen(be)

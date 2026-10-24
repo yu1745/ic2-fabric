@@ -31,9 +31,15 @@
   "block.ic2_120.peat_ore": "Peat Ore",
   "tooltip.ic2_120.peat_ore.hint": "Hold Shift for processing recipes",
   "tooltip.ic2_120.peat_ore.recipes": "--- Processing Recipes ---",
+<<<<<<< HEAD
   "tooltip.ic2_120.peat_ore.coke_oven": "Coke Oven → Coal + Creosote 125mB",
   "tooltip.ic2_120.peat_ore.centrifuge": "Thermal Centrifuge → Coal + Bio Chaff",
   "tooltip.ic2_120.peat_ore.canner": "Canner (Fluid Mix): Water + Peat Ore → Biomass",
+=======
+  "tooltip.ic2_120.peat_ore.coke_oven": "Coke Oven \u2192 Coal + Creosote 125mB",
+  "tooltip.ic2_120.peat_ore.centrifuge": "Thermal Centrifuge \u2192 Coal + Bio Chaff",
+  "tooltip.ic2_120.peat_ore.canner": "Canner (Fluid Mix): Water + Peat Ore \u2192 Biomass",
+>>>>>>> backup/1.21.1
   "tooltip.ic2_120.peat_ore.spawn_header": "--- Spawn Biomes ---",
   "tooltip.ic2_120.peat_ore.spawn_range": "Y=%s~%s",
   "tooltip.ic2_120.peat_ore.spawn_disabled": "[Spawn disabled in config]",
@@ -656,7 +662,14 @@
   "message.ic2_120.quantum_boots.jump_off": "Quantum Boots: Super Jump OFF",
   "message.ic2_120.jetpack.flight_on": "Jetpack: Flight ON",
   "message.ic2_120.jetpack.flight_off": "Jetpack: Flight OFF",
+<<<<<<< HEAD
   "key.ic2_120.toggle_vision": "Alt + Vision Key",
+=======
+  "key.ic2_120.toggle_mode": "Feature Toggle",
+  "key.ic2_120.toggle_foam_sprayer_mode": "Toggle Foam Sprayer Mode",
+  "key.ic2_120.toggle_vision": "Alt + Vision Key",
+  "key.ic2_120.toggle_bandwidth_hud": "Toggle Bandwidth HUD",
+>>>>>>> backup/1.21.1
   "category.ic2_120.ic2": "IC2",
   "message.ic2_120.iridium_drill.silk_touch_on": "Iridium Drill: Silk Touch ON",
   "message.ic2_120.iridium_drill.silk_touch_off": "Iridium Drill: Silk Touch OFF",
@@ -750,10 +763,18 @@
   "ic2_120.jade.animal_monitored": "Managed by Animal-Matron",
   "ic2_120.jade.animal_water_ok": "Water: OK",
   "ic2_120.jade.animal_water_low": "Water: LOW",
+<<<<<<< HEAD
   "ic2_120.jade.animal_thirsty": "Thirsty",
   "ic2_120.jade.animal_remaining_feed": "Need %s more feeding to unlock breeding",
   "ic2_120.jade.animal_feed_progress": "Fed: %s/%s (breeding unlock)",
   "ic2_120.jade.animal_fed_full": "Fully fed (waiting for mate or slot)",
+=======
+  "ic2_120.jade.animal_weedex_ok": "Insecticide: OK",
+  "ic2_120.jade.animal_weedex_low": "Insecticide: LOW",
+  "ic2_120.jade.animal_thirsty": "Thirsty",
+  "ic2_120.jade.animal_sick": "Sick",
+  "ic2_120.jade.animal_remaining_feed": "Need %s more feeding to grow",
+>>>>>>> backup/1.21.1
   "ic2_120.jade.animal_ready_to_breed": "Ready to breed",
   "ic2_120.jade.ku_line": "Kinetic: %s / %s KU/t",
   "ic2_120.jade.ku_loss_line": "Loss: %s KU/block",
@@ -870,8 +891,14 @@
   "item.ic2_120.animalmatron.tooltip.extra_products": "Extra Products (egg: 10 min, wool: 2 min):",
   "item.ic2_120.animalmatron.tooltip.extra_product_auto": "(Auto)",
   "item.ic2_120.animalmatron.tooltip.extra_product_shears": "(Shears)",
+<<<<<<< HEAD
   "gui.ic2_120.input_eu": "Input %s EU/t",
   "gui.ic2_120.consume_eu": "Consuming: %s EU/t",
+=======
+
+  "gui.ic2_120.input_eu": "Input %s EU/t",
+  "gui.ic2_120.consume_eu": "Consume %s EU/t",
+>>>>>>> backup/1.21.1
   "gui.ic2_120.energy_tooltip": "Stored: %s / %s EU",
   "gui.ic2_120.upgrade_slots": "Upgrades",
   "gui.ic2_120.uv_lamp_upgrade": "Upgrade Slot",
@@ -972,7 +999,11 @@
   "gui.ic2_120.wind_meter.gust_bonus": "Gust Bonus: %s",
   "gui.ic2_120.wind_meter.effective_wind": "Effective Wind: %s",
   "gui.ic2_120.wind_meter.rotor_output": "%1$s rotor: %2$s KU/t",
+<<<<<<< HEAD
   "gui.ic2_120.wind_meter.rotor_need_height": "%1$s rotor: %2$s KU/t (Cannot start, need Y≥%3$s)",
+=======
+  "gui.ic2_120.wind_meter.rotor_need_height": "%1$s rotor: %2$s KU/t (Cannot start, need Y\u2265%3$s)",
+>>>>>>> backup/1.21.1
   "gui.ic2_120.wind_meter.rotor_no_weather": "%1$s rotor: %2$s KU/t (Cannot start in this weather)",
   "gui.ic2_120.wind_meter.wood": "Wood",
   "gui.ic2_120.wind_meter.bronze": "Bronze",
@@ -993,7 +1024,10 @@
   "gui.ic2_120.chunk_loader.consume_chunks": "Consume %1$s EU/t (%2$s chunks)",
   "gui.ic2_120.chunk_loader.loaded": "Loaded",
   "gui.ic2_120.chunk_loader.unloaded": "Unloaded",
+<<<<<<< HEAD
   "gui.ic2_120.chunk_loader.restart_bootstrap_hint": "After a server restart, a player must visit once to load this chunk before the Chunk Loader can start again.",
+=======
+>>>>>>> backup/1.21.1
   "gui.ic2_120.uu_scanner.scan_progress": "Scan Progress: %1$s / %2$s",
   "gui.ic2_120.uu_scanner.status_no_input": "Please insert an item to scan",
   "gui.ic2_120.uu_scanner.status_not_whitelisted": "Item not in whitelist",
@@ -1082,10 +1116,13 @@
   "gui.ic2_120.blast_furnace.air": "Compressed Air",
   "gui.ic2_120.blast_furnace.air_tooltip": "Compressed Air: %1$s / %2$s mB",
   "gui.ic2_120.blast_furnace.heat_tooltip": "Furnace Temp: %1$s / %2$s °C",
+<<<<<<< HEAD
   "gui.ic2_120.blast_furnace.heat_info_warmup": "Heating needs at least 50 HU/t; higher temp needs more",
   "gui.ic2_120.blast_furnace.heat_info_maintain": "Final stable temperature depends entirely on HU input",
   "gui.ic2_120.blast_furnace.heat_info_faster": "Higher temperature means faster smelting",
   "gui.ic2_120.blast_furnace.heat_info_lower": "Higher temperature requires more heat to maintain",
+=======
+>>>>>>> backup/1.21.1
   "gui.ic2_120.blast_furnace.hu_tooltip": "HU Input: %1$s",
   "gui.ic2_120.coke_kiln.structure_valid": "Structure: Valid",
   "gui.ic2_120.coke_kiln.structure_invalid": "Structure: Invalid",
@@ -1139,10 +1176,21 @@
   "tooltip.ic2_120.weed_ex.amount": "Remaining: %s/%s mB",
   "tooltip.ic2_120.weed_ex.low": "Weed-Ex low!",
   "tooltip.ic2_120.pipe.flow_rate": "Flow: %s mB/s (%s buckets/s)",
+<<<<<<< HEAD
   "jei.ic2_120.replicator.uu_cost": "UU Cost: %s uB",
   "tooltip.ic2_120.status.on": "ON",
   "tooltip.ic2_120.status.off": "OFF",
   "block.ic2_120.leash_kinetic_generator": "Leash Kinetic Generator",
+=======
+
+  "jei.ic2_120.replicator.uu_cost": "UU Cost: %s uB",
+
+  "tooltip.ic2_120.status.on": "ON",
+  "tooltip.ic2_120.status.off": "OFF",
+
+  "block.ic2_120.leash_kinetic_generator": "Leash Kinetic Generator",
+
+>>>>>>> backup/1.21.1
   "gui.ic2_120.leash_kinetic.generated": "Generated: %s KU/t",
   "gui.ic2_120.leash_kinetic.output": "Output: %s KU/t",
   "gui.ic2_120.leash_kinetic.animal_status": "Animal: %s",
@@ -1153,13 +1201,25 @@
   "gui.ic2_120.leash_kinetic.status": "Status: %s",
   "gui.ic2_120.leash_kinetic.running": "Running",
   "gui.ic2_120.leash_kinetic.idle": "Idle",
+<<<<<<< HEAD
+=======
+
+>>>>>>> backup/1.21.1
   "message.ic2_120.leash_kinetic.already_leashed": "This machine already has a leashed animal!",
   "message.ic2_120.leash_kinetic.attached": "Leashed %s",
   "message.ic2_120.leash_kinetic.no_mob": "No leashed animals nearby",
   "message.ic2_120.leash_kinetic.detached": "Leash detached",
+<<<<<<< HEAD
   "ic2_120.jade.leash_kinetic.generated": "Generated: %s KU/t",
   "ic2_120.jade.leash_kinetic.velocity": "Angular Velocity: %s deg/s",
   "ic2_120.jade.leash_kinetic.animal": "Animal: %s",
+=======
+
+  "ic2_120.jade.leash_kinetic.generated": "Generated: %s KU/t",
+  "ic2_120.jade.leash_kinetic.velocity": "Angular Velocity: %s deg/s",
+  "ic2_120.jade.leash_kinetic.animal": "Animal: %s",
+
+>>>>>>> backup/1.21.1
   "ic2_120.jade.teleporter.header": "[Teleporter Diagnosis]",
   "ic2_120.jade.teleporter.mfe_energy": "Adjacent MFE: %s EU",
   "ic2_120.jade.teleporter.cooldown": "Cooldown: %s ticks",
@@ -1176,6 +1236,7 @@
   "ic2_120.jade.teleporter.check.charging": "Charging",
   "ic2_120.jade.teleporter.check.energy_insufficient": "Energy Insufficient (%s)",
   "ic2_120.jade.teleporter.check.energy_sufficient": "Energy Sufficient (%s)",
+<<<<<<< HEAD
   "ic2_120.jade.electric_heat.buffer": "Buffer: %s / %s EU",
   "ic2_120.jade.electric_heat.generating": "Generating: %s HU/t",
   "ic2_120.jade.electric_heat.coils": "Coils: %s",
@@ -1184,29 +1245,55 @@
   "ic2_120.jade.electric_heat.stopped_inverted": "Status: Stopped (Redstone Signal in Inverted Mode)",
   "key.ic2_120.toggle_speed": "Speed Boost",
   "key.ic2_120.toggle_jump": "Jump Boost",
+=======
+
+  "key.ic2_120.toggle_speed": "Speed Boost",
+  "key.ic2_120.toggle_jump": "Jump Boost",
+
+>>>>>>> backup/1.21.1
   "tooltip.ic2_120.armor.damage_reduction": "Damage Reduction: %s%%",
   "tooltip.ic2_120.quantum_boots.damage_reduction": "Damage Reduction: %s%% | Fall Immunity",
   "tooltip.ic2_120.quantum_helmet.features": "Damage Reduction: %s%% | Water Breathing | Night Vision | Auto-eat Tin Can",
   "tooltip.ic2_120.quantum_helmet.full_set": "Full Set: Remove Debuffs",
+<<<<<<< HEAD
+=======
+
+>>>>>>> backup/1.21.1
   "tooltip.ic2_120.quantum_boots.jump": "Jump Boost: %s | Remaining: %s",
   "tooltip.ic2_120.quantum_leggings.speed": "Speed: %s | Remaining: %s",
   "tooltip.ic2_120.quantum_chestplate.flight_time": "Flight remaining: %s",
   "tooltip.ic2_120.quantum_helmet.night_vision": "Night Vision: %s | Remaining: %s",
   "tooltip.ic2_120.nano_helmet.night_vision": "Night Vision: %s | Remaining: %s",
+<<<<<<< HEAD
   "tooltip.ic2_120.armor.speed_tier.off": "OFF",
   "tooltip.ic2_120.armor.speed_tier.1": "Tier 1",
   "tooltip.ic2_120.armor.speed_tier.2": "Tier 2",
+=======
+
+  "tooltip.ic2_120.armor.speed_tier.off": "OFF",
+  "tooltip.ic2_120.armor.speed_tier.1": "Tier 1",
+  "tooltip.ic2_120.armor.speed_tier.2": "Tier 2",
+
+>>>>>>> backup/1.21.1
   "tooltip.ic2_120.armor.key.flight_double_tap": "Double-Tap Space to Fly",
   "tooltip.ic2_120.armor.key.vision": "Night Vision: ",
   "tooltip.ic2_120.armor.key.speed": "Speed: ",
   "tooltip.ic2_120.armor.key.jump": "Jump Boost: ",
   "item.ic2_120.recall_scroll": "Teleport Scroll",
+<<<<<<< HEAD
+=======
+
+>>>>>>> backup/1.21.1
   "tooltip.ic2_120.harvest": "§7Harvest: ",
   "tooltip.ic2_120.harvest.sep": " or ",
   "tooltip.ic2_120.harvest.qty_n": " ×%d",
   "tooltip.ic2_120.harvest.qty_age": " ×age",
   "tooltip.ic2_120.harvest.qty_rng": " ×%d~%d",
   "tooltip.ic2_120.harvest.chance": " (%d%%)",
+<<<<<<< HEAD
+=======
+
+>>>>>>> backup/1.21.1
   "tooltip.ic2_120.harvest.note.poisonous_5": "5% poisonous potato chance",
   "tooltip.ic2_120.harvest.note.melon_random": "Random melon or slices",
   "tooltip.ic2_120.harvest.note.by_age": "Quantity increases with age",
@@ -1225,7 +1312,10 @@
   "tooltip.ic2_120.harvest.note.attacks": "Attacks nearby mobs",
   "gui.ic2_120.animal_slaughterer.need_shears": "Shears required to slaughter animals",
   "gui.ic2_120.animalmatron.need_shears": "Shears required to harvest extra products",
+<<<<<<< HEAD
   "gui.ic2_120.animalmatron.weed_ex_deprecated": "§7This tank is deprecated: Weed-Ex is disabled, no fluid needed",
+=======
+>>>>>>> backup/1.21.1
   "gui.ic2_120.direction.down": "Down",
   "gui.ic2_120.direction.up": "Up",
   "gui.ic2_120.direction.north": "North",
@@ -1249,6 +1339,7 @@
   "gui.ic2_120.item_upgrade.no_filter": "All",
   "gui.ic2_120.limiter_cable.limit_value": "Limit: %s EU/t",
   "gui.ic2_120.limiter_cable.limit_unlimited": "Limit: Unlimited",
+<<<<<<< HEAD
   "gui.ic2_120.splitter_cable.threshold": "Trigger threshold: %s",
   "gui.ic2_120.splitter_cable.inverted.on": "Inverted: On",
   "gui.ic2_120.splitter_cable.inverted.off": "Inverted: Off",
@@ -1263,6 +1354,21 @@
   "item.ic2_120.superheated_steam_bucket": "Superheated Steam Bucket",
   "gui.ic2_120.temperature": "Temp: %s°C",
   "gui.ic2_120.heat_progress": "Temp: %s°C",
+=======
+
+  "block.ic2_120.steam_generator": "Steam Generator",
+  "block.ic2_120.steam_kinetic_generator": "Steam Kinetic Generator",
+  "block.ic2_120.condenser": "Condenser",
+
+  "block.ic2_120.steam": "Steam",
+  "block.ic2_120.superheated_steam": "Superheated Steam",
+  "item.ic2_120.steam_bucket": "Steam Bucket",
+  "item.ic2_120.superheated_steam_bucket": "Superheated Steam Bucket",
+
+  "gui.ic2_120.temperature": "Temp: %s°C",
+  "gui.ic2_120.heat_progress": "Temp: %s°C",
+  "gui.ic2_120.water": "Water",
+>>>>>>> backup/1.21.1
   "gui.ic2_120.water_tank": "Water Tank",
   "gui.ic2_120.steam": "Steam",
   "gui.ic2_120.steam_tank": "Steam Tank",
@@ -1300,6 +1406,7 @@
   "gui.ic2_120.distilled_water": "Distilled Water",
   "gui.ic2_120.generate_ku": "KU Output: %s KU/t",
   "gui.ic2_120.cooling_rate": "Cooling Rate: %s mB/t",
+<<<<<<< HEAD
   "gui.ic2_120.tank.level_change": "Recent level change (average)",
   "gui.ic2_120.tank.level_change_1s": "1 sec: %s",
   "gui.ic2_120.tank.level_change_5s": "5 sec: %s",
@@ -1307,6 +1414,10 @@
   "gui.ic2_120.tank.level_change_30s": "30 sec: %s",
   "gui.ic2_120.tank.level_change_60s": "60 sec: %s",
   "gui.ic2_120.heat_vent_slots": "Heat Vents",
+=======
+  "gui.ic2_120.heat_vent_slots": "Heat Vents",
+  "gui.ic2_120.consume_eu": "Consuming: %s EU/t",
+>>>>>>> backup/1.21.1
   "gui.ic2_120.slot.vent": "Install heat vents to boost cooling (+100 mB/t each, 2 EU/t)",
   "gui.ic2_120.slot.upgrade": "Install transformer upgrade to raise voltage tier",
   "gui.ic2_120.slot.discharge": "Insert battery to power the machine",
@@ -1315,6 +1426,7 @@
   "gui.ic2_120.condenser.no_power_warning": "Passive cooling is free; heat vents require EU to operate",
   "death.attack.ic2_120.steam": "%1$s was scalded to death by steam",
   "death.attack.ic2_120.steam.player": "%1$s was scalded to death by steam whilst fighting %2$s",
+<<<<<<< HEAD
   "death.attack.nuclear_heat": "%1$s was burned to death by a nuclear reactor",
   "death.attack.nuclear_heat.player": "%1$s was burned to death by a nuclear reactor whilst fighting %2$s",
   "chat.ic2_120.nuclear_explosion.title": "§4⚠ §cNuclear Reactor Explosion!",
@@ -1370,4 +1482,10 @@
   "jei.ic2_120.coal_water_transform.tooltip": "Throw directly into water (about 3 seconds)",
   "jei.ic2_120.coal_water_transform.circumstance": "Submerge in",
   "item.ic2_120.advanced_scanner.tooltip": "Advanced Scanner - larger scan radius"
+=======
+  "chat.ic2_120.nuclear_explosion.title": "§4⚠ §cNuclear Reactor Explosion!",
+  "chat.ic2_120.nuclear_explosion.detail": "§c%1$s§7's nuclear reactor exploded at §c%2$s§7!",
+  "chat.ic2_120.nuclear_explosion.blocks_removed": "§7Removed §c%1$d §7blocks.",
+  "chat.ic2_120.nuclear_explosion.safety": "§e§lAlways pay attention to safety!"
+>>>>>>> backup/1.21.1
 }

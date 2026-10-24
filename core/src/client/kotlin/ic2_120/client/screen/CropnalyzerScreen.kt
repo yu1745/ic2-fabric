@@ -5,6 +5,10 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.crop.CropSystem
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
+<<<<<<< HEAD
+=======
+import ic2_120.content.item.CropnalyzerItem
+>>>>>>> backup/1.21.1
 import ic2_120.content.screen.CropnalyzerScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
@@ -23,10 +27,17 @@ class CropnalyzerScreen(
     handler: CropnalyzerScreenHandler,
     playerInventory: PlayerInventory,
     title: McText
+<<<<<<< HEAD
 ) : HandledScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guicropnalyzer.png")
+=======
+    ) : HandledScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
+
+    companion object {
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicropnalyzer.png")
+>>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
         private const val GUI_WIDTH = 176
         private const val GUI_HEIGHT = 223
@@ -54,12 +65,23 @@ class CropnalyzerScreen(
         titleY = 6
     }
 
+<<<<<<< HEAD
+=======
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
+>>>>>>> backup/1.21.1
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -195,6 +217,7 @@ class CropnalyzerScreen(
         if (button == 0) {
             val bx = x + BTN_X
             val by = y + BTN_Y
+<<<<<<< HEAD
            if (mouseX in bx.toDouble()..(bx + BTN_W).toDouble() && mouseY in by.toDouble()..(by + BTN_H).toDouble()) {
                 MinecraftClient.getInstance().soundManager.play(
                     PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
@@ -202,6 +225,21 @@ class CropnalyzerScreen(
                 client?.player?.networkHandler?.sendPacket(
                     ButtonClickC2SPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
                 )
+=======
+            if (mouseX in bx.toDouble()..(bx + BTN_W).toDouble() && mouseY in by.toDouble()..(by + BTN_H).toDouble()) {
+                val inputSeed = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].stack
+                val canScan = handler.energy >= CropnalyzerItem.ENERGY_PER_SCAN
+                        && inputSeed.item is CropSeedBagItem
+                        && CropSeedData.readType(inputSeed) != null
+                if (canScan) {
+                    MinecraftClient.getInstance().soundManager.play(
+                        PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+                    )
+                    client?.player?.networkHandler?.sendPacket(
+                        ButtonClickC2SPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
+                    )
+                }
+>>>>>>> backup/1.21.1
                 return true
             }
         }

@@ -1,10 +1,17 @@
 {
   "variants": {
     "crossing_base=false": {
+<<<<<<< HEAD
       "model": "ic2_120:block/crop/crop"
     },
     "crossing_base=true": {
       "model": "ic2_120:block/crop/stick_upgraded"
+=======
+      "model": "ic2:block/crop/crop"
+    },
+    "crossing_base=true": {
+      "model": "ic2:block/crop/stick_upgraded"
+>>>>>>> backup/1.21.1
     }
   }
 }

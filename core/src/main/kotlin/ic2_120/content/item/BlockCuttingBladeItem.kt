@@ -8,23 +8,21 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 @ModItem(name = "iron_block_cutting_blade", tab = CreativeTab.IC2_MATERIALS)
-class IronBlockCuttingBladeItem : Item(FabricItemSettings()), IBlockCuttingBlade {
+class IronBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
     override fun getBladeHardness(stack: ItemStack): Float = 5.0f
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val dense = DenseIronPlate::class.instance()
             if (dense != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronBlockCuttingBladeItem::class.instance(), 1)
@@ -38,12 +36,12 @@ class IronBlockCuttingBladeItem : Item(FabricItemSettings()), IBlockCuttingBlade
 }
 
 @ModItem(name = "steel_block_cutting_blade", tab = CreativeTab.IC2_MATERIALS)
-class SteelBlockCuttingBladeItem : Item(FabricItemSettings()), IBlockCuttingBlade {
+class SteelBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
     override fun getBladeHardness(stack: ItemStack): Float = 6.0f
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = SteelPlate::class.instance()
             if (plate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelBlockCuttingBladeItem::class.instance(), 1)
@@ -57,12 +55,12 @@ class SteelBlockCuttingBladeItem : Item(FabricItemSettings()), IBlockCuttingBlad
 }
 
 @ModItem(name = "diamond_block_cutting_blade", tab = CreativeTab.IC2_MATERIALS)
-class DiamondBlockCuttingBladeItem : Item(FabricItemSettings()), IBlockCuttingBlade {
+class DiamondBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
     override fun getBladeHardness(stack: ItemStack): Float = 50.0f
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val steel = SteelIngot::class.instance()
             if (steel != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, DiamondBlockCuttingBladeItem::class.instance(), 1)

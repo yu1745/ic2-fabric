@@ -1,5 +1,9 @@
 {
   "variants": {
+<<<<<<< HEAD
     "": { "model": "ic2_120:block/machine/machine" }
+=======
+    "": { "model": "ic2:block/machine/machine" }
+>>>>>>> backup/1.21.1
   }
 }

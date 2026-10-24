@@ -26,7 +26,10 @@ class SolarPanelScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
@@ -103,7 +106,11 @@ class SolarPanelScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2_120_advanced_solar_addon", "textures/gui/advancedsolarpanel.png")
+=======
+        private val TEXTURE = Identifier.of("ic2_120_advanced_solar_addon", "textures/gui/advancedsolarpanel.png")
+>>>>>>> backup/1.21.1
 
         private const val TEX_WIDTH = 256
         private const val TEX_HEIGHT = 256

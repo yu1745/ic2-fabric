@@ -1,6 +1,11 @@
 {
   "variants": {
+<<<<<<< HEAD
     "powered=false": { "model": "ic2_120:block/resource/rubber/pressure_plate" },
     "powered=true": { "model": "ic2_120:block/resource/rubber/pressure_plate_down" }
+=======
+    "powered=false": { "model": "ic2:block/resource/rubber/pressure_plate" },
+    "powered=true": { "model": "ic2:block/resource/rubber/pressure_plate_down" }
+>>>>>>> backup/1.21.1
   }
 }

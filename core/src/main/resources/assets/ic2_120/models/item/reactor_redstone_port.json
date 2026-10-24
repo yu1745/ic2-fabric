@@ -1,3 +1,7 @@
 {
+<<<<<<< HEAD
  "parent": "ic2_120:block/generator/reactor/reactor_redstone_port_item"
+=======
+  "parent": "ic2:block/generator/reactor/reactor_redstone_port"
+>>>>>>> backup/1.21.1
 }

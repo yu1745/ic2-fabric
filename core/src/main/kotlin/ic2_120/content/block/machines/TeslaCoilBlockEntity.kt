@@ -16,6 +16,10 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.item.ArmorItem
 import net.minecraft.nbt.NbtCompound
+<<<<<<< HEAD
+=======
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.world.ServerWorld
@@ -58,8 +62,13 @@ class TeslaCoilBlockEntity(
         state
     )
 
+<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
+=======
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(TeslaCoilSync.NBT_ENERGY_STORED).coerceIn(0L, TeslaCoilSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -68,8 +77,8 @@ class TeslaCoilBlockEntity(
         lastHitTargetUuid = if (nbt.contains("LastHitTarget")) nbt.getUuid("LastHitTarget") else null
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(TeslaCoilSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("ShotCooldown", shotCooldown)
@@ -161,7 +170,7 @@ class TeslaCoilBlockEntity(
 
     private fun createTeslaDamageSource(world: ServerWorld): DamageSource {
         val registry = world.registryManager.get(RegistryKeys.DAMAGE_TYPE)
-        val key = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier("ic2_120", "tesla_coil"))
+        val key = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("ic2_120", "tesla_coil"))
         val entry = registry.getEntry(key).orElseThrow { IllegalStateException("Tesla coil damage type not registered") }
         return DamageSource(entry)
     }
@@ -169,15 +178,13 @@ class TeslaCoilBlockEntity(
     private fun damageArmorDurability(world: World, entity: LivingEntity, min: Int, max: Int) {
         val amount = if (min >= max) min else world.random.nextBetween(min, max)
         for (slot in EquipmentSlot.entries) {
-            if (slot.type != EquipmentSlot.Type.ARMOR) continue
+            if (slot.type != EquipmentSlot.Type.HUMANOID_ARMOR) continue
             val stack = entity.getEquippedStack(slot)
             if (!stack.isEmpty && stack.item is ArmorItem) {
-                stack.damage(amount, entity) { it.sendEquipmentBreakStatus(slot) }
+                stack.damage(amount, entity, slot)
             }
         }
     }
 }
-
-
 
 

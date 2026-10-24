@@ -43,7 +43,11 @@ Shift-clicking routes upgrades to the upgrade slots, batteries to the battery sl
 
 The Recycler supports Overclocker, Transformer, Energy Storage, Ejector, and Pulling upgrades.
 
+<<<<<<< HEAD
 - Overclockers increase speed and energy use: each one shortens processing time to 70% (speed ×1/0.7) and multiplies energy cost by 1.6. Progress and energy are accumulated as floats with the fractional remainder carried across ticks, so a single overclocker shortens the 50-tick process to 35 ticks.
+=======
+- Overclockers increase energy use and speed. Progress uses the integer part of the speed multiplier, so the first overclocker increases draw but the second and later overclockers begin shortening the 50-tick process.
+>>>>>>> backup/1.21.1
 - Transformer upgrades raise the accepted input tier by one level each, increasing the input limit from the base 32 EU/t.
 - Energy Storage upgrades add 10,000 EU of buffer each.
 - Ejector upgrades push Scrap from the output slot into adjacent inventories, with optional item filter and side settings.

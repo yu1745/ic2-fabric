@@ -38,7 +38,11 @@ class SemifluidGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
@@ -171,8 +175,12 @@ class SemifluidGeneratorScreen(
     private fun supportedFluids(tag: TagKey<Fluid>): List<Fluid> {
         val fluids = mutableListOf<Fluid>()
         Registries.FLUID.forEach { fluid ->
+<<<<<<< HEAD
             // Fluid.isIn(TagKey) 在 1.20.1 已 @Deprecated，改用未废弃的 FluidState.isIn。
             if (fluid.defaultState.isIn(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
+=======
+            if (fluid.isIn(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
+>>>>>>> backup/1.21.1
         }
         return fluids.sortedBy { Registries.FLUID.getId(it).toString() }
     }
@@ -209,7 +217,11 @@ class SemifluidGeneratorScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiheatsourcegenerator.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiheatsourcegenerator.png")
+>>>>>>> backup/1.21.1
         private const val DROPLETS_PER_MB = FluidConstants.BUCKET / 1000
     }
 }

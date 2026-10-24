@@ -24,12 +24,23 @@ class MagnetizerScreen(
         backgroundHeight = GUI_SIZE.height
     }
 
+<<<<<<< HEAD
+=======
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
+>>>>>>> backup/1.21.1
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -105,7 +116,11 @@ class MagnetizerScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guimagnetizer.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guimagnetizer.png")
+>>>>>>> backup/1.21.1
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
 
@@ -126,7 +141,11 @@ class MagnetizerScreen(
         private const val BOOTS_Y = 32
 
         // uptips (4,4)
+<<<<<<< HEAD
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+=======
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+>>>>>>> backup/1.21.1
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4
         private const val UPTIPS_SIZE = 16

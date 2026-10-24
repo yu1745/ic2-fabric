@@ -63,6 +63,7 @@ IndustrialCraft 2 Experimental 的 Minecraft 1.20.1 Fabric 移植版本，使用
 
 ```
 ic2-fabric/
+<<<<<<< HEAD
 ├── core/                    # 模组本体（IC2 主内容、能量/流体/动能网络、机器、GUI）
 │   └── src/{main,client}/   #   main=通用/服务端, client=客户端（kotlin + java）
 ├── advanced-solar-addon/    # 高级太阳能附属
@@ -73,6 +74,15 @@ ic2-fabric/
 ├── libs/                    # 本地依赖
 ├── scripts/                 # 辅助脚本
 └── tests/                   # 测试（含 mcdebug 机器/方块测试）
+=======
+├── src/
+│   ├── main/kotlin/     # 通用/服务端代码
+│   ├── client/kotlin/   # 客户端专用代码
+│   ├── main/java/       # 通用/服务端 Mixin 类
+│   └── client/java/     # 客户端 Mixin 类
+├── docs/                # 技术文档
+└── assets/              # 模组资源（模型、纹理、语言文件等）
+>>>>>>> backup/1.21.1
 ```
 
 ## 开发者文档入口

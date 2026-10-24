@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/rubber_door.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,3 +11,10 @@
     "flat_808b95": "ic2_120:item/item3d/flat_808b95"
   }
 }
+=======
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "ic2:item/rubber_door"
+    }
+  }
+>>>>>>> backup/1.21.1

@@ -33,7 +33,7 @@ import net.minecraft.util.math.BlockPos
 object ModItemTooltip {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, context, lines ->
+        ItemTooltipCallback.EVENT.register { stack, context, type, lines ->
             // 导线 tooltip
             val item = stack.item
             if (item is BlockItem) {
@@ -87,7 +87,7 @@ object ModItemTooltip {
                 }
             }
             // 流体单元 tooltip：显示所含流体
-            if (item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell"))) {
+            if (item == Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell"))) {
                 val variant = stack.getFluidCellVariant()
                 if (variant != null && !variant.isBlank) {
                     val fluidId = Registries.FLUID.getId(variant.fluid)

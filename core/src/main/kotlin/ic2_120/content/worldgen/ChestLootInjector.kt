@@ -1,8 +1,12 @@
 package ic2_120.content.worldgen
 
 import ic2_120.Ic2_120
+<<<<<<< HEAD
 import ic2_120.config.Ic2Config
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents
+=======
+import net.fabricmc.fabric.api.loot.v3.LootTableEvents
+>>>>>>> backup/1.21.1
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.loot.LootPool
@@ -100,19 +104,53 @@ object ChestLootInjector {
         chest("woodland_mansion")
     )
 
+    /** 试炼密室基础 — 入口、走廊、交叉口 barrels */
+    private val trialBasicChests = setOf(
+        chest("trial_chambers/entrance"),
+        chest("trial_chambers/corridor"),
+        chest("trial_chambers/intersection_barrel")
+    )
+
+    /** 试炼密室补给箱 */
+    private val trialSupplyChests = setOf(
+        chest("trial_chambers/supply")
+    )
+
+    /** 试炼密室交叉口（高级） */
+    private val trialAdvancedChests = setOf(
+        chest("trial_chambers/intersection")
+    )
+
+    /** 试炼密室宝库（普通） */
+    private val trialRewardChests = setOf(
+        chest("trial_chambers/reward"),
+        chest("trial_chambers/reward_common"),
+        chest("trial_chambers/reward_rare"),
+        chest("trial_chambers/reward_unique")
+    )
+
+    /** 试炼密室宝库（不祥） */
+    private val trialOminousRewardChests = setOf(
+        chest("trial_chambers/reward_ominous"),
+        chest("trial_chambers/reward_ominous_common"),
+        chest("trial_chambers/reward_ominous_rare"),
+        chest("trial_chambers/reward_ominous_unique")
+    )
+
     /** 所有需要注入的奖励箱 ID 的并集，用于快速判断 */
     private val allChests = industrialChests + adventureChests + ancientCityChests +
         bastionChests + shipwreckChests + underwaterRuinChests + strongholdStandardChests +
         villageBlacksmithEquivalents + villageHouseChests + villageWorkerChests +
-        miscellaneousChests + setOf(
+        miscellaneousChests + trialBasicChests + trialSupplyChests + trialAdvancedChests +
+        trialRewardChests + trialOminousRewardChests + setOf(
             chest("simple_dungeon"),
             chest("spawn_bonus_chest"),
             chest("stronghold_corridor"),
         )
 
     fun register() {
-        LootTableEvents.MODIFY.register { _, _, lootTableId, tableBuilder, source ->
-            if (!source.isBuiltin) return@register
+        LootTableEvents.MODIFY.register { key, tableBuilder, source, lookup ->
+            val lootTableId = key.value
             if (lootTableId !in allChests) return@register
 
             when (lootTableId) {
@@ -130,6 +168,11 @@ object ChestLootInjector {
                 in villageHouseChests -> tableBuilder.pool(createVillageHousePool())
                 in villageWorkerChests -> tableBuilder.pool(createVillageWorkerPool())
                 in miscellaneousChests -> tableBuilder.pool(createAdventurePool())
+                in trialBasicChests -> tableBuilder.pool(createTrialBasicPool())
+                in trialSupplyChests -> tableBuilder.pool(createTrialSupplyPool())
+                in trialAdvancedChests -> tableBuilder.pool(createTrialAdvancedPool())
+                in trialRewardChests -> tableBuilder.pool(createTrialRewardPool())
+                in trialOminousRewardChests -> tableBuilder.pool(createTrialOminousPool())
             }
         }
     }
@@ -276,6 +319,53 @@ object ChestLootInjector {
             .withWeightedItem(modItem("rubber_sapling"), 3, 1f, 2f)
             .withEmpty(45)
 
+    private fun createTrialBasicPool(): LootPool.Builder =
+        LootPool.builder()
+            .rolls(UniformLootNumberProvider.create(1f, 2f))
+            .withWeightedItem(modItem("treetap"), 6)
+            .withWeightedItem(modItem("rubber_sapling"), 6, 1f, 2f)
+            .withWeightedItem(Items.COPPER_INGOT, 8, 1f, 3f)
+            .withWeightedItem(modItem("tin_ingot"), 8, 1f, 2f)
+            .withEmpty(40)
+
+    private fun createTrialSupplyPool(): LootPool.Builder =
+        LootPool.builder()
+            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .withWeightedItem(modItem("filled_tin_can"), 12, 1f, 3f)
+            .withWeightedItem(Items.COPPER_INGOT, 8, 2f, 4f)
+            .withWeightedItem(modItem("tin_ingot"), 6, 1f, 3f)
+            .withWeightedItem(modItem("rubber_sapling"), 8, 1f, 2f)
+            .withEmpty(35)
+
+    private fun createTrialAdvancedPool(): LootPool.Builder =
+        LootPool.builder()
+            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .withWeightedItem(modItem("bronze_ingot"), 10, 2f, 4f)
+            .withWeightedItem(modItem("iridium_shard"), 8, 1f, 3f)
+            .withWeightedItem(modItem("bronze_pickaxe"), 5)
+            .withWeightedItem(modItem("bronze_sword"), 4)
+            .withWeightedItem(modItem("circuit"), 4)
+            .withEmpty(30)
+
+    private fun createTrialRewardPool(): LootPool.Builder =
+        LootPool.builder()
+            .rolls(UniformLootNumberProvider.create(1f, 2f))
+            .withWeightedItem(modItem("advanced_circuit"), 8)
+            .withWeightedItem(modItem("carbon_plate"), 5)
+            .withWeightedItem(modItem("iridium_shard"), 8, 2f, 5f)
+            .withWeightedItem(modItem("drill"), 3)
+            .withEmpty(25)
+
+    private fun createTrialOminousPool(): LootPool.Builder =
+        LootPool.builder()
+            .rolls(UniformLootNumberProvider.create(1f, 2f))
+            .withWeightedItem(modItem("lapotron_crystal"), 6)
+            .withWeightedItem(modItem("energy_crystal"), 4)
+            .withWeightedItem(modItem("iridium"), 5, 1f, 3f)
+            .withWeightedItem(modItem("carbon_plate"), 5)
+            .withWeightedItem(modItem("iridium_shard"), 8, 4f, 8f)
+            .withEmpty(20)
+
     private fun LootPool.Builder.withWeightedItem(item: Item, weight: Int, min: Float? = null, max: Float? = null): LootPool.Builder {
         val entry = ItemEntry.builder(item).weight(weight)
         if (min != null && max != null) {
@@ -301,5 +391,5 @@ object ChestLootInjector {
 
     private fun modItem(path: String): Item = Registries.ITEM.get(Ic2_120.id(path))
 
-    private fun chest(path: String): Identifier = Identifier("minecraft", "chests/$path")
+    private fun chest(path: String): Identifier = Identifier.of("minecraft", "chests/$path")
 }

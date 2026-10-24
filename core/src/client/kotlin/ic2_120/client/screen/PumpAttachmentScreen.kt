@@ -1,17 +1,26 @@
 package ic2_120.client.screen
 
+<<<<<<< HEAD
 import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.screen.PumpAttachmentScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.loader.api.FabricLoader
+=======
+import ic2_120.client.t
+import ic2_120.content.screen.PumpAttachmentScreenHandler
+import ic2_120.registry.annotation.ModScreen
+>>>>>>> backup/1.21.1
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+<<<<<<< HEAD
 import net.minecraft.client.util.math.Rect2i
+=======
+>>>>>>> backup/1.21.1
 
 @ModScreen(handlers = ["bronze_pump_attachment", "carbon_pump_attachment"])
 class PumpAttachmentScreen(
@@ -45,6 +54,7 @@ class PumpAttachmentScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -53,15 +63,25 @@ class PumpAttachmentScreen(
 
         drawJeiHint(context, mouseX, mouseY)
 
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
+>>>>>>> backup/1.21.1
         // 标题居中
         context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // 过滤器状态文本，7px，居中于文本区域 (52,55)-(129,70)
+<<<<<<< HEAD
         val fluid = handler.filterFluid()
         val line = when {
             fluid != null -> t("gui.ic2_120.pump_attachment.filter_current", fluid.defaultState.blockState.block.name.string)
             else -> t("gui.ic2_120.pump_attachment.filter_any")
         }
+=======
+        val stack = handler.slots[0].stack
+        val line = if (stack.isEmpty) t("gui.ic2_120.pump_attachment.filter_any") else t("gui.ic2_120.pump_attachment.filter_current", stack.name.string)
+>>>>>>> backup/1.21.1
         val textScale = 7f / textRenderer.fontHeight
         val scaledW = (textRenderer.getWidth(line) * textScale).toInt()
         val textX = x + TEXT_AREA_X + (TEXT_AREA_W - scaledW) / 2
@@ -75,6 +95,7 @@ class PumpAttachmentScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
+<<<<<<< HEAD
     private fun drawFilterFluid(context: DrawContext) {
         val fluid = handler.filterFluid() ?: return
         context.drawTexture(
@@ -106,6 +127,10 @@ class PumpAttachmentScreen(
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guiother.png")
+=======
+    companion object {
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
+>>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
 
         // 过滤器槽背景 (179,3)-(197,21) = 18×18
@@ -122,9 +147,12 @@ class PumpAttachmentScreen(
         private const val TEXT_AREA_H = 15
         private const val TEXT_AREA_X = 52
         private const val TEXT_AREA_Y = 55
+<<<<<<< HEAD
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private const val HINT_X = 4
         private const val HINT_Y = 4
         private const val HINT_SIZE = 16
+=======
+>>>>>>> backup/1.21.1
     }
 }

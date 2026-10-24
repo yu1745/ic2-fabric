@@ -1,11 +1,23 @@
 package ic2_120.content.block.storage
 
+import com.mojang.serialization.MapCodec
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 import ic2_120.content.item.BronzePlate
 import ic2_120.content.item.EmptyCell
 import ic2_120.content.item.IridiumPlate
 import ic2_120.content.item.IronPlate
+<<<<<<< HEAD
 import ic2_120.content.item.SteelPlate
 import ic2_120.content.recipes.ModTags
+=======
+import ic2_120.content.item.FluidCellItem
+import ic2_120.content.item.ModFluidCell
+import ic2_120.content.item.SteelPlate
+import ic2_120.content.item.fluidToFilledCellStack
+import ic2_120.content.item.getFluidCellVariant
+import ic2_120.content.item.isFluidCellEmpty
+>>>>>>> backup/1.21.1
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -21,33 +33,39 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes
 import net.minecraft.block.AbstractBlock
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.BlockItem
+<<<<<<< HEAD
 import net.minecraft.recipe.Ingredient
+=======
+import net.minecraft.item.Item
+>>>>>>> backup/1.21.1
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.ItemActionResult
 import net.minecraft.util.Identifier
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
-import net.minecraft.world.BlockView
 import net.minecraft.world.World
-import java.util.function.Consumer
+import net.minecraft.world.WorldView
+import net.minecraft.item.tooltip.TooltipType
 
 /**
  * 储罐基类
@@ -59,6 +77,7 @@ import java.util.function.Consumer
  * - 不同材质容量不同
  */
 abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(settings) {
+    override fun getCodec(): MapCodec<out BlockWithEntity> = TANK_CODEC
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return TankBlockEntity(pos, state)
@@ -66,17 +85,23 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
+<<<<<<< HEAD
     @Deprecated("Override without Hand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun onUse(
+=======
+    override fun onUseWithItem(
+        stack: ItemStack,
+>>>>>>> backup/1.21.1
         state: BlockState,
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
         hand: Hand,
         hit: BlockHitResult
-    ): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
 
+<<<<<<< HEAD
         val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ActionResult.PASS
         val storage = FluidStorage.SIDED.find(world, pos, hit.side)
         if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
@@ -85,6 +110,143 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
         player.openHandledScreen(be)
         return ActionResult.SUCCESS
+=======
+        val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+
+        // 空手或非桶/单元物品 → 打开 GUI
+        if (stack.isEmpty || !isBucketOrCell(stack.item)) {
+            player.openHandledScreen(be)
+            return ItemActionResult.SUCCESS
+        }
+
+        val heldItem = stack.item
+        // 空桶 → 取出流体
+        if (heldItem == Items.BUCKET) return tryFillBucket(world, be, player, hand, stack)
+        // 满桶 → 放入流体
+        if (heldItem == Items.WATER_BUCKET || heldItem == Items.LAVA_BUCKET || isModBucket(heldItem))
+            return tryDrainBucket(world, be, player, hand, stack)
+        // 空单元 → 取出流体
+        if (isEmptyCell(stack)) return tryFillCell(world, be, player, hand, stack)
+        // 满单元 → 放入流体
+        if (isFilledCell(stack)) return tryDrainCell(world, be, player, hand, stack)
+
+        player.openHandledScreen(be)
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        if (world.isClient) return ActionResult.SUCCESS
+        val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ActionResult.PASS
+        player.openHandledScreen(be)
+        return ActionResult.SUCCESS
+    }
+
+    private fun isBucketOrCell(item: net.minecraft.item.Item): Boolean =
+        item == Items.BUCKET || item == Items.WATER_BUCKET || item == Items.LAVA_BUCKET ||
+        isModBucket(item) || item is FluidCellItem || item is ModFluidCell
+
+    private fun isModBucket(item: net.minecraft.item.Item): Boolean =
+        Registries.ITEM.getId(item).path.endsWith("_bucket")
+
+    private fun resolveBucketItem(fluid: net.minecraft.fluid.Fluid): net.minecraft.item.Item {
+        if (fluid == net.minecraft.fluid.Fluids.WATER) return Items.WATER_BUCKET
+        if (fluid == net.minecraft.fluid.Fluids.LAVA) return Items.LAVA_BUCKET
+        val fluidId = Registries.FLUID.getId(fluid)
+        val bucketId = Identifier.of(fluidId.namespace, "${fluidId.path}_bucket")
+        return Registries.ITEM.getOrEmpty(bucketId).orElse(Items.BUCKET)
+    }
+
+    private fun isEmptyCell(stack: ItemStack): Boolean {
+        val item = stack.item
+        val emptyCell = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
+        if (item == emptyCell) return true
+        if (item is FluidCellItem) return stack.isFluidCellEmpty()
+        return false
+    }
+
+    private fun isFilledCell(stack: ItemStack): Boolean {
+        val item = stack.item
+        if (item is ModFluidCell) return true
+        if (item is FluidCellItem) return !stack.isFluidCellEmpty()
+        return false
+    }
+
+    private fun tryFillBucket(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ItemActionResult {
+        if (be.fluidAmount < FluidConstants.BUCKET) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        val variant = be.fluidVariant
+        Transaction.openOuter().use { tx ->
+            val extracted = be.fluidTank.extract(variant, FluidConstants.BUCKET, tx)
+            if (extracted < FluidConstants.BUCKET) { tx.abort(); return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION }
+            tx.commit()
+            be.markDirty()
+        }
+        if (!player.abilities.creativeMode) {
+            held.decrement(1)
+            val bucketItem = resolveBucketItem(variant.fluid)
+            val bucket = ItemStack(bucketItem)
+            if (held.isEmpty) player.setStackInHand(hand, bucket)
+            else if (!player.inventory.insertStack(bucket)) player.dropItem(bucket, false)
+        }
+        return ItemActionResult.SUCCESS
+    }
+
+    private fun tryDrainBucket(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ItemActionResult {
+        val storage = FluidStorage.ITEM.find(held, null) ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        for (view in storage) {
+            if (view.isResourceBlank || view.amount < FluidConstants.BUCKET) continue
+            val inserted = be.fluidTank.insert(view.resource, FluidConstants.BUCKET, null)
+            if (inserted >= FluidConstants.BUCKET) {
+                if (!player.abilities.creativeMode) {
+                    held.decrement(1)
+                    val emptyBucket = ItemStack(Items.BUCKET)
+                    if (held.isEmpty) player.setStackInHand(hand, emptyBucket)
+                    else if (!player.inventory.insertStack(emptyBucket)) player.dropItem(emptyBucket, false)
+                }
+                be.markDirty()
+                return ItemActionResult.SUCCESS
+            }
+        }
+        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+    }
+
+    private fun tryFillCell(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ItemActionResult {
+        if (be.fluidAmount < FluidConstants.BUCKET) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        val variant = be.fluidVariant
+        val filled = fluidToFilledCellStack(variant.fluid)
+        Transaction.openOuter().use { tx ->
+            val extracted = be.fluidTank.extract(variant, FluidConstants.BUCKET, tx)
+            if (extracted < FluidConstants.BUCKET) { tx.abort(); return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION }
+            tx.commit()
+            be.markDirty()
+        }
+        if (!player.abilities.creativeMode) {
+            held.decrement(1)
+            if (held.isEmpty) player.setStackInHand(hand, filled)
+            else if (!player.inventory.insertStack(filled)) player.dropItem(filled, false)
+        }
+        return ItemActionResult.SUCCESS
+    }
+
+    private fun tryDrainCell(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ItemActionResult {
+        val variant = when (val item = held.item) {
+            is ModFluidCell -> FluidVariant.of(item.getFluid())
+            else -> held.getFluidCellVariant()
+        } ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        if (variant.isBlank) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+
+        val inserted = be.fluidTank.insert(variant, FluidConstants.BUCKET, null)
+        if (inserted >= FluidConstants.BUCKET) {
+            if (!player.abilities.creativeMode) {
+                held.decrement(1)
+                val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")))
+                if (held.isEmpty) player.setStackInHand(hand, emptyCell)
+                else if (!player.inventory.insertStack(emptyCell)) player.dropItem(emptyCell, false)
+            }
+            be.markDirty()
+            return ItemActionResult.SUCCESS
+        }
+        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+>>>>>>> backup/1.21.1
     }
 
     /**
@@ -97,9 +259,9 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         val nbt = NbtCompound()
         nbt.putLong(NBT_FLUID_AMOUNT, be.fluidAmount)
         if (!be.fluidVariant.isBlank) {
-            nbt.put(NBT_FLUID_VARIANT, be.fluidVariant.toNbt())
+            nbt.put(NBT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, be.fluidVariant).result().orElse(NbtCompound()))
         }
-        stack.orCreateNbt.put("BlockEntityTag", nbt)
+        stack.editCustomData { it.put("BlockEntityTag", nbt) }
     }
 
     @Deprecated("override deprecated method", level = DeprecationLevel.WARNING)
@@ -129,7 +291,11 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         // 不调用 super，防止默认掉落行为
     }
 
+<<<<<<< HEAD
     override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
+=======
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity): BlockState {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             val be = world.getBlockEntity(pos)
             if (be is TankBlockEntity) {
@@ -145,10 +311,17 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
                 }
             }
         }
+<<<<<<< HEAD
         super.onBreak(world, pos, state, player)
     }
 
     override fun getPickStack(world: net.minecraft.world.BlockView, pos: BlockPos, state: BlockState): ItemStack {
+=======
+        return super.onBreak(world, pos, state, player)
+    }
+
+    override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {
+>>>>>>> backup/1.21.1
         val itemStack = super.getPickStack(world, pos, state)
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is TankBlockEntity) {
@@ -175,22 +348,22 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
     @Environment(EnvType.CLIENT)
     override fun appendTooltip(
         stack: ItemStack,
-        world: BlockView?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val blockItem = stack.item as? BlockItem ?: return
         val block = blockItem.block
         if (block !is TankBlock) return
 
         val capMb = fluidCapacityMbForBlock(block)
-        val beTag = stack.getSubNbt("BlockEntityTag")
+        val beTag = stack.getCustomData()?.getCompound("BlockEntityTag")
         val amountRaw = beTag?.getLong(NBT_FLUID_AMOUNT) ?: 0L
         val variantTag = beTag?.getCompound(NBT_FLUID_VARIANT)
         val variant =
             if (variantTag == null || variantTag.isEmpty) FluidVariant.blank()
-            else FluidVariant.fromNbt(variantTag)
+            else FluidVariant.CODEC.decode(NbtOps.INSTANCE, variantTag).result().map { it.first }.orElse(FluidVariant.blank())
         val amountMb =
             amountRaw.toInt().coerceIn(0, capMb)
 
@@ -205,6 +378,8 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
     }
 
     companion object {
+        val TANK_CODEC: MapCodec<TankBlock> = Block.createCodec { error("TankBlock cannot be deserialized from JSON") }
+
         private const val NBT_FLUID_AMOUNT = "FluidAmount"
         private const val NBT_FLUID_VARIANT = "FluidVariant"
 
@@ -229,7 +404,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = BronzePlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -253,7 +428,7 @@ class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.bloc
 class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = IronPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -277,7 +452,7 @@ class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.
 class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = SteelPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -301,7 +476,7 @@ class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block
 class IridiumTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = IridiumPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {

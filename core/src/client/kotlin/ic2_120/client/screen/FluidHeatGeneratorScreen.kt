@@ -35,7 +35,11 @@ class FluidHeatGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val fuelAmount = handler.sync.fuelAmount.coerceAtLeast(0)
@@ -110,7 +114,11 @@ class FluidHeatGeneratorScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiliquidheatingmachine.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiliquidheatingmachine.png")
+>>>>>>> backup/1.21.1
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
     }
 }

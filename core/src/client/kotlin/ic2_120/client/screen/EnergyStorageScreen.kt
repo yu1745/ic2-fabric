@@ -24,8 +24,13 @@ class EnergyStorageScreen(
     title: Text
 ) : HandledScreen<EnergyStorageScreenHandler>(handler, playerInventory, title) {
 
+<<<<<<< HEAD
    private val capacity: Long = resolveCapacity()
    private val useEquipmentSlots: Boolean = resolveUseEquipmentSlots()
+=======
+    private val capacity: Long = resolveCapacity()
+    private val useEquipmentSlots: Boolean = resolveUseEquipmentSlots()
+>>>>>>> backup/1.21.1
 
     private fun resolveCapacity(): Long {
         return handler.context.get({ world, pos ->
@@ -48,6 +53,7 @@ class EnergyStorageScreen(
         backgroundHeight = 196
     }
 
+<<<<<<< HEAD
    override fun init() {
        super.init()
        if (handler.supportsRedstoneMode) {
@@ -77,15 +83,25 @@ class EnergyStorageScreen(
        }
    }
 
+=======
+>>>>>>> backup/1.21.1
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
+<<<<<<< HEAD
    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
        renderBackground(context)
        super.render(context, mouseX, mouseY, delta)
 
        val left = x
+=======
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
+        val left = x
+>>>>>>> backup/1.21.1
         val top = y
 
         context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
@@ -126,6 +142,7 @@ class EnergyStorageScreen(
             )
         }
 
+<<<<<<< HEAD
         // 红石模式按钮：原版红石粉图标（居中于 18x14 按钮）
         if (handler.supportsRedstoneMode) {
             context.drawItem(
@@ -135,6 +152,8 @@ class EnergyStorageScreen(
             )
         }
 
+=======
+>>>>>>> backup/1.21.1
         if (!useEquipmentSlots) {
             context.drawTexture(
                 TEXTURE, left + OVERLAY_X, top + OVERLAY_Y,
@@ -148,14 +167,23 @@ class EnergyStorageScreen(
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatRaw(outputRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
         val sideTextX = left - sideTextWidth - 4
+<<<<<<< HEAD
         context.drawText(textRenderer, inputText, sideTextX, top + 4, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, sideTextX, top + 16, 0xAAAAAA, false)
+=======
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
+>>>>>>> backup/1.21.1
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guielectricblock.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guielectricblock.png")
+>>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
         private const val ENERGY_BAR_U = 180
         private const val ENERGY_BAR_V = 4
@@ -170,4 +198,8 @@ class EnergyStorageScreen(
         private const val OVERLAY_X = 7
         private const val OVERLAY_Y = 83
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> backup/1.21.1

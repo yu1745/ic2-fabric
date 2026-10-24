@@ -9,17 +9,32 @@ import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+<<<<<<< HEAD
+=======
+import ic2_120.registry.annotation.ScreenFactory
+>>>>>>> backup/1.21.1
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
+<<<<<<< HEAD
 import net.minecraft.item.ItemStack
+=======
+import net.minecraft.inventory.SimpleInventory
+import net.minecraft.item.ItemStack
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.screen.ArrayPropertyDelegate
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 
+<<<<<<< HEAD
 @ModScreenHandler(block = MetalFormerBlock::class, inventorySize = MetalFormerBlockEntity.INVENTORY_SIZE)
+=======
+@ModScreenHandler(block = MetalFormerBlock::class, clientInventorySize = MetalFormerBlockEntity.INVENTORY_SIZE)
+>>>>>>> backup/1.21.1
 class MetalFormerScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -93,7 +108,11 @@ class MetalFormerScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
+<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
+=======
+                index in PLAYER_INV_START..HOTBAR_END -> {
+>>>>>>> backup/1.21.1
                     val storage = itemStorage
                     if (storage == null) return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
@@ -102,9 +121,12 @@ class MetalFormerScreenHandler(
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
+<<<<<<< HEAD
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
+=======
+>>>>>>> backup/1.21.1
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
@@ -139,5 +161,16 @@ class MetalFormerScreenHandler(
         /** 客户端发送按钮点击时使用此 id，服务端在 [onButtonClick] 中处理 */
         const val BUTTON_ID_MODE_CYCLE = 0
 
+<<<<<<< HEAD
+=======
+        @ScreenFactory
+        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): MetalFormerScreenHandler {
+            val pos = buf.readBlockPos()
+            val propertyCount = buf.readVarInt()
+            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
+            val blockInv = SimpleInventory(MetalFormerBlockEntity.INVENTORY_SIZE)
+            return MetalFormerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
+        }
+>>>>>>> backup/1.21.1
     }
 }

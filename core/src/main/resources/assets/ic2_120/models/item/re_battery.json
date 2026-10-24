@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/re_battery.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -37,4 +38,36 @@
       "model": "ic2_120:item/battery/re_battery_4"
     }
   ]
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/battery/re_battery_0"
+	},
+	"overrides": [
+		{
+			"predicate": {
+				"ic2:charge": 0.2
+			},
+			"model": "ic2:item/battery/re_battery_1"
+		},
+		{
+			"predicate": {
+				"ic2:charge": 0.4
+			},
+			"model": "ic2:item/battery/re_battery_2"
+		},
+		{
+			"predicate": {
+				"ic2:charge": 0.6
+			},
+			"model": "ic2:item/battery/re_battery_3"
+		},
+		{
+			"predicate": {
+				"ic2:charge": 0.8
+			},
+			"model": "ic2:item/battery/re_battery_4"
+		}
+	]
+>>>>>>> backup/1.21.1
 }

@@ -5,7 +5,10 @@ import buildcraft_addon.content.block.PumpBlock
 import buildcraft_addon.content.fluid.ModFluids
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.content.block.transmission.pullKuFromNeighbors
+<<<<<<< HEAD
 import ic2_120.integration.ftbchunks.ClaimProtection
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
@@ -28,6 +31,10 @@ import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.Registries
+<<<<<<< HEAD
+=======
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -329,9 +336,12 @@ class PumpBlockEntity(
                 return
             }
 
+<<<<<<< HEAD
             if (!(isInfiniteWater && fluid == Fluids.WATER) &&
                 ClaimProtection.isProtected(w, dp, null as java.util.UUID?, ClaimProtection.EDIT_FLUID)) return
 
+=======
+>>>>>>> backup/1.21.1
             val variant = FluidVariant.of(fluid)
             val tx = Transaction.openOuter()
             val inserted = tank.insert(variant, FluidConstants.BUCKET, tx)
@@ -457,7 +467,10 @@ class PumpBlockEntity(
         for (y in pos.y - 1 downTo pos.y - MAX_DEPTH) {
             val bp = BlockPos(pos.x, y, pos.z)
             if (w.getBlockState(bp).isOf(tubeBlock)) {
+<<<<<<< HEAD
                 if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
+=======
+>>>>>>> backup/1.21.1
                 w.setBlockState(bp, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
             } else break
         }
@@ -465,7 +478,10 @@ class PumpBlockEntity(
             val bp = BlockPos(pos.x, y, pos.z)
             val bs = w.getBlockState(bp)
             if (bs.isAir || bs.isOf(tubeBlock)) {
+<<<<<<< HEAD
                 if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
+=======
+>>>>>>> backup/1.21.1
                 w.setBlockState(bp, tubeBlock.defaultState, Block.NOTIFY_ALL)
             }
         }
@@ -536,8 +552,13 @@ class PumpBlockEntity(
     }
 
     // ========== NBT ==========
+<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
+=======
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         nbt.putLong("tankAmount", tank.amount)
         if (!tank.variant.isBlank) nbt.putString("tankFluid", Registries.FLUID.getId(tank.variant.fluid).toString())
         nbt.putBoolean("powered", isRedstonePowered)
@@ -549,11 +570,19 @@ class PumpBlockEntity(
         nbt.putBoolean("hasOilAchievement", hasOilAchievement)
     }
 
+<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         val amt = nbt.getLong("tankAmount")
         if (amt > 0 && nbt.contains("tankFluid")) {
             val fid = Identifier(nbt.getString("tankFluid"))
+=======
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        val amt = nbt.getLong("tankAmount")
+        if (amt > 0 && nbt.contains("tankFluid")) {
+            val fid = Identifier.of(nbt.getString("tankFluid"))
+>>>>>>> backup/1.21.1
             tank.variant = FluidVariant.of(Registries.FLUID.get(fid))
             tank.amount = amt
         }
@@ -569,7 +598,11 @@ class PumpBlockEntity(
     // ========== 客户端 NBT 同步 ==========
     // 客户端渲染需要 tubeDepth，必须把 NBT 同步到客户端。
     // 否则 PumpRenderer 收到的 tubeDepth 永远是 0，管道不显示。
+<<<<<<< HEAD
     override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+=======
+    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
+>>>>>>> backup/1.21.1
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 }

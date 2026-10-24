@@ -80,11 +80,22 @@ object PipeNetworkManager {
 
     fun tickAllWorlds(server: net.minecraft.server.MinecraftServer) {
         for (world in server.worlds) {
+<<<<<<< HEAD
             // Snapshot by network count so invalidation during transfer cannot
             // mutate the set being iterated. This replaces the old per-pipe
             // map scan and temporary deduplication set.
             val networks = worldNetworks[world.registryKey]?.toList() ?: continue
             for (network in networks) network.tickIfNeeded(world)
+=======
+            val map = worldPosToNetwork[world.registryKey] ?: continue
+            val ticked = mutableSetOf<PipeNetwork>()
+            for (network in map.values) {
+                if (network !in ticked) {
+                    network.tickIfNeeded(world)
+                    ticked.add(network)
+                }
+            }
+>>>>>>> backup/1.21.1
         }
     }
 

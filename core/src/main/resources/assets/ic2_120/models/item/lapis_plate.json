@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/lapis_plate.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,5 +11,10 @@
     "flat_7497ea": "ic2_120:item/item3d/flat_7497ea",
     "flat_345ec3": "ic2_120:item/item3d/flat_345ec3",
     "flat_5a82e2": "ic2_120:item/item3d/flat_5a82e2"
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/resource/plate/lapis"
+>>>>>>> backup/1.21.1
   }
 }

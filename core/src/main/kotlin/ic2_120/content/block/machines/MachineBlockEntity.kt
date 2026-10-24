@@ -13,6 +13,7 @@ import net.minecraft.sound.SoundCategory
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import java.util.UUID
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 机器 BlockEntity 基类
@@ -52,8 +53,8 @@ abstract class MachineBlockEntity(
 
     override var ownerUuid: UUID? = null
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         ownerUuid = if (nbt.containsUuid(NBT_OWNER_UUID)) nbt.getUuid(NBT_OWNER_UUID) else null
         if (this is ITransformerUpgradeSupport) {
             // voltageTierBonus 是瞬态字段，正常由每 tick 的 TransformerUpgradeComponent.apply 写入；
@@ -91,8 +92,8 @@ abstract class MachineBlockEntity(
         super.markDirty()
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         ownerUuid?.let { nbt.putUuid(NBT_OWNER_UUID, it) }
         if (this is ITransformerUpgradeSupport) {
             // 持久化高压升级加成，作为 readNbt 扫描之外的纵深防御（升级在区块卸载期间不会变化，

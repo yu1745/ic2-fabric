@@ -17,7 +17,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -30,7 +30,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "uu_scanner", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -47,7 +46,11 @@ class UuScannerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, UuScannerBlockEntity::class.type()) { w, p, s, be ->
+=======
+        else validateTicker(type, UuScannerBlockEntity::class.type()){ w, p, s, be ->
+>>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -58,6 +61,7 @@ class UuScannerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
     ): net.minecraft.screen.NamedScreenHandlerFactory? =
         world.getBlockEntity(pos) as? net.minecraft.screen.NamedScreenHandlerFactory
 
+<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -67,6 +71,9 @@ class UuScannerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
         }
@@ -85,7 +92,7 @@ class UuScannerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val advancedCircuit = AdvancedCircuit::class.instance()
             val electricMotor = ElectricMotor::class.instance()

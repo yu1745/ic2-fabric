@@ -66,6 +66,7 @@ registerFluid("steam", "fluid_still", "fluid_flow", tintArgb = 0xFFD0D0D0.toInt(
 5. **设置 Block/Bucket 引用**到伴生对象常量
 6. **填充查找表** `stillFluidMap`/`flowingFluidMap`/`blockMap`/`bucketMap`（替代 `Ic2Fluid.Still/Flowing` 中繁重的 `when` 表达式，新增流体无需再改分支）
 
+<<<<<<< HEAD
 ### 2.4 世界中的蒸汽行为
 
 蒸汽仍使用 `FlowableFluid`/`FluidVariant` 参与储罐、管道和机器传输，但世界方块不复用
@@ -80,6 +81,8 @@ registerFluid("steam", "fluid_still", "fluid_flow", tintArgb = 0xFFD0D0D0.toInt(
 - 流动状态的调度必须使用当前位置实际的 still/flowing 流体类型。服务端只会执行与
   当前 `FluidState` 类型完全匹配的 scheduled fluid tick。
 
+=======
+>>>>>>> backup/1.21.1
 ---
 
 ## 3. 流体单元物品 (CellsAndBuckets.kt)

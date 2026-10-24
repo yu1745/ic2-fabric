@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/terra_wart.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -9,4 +10,10 @@
     "flat_406ebe": "ic2_120:item/item3d/flat_406ebe",
     "flat_12284e": "ic2_120:item/item3d/flat_12284e"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/crop/terra_wart"
+	}
+>>>>>>> backup/1.21.1
 }

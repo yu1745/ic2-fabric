@@ -18,22 +18,25 @@ class RadiationStatusEffect : StatusEffect(StatusEffectCategory.HARMFUL, 0x55FF5
         return duration % 20 == 0
     }
 
-    override fun applyUpdateEffect(entity: LivingEntity, amplifier: Int) {
+    override fun applyUpdateEffect(entity: LivingEntity, amplifier: Int): Boolean {
         val world = entity.world
-        if (world !is ServerWorld) return
+        if (world !is ServerWorld) return false
 
         val registry = world.registryManager.get(RegistryKeys.DAMAGE_TYPE)
         val key = RegistryKey.of(
             RegistryKeys.DAMAGE_TYPE,
-            Identifier(Ic2_120.MOD_ID, "radiation")
+            Identifier.of(Ic2_120.MOD_ID, "radiation")
         )
         val entry = registry.getEntry(key).orElse(null)
             ?: registry.getEntry(
-                RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier("minecraft", "magic"))
+                RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("minecraft", "magic"))
             ).orElse(null)
 
-        if (entry != null) {
+        return if (entry != null) {
             entity.damage(DamageSource(entry), 1.0f)
+            true
+        } else {
+            false
         }
     }
 }

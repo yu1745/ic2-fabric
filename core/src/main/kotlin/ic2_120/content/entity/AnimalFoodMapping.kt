@@ -17,22 +17,22 @@ object AnimalFoodMapping {
     // 仅包含产生肉和皮革的动物
     private val FOOD_MAP = mapOf<Identifier, List<Item>>(
         // 猪（猪肉）
-        Identifier("minecraft", "pig") to listOf(Items.CARROT),
+        Identifier.of("minecraft", "pig") to listOf(Items.CARROT),
         // 牛/哞菇（牛肉、皮革、牛奶）
-        Identifier("minecraft", "cow") to listOf(Items.WHEAT),
-        Identifier("minecraft", "mooshroom") to listOf(Items.WHEAT),
+        Identifier.of("minecraft", "cow") to listOf(Items.WHEAT),
+        Identifier.of("minecraft", "mooshroom") to listOf(Items.WHEAT),
         // 羊（羊肉、羊毛）
-        Identifier("minecraft", "sheep") to listOf(Items.WHEAT),
+        Identifier.of("minecraft", "sheep") to listOf(Items.WHEAT),
         // 鸡（鸡肉、羽毛、鸡蛋）
-        Identifier("minecraft", "chicken") to listOf(Items.WHEAT_SEEDS),
+        Identifier.of("minecraft", "chicken") to listOf(Items.WHEAT_SEEDS),
         // 兔子（兔子肉、兔子皮）
-        Identifier("minecraft", "rabbit") to listOf(Items.CARROT, Items.DANDELION),
+        Identifier.of("minecraft", "rabbit") to listOf(Items.CARROT, Items.DANDELION),
         // 马/驴/骡（皮革）
-        Identifier("minecraft", "horse") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
-        Identifier("minecraft", "donkey") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
-        Identifier("minecraft", "mule") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
+        Identifier.of("minecraft", "horse") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
+        Identifier.of("minecraft", "donkey") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
+        Identifier.of("minecraft", "mule") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
         // 羊驼（皮革）
-        Identifier("minecraft", "llama") to listOf(Items.HAY_BLOCK)
+        Identifier.of("minecraft", "llama") to listOf(Items.HAY_BLOCK)
     )
 
     /**

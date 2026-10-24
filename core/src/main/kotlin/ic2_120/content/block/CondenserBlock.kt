@@ -14,7 +14,11 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+=======
+import net.minecraft.data.server.recipe.RecipeExporter
+>>>>>>> backup/1.21.1
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -22,6 +26,7 @@ import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
+<<<<<<< HEAD
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
@@ -31,6 +36,14 @@ import java.util.function.Consumer
 @ModBlock(name = "condenser", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "machine")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
 class CondenserBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
+=======
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
+
+@ModBlock(name = "condenser", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "machine")
+class CondenserBlock : MachineBlock() {
+>>>>>>> backup/1.21.1
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         CondenserBlockEntity(pos, state)
@@ -41,7 +54,11 @@ class CondenserBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, CondenserBlockEntity::class.type()) { w, p, s, be ->
+=======
+        else validateTicker(type, CondenserBlockEntity::class.type()) { w, p, s, be ->
+>>>>>>> backup/1.21.1
             be.tick(w, p, s)
         }
 
@@ -64,7 +81,10 @@ class CondenserBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
+<<<<<<< HEAD
         hand: Hand,
+=======
+>>>>>>> backup/1.21.1
         hit: BlockHitResult
     ): ActionResult {
         if (!world.isClient) {
@@ -79,7 +99,11 @@ class CondenserBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
+<<<<<<< HEAD
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+=======
+        fun generateRecipes(exporter: RecipeExporter) {
+>>>>>>> backup/1.21.1
             val ironCasing = ic2_120.content.item.IronCasing::class.instance()
             val heatVent = ic2_120.content.item.HeatVentItem::class.instance()
             val ironIngot = net.minecraft.item.Items.IRON_INGOT

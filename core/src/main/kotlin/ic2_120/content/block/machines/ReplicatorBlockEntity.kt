@@ -10,7 +10,10 @@ import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+<<<<<<< HEAD
 import ic2_120.content.storage.IRoutedSidedInventory
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.ReplicatorScreenHandler
 import ic2_120.content.sync.ReplicatorSync
@@ -53,8 +56,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -65,15 +69,22 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import kotlin.math.ceil
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = ReplicatorBlock::class)
 class ReplicatorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
+<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
+=======
+) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     override val activeProperty = ReplicatorBlock.ACTIVE
     override val tier: Int = ReplicatorSync.REPLICATOR_TIER
@@ -145,6 +156,10 @@ class ReplicatorBlockEntity(
     override val routedItemStorage get() = itemStorage
     private var singlePulseConsumed = false
     private var fluidConsumptionRemainder = 0L
+<<<<<<< HEAD
+=======
+    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")) }
+>>>>>>> backup/1.21.1
 
     // A replicator asks for the same output stack on every progress tick.  Keep
     // the registry parse/lookup out of that hot path; the returned stack is only
@@ -169,12 +184,20 @@ class ReplicatorBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
+<<<<<<< HEAD
         /** 实际容量 = max(标称 16K, 读档存量)。只升到存量、不为存量而降，之后所有写入都被 capacity 封顶且只减不增，永不可能再超。 */
         private var tankCapacity = ReplicatorSync.TANK_CAPACITY_DROPLETS.toLong()
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
         override fun canInsert(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && !variant.isBlank
+=======
+        private val tankCapacity = FluidConstants.BUCKET * ReplicatorSync.TANK_CAPACITY_DROPLETS
+
+        override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
+        override fun getCapacity(variant: FluidVariant): Long = tankCapacity
+        override fun canInsert(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && ModFluids.isFluid(variant.fluid)
+>>>>>>> backup/1.21.1
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -185,7 +208,11 @@ class ReplicatorBlockEntity(
 
         override fun onFinalCommit() {
             sync.fluidAmount = toMilliBuckets(amount)
+<<<<<<< HEAD
             sync.fluidCapacity = getEffectiveCapacity()
+=======
+            sync.fluidCapacity = ReplicatorSync.TANK_CAPACITY_DROPLETS
+>>>>>>> backup/1.21.1
             markDirty()
         }
 
@@ -197,7 +224,11 @@ class ReplicatorBlockEntity(
             tankCapacity = tankCapacity.coerceAtLeast(stored)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.UU_MATTER_STILL) else FluidVariant.blank()
             sync.fluidAmount = toMilliBuckets(amount)
+<<<<<<< HEAD
             sync.fluidCapacity = getEffectiveCapacity()
+=======
+            sync.fluidCapacity = ReplicatorSync.TANK_CAPACITY_DROPLETS
+>>>>>>> backup/1.21.1
         }
 
         fun getTankCapacity(): Long = tankCapacity
@@ -206,6 +237,7 @@ class ReplicatorBlockEntity(
         fun extractInternal(toExtract: Long): Long {
             val actual = minOf(toExtract, amount)
             if (actual <= 0L) return 0L
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -215,6 +247,13 @@ class ReplicatorBlockEntity(
                 markDirty()
                 actual
             }
+=======
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            sync.fluidAmount = toMilliBuckets(amount)
+            markDirty()
+            return actual
+>>>>>>> backup/1.21.1
         }
     }
 
@@ -247,7 +286,7 @@ class ReplicatorBlockEntity(
     private fun replicatorIsDrainableUuContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = Registries.ITEM.getId(stack.item)
-        val fluidCellId = Identifier("ic2_120", "fluid_cell")
+        val fluidCellId = Identifier.of("ic2_120", "fluid_cell")
         return itemId.path == "uu_matter_bucket" ||
             itemId.path == "uu_matter_cell" ||
             (itemId == fluidCellId &&
@@ -263,9 +302,11 @@ class ReplicatorBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.replicator")
@@ -281,9 +322,9 @@ class ReplicatorBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(ReplicatorSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -294,9 +335,9 @@ class ReplicatorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(ReplicatorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
@@ -322,7 +363,11 @@ class ReplicatorBlockEntity(
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, tankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
+<<<<<<< HEAD
         sync.fluidCapacity = tankInternal.getEffectiveCapacity()
+=======
+        sync.fluidCapacity = ReplicatorSync.TANK_CAPACITY_DROPLETS
+>>>>>>> backup/1.21.1
 
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
@@ -488,8 +533,12 @@ class ReplicatorBlockEntity(
         if (space < FluidConstants.BUCKET) return
 
         Transaction.openOuter().use { tx ->
+<<<<<<< HEAD
             @Suppress("DEPRECATION")
             val ctx = ContainerItemContext.withInitial(input.copyWithCount(1))
+=======
+            val ctx = ContainerItemContext.withConstant(input)
+>>>>>>> backup/1.21.1
             val itemStorage = ctx.find(FluidStorage.ITEM) ?: return@use
             for (view in itemStorage) {
                 if (view.amount < FluidConstants.BUCKET || view.resource.isBlank) continue
@@ -517,7 +566,7 @@ class ReplicatorBlockEntity(
     }
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean =
-        current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
+        current.isEmpty || (ItemStack.areItemsAndComponentsEqual(current, toInsert) && current.count < current.maxCount)
 
     private fun isUuMatter(fluid: net.minecraft.fluid.Fluid): Boolean =
         fluid == ModFluids.UU_MATTER_STILL || fluid == ModFluids.UU_MATTER_FLOWING

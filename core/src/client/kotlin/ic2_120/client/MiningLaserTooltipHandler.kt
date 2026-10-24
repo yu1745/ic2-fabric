@@ -19,7 +19,7 @@ import org.lwjgl.glfw.GLFW
 object MiningLaserTooltipHandler {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, _, lines ->
+        ItemTooltipCallback.EVENT.register { stack, _, type, lines ->
             if (stack.item !is MiningLaserItem) return@register
             val laser = stack.item as MiningLaserItem
             val mode = MiningLaserItem.getMode(stack)

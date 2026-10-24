@@ -3,20 +3,14 @@
 	"package": "ic2_120.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"CoalDustWaterTransformMixin",
 		"PlayerEntityMixin",
 		"LivingEntityJumpMixin",
-		"LivingEntityScaffoldFabricMixin",
-		"LivingEntityScaffoldForgeMixin",
+		"ServerPlayNetworkHandlerMixin",
 		"ChickenEntityMixin",
 		"PassiveEntityMixin",
 		"MerchantEntityMixin",
 		"PathAwareEntityMixin",
-		"MobEntityMixin",
-		"GrindstoneScreenHandlerMixin",
-		"ReactorComponentStackMixin",
-		"ItemStackLargeCountMixin",
-		"SimpleInventoryMixin"
+		"MobEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

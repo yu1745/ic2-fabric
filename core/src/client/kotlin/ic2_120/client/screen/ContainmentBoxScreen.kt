@@ -20,21 +20,39 @@ class ContainmentBoxScreen(
         backgroundHeight = 166
     }
 
+<<<<<<< HEAD
+=======
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
+>>>>>>> backup/1.21.1
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
         context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
+        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+>>>>>>> backup/1.21.1
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guicontainmentbox.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicontainmentbox.png")
+>>>>>>> backup/1.21.1
         private const val TEX_SIZE = 256
     }
 }

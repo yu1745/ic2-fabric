@@ -98,7 +98,7 @@ object ModTags {
             val RAW_MATERIALS_COPPER = item("raw_materials/copper")
 
             private fun item(path: String): TagKey<Item> =
-                TagKey.of(RegistryKeys.ITEM, Identifier(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.of(RegistryKeys.ITEM, Identifier.of(Ic2_120.MOD_ID, "compat/$path"))
         }
 
         object Blocks {
@@ -114,7 +114,15 @@ object ModTags {
             val STORAGE_BLOCKS_URANIUM = block("storage_blocks/uranium")
 
             private fun block(path: String): TagKey<Block> =
-                TagKey.of(RegistryKeys.BLOCK, Identifier(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.of(RegistryKeys.BLOCK, Identifier.of(Ic2_120.MOD_ID, "compat/$path"))
+        }
+
+        object Fluids {
+            val SEMIFLUID_BIOFUEL_EQUIVALENT = fluid("semifluid_generator/biofuel_equivalent")
+            val SEMIFLUID_CREOSOTE_EQUIVALENT = fluid("semifluid_generator/creosote_equivalent")
+
+            private fun fluid(path: String): TagKey<net.minecraft.fluid.Fluid> =
+                TagKey.of(RegistryKeys.FLUID, Identifier.of(Ic2_120.MOD_ID, "compat/$path"))
         }
 
         object Fluids {

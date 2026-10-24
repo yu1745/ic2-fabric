@@ -17,6 +17,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
@@ -94,7 +95,11 @@ class UuScannerScreenHandler(
                 index in SLOT_INPUT_INDEX..SLOT_CRYSTAL_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
+<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
+=======
+                index in PLAYER_INV_START..HOTBAR_END -> {
+>>>>>>> backup/1.21.1
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
                         stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)

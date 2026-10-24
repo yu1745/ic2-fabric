@@ -2,7 +2,11 @@ package buildcraft_addon.content.block
 
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.PumpBlockEntity
+<<<<<<< HEAD
 import ic2_120.integration.ftbchunks.ClaimProtection
+=======
+import com.mojang.serialization.MapCodec
+>>>>>>> backup/1.21.1
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import net.minecraft.block.Block
@@ -19,16 +23,32 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.state.StateManager
 import net.minecraft.util.ActionResult
+<<<<<<< HEAD
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+=======
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
+import net.minecraft.world.WorldView
+>>>>>>> backup/1.21.1
 
 @ModBlock(name = "pump", registerItem = true, tab = CreativeTab.BUILDCRAFT)
 class PumpBlock : BlockWithEntity(
     Settings.create().strength(5.0f, 10.0f).nonOpaque()
 ), BlockEntityProvider {
 
+<<<<<<< HEAD
+=======
+    companion object {
+        private val CODEC: MapCodec<PumpBlock> = Block.createCodec { PumpBlock() }
+    }
+
+    override fun getCodec(): MapCodec<out BlockWithEntity> = CODEC
+
+>>>>>>> backup/1.21.1
     init {
         defaultState = stateManager.defaultState
     }
@@ -39,7 +59,11 @@ class PumpBlock : BlockWithEntity(
         return PumpBlockEntity(pos, state)
     }
 
+<<<<<<< HEAD
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hand: Hand, hit: BlockHitResult): ActionResult {
+=======
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? PumpBlockEntity ?: return ActionResult.PASS
             player.sendMessage(net.minecraft.text.Text.literal("液泵: ${be.getTankInfo()}"), true)
@@ -66,7 +90,11 @@ class PumpBlock : BlockWithEntity(
         }
     }
 
+<<<<<<< HEAD
     override fun getPickStack(world: net.minecraft.world.BlockView, pos: BlockPos, state: BlockState): ItemStack {
+=======
+    override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {
+>>>>>>> backup/1.21.1
         return ItemStack(this)
     }
 
@@ -75,6 +103,7 @@ class PumpBlock : BlockWithEntity(
         // BC TileMiner.onRemove: 方块被破坏时清除管道
         if (!state.isOf(newState.block) && !world.isClient) {
             val tubeBlock = Registries.BLOCK.get(BuildCraftAddon.id("tube"))
+<<<<<<< HEAD
             val planned = mutableListOf<BlockPos>()
             for (y in pos.y - 1 downTo pos.y - PumpBlockEntity.MAX_DEPTH) {
                 val bp = BlockPos(pos.x, y, pos.z)
@@ -85,6 +114,14 @@ class PumpBlock : BlockWithEntity(
             if (ClaimProtection.allAllowedUuid(world, planned, null, ClaimProtection.EDIT_BLOCK)) {
                 for (bp in planned) world.setBlockState(bp, Blocks.AIR.defaultState, 3)
             }
+=======
+            for (y in pos.y - 1 downTo pos.y - PumpBlockEntity.MAX_DEPTH) {
+                val bp = BlockPos(pos.x, y, pos.z)
+                if (world.getBlockState(bp).isOf(tubeBlock)) {
+                    world.setBlockState(bp, Blocks.AIR.defaultState, 3)
+                } else break
+            }
+>>>>>>> backup/1.21.1
         }
         super.onStateReplaced(state, world, pos, newState, moved)
     }

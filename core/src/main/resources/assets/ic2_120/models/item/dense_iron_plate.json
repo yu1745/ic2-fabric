@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/dense_iron_plate.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -8,5 +9,10 @@
     "metal_a3a3a3": "ic2_120:item/item3d/metal_a3a3a3",
     "metal_b8b8b8": "ic2_120:item/item3d/metal_b8b8b8",
     "flat_e0e0e0": "ic2_120:item/item3d/flat_e0e0e0"
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/resource/plate/dense_iron"
+>>>>>>> backup/1.21.1
   }
 }

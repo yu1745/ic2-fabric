@@ -29,7 +29,11 @@ class InductionFurnaceScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -63,8 +67,16 @@ class InductionFurnaceScreen(
         }
 
         // 工作进度纹理 (181,23)-(203,38) = 22×15，自左向右（仅处理物品时渲染）
+<<<<<<< HEAD
         if (handler.sync.progress > 0) {
             val progressFrac = (handler.sync.progress.toFloat() / InductionFurnaceSync.PROGRESS_THRESHOLD).coerceIn(0f, 1f)
+=======
+        if (handler.sync.progressSlot0 > 0) {
+            val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
+            val heat = handler.sync.heat.coerceAtLeast(InductionFurnaceSync.MIN_HEAT_THRESHOLD)
+            val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).toInt().coerceAtLeast(baseTicks.toInt())
+            val progressFrac = (handler.sync.progressSlot0.coerceIn(0, progressNeeded).toFloat() / progressNeeded).coerceIn(0f, 1f)
+>>>>>>> backup/1.21.1
             val arrowWidth = (PROGRESS_W * progressFrac).toInt().coerceAtLeast(1)
             context.enableScissor(
                 left + PROGRESS_X,
@@ -137,8 +149,13 @@ class InductionFurnaceScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiinductionfurnace.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiinductionfurnace.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+>>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
 
         // uptips

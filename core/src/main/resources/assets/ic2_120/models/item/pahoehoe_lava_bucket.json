@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/pahoehoe_lava_bucket.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -13,4 +14,10 @@
     "flat_353535": "ic2_120:item/item3d/flat_353535",
     "flat_b68c7b": "ic2_120:item/item3d/flat_b68c7b"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/bucket/pahoehoe_lava"
+	}
+>>>>>>> backup/1.21.1
 }

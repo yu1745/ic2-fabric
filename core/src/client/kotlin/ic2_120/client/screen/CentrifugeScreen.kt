@@ -29,7 +29,11 @@ class CentrifugeScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -176,8 +180,13 @@ class CentrifugeScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guicentrifuge.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicentrifuge.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+>>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,3)-(193,17) = 14x14

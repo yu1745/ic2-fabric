@@ -1,7 +1,12 @@
 {
 	"parent": "minecraft:block/door_bottom_right_open",
 	"textures": {
+<<<<<<< HEAD
 		"bottom": "ic2_120:block/reinforced_door_bottom",
 		"top": "ic2_120:block/reinforced_door_top"
+=======
+		"bottom": "ic2:block/reinforced_door_bottom",
+		"top": "ic2:block/reinforced_door_top"
+>>>>>>> backup/1.21.1
 	}
 }

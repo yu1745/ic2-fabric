@@ -1,8 +1,11 @@
 package ic2_120.content.entity
 
 import ic2_120.config.Ic2Config
+<<<<<<< HEAD
 import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.annotation.ModEntity
+=======
+>>>>>>> backup/1.21.1
 import net.minecraft.block.AbstractFireBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -14,8 +17,8 @@ import net.minecraft.entity.data.TrackedData
 import net.minecraft.entity.data.TrackedDataHandlerRegistry
 import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.entity.projectile.ProjectileUtil
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.recipe.RecipeType
 import net.minecraft.registry.tag.BlockTags
@@ -48,7 +51,7 @@ class LaserProjectileEntity(
         /** 最大存活 tick 数 */
         private val MAX_LIFE: Int get() = Ic2Config.current.miningLaser.maxLife
 
-        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "item.laser.hit"))
+        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "item.laser.hit"))
 
         private val MODE: TrackedData<String> = DataTracker.registerData(
             LaserProjectileEntity::class.java, TrackedDataHandlerRegistry.STRING
@@ -74,8 +77,8 @@ class LaserProjectileEntity(
     /** 已飞行 tick */
     private var lifeTicks: Int = 0
 
-    override fun initDataTracker() {
-        dataTracker.startTracking(MODE, LaserMode.DEFAULT.name)
+    override fun initDataTracker(builder: DataTracker.Builder) {
+        builder.add(MODE, LaserMode.DEFAULT.name)
     }
 
     /**
@@ -306,11 +309,10 @@ class LaserProjectileEntity(
         if (blockItem == net.minecraft.item.Items.AIR) return
 
         val inputStack = ItemStack(blockItem)
-        val inventory = SimpleInventory(inputStack)
-        val recipe = serverWorld.recipeManager.getFirstMatch(RecipeType.SMELTING, inventory, serverWorld).orElse(null)
+        val recipe = serverWorld.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputStack), serverWorld).map { it.value }.orElse(null)
 
         if (recipe != null) {
-            val output = recipe.craft(inventory, serverWorld.registryManager)
+            val output = recipe.getResult(serverWorld.registryManager)
             if (!output.isEmpty) {
                 world.breakBlock(pos, false)
                 net.minecraft.block.Block.dropStack(serverWorld, pos, output.copy())
@@ -360,7 +362,11 @@ class LaserProjectileEntity(
     }
 
     override fun isCollidable(): Boolean = false
+<<<<<<< HEAD
     override fun canUsePortals(): Boolean = false
+=======
+    override fun canUsePortals(allowVehicles: Boolean): Boolean = false
+>>>>>>> backup/1.21.1
 
     /**
      * 覆盖渲染距离检查。

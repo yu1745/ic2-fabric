@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/dual_uranium_fuel_rod.obj",
@@ -12,3 +13,6 @@
     "flat_e7e7e7": "ic2_120:item/item3d/flat_e7e7e7"
   }
 }
+=======
+{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/fuel_rod/dual_uranium"}}
+>>>>>>> backup/1.21.1

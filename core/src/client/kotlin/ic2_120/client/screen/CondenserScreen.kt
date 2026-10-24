@@ -42,7 +42,11 @@ class CondenserScreen(
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         // 背景: guicondenser.png (0,0) 到 (176,184)
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
         // 标题: 居中, 颜色 0x404040 (4210752) — 与 Ic2Gui.drawXCenteredString 一致
@@ -185,7 +189,11 @@ class CondenserScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guicondenser.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicondenser.png")
+>>>>>>> backup/1.21.1
         private const val PROGRESS_WIDTH = 82
 
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

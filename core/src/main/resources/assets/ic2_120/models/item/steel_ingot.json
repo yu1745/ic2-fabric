@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/steel_ingot.obj",
@@ -11,3 +12,6 @@
     "flat_595c68": "ic2_120:item/item3d/flat_595c68"
   }
 }
+=======
+{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/ingot/steel" } }
+>>>>>>> backup/1.21.1

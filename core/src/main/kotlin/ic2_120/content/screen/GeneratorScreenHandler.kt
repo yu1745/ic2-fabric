@@ -16,10 +16,20 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
+=======
+
+import net.minecraft.screen.ArrayPropertyDelegate
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
+<<<<<<< HEAD
+=======
+import ic2_120.registry.annotation.ScreenFactory
+>>>>>>> backup/1.21.1
 
 @ModScreenHandler(block = GeneratorBlock::class, inventorySize = GeneratorBlockEntity.INVENTORY_SIZE)
 class GeneratorScreenHandler(
@@ -80,6 +90,7 @@ class GeneratorScreenHandler(
                 // 电池槽 -> 玩家物品栏
                 index == SLOT_BATTERY_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 // 玩家物品栏 -> 机器（路由驱动）
+<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
@@ -91,6 +102,14 @@ class GeneratorScreenHandler(
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
+=======
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
+                    if (!moved) return ItemStack.EMPTY
+                }
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+>>>>>>> backup/1.21.1
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()

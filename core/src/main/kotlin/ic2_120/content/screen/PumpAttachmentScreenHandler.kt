@@ -10,8 +10,9 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
@@ -29,7 +30,11 @@ class PumpAttachmentScreenHandler(
         this(syncId, playerInventory, be, ScreenHandlerContext.create(playerInventory.player.world, be.pos))
 
     init {
+<<<<<<< HEAD
         addSlot(object : Slot(SimpleInventory(1), FILTER_SLOT, 80, 31) {
+=======
+        addSlot(object : Slot(object : net.minecraft.inventory.SimpleInventory(1) {}, 0, 80, 31) {
+>>>>>>> backup/1.21.1
             override fun canInsert(stack: ItemStack): Boolean = false
             override fun canTakeItems(playerEntity: PlayerEntity): Boolean = false
         })

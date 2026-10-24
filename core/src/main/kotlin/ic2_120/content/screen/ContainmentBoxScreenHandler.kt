@@ -10,6 +10,11 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
+=======
+import net.minecraft.network.PacketByteBuf
+
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
 import net.minecraft.util.Hand

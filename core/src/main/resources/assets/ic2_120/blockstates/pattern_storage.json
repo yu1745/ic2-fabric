@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "multipart": [
     {
       "when": {
@@ -71,4 +72,12 @@
       }
     }
   ]
+=======
+  "variants": {
+    "facing=north": { "model": "ic2:block/machine/uu/pattern_storage" },
+    "facing=east": { "model": "ic2:block/machine/uu/pattern_storage", "y": 90 },
+    "facing=south": { "model": "ic2:block/machine/uu/pattern_storage", "y": 180 },
+    "facing=west": { "model": "ic2:block/machine/uu/pattern_storage", "y": 270 }
+  }
+>>>>>>> backup/1.21.1
 }

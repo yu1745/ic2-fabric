@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/filled_tin_can.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,4 +12,10 @@
     "flat_bd790f": "ic2_120:item/item3d/flat_bd790f",
     "flat_e0a040": "ic2_120:item/item3d/flat_e0a040"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/filled_tin_can"
+	}
+>>>>>>> backup/1.21.1
 }

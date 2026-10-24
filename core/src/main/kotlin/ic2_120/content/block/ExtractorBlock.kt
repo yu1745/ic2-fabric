@@ -16,7 +16,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
@@ -31,7 +31,6 @@ import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
-import java.util.function.Consumer
 
 /**
  * 提取机方块。消耗电力从粘性树脂、橡胶原木、橡胶树苗等提取橡胶。
@@ -50,13 +49,18 @@ class ExtractorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
+<<<<<<< HEAD
         else checkType(type, ExtractorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+=======
+        else validateTicker(type, ExtractorBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
+>>>>>>> backup/1.21.1
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -66,6 +70,9 @@ class ExtractorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -86,7 +93,7 @@ class ExtractorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 机器本身合成配方
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()

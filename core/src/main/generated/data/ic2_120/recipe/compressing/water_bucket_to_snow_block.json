@@ -1,0 +1,15 @@
+{
+  "type": "ic2_120:compressing",
+  "container_return": {
+    "count": 1,
+    "id": "minecraft:bucket"
+  },
+  "ingredient": {
+    "item": "minecraft:water_bucket"
+  },
+  "input_count": 1,
+  "result": {
+    "count": 1,
+    "id": "minecraft:snow_block"
+  }
+}

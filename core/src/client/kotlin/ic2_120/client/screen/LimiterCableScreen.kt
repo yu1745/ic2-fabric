@@ -67,7 +67,11 @@ class LimiterCableScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
@@ -90,7 +94,11 @@ class LimiterCableScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guilimitercable.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guilimitercable.png")
+>>>>>>> backup/1.21.1
         private const val TEX_SIZE = 256
     }
 }

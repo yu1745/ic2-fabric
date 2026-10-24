@@ -1,13 +1,18 @@
 package ic2_120.mixin;
 
+<<<<<<< HEAD
 import ic2_120.config.Ic2Config;
 import ic2_120.access.SuperJumpProtectionAccess;
 import ic2_120.content.item.armor.ElectricArmorItem;
 import ic2_120.content.item.armor.QuantumArmorItem;
+=======
+import ic2_120.content.item.armor.ElectricArmorItem;
+>>>>>>> backup/1.21.1
 import ic2_120.content.item.armor.QuantumBoots;
 import ic2_120.util.NanoSaberDamageHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.damage.DamageSource;
+<<<<<<< HEAD
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
@@ -19,6 +24,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+=======
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+>>>>>>> backup/1.21.1
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashMap;
@@ -31,6 +44,7 @@ import java.util.Map;
  * 1. 纳米/量子护甲减伤逻辑
  */
 @Mixin(PlayerEntity.class)
+<<<<<<< HEAD
 public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
     private static final long DAMAGE_COST_PER_POINT = 20000L;
@@ -55,6 +69,11 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
     @Unique
     private World ic2$superJumpProtectionWorld;
+=======
+public abstract class PlayerEntityMixin {
+
+    private static final int DAMAGE_COST_PER_POINT = 5000;
+>>>>>>> backup/1.21.1
 
     /**
      * 防止 {@link #onDamage} 在递归调用 {@link PlayerEntity#damage} 时再次套用电力护甲减伤。
@@ -62,6 +81,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     private static final ThreadLocal<Boolean> IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE =
             ThreadLocal.withInitial(() -> false);
 
+<<<<<<< HEAD
     @Override
     public void ic2$activateSuperJumpProtection(ItemStack boots) {
         PlayerEntity player = (PlayerEntity) (Object) this;
@@ -163,6 +183,8 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         }
     }
 
+=======
+>>>>>>> backup/1.21.1
     /**
      * 纳米剑对穿戴纳米套的玩家：替换为无视原版护甲的伤害类型；量子护甲时不替换（见 {@link NanoSaberDamageHelper}）。
      */
@@ -187,6 +209,21 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             return;
         }
 
+<<<<<<< HEAD
+=======
+        // 量子靴子大跳摔落保护
+        if (source.getName().equals("fall")) {
+            ItemStack boots = player.getEquippedStack(EquipmentSlot.FEET);
+            if (!boots.isEmpty() && boots.getItem() instanceof QuantumBoots) {
+                if (QuantumBoots.checkAndClearSuperJumpProtection(boots)) {
+                    cir.setReturnValue(false);
+                    cir.cancel();
+                    return;
+                }
+            }
+        }
+
+>>>>>>> backup/1.21.1
         // 纳米剑穿甲伤害：不走纳米/量子 EU 减伤（量子套不会收到此伤害类型）
         if (NanoSaberDamageHelper.isNanoSaberArmorPierceDamage(source)) {
             return;
@@ -219,9 +256,13 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         double mitigated = (double) amount - (double) reducedDamage;
         if (mitigated <= 0.0) return;
 
+<<<<<<< HEAD
         long energyNeeded = (long) Math.ceil(
             mitigated * DAMAGE_COST_PER_POINT * Ic2Config.INSTANCE.getElectricArmorDamageCostMultiplier()
         );
+=======
+        long energyNeeded = (long) Math.ceil(mitigated) * DAMAGE_COST_PER_POINT;
+>>>>>>> backup/1.21.1
 
         long totalEnergy = 0;
         for (Map.Entry<ElectricArmorItem, ItemStack> entry : armorItems.entrySet()) {
@@ -267,6 +308,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             }
         }
 
+<<<<<<< HEAD
         if (reducedDamage <= 0.0f) {
             if (Ic2Config.INSTANCE.isQuantumArmorHitReactionEnabled()
                     && QuantumArmorItem.Companion.hasFullQuantumArmor(player)) {
@@ -277,6 +319,8 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             return;
         }
 
+=======
+>>>>>>> backup/1.21.1
         IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(true);
         try {
             cir.setReturnValue(player.damage(source, reducedDamage));
@@ -285,6 +329,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         }
         cir.cancel();
     }
+<<<<<<< HEAD
 
     /**
      * 复刻原版 LivingEntity.damage 在伤害已被护甲吸收为 0 时仍保留的受击反馈。
@@ -308,4 +353,6 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             player.getWorld().sendEntityDamage(player, source);
         }
     }
+=======
+>>>>>>> backup/1.21.1
 }

@@ -1,3 +1,12 @@
+import net.fabricmc.loom.api.remapping.RemapperParameters
+
+def addRemapperExtensionByClassName = { loomExt, String extensionClassName ->
+	def holderClass = Class.forName("net.fabricmc.loom.extension.RemapperExtensionHolder")
+	def holder = objects.newInstance(holderClass, RemapperParameters.None.INSTANCE)
+	holder.getRemapperExtensionClass().set(extensionClassName)
+	loomExt.getRemapperExtensions().add(holder)
+}
+
 version = project.mod_version
 group = project.maven_group
 
@@ -6,6 +15,8 @@ base {
 }
 
 loom {
+    addRemapperExtensionByClassName(delegate, "ic2_120.gradle.IgnoreMappingConflictsExtension")
+
     mods {
         "ic2_120_advanced_weapons_addon" {
             sourceSet sourceSets.main

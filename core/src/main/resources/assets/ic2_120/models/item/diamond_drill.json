@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/diamond_drill.obj",
   "parent": "ic2_120:item/item3d/display_handheld",
@@ -14,5 +15,10 @@
     "glass_00b4b4": "ic2_120:item/item3d/glass_00b4b4",
     "flat_8e8e8e": "ic2_120:item/item3d/flat_8e8e8e",
     "flat_006e6e": "ic2_120:item/item3d/flat_006e6e"
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/tool/electric/diamond_drill"
+>>>>>>> backup/1.21.1
   }
 }

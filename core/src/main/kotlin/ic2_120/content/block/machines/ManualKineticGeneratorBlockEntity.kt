@@ -30,6 +30,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.text.Text
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
 
 @ModBlockEntity(block = ManualKineticGeneratorBlock::class)
 class ManualKineticGeneratorBlockEntity(
@@ -273,22 +274,22 @@ class ManualKineticGeneratorBlockEntity(
 
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
         inventory[CRANK_SLOT] = ItemStack.EMPTY
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putInt("PendingKu", pendingOutputKu)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 }

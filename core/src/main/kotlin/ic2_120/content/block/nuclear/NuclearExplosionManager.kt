@@ -30,12 +30,19 @@ object NuclearExplosionManager {
         cx: Double, cy: Double, cz: Double,
         power: Float,
         damageSource: net.minecraft.entity.damage.DamageSource,
+<<<<<<< HEAD
         ownerUuid: java.util.UUID? = null,
+=======
+>>>>>>> backup/1.21.1
         onComplete: ((NuclearExplosion) -> Unit)? = null
     ) {
         if (power <= 0f) return
 
+<<<<<<< HEAD
         val explosion = NuclearExplosion.create(world, cx, cy, cz, power, damageSource, ownerUuid)
+=======
+        val explosion = NuclearExplosion.create(world, cx, cy, cz, power, damageSource)
+>>>>>>> backup/1.21.1
         explosion.onComplete = onComplete
         explosions.add(explosion)
         activeCount++

@@ -14,7 +14,13 @@ import ic2_120.content.block.storage.StorageBoxBlock
 import ic2_120.content.block.storage.TankBlock
 import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.item.energy.IElectricTool
+<<<<<<< HEAD
 import ic2_120.integration.ftbchunks.ClaimProtection
+=======
+import ic2_120.editCustomData
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.NbtComponent
+>>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -22,6 +28,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.Block
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ItemStack
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.item.Items
@@ -52,9 +59,9 @@ import net.minecraft.world.World
  */
 object WrenchHandler {
 
-    private val WRENCH_ID = Identifier(Ic2_120.MOD_ID, "wrench")
-    private val ELECTRIC_WRENCH_ID = Identifier(Ic2_120.MOD_ID, "electric_wrench")
-    private val WRENCH_USE_SOUND = SoundEvent.of(Identifier("ic2", "item.wrench.use"))
+    private val WRENCH_ID = Identifier.of(Ic2_120.MOD_ID, "wrench")
+    private val ELECTRIC_WRENCH_ID = Identifier.of(Ic2_120.MOD_ID, "electric_wrench")
+    private val WRENCH_USE_SOUND = SoundEvent.of(Identifier.of("ic2", "item.wrench.use"))
     private const val ENERGY_RETAIN_RATIO = 0.8
 
     fun isWrench(stack: ItemStack): Boolean {
@@ -103,6 +110,7 @@ object WrenchHandler {
             if (block !is MachineBlock && block !is DirectionalMachineBlock) return@register ActionResult.PASS
 
             if (!world.isClient) {
+<<<<<<< HEAD
                 if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK)) {
                     return@register ActionResult.FAIL
                 }
@@ -111,6 +119,8 @@ object WrenchHandler {
                     if (tool.getEnergy(stack) < 100L) return@register ActionResult.FAIL
                     tool.setEnergy(stack, tool.getEnergy(stack) - 100L)
                 }
+=======
+>>>>>>> backup/1.21.1
                 when (block) {
                     is DirectionalMachineBlock -> {
                         // 变压器等六面朝向机器：根据玩家视角计算朝向
@@ -155,7 +165,11 @@ object WrenchHandler {
                 // fall through to normal break
             }
 
+<<<<<<< HEAD
             if (block !is MachineBlock && block !is DirectionalMachineBlock && block !is TankBlock && block !is StorageBoxBlock) return@register ActionResult.PASS
+=======
+            if (block !is MachineBlock && block !is TankBlock && block !is StorageBoxBlock) return@register ActionResult.PASS
+>>>>>>> backup/1.21.1
 
             // 电动扳手：电量不足 1000 EU 则不允许拆卸
             if (isElectricWrench(stack)) {
@@ -183,7 +197,7 @@ object WrenchHandler {
                                 ic2_120.content.sync.EnergyStorageSync.NBT_ENERGY_STORED,
                                 retained
                             )
-                            dropped.orCreateNbt.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
+                            dropped.set(DataComponentTypes.BLOCK_ENTITY_DATA, NbtComponent.of(blockEntityTag))
                         }
                         val itemEntity = net.minecraft.entity.ItemEntity(
                             world,
@@ -200,13 +214,22 @@ object WrenchHandler {
                     val patternBe = world.getBlockEntity(pos) as? PatternStorageBlockEntity
                     // 水晶要爆出来，不保存在 NBT 里
                     val crystalStack = patternBe?.removeStack(PatternStorageBlockEntity.SLOT_CRYSTAL, 64)
+<<<<<<< HEAD
                     val nbt = patternBe?.createNbt()
+=======
+                    val lookup = world.registryManager
+                    val nbt = patternBe?.createNbt(lookup)
+>>>>>>> backup/1.21.1
                     world.removeBlockEntity(pos)
                     val didBreak = world.breakBlock(pos, false, player)
                     if (didBreak && nbt != null) {
                         val dropped = ItemStack(block.asItem())
                         if (!nbt.isEmpty) {
+<<<<<<< HEAD
                             dropped.orCreateNbt.put("BlockEntityTag", nbt)
+=======
+                            dropped.editCustomData { it.put("BlockEntityTag", nbt) }
+>>>>>>> backup/1.21.1
                         }
                         val patternEntity = net.minecraft.entity.ItemEntity(
                             world,
@@ -256,7 +279,7 @@ object WrenchHandler {
                             tool.setEnergy(stack, current - 1000)
                         }
                         stack.isDamageable -> {
-                            stack.damage(10, player) { it.sendToolBreakStatus(hand) }
+                            stack.damage(10, player, if (hand == Hand.MAIN_HAND) EquipmentSlot.MAINHAND else EquipmentSlot.OFFHAND)
                         }
                     }
                     world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)

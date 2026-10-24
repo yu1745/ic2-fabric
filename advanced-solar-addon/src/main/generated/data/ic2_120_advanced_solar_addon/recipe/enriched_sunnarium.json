@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "ic2_120_advanced_solar_addon:irradiant_uranium"
+    },
+    "S": {
+      "item": "ic2_120_advanced_solar_addon:sunnarium"
+    }
+  },
+  "pattern": [
+    "III",
+    "ISI",
+    "III"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_advanced_solar_addon:enriched_sunnarium"
+  }
+}

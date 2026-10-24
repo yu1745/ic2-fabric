@@ -21,7 +21,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
@@ -40,7 +40,6 @@ import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -103,7 +102,11 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
                 is EvTransformerBlock -> EvTransformerBlockEntity::class.type()
                 else -> return null
             }
+<<<<<<< HEAD
             checkType(type, beType) { world1, pos, state, be ->
+=======
+            validateTicker(type, beType) { world1, pos, state, be ->
+>>>>>>> backup/1.21.1
                 be.tick(world1, pos, state)
             }
         }
@@ -113,6 +116,7 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -122,6 +126,9 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -142,7 +149,7 @@ class LvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val insulatedTinCable = InsulatedTinCableBlock::class.item()
             val coil = ic2_120.content.item.Coil::class.instance()
             if (coil != Items.AIR) {
@@ -163,7 +170,7 @@ class MvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val machine = MachineCasingBlock::class.item()
             if (machine != Items.AIR) {
@@ -184,7 +191,7 @@ class HvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val insulatedGoldCable = InsulatedGoldCableBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val advancedReBattery = ic2_120.content.item.energy.AdvancedReBatteryItem::class.instance()
@@ -206,7 +213,7 @@ class EvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val insulatedIronCable = TripleInsulatedIronCableBlock::class.item()
             val advancedCircuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val lapotronCrystal = ic2_120.content.item.energy.LapotronCrystalItem::class.instance()

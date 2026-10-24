@@ -29,7 +29,11 @@ class MinerScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -147,7 +151,11 @@ class MinerScreen(
             if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
                 context.drawTooltip(textRenderer, listOf(
                     Text.translatable("gui.ic2_120.miner.uptips"),
+<<<<<<< HEAD
                     Text.literal("§7${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+=======
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
+>>>>>>> backup/1.21.1
                     Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
                     Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
                     Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
@@ -172,7 +180,11 @@ class MinerScreen(
                 return true
             }
             if (relX in 133 until 170 && relY in 101 until 117) {
+<<<<<<< HEAD
                 client?.player?.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, MinerScreenHandler.BUTTON_RESTART))
+=======
+                client?.player?.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, MinerScreenHandler.BUTTON_RECOVER_PIPES))
+>>>>>>> backup/1.21.1
                 return true
             }
         }
@@ -180,9 +192,15 @@ class MinerScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEX_ORDINARY = Identifier("ic2", "textures/gui/guiminer.png")
         private val TEX_ADVANCED = Identifier("ic2", "textures/gui/guiadvminer.png")
         private val UPTIPS_TEX = Identifier("ic2", "textures/gui/uptips.png")
+=======
+        private val TEX_ORDINARY = Identifier.of("ic2", "textures/gui/guiminer.png")
+        private val TEX_ADVANCED = Identifier.of("ic2", "textures/gui/guiadvminer.png")
+        private val UPTIPS_TEX = Identifier.of("ic2", "textures/gui/uptips.png")
+>>>>>>> backup/1.21.1
         private const val TEXTURE_SIZE = 256
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4
@@ -193,9 +211,16 @@ class MinerScreen(
         private const val ORD_EB_W = 14; private const val ORD_EB_H = 15
         private const val ORD_EB_X = 129; private const val ORD_EB_Y = 40
 
+<<<<<<< HEAD
         // 高级：闪电能量槽 (12,55)
         private const val ADV_EB_U = 179; private const val ADV_EB_V = 3
         private const val ADV_EB_W = 14; private const val ADV_EB_H = 15
         private const val ADV_EB_X = 12; private const val ADV_EB_Y = 55
+=======
+        // 高级: 电量条 (179,3)-(193,18) = 14x15, 渲染至 10,64
+        private const val ADV_EB_U = 179; private const val ADV_EB_V = 3
+        private const val ADV_EB_W = 14; private const val ADV_EB_H = 15
+        private const val ADV_EB_X = 9; private const val ADV_EB_Y = 62
+>>>>>>> backup/1.21.1
     }
 }

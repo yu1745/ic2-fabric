@@ -12,13 +12,26 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
+<<<<<<< HEAD
 import net.minecraft.item.ItemStack
+=======
+import net.minecraft.inventory.SimpleInventory
+import net.minecraft.item.ItemStack
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.screen.ArrayPropertyDelegate
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
+<<<<<<< HEAD
 
 @ModScreenHandler(block = UvLampBlock::class, inventorySize = UvLampBlockEntity.INVENTORY_SIZE)
+=======
+import ic2_120.registry.annotation.ScreenFactory
+
+@ModScreenHandler(block = UvLampBlock::class)
+>>>>>>> backup/1.21.1
 class UvLampScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -67,7 +80,11 @@ class UvLampScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
+<<<<<<< HEAD
                 index in PLAYER_INV_START until HOTBAR_END -> {
+=======
+                index in PLAYER_INV_START..HOTBAR_END -> {
+>>>>>>> backup/1.21.1
                     val storage = itemStorage
                     if (storage == null) return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
@@ -76,9 +93,12 @@ class UvLampScreenHandler(
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
+<<<<<<< HEAD
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
+=======
+>>>>>>> backup/1.21.1
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
@@ -99,7 +119,20 @@ class UvLampScreenHandler(
     companion object {
         const val SLOT_UPGRADE_INDEX = 0
         const val PLAYER_INV_START = 1
+<<<<<<< HEAD
         const val HOTBAR_END = 37
 
+=======
+        const val HOTBAR_END = 36
+
+        @ScreenFactory
+        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): UvLampScreenHandler {
+            val pos = buf.readBlockPos()
+            val propertyCount = buf.readVarInt()
+            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
+            val blockInv = SimpleInventory(UvLampBlockEntity.INVENTORY_SIZE)
+            return UvLampScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
+        }
+>>>>>>> backup/1.21.1
     }
 }

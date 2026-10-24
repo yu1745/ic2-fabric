@@ -29,7 +29,10 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+<<<<<<< HEAD
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
+=======
+>>>>>>> backup/1.21.1
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntityType
@@ -42,8 +45,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -54,6 +58,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 水力发电机方块实体。
@@ -70,7 +76,11 @@ class WaterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
+<<<<<<< HEAD
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+=======
+) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
@@ -161,7 +171,11 @@ class WaterGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
         override fun canInsert(variant: FluidVariant): Boolean =
+<<<<<<< HEAD
             !variant.isBlank && variant.fluid == net.minecraft.fluid.Fluids.WATER
+=======
+            ModFluids.isFluid(variant.fluid) && variant.fluid == net.minecraft.fluid.Fluids.WATER
+>>>>>>> backup/1.21.1
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -189,6 +203,7 @@ class WaterGeneratorBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -197,6 +212,12 @@ class WaterGeneratorBlockEntity(
                 sync.waterAmount = amount.toInt().coerceAtLeast(0)
                 actual
             }
+=======
+            amount += actual
+            if (variant.fluid != Fluids.WATER) variant = FluidVariant.of(Fluids.WATER)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
+            return actual
+>>>>>>> backup/1.21.1
         }
 
         /** 内部消耗水 */
@@ -204,6 +225,7 @@ class WaterGeneratorBlockEntity(
             if (toConsume <= 0L || variant.fluid != Fluids.WATER) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -212,6 +234,12 @@ class WaterGeneratorBlockEntity(
                 sync.waterAmount = amount.toInt().coerceAtLeast(0)
                 actual
             }
+=======
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
+            return actual
+>>>>>>> backup/1.21.1
         }
     }
 
@@ -294,7 +322,7 @@ class WaterGeneratorBlockEntity(
         return if (current.isEmpty) {
             setStack(EMPTY_CONTAINER_SLOT, emptyStack.copy())
             true
-        } else if (ItemStack.canCombine(current, emptyStack)) {
+        } else if (ItemStack.areItemsAndComponentsEqual(current, emptyStack)) {
             val toAdd = minOf(emptyStack.count, current.maxCount - current.count)
             if (toAdd > 0) {
                 current.increment(toAdd)
@@ -304,9 +332,11 @@ class WaterGeneratorBlockEntity(
         } else false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.water_generator")
@@ -321,9 +351,9 @@ class WaterGeneratorBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(WaterGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, WaterGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -334,9 +364,9 @@ class WaterGeneratorBlockEntity(
         cachedWaterCount = nbt.getInt(NBT_CACHED_WATER_COUNT).coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(WaterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.amount)
@@ -395,7 +425,7 @@ class WaterGeneratorBlockEntity(
         // 燃料槽：水桶、水单元、通用流体单元（NBT 为水）倒入水罐（必须在发电之后处理，否则会干扰发电）
         // 水罐仅 1 桶容量，必须等水罐空才能倒入整桶
         val fuelStack = getStack(FUEL_SLOT)
-        val emptyCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCell = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell"))
         val canAcceptFullBucket = waterTankInternal.amount <= 0L
         when {
             fuelStack.item == Items.WATER_BUCKET && canAcceptFullBucket -> {

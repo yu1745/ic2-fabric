@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/containment_box.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -10,5 +11,10 @@
     "flat_384238": "ic2_120:item/item3d/flat_384238",
     "flat_e4e510": "ic2_120:item/item3d/flat_e4e510",
     "flat_202020": "ic2_120:item/item3d/flat_202020"
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/tool/containment_box"
+>>>>>>> backup/1.21.1
   }
 }

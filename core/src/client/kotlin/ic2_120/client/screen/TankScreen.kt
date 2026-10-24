@@ -26,6 +26,7 @@ class TankScreen(
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
+<<<<<<< HEAD
         // 与压缩机相同的升级提示图标，复用上游 uptips 资源。
         context.drawTexture(
             UPTIPS_TEXTURE, x + UPTIPS_X, y + UPTIPS_Y,
@@ -33,6 +34,8 @@ class TankScreen(
             UPTIPS_SIZE, UPTIPS_SIZE
         )
 
+=======
+>>>>>>> backup/1.21.1
         // 槽位纹理 (179,3)-(197,21) = 18x18
         context.drawTexture(
             TEXTURE, x + SLOT_X, y + SLOT_Y,
@@ -63,7 +66,11 @@ class TankScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
@@ -73,6 +80,7 @@ class TankScreen(
         val relX = mouseX - x
         val relY = mouseY - y
 
+<<<<<<< HEAD
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
             relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
         ) {
@@ -90,6 +98,8 @@ class TankScreen(
             )
         }
 
+=======
+>>>>>>> backup/1.21.1
         if (relX in FLUID_X until FLUID_X + FLUID_W &&
             relY in FLUID_Y until FLUID_Y + FLUID_H
         ) {
@@ -117,6 +127,7 @@ class TankScreen(
         }
     }
 
+<<<<<<< HEAD
     private fun formatRate(rate: Int): String = "%+d mB/s".format(rate)
 
     companion object {
@@ -126,6 +137,11 @@ class TankScreen(
         private const val UPTIPS_SIZE = 16
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4
+=======
+    companion object {
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
+        private const val TEXTURE_SIZE = 256
+>>>>>>> backup/1.21.1
 
         // 槽位纹理 (179,3)-(197,21) = 18x18, 渲染至 79,28
         private const val SLOT_U = 179
@@ -140,5 +156,8 @@ class TankScreen(
         private const val FLUID_W = 16
         private const val FLUID_H = 16
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> backup/1.21.1
 }

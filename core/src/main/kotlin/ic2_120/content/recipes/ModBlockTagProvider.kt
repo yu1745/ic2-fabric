@@ -85,6 +85,12 @@ class ModBlockTagProvider(
         val saplingBuilder = getOrCreateTagBuilder(BlockTags.SAPLINGS).setReplace(false)
         val climbableBuilder = getOrCreateTagBuilder(BlockTags.CLIMBABLE).setReplace(false)
 
+        // 将橡胶原木添加到原版 logs 标签，使橡胶树叶能正确识别原木
+        val logsBuilder = getOrCreateTagBuilder(BlockTags.LOGS)
+        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "rubber_log"))!!)
+        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "stripped_rubber_log"))!!)
+        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "rubber_wood"))!!)
+
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)
             if (id.namespace != Ic2_120.MOD_ID) continue
@@ -165,11 +171,11 @@ class ModBlockTagProvider(
     }
 
     private fun cBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier("c", path))
+        TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", path))
 
     private fun forgeBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier("forge", path))
+        TagKey.of(RegistryKeys.BLOCK, Identifier.of("forge", path))
 
     private fun compatBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier("ic2_120", "compat/$path"))
+        TagKey.of(RegistryKeys.BLOCK, Identifier.of("ic2_120", "compat/$path"))
 }

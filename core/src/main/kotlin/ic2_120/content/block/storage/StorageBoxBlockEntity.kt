@@ -19,8 +19,11 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 储物箱 BlockEntity
@@ -46,7 +49,7 @@ import net.minecraft.screen.ScreenHandler
 class StorageBoxBlockEntity(
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(StorageBoxBlockEntity::class.type(), pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(StorageBoxBlockEntity::class.type(), pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     companion object {
         /** 木质储物箱容量 */
@@ -180,7 +183,7 @@ class StorageBoxBlockEntity(
         markDirty()
     }
 
-    // ========== ExtendedScreenHandlerFactory 实现 ==========
+    // ========== ExtendedScreenHandlerFactory<PacketByteBuf> 实现 ==========
 
     /** 创建菜单标题 */
     override fun getDisplayName(): Text {
@@ -194,20 +197,22 @@ class StorageBoxBlockEntity(
     }
 
     /** 写入数据到 PacketByteBuf（客户端 GUI 打开时使用） */
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
+        return buf
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         // 保存物品栏到 NBT
         val inventoryNbt = NbtCompound()
-        Inventories.writeNbt(inventoryNbt, inventory)
+        Inventories.writeNbt(inventoryNbt, inventory, lookup)
         nbt.put(INVENTORY_KEY, inventoryNbt)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         // 从 NBT 读取物品栏
         val inventoryNbt = nbt.getCompound(INVENTORY_KEY)
         if (inventoryNbt.size == 0) {
@@ -215,11 +220,11 @@ class StorageBoxBlockEntity(
             val itemsNbt = nbt.getList(ITEMS_KEY, 10)
             if (itemsNbt.size != 0) {
                 inventory = createInventory()
-                Inventories.readNbt(inventoryNbt, inventory)
+                Inventories.readNbt(inventoryNbt, inventory, lookup)
             }
         } else {
             inventory = createInventory()
-            Inventories.readNbt(inventoryNbt, inventory)
+            Inventories.readNbt(inventoryNbt, inventory, lookup)
         }
     }
 }

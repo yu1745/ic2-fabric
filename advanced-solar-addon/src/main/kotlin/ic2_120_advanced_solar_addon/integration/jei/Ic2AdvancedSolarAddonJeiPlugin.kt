@@ -46,7 +46,11 @@ class Ic2AdvancedSolarAddonJeiPlugin : IModPlugin {
     }
 
     override fun getPluginUid(): Identifier {
+<<<<<<< HEAD
         return Identifier("ic2_120_advanced_solar_addon", "jei")
+=======
+        return Identifier.of("ic2_120_advanced_solar_addon", "jei")
+>>>>>>> backup/1.21.1
     }
 
     override fun onRuntimeAvailable(runtime: IJeiRuntime) {
@@ -72,7 +76,11 @@ class Ic2AdvancedSolarAddonJeiPlugin : IModPlugin {
 
     override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
         registration.addRecipeCatalyst(
+<<<<<<< HEAD
             ItemStack(Registries.ITEM.get(Identifier("ic2_120_advanced_solar_addon", "molecular_transformer"))),
+=======
+            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120_advanced_solar_addon", "molecular_transformer"))),
+>>>>>>> backup/1.21.1
             Ic2AdvancedSolarAddonJeiRecipeTypes.MOLECULAR_TRANSFORMER
         )
     }

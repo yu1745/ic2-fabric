@@ -189,7 +189,11 @@ class NuclearReactorScreen(
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         positionSlots()
         updateLockButton()
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
         drawTextOverlay(context)
         if (handler.sync.layoutLocked == 1) drawGhostItems(context)
@@ -200,7 +204,11 @@ class NuclearReactorScreen(
     private fun drawTextOverlay(context: DrawContext) {
         val scale = 7f / 9f
         if (isThermal) {
+<<<<<<< HEAD
             val heatOutput = handler.sync.thermalHeatOutput / 20
+=======
+            val heatOutput = handler.sync.thermalHeatOutput
+>>>>>>> backup/1.21.1
             val text = "HU输出：$heatOutput HU/t"
             val tw = textRenderer.getWidth(text)
             val areaCenterX = (TH_TEXT_X1 + TH_TEXT_X2) / 2
@@ -345,7 +353,11 @@ class NuclearReactorScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
+>>>>>>> backup/1.21.1
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val COOLANT_TANK_DROPLETS = (FluidConstants.BUCKET * NuclearReactorSync.COOLANT_TANK_CAPACITY_BUCKETS).toInt()
         private val COOLANT_TANK_CAPACITY_MB = (COOLANT_TANK_DROPLETS / DROPLETS_PER_MB)

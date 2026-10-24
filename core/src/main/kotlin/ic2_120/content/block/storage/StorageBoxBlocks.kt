@@ -1,6 +1,9 @@
 package ic2_120.content.block.storage
 
+import ic2_120.editCustomData
 import ic2_120.content.item.BronzeCasing
+import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
 import ic2_120.content.item.BronzePlate
 import ic2_120.content.item.IridiumPlate
 import ic2_120.content.item.IronCasing
@@ -14,6 +17,7 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
+import com.mojang.serialization.MapCodec
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -24,8 +28,7 @@ import net.minecraft.block.BlockRenderType
 import net.minecraft.block.Blocks
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.BlockItem
@@ -47,7 +50,8 @@ import net.minecraft.world.World
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.world.BlockView
-import java.util.function.Consumer
+import net.minecraft.world.WorldView
+import ic2_120.getCustomData
 
 /**
  * 储物箱基类
@@ -55,6 +59,11 @@ import java.util.function.Consumer
  * 类似潜影盒，破坏时保留物品内容。
  */
 abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEntity(settings) {
+    companion object {
+        val STORAGE_BOX_CODEC: MapCodec<StorageBoxBlock> = Block.createCodec { error("StorageBoxBlock cannot be deserialized from JSON") }
+    }
+
+    override fun getCodec(): MapCodec<out BlockWithEntity> = STORAGE_BOX_CODEC
 
     /**
      * 储物箱物品禁止堆叠：内容物保存在 BlockEntityTag NBT 中，堆叠会丢失/复制内容。
@@ -77,13 +86,13 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
     @Environment(EnvType.CLIENT)
     override fun appendTooltip(
         stack: ItemStack,
-        world: BlockView?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
 
-        val blockEntityTag = stack.getSubNbt("BlockEntityTag")
+        val blockEntityTag = stack.getCustomData()?.getCompound("BlockEntityTag")
         if (blockEntityTag == null || !blockEntityTag.contains("Inventory")) {
             tooltip.add(Text.literal("物品数量: 0").formatted(Formatting.GRAY))
             return
@@ -120,6 +129,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
     /**
      * 玩家右键点击打开 GUI
      */
+<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -129,6 +139,9 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is StorageBoxBlockEntity) {
@@ -148,9 +161,10 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
             if (blockEntity is StorageBoxBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
                 // 创建带有 BlockEntity NBT 的物品
                 val itemStack = ItemStack(this.asItem())
-                val nbt = blockEntity.createNbtWithIdentifyingData()
+                val lookup = world.registryManager
+                val nbt = blockEntity.createNbtWithIdentifyingData(lookup)
                 if (!nbt.isEmpty) {
-                    itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+                    itemStack.editCustomData { it.put("BlockEntityTag", nbt) }
                 }
 
                 // 掉落物品
@@ -184,14 +198,15 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
     /**
      * 获取掉落的物品（包含 BlockEntity NBT 数据）- 用于创造模式拾取
      */
-    override fun getPickStack(world: net.minecraft.world.BlockView, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getPickStack(world, pos, state)
-        val blockEntity = world.getBlockEntity(pos)
+        val blockEntity = (world as BlockView).getBlockEntity(pos)
 
         if (blockEntity is StorageBoxBlockEntity) {
-            val nbt = blockEntity.createNbtWithIdentifyingData()
+            val lookup = (world as World).registryManager
+            val nbt = blockEntity.createNbtWithIdentifyingData(lookup)
             if (!nbt.isEmpty) {
-                itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+                itemStack.editCustomData { it.put("BlockEntityTag", nbt) }
             }
         }
 
@@ -233,7 +248,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
 class WoodenStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(2.5f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val log = Items.OAK_LOG
             val plank = Items.OAK_PLANKS
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenStorageBoxBlock::class.item(), 1)
@@ -255,7 +270,7 @@ class WoodenStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
 class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = BronzePlate::class.instance()
             val casing = BronzeCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -279,7 +294,7 @@ class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
 class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = IronPlate::class.instance()
             val casing = IronCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -303,7 +318,7 @@ class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.I
 class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = SteelPlate::class.instance()
             val casing = SteelCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -327,7 +342,7 @@ class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.
 class IridiumStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(6.0f, 8.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val iridium = IridiumPlate::class.instance()
             val steel = SteelPlate::class.instance()
             if (iridium != Items.AIR && steel != Items.AIR) {

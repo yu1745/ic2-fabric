@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/coal_chunk.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -8,4 +9,10 @@
     "flat_525257": "ic2_120:item/item3d/flat_525257",
     "flat_4a3a5c": "ic2_120:item/item3d/flat_4a3a5c"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/crafting/coal_chunk"
+	}
+>>>>>>> backup/1.21.1
 }

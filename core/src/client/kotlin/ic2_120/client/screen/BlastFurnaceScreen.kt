@@ -33,7 +33,11 @@ class BlastFurnaceScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val temperature = handler.sync.temperature.coerceIn(0, BlastFurnaceSync.TEMP_MAX)
@@ -108,6 +112,7 @@ class BlastFurnaceScreen(
 
         // 升级提示工具提示
         if (mouseX in (x + 35) until (x + 35 + 16) && mouseY in (y + 4) until (y + 4 + 16)) {
+<<<<<<< HEAD
            val upgradeTooltip = mutableListOf<Text>()
            upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
             upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_warmup"))
@@ -116,6 +121,12 @@ class BlastFurnaceScreen(
             upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_lower"))
            for (id in SUPPORTED_UPGRADES) {
                 val item = Registries.ITEM.get(Identifier("ic2_120", id))
+=======
+            val upgradeTooltip = mutableListOf<Text>()
+            upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
+            for (id in SUPPORTED_UPGRADES) {
+                val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
+>>>>>>> backup/1.21.1
                 upgradeTooltip.add(item.name)
             }
             context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
@@ -176,8 +187,13 @@ class BlastFurnaceScreen(
     }
 
     companion object {
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiblockcutter.png")
         private val UPTIPS = Identifier("ic2", "textures/gui/uptips.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiblockcutter.png")
+        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
+>>>>>>> backup/1.21.1
         private val SUPPORTED_UPGRADES = listOf(
             "ejector_upgrade",
             "pulling_upgrade"

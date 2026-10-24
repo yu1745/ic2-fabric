@@ -7,6 +7,10 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
+<<<<<<< HEAD
+=======
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 import net.minecraft.util.math.BlockPos
 
 @ModBlockEntity(block = SpringBlock::class)
@@ -32,8 +36,13 @@ class OilSpringBlockEntity(
         }
     }
 
+<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
+=======
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         nbt.putInt("totalSources", totalSources)
         val progressList = NbtCompound()
         pumpProgress.forEach { (uuid, info) ->
@@ -46,8 +55,13 @@ class OilSpringBlockEntity(
         nbt.put("pumpProgress", progressList)
     }
 
+<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
+=======
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         totalSources = nbt.getInt("totalSources")
         pumpProgress.clear()
         if (nbt.contains("pumpProgress")) {

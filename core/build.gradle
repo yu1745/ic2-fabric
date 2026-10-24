@@ -1,14 +1,23 @@
-version = project.mod_version
-group = project.maven_group
+import net.fabricmc.loom.api.remapping.RemapperParameters
 
-base {
-	archivesName = project.archives_base_name
+def addRemapperExtensionByClassName = { loomExt, String extensionClassName ->
+	def holderClass = Class.forName("net.fabricmc.loom.extension.RemapperExtensionHolder")
+	def holder = objects.newInstance(holderClass, RemapperParameters.None.INSTANCE)
+	holder.getRemapperExtensionClass().set(extensionClassName)
+	loomExt.getRemapperExtensions().add(holder)
 }
 
 def ciRunNumberProvider = providers.environmentVariable("GITHUB_RUN_NUMBER").orElse("0")
 def githubRepositoryProvider = providers.environmentVariable("GITHUB_REPOSITORY").orElse("yu1745/ic2-fabric")
 def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources")
 def generatedBuildInfoFile = generatedBuildInfoDir.map { it.file("assets/ic2_120/build_info.json") }
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
 
 loom {
 	accessWidenerPath = file("src/main/resources/ic2_120.accesswidener")
@@ -20,15 +29,15 @@ loom {
 		}
 	}
 
+	addRemapperExtensionByClassName(delegate, "ic2_120.gradle.IgnoreMappingConflictsExtension")
+
 	runs {
 		client {
 			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8'
-			// 开发环境 LWJGL 为 3.3.2-snapshot，Sodium 0.5 启动自检要求 3.3.1；仅开发客户端跳过该检查
-			vmArg '-Dsodium.checks.issue2561=false'
 			programArgs '--width', '2560', '--height', '1440'
 		}
 		server {
-			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8', '-Xmx4G'
+			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8'
 		}
 	}
 }
@@ -44,7 +53,8 @@ tasks.named('runDatagen') {
 }
 
 dependencies {
-	include modImplementation("com.github.yu1745:fabric-guidebook:${project.fabric_guidebook_version}")
+	// Fabric Guidebook 0.1.2 only declares Minecraft 1.20.1 support.
+	// Keep guidebook resources in assets, but do not load/include the mod on 1.21.1 until it is ported.
 	include implementation("org.yaml:snakeyaml:1.33")
 
 	include modImplementation("teamreborn:energy:${project.energy_api_version}") {
@@ -58,41 +68,25 @@ dependencies {
 	modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }
 	modCompileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
 	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
-
-	modRuntimeOnly("com.github.yu1745:mcdebug:v0.5.0")
-
-// ---- mcdebugTest Kotlin source set（替代旧 TS 测试）----
-sourceSets {
-	mcdebugTest {
-		kotlin.srcDir 'src/mcdebugTest/kotlin'
-		compileClasspath += sourceSets.main.output
-		runtimeClasspath += sourceSets.main.output
-	}
-}
-
-configurations {
-	mcdebugTestImplementation.extendsFrom implementation
-	mcdebugTestRuntimeOnly.extendsFrom runtimeOnly
-}
-
-dependencies {
-	mcdebugTestImplementation "com.github.yu1745:mcdebug-cli:0.5.0"
-	mcdebugTestImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
-	mcdebugTestRuntimeOnly "org.junit.platform:junit-platform-launcher"
-}
-
 	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
 
 	// ModMenu + Cloth Config: GUI 配置编辑（软依赖，需要同时安装）
 	modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}")
-	modCompileOnly("maven.modrinth:modmenu:${project.modmenu_version}")
-	modLocalRuntime("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}")
-	modLocalRuntime("maven.modrinth:modmenu:${project.modmenu_version}")
+	modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
 
 	include implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
 	include implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
 	include implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
 	include implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.jackson_version}")
+}
+
+sourceSets {
+	client {
+		java {
+			// Depends on Fabric Guidebook compiler classes; restore after Guidebook is ported to 1.21.1.
+			exclude 'ic2_120/tools/GuidebookValidationTool.java'
+		}
+	}
 }
 
 tasks.register("generateBuildInfo") {
@@ -152,8 +146,9 @@ tasks.register('runCropPreview', Exec) {
 }
 
 tasks.register('validateGuidebook', JavaExec) {
-	description = '使用 Fabric Guidebook PageCompiler.parse 解析 guidebook，并补充检查相对链接'
+	description = '暂时禁用：Fabric Guidebook 1.21.1 适配完成后再启用校验'
 	group = 'verification'
+	enabled = false
 
 	def runDir = layout.buildDirectory.dir('guidebookValidation')
 	def assetRoots = rootProject.subprojects
@@ -180,105 +175,5 @@ tasks.register('printGuidebookDevCommand') {
 		def guideRoot = file('src/main/resources/assets/ic2_120/guidebook/main').absolutePath.replace('\\', '/')
 		println '/fabricguidebook dev watch ic2_120:main ' + guideRoot
 		println '/fabricguidebook dev stop ic2_120:main'
-	}
-}
-
-tasks.named('check') {
-	dependsOn(tasks.named('validateGuidebook'))
-}
-
-// mcdebugTest: 拉起 dev MC server + 跑 Kotlin JUnit 测试 + 清理。
-//
-// 为什么不直接 `dependsOn core:runServer`：
-//   Loom 的 `runServer` 是前台阻塞任务（JavaExec 派生，main 线程跑到 server
-//   退出才返回），Gradle 的 dependsOn 会把依赖任务跑完才跑当前任务，加上
-//   runServer 永远不返回 ⇒ mcdebugTest 永远不会开始。
-//
-// 现在的做法：复用 Loom 已经算好的 `runServer` 配置（main class、classpath、
-// JVM args、工作目录），把它**原样转发给一个 `java` 子进程**，这样：
-//   - mcdebugTest 仍然一次命令完成"启动 + 测试 + 清理"；
-//   - 不再嵌套 `./gradlew core:runServer` 那个二级 Gradle daemon，少一次
-//     Gradle 冷启动（实测 ~5–10s 提速）；
-//   - server 生命周期完全在我们手里（doFirst 起 / doLast 停，测试失败也停）。
-//
-// 测试本体是标准 JUnit 5（Test 任务）：测试 JVM 的 workingDir 是 core/，
-// socket 发现自动命中 `run/mcdebug/port`；方法级并行由 mcdebug-cli 自带的
-// junit-platform.properties 控制。
-tasks.register('mcdebugTest', Test) {
-	description = 'Run Kotlin mcdebug tests against a dev MC server'
-	group = 'verification'
-	dependsOn(tasks.named('classes'))
-
-	testClassesDirs = sourceSets.mcdebugTest.output.classesDirs
-	classpath = sourceSets.mcdebugTest.runtimeClasspath
-	useJUnitPlatform()
-	maxParallelForks = 1
-
-	testLogging {
-		events "FAILED", "PASSED", "SKIPPED"
-		exceptionFormat "full"
-	}
-
-	doFirst {
-		def portFile = layout.projectDirectory.file('run/mcdebug/port').asFile
-		if (portFile.exists()) {
-			portFile.delete()
-		}
-
-		def logFile = layout.buildDirectory.file('mcdebugTest/server.log').get().asFile
-		logFile.parentFile.mkdirs()
-
-		// 1. 抽取 Loom 已配好的 runServer 启动参数（与旧 TS 版任务相同）。
-		def runServer = tasks.named('runServer').get()
-		def mainClass = runServer.mainClass.get()
-		def classpath = runServer.classpath.asPath
-		def jvmArgs = runServer.jvmArgs.findAll { !it.startsWith('@') }
-		def javaBin = java.lang.ProcessHandle.current().info().command().orElseThrow {
-			new GradleException("Cannot resolve current JVM executable path")
-		}
-
-		logger.lifecycle("Starting MC server in-process (main=${mainClass}, java=${javaBin})...")
-
-		def cmd = [javaBin, '-cp', classpath] + jvmArgs + [mainClass, '--nogui']
-		def server = new ProcessBuilder(cmd)
-				.directory(layout.projectDirectory.dir('run').asFile)
-				.redirectErrorStream(true)
-				.start()
-		project.ext.mcdebugServerProc = server
-
-		Thread.startDaemon('mcdebug-server-log-drain') {
-			logFile.withOutputStream { out -> server.inputStream.transferTo(out) }
-		}
-
-		// 2. 等 socket 发现文件（unix socket 版：内容为 socket 路径）。
-		def deadline = System.currentTimeMillis() + 120_000L
-		while (System.currentTimeMillis() < deadline && !portFile.exists()) {
-			Thread.sleep(500)
-		}
-		if (!portFile.exists()) {
-			throw new GradleException("MC server didn't write ${portFile} within 120s. Inspect server log: ${logFile}")
-		}
-	}
-
-	finalizedBy tasks.named('stopMcdebugServer')
-}
-
-// Test 任务测试失败时 executeTests 抛异常会中断动作链（doLast 不执行），
-// server 必然残留并锁住世界 → 用 finalizer（无论主任务成败都运行）停 server。
-tasks.register('stopMcdebugServer') {
-	doLast {
-		def server = project.ext.mcdebugServerProc
-		project.ext.mcdebugServerProc = null
-		if (server != null) {
-			logger.lifecycle('Stopping MC server...')
-			server.destroy()
-			if (!server.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)) {
-				logger.warn('MC server did not stop in 10s, force-killing process tree')
-				// DLI 可能 fork 子进程，只杀直接进程会残留 session.lock。
-				server.toHandle().descendants().forEach { it.destroyForcibly() }
-				server.destroyForcibly()
-				server.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)
-			}
-		}
 	}
 }

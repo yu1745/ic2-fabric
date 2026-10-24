@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "o": {
+      "item": "ic2_120:circuit"
+    },
+    "x": {
+      "item": "ic2_120:foam_sprayer"
+    },
+    "y": {
+      "item": "ic2_120:empty_cell"
+    },
+    "z": {
+      "item": "ic2_120:iron_casing"
+    }
+  },
+  "pattern": [
+    "xox",
+    "yzy",
+    "y y"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:cf_pack"
+  }
+}

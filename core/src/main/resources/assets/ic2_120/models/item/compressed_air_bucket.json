@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/compressed_air_bucket.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,5 +13,10 @@
     "glass_ffffff": "ic2_120:item/item3d/glass_ffffff",
     "flat_969696": "ic2_120:item/item3d/flat_969696",
     "flat_353535": "ic2_120:item/item3d/flat_353535"
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "minecraft:item/water_bucket"
+>>>>>>> backup/1.21.1
   }
 }

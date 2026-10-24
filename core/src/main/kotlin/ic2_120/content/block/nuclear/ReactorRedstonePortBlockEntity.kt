@@ -10,6 +10,7 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 反应堆红石接口方块实体。
@@ -63,13 +64,13 @@ class ReactorRedstonePortBlockEntity(
         }
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         redstoneInverted = nbt.getBoolean("RedstoneInverted")
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 }

@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/block/machine3d/steam_generator_item.obj",
   "parent": "minecraft:block/block",
@@ -16,4 +17,7 @@
     "lamp_off": "ic2_120:block/machine3d/lamp_off",
     "lamp_red": "ic2_120:block/machine3d/lamp_red"
   }
+=======
+  "parent": "ic2:block/machine/fluid/steam_generator"
+>>>>>>> backup/1.21.1
 }

@@ -1,5 +1,6 @@
 package ic2_120.content.worldgen
 
+<<<<<<< HEAD
 import com.mojang.serialization.Codec
 import ic2_120.config.Ic2Config
 import net.minecraft.registry.RegistryKeys
@@ -9,10 +10,18 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.Heightmap
 import net.minecraft.world.biome.Biome
+=======
+import com.mojang.serialization.MapCodec
+import ic2_120.config.Ic2Config
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.random.Random
+import net.minecraft.world.Heightmap
+>>>>>>> backup/1.21.1
 import net.minecraft.world.gen.feature.FeaturePlacementContext
 import net.minecraft.world.gen.placementmodifier.AbstractConditionalPlacementModifier
 import net.minecraft.world.gen.placementmodifier.PlacementModifier
 import net.minecraft.world.gen.placementmodifier.PlacementModifierType
+<<<<<<< HEAD
 import java.util.stream.Stream
 
 /**
@@ -49,6 +58,14 @@ object RubberTreeBiomeTags {
  *     FOREST 或 JUNGLE   → +randInt(5)+1    (1~5)
  *     其他               → +0
  * 旧版模型是每区块固定尝试次数、每次独立按稀有度判定；群系加成仍保留。
+=======
+import java.util.ArrayList
+import java.util.stream.Stream
+
+/**
+ * 用配置文件控制每区块的橡胶树尝试次数和稀有度，
+ * 这样 placed_feature JSON 只保留 placement 链路入口，具体数值由 Ic2Config 决定。
+>>>>>>> backup/1.21.1
  */
 class RubberTreeConfigPlacementModifier : PlacementModifier() {
 
@@ -62,6 +79,7 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
             return Stream.empty()
         }
 
+<<<<<<< HEAD
         val world = context.world
 
         // 对齐 Forge：在 chunk 内 4 个点采样 biome。
@@ -95,6 +113,13 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
         val positions = java.util.ArrayList<BlockPos>(config.countPerChunk)
         repeat(config.countPerChunk) {
             if (random.nextFloat() < chance) positions += pos
+=======
+        val positions = ArrayList<BlockPos>(config.countPerChunk)
+        repeat(config.countPerChunk) {
+            if (random.nextFloat() < 1.0f / config.rarityChance.toFloat()) {
+                positions += pos
+            }
+>>>>>>> backup/1.21.1
         }
         return positions.stream()
     }
@@ -103,8 +128,13 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
         ModWorldgen.RUBBER_TREE_CONFIG_PLACEMENT_MODIFIER_TYPE
 
     companion object {
+<<<<<<< HEAD
         val CODEC: Codec<RubberTreeConfigPlacementModifier> =
             Codec.unit(::RubberTreeConfigPlacementModifier)
+=======
+        val CODEC: MapCodec<RubberTreeConfigPlacementModifier> =
+            MapCodec.unit(::RubberTreeConfigPlacementModifier)
+>>>>>>> backup/1.21.1
     }
 }
 
@@ -132,7 +162,12 @@ class RubberTreeConfigWaterDepthFilterPlacementModifier : AbstractConditionalPla
         ModWorldgen.RUBBER_TREE_CONFIG_WATER_DEPTH_FILTER_TYPE
 
     companion object {
+<<<<<<< HEAD
         val CODEC: Codec<RubberTreeConfigWaterDepthFilterPlacementModifier> =
             Codec.unit(::RubberTreeConfigWaterDepthFilterPlacementModifier)
+=======
+        val CODEC: MapCodec<RubberTreeConfigWaterDepthFilterPlacementModifier> =
+            MapCodec.unit(::RubberTreeConfigWaterDepthFilterPlacementModifier)
+>>>>>>> backup/1.21.1
     }
 }

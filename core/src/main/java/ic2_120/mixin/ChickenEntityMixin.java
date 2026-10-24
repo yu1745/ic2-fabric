@@ -1,8 +1,18 @@
 package ic2_120.mixin;
 
 import ic2_120.content.block.AnimalmatronBlock;
+<<<<<<< HEAD
 import net.minecraft.entity.passive.ChickenEntity;
 import org.spongepowered.asm.mixin.Mixin;
+=======
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.passive.ChickenEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+>>>>>>> backup/1.21.1
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -29,9 +39,46 @@ public abstract class ChickenEntityMixin {
 	)
 	private void ic2_120$preventEggLay(CallbackInfo ci) {
 		ChickenEntity chicken = (ChickenEntity) (Object) this;
+<<<<<<< HEAD
 		// 统一走 AnimalmatronBlock.isManaged：与 BE 扫描同几何 + 要求 ACTIVE（P1/P4）。
 		if (chicken.eggLayTime <= 1 && AnimalmatronBlock.isManaged(chicken)) {
 			chicken.eggLayTime = ThreadLocalRandom.current().nextInt(6000) + 6000;
 		}
 	}
+=======
+		if (chicken.eggLayTime <= 1 && ic2_120$isInsideAnimalmatronRange(chicken)) {
+			chicken.eggLayTime = ThreadLocalRandom.current().nextInt(6000) + 6000;
+		}
+	}
+
+	@Unique
+	private boolean ic2_120$isInsideAnimalmatronRange(ChickenEntity entity) {
+		if (!(entity.getWorld() instanceof ServerWorld world)) {
+			return false;
+		}
+		BlockPos entityPos = entity.getBlockPos();
+		Box searchBox = new Box(entityPos).expand(4.0);
+
+		int minX = (int) Math.floor(searchBox.minX);
+		int minY = (int) Math.floor(searchBox.minY);
+		int minZ = (int) Math.floor(searchBox.minZ);
+		int maxX = (int) Math.ceil(searchBox.maxX);
+		int maxY = (int) Math.ceil(searchBox.maxY);
+		int maxZ = (int) Math.ceil(searchBox.maxZ);
+
+		for (int x = minX; x <= maxX; x++) {
+			for (int y = minY; y <= maxY; y++) {
+				for (int z = minZ; z <= maxZ; z++) {
+					BlockPos pos = new BlockPos(x, y, z);
+					BlockState state = world.getBlockState(pos);
+					if (state.getBlock() instanceof AnimalmatronBlock) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+>>>>>>> backup/1.21.1
 }

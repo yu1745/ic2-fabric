@@ -3,7 +3,11 @@ navigation:
   title: 储物箱 (Storage Box)
   parent: index.md
   position: 206
+<<<<<<< HEAD
   icon: ic2_120:iron_storage_box
+=======
+  icon: ic2_120:storage_box
+>>>>>>> backup/1.21.1
 ---
 
 # 储物箱 (Storage Box)

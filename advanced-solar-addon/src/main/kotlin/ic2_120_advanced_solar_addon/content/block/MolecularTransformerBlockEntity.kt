@@ -32,14 +32,24 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.type
 import ic2_120.content.AdjacentEnergyTransferComponent
+<<<<<<< HEAD
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+=======
+import io.netty.buffer.Unpooled
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.minecraft.registry.RegistryWrapper
+>>>>>>> backup/1.21.1
 
 @ModBlockEntity(block = MolecularTransformerBlock::class)
 class MolecularTransformerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(MolecularTransformerBlockEntity::class.type(), pos, state),
+<<<<<<< HEAD
     Inventory, ITieredMachine, ExtendedScreenHandlerFactory {
+=======
+    Inventory, ITieredMachine, ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     companion object {
         const val TIER = 10
@@ -50,7 +60,11 @@ class MolecularTransformerBlockEntity(
     override val activeProperty = MolecularTransformerBlock.ACTIVE
 
     @Suppress("unused")
+<<<<<<< HEAD
     val syncedData = SyncedData()
+=======
+    val syncedData = SyncedData(this)
+>>>>>>> backup/1.21.1
 
     @RegisterEnergy
     val sync = MolecularTransformerSync(
@@ -212,7 +226,11 @@ class MolecularTransformerBlockEntity(
 
     private fun canOutput(output: ItemStack, currentOutput: ItemStack): Boolean {
         if (currentOutput.isEmpty) return true
+<<<<<<< HEAD
         if (!ItemStack.canCombine(currentOutput, output)) return false
+=======
+        if (!ItemStack.areItemsAndComponentsEqual(currentOutput, output)) return false
+>>>>>>> backup/1.21.1
         return currentOutput.count + output.count <= currentOutput.maxCount
     }
 
@@ -227,6 +245,7 @@ class MolecularTransformerBlockEntity(
             itemStorage
         )
 
+<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -237,6 +256,20 @@ class MolecularTransformerBlockEntity(
         Inventories.readNbt(nbt, inventory)
         energyUsed = nbt.getLong("energyUsed")
         consumedInputItem = ItemStack.fromNbt(nbt.getCompound("consumedInput"))
+=======
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.size())
+        return buf
+    }
+
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
+        energyUsed = nbt.getLong("energyUsed")
+        consumedInputItem = ItemStack.fromNbt(lookup, nbt.getCompound("consumedInput")).orElse(ItemStack.EMPTY)
+>>>>>>> backup/1.21.1
         noEnergyTicks = nbt.getInt("noEnergyTicks")
         isLit = nbt.getBoolean("isLit")
         sync.restoreEnergy(nbt.getLong(MolecularTransformerSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
@@ -247,11 +280,21 @@ class MolecularTransformerBlockEntity(
         }
     }
 
+<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         Inventories.writeNbt(nbt, inventory)
         nbt.putLong("energyUsed", energyUsed)
         nbt.put("consumedInput", consumedInputItem.writeNbt(NbtCompound()))
+=======
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
+        nbt.putLong("energyUsed", energyUsed)
+        if (!consumedInputItem.isEmpty) {
+            nbt.put("consumedInput", consumedInputItem.encode(lookup))
+        }
+>>>>>>> backup/1.21.1
         nbt.putInt("noEnergyTicks", noEnergyTicks)
         nbt.putBoolean("isLit", isLit)
         nbt.putLong(MolecularTransformerSync.NBT_ENERGY, sync.amount)

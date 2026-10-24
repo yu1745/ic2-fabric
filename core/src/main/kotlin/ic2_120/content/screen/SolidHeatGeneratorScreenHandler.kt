@@ -14,8 +14,14 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
+=======
+
+import net.minecraft.screen.ArrayPropertyDelegate
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 
@@ -64,6 +70,7 @@ class SolidHeatGeneratorScreenHandler(
                 index == SolidHeatGeneratorBlockEntity.SLOT_FUEL ||
                 index == SolidHeatGeneratorBlockEntity.SLOT_OUTPUT -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+<<<<<<< HEAD
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     if (FUEL_SLOT_SPEC.canInsert(stackInSlot) && insertItem(stackInSlot, 0, 1, false)) return stack
@@ -77,6 +84,14 @@ class SolidHeatGeneratorScreenHandler(
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
+=======
+                }
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    if (FUEL_SLOT_SPEC.canInsert(stackInSlot) && insertItem(stackInSlot, 0, 1, false)) return stack
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                }
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+>>>>>>> backup/1.21.1
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
@@ -93,12 +108,26 @@ class SolidHeatGeneratorScreenHandler(
 
     companion object {
         const val PLAYER_INV_START = 2
+<<<<<<< HEAD
         const val HOTBAR_END = 38
+=======
+        const val HOTBAR_END = 37
+>>>>>>> backup/1.21.1
 
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
             !stack.isEmpty && (FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0
         })
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false })
 
+<<<<<<< HEAD
+=======
+        @ScreenFactory
+        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SolidHeatGeneratorScreenHandler {
+            val pos = buf.readBlockPos()
+            val propertyCount = buf.readVarInt()
+            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
+            return SolidHeatGeneratorScreenHandler(syncId, playerInventory, SimpleInventory(SolidHeatGeneratorBlockEntity.INVENTORY_SIZE), context, ArrayPropertyDelegate(propertyCount))
+        }
+>>>>>>> backup/1.21.1
     }
 }

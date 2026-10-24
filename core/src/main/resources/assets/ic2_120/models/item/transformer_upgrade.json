@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/transformer_upgrade.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -14,4 +15,10 @@
     "flat_aa0f01": "ic2_120:item/item3d/flat_aa0f01",
     "flat_ff0000": "ic2_120:item/item3d/flat_ff0000"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/upgrade/transformer"
+	}
+>>>>>>> backup/1.21.1
 }

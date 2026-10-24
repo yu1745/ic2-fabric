@@ -1,0 +1,16 @@
+{
+  "type": "ic2_120:damage_tool_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:cutter"
+    },
+    {
+      "item": "ic2_120:insulated_gold_cable"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:gold_cable"
+  }
+}

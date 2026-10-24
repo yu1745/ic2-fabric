@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/hazmat_chestplate.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -8,5 +9,10 @@
     "flat_a13810": "ic2_120:item/item3d/flat_a13810",
     "flat_fb5a1b": "ic2_120:item/item3d/flat_fb5a1b",
     "flat_d8d8d8": "ic2_120:item/item3d/flat_d8d8d8"
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/armor/hazmat_chestplate"
+>>>>>>> backup/1.21.1
   }
 }

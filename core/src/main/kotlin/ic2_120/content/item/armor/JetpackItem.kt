@@ -1,6 +1,7 @@
 package ic2_120.content.item.armor
 
 import ic2_120.config.Ic2Config
+<<<<<<< HEAD
 import ic2_120.content.fluid.FluidFuelRegistry
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.ICreativeFullVariant
@@ -24,6 +25,17 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.util.hit.BlockHitResult
 import kotlin.math.min
+=======
+import ic2_120.content.item.ModArmorMaterials
+import net.minecraft.item.ArmorItem
+import net.minecraft.item.ItemStack
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
+import ic2_120.editCustomData
+import ic2_120.getCustomData
+import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
+>>>>>>> backup/1.21.1
 
 /**
  * 喷气背包 (Jetpack)
@@ -33,6 +45,7 @@ import kotlin.math.min
 open class JetpackItem : ArmorItem(
     ModArmorMaterials.JETPACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
+<<<<<<< HEAD
     // ArmorItem 会通过 maxDamageIfAbsent 自动注入材质耐久；-1 让 ItemStack.isDamageable() 返回 false。
     FabricItemSettings().maxCount(1).maxDamage(-1)
 ), ICreativeFullVariant {
@@ -54,11 +67,28 @@ open class JetpackItem : ArmorItem(
         /** 内部燃料容量（droplets）。由配置的 mB 值换算而来。 */
         val MAX_FUEL: Long
             get() = maxFuel
+=======
+    Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(ModArmorMaterials.JETPACK_DURABILITY_MULTIPLIER))
+) {
+
+    companion object {
+        private const val FUEL_KEY = "Fuel"
+        private const val FUEL_REMAINDER_KEY = "FuelRemainder"
+
+        @JvmStatic
+        val maxFuel: Long
+            get() = Ic2Config.current.armor.jetpack.maxFuel
+
+        @JvmStatic
+        val MAX_FUEL: Long
+            get() = Ic2Config.current.armor.jetpack.maxFuel
+>>>>>>> backup/1.21.1
 
         @JvmStatic
         val fuelPerTick: Double
             get() = Ic2Config.getJetpackFuelPerTick()
 
+<<<<<<< HEAD
         /** 配置中的容量（mB），仅用于 UI 显示。 */
         @JvmStatic
         val maxFuelMb: Long
@@ -70,12 +100,15 @@ open class JetpackItem : ArmorItem(
                 FluidFuelRegistry.getProfile(fluid)?.jetpackConsumptionMultiplier
             } ?: 1.0
 
+=======
+>>>>>>> backup/1.21.1
         @JvmStatic
         val flightDurationSeconds: Int
             get() = Ic2Config.current.armor.jetpack.flightDurationSeconds
 
         @JvmStatic
         fun getFuel(stack: ItemStack): Long =
+<<<<<<< HEAD
             stack.orCreateNbt.getLong(FUEL_KEY).coerceIn(0L, maxFuel)
 
         @JvmStatic
@@ -96,6 +129,13 @@ open class JetpackItem : ArmorItem(
         fun setFuelFluid(stack: ItemStack, fluid: net.minecraft.fluid.Fluid?) {
             if (fluid == null) stack.orCreateNbt.remove(FUEL_FLUID_KEY)
             else stack.orCreateNbt.putString(FUEL_FLUID_KEY, net.minecraft.registry.Registries.FLUID.getId(fluid).toString())
+=======
+            (stack.getCustomData()?.getLong(FUEL_KEY) ?: 0L).coerceIn(0L, maxFuel)
+
+        @JvmStatic
+        fun setFuel(stack: ItemStack, fuel: Long) {
+            stack.editCustomData { it.putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel)) }
+>>>>>>> backup/1.21.1
         }
 
         /**
@@ -106,6 +146,7 @@ open class JetpackItem : ArmorItem(
         fun consumeFuelPerTick(stack: ItemStack): Boolean {
             val fuel = getFuel(stack)
             if (fuel <= 0) return false
+<<<<<<< HEAD
             val nbt = stack.orCreateNbt
             var remainder = nbt.getDouble(FUEL_REMAINDER_KEY)
             val cost = fuelPerTick * fuelConsumptionMultiplier(stack)
@@ -113,17 +154,31 @@ open class JetpackItem : ArmorItem(
             val toConsume = remainder.toLong()
             if (toConsume <= 0) {
                 nbt.putDouble(FUEL_REMAINDER_KEY, remainder)
+=======
+            val customData = stack.getCustomData()
+            var remainder = customData?.getDouble(FUEL_REMAINDER_KEY) ?: 0.0
+            val cost = fuelPerTick
+            remainder += cost
+            val toConsume = remainder.toLong()
+            if (toConsume <= 0) {
+                stack.editCustomData { it.putDouble(FUEL_REMAINDER_KEY, remainder) }
+>>>>>>> backup/1.21.1
                 return true
             }
             if (fuel < toConsume) return false
             setFuel(stack, fuel - toConsume)
+<<<<<<< HEAD
             nbt.putDouble(FUEL_REMAINDER_KEY, remainder - toConsume)
+=======
+            stack.editCustomData { it.putDouble(FUEL_REMAINDER_KEY, remainder - toConsume) }
+>>>>>>> backup/1.21.1
             return true
         }
     }
 
     override fun appendTooltip(
         stack: ItemStack,
+<<<<<<< HEAD
         world: net.minecraft.world.World?,
         tooltip: MutableList<Text>,
         context: net.minecraft.client.item.TooltipContext
@@ -138,6 +193,20 @@ open class JetpackItem : ArmorItem(
         // 计算剩余飞行时间（秒）
         val remainingSeconds = if (fuel > 0 && maxFuel > 0) {
             fuel.toDouble() / maxFuel * flightDurationSeconds / fuelConsumptionMultiplier(stack)
+=======
+        context: Item.TooltipContext,
+        tooltip: MutableList<Text>,
+        type: TooltipType
+    ) {
+        super.appendTooltip(stack, context, tooltip, type)
+
+        val fuel = getFuel(stack)
+        val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0
+
+        // 计算剩余飞行时间（秒）
+        val remainingSeconds = if (fuel > 0 && maxFuel > 0) {
+            fuel.toDouble() / maxFuel * flightDurationSeconds
+>>>>>>> backup/1.21.1
         } else 0.0
 
         // 格式化时间
@@ -149,6 +218,7 @@ open class JetpackItem : ArmorItem(
             "${remainingSeconds.toInt()}秒"
         }
 
+<<<<<<< HEAD
         val fuelName = getFuelFluid(stack)?.let { net.minecraft.registry.Registries.FLUID.getId(it).toString() } ?: "无"
         tooltip.add(Text.literal("燃料: $fuelName %,d / %,d mB (%.1f%%)".format(fuelMb, maxFuelMb, ratio * 100)))
         tooltip.add(Text.literal("剩余飞行: $timeText").formatted(Formatting.GRAY))
@@ -171,6 +241,12 @@ open class JetpackItem : ArmorItem(
         } else ActionResult.PASS
     }
 
+=======
+        tooltip.add(Text.literal("燃料: %,d / %,d mB (%.1f%%)".format(fuel, maxFuel, ratio * 100)))
+        tooltip.add(Text.literal("剩余飞行: $timeText").formatted(Formatting.GRAY))
+    }
+
+>>>>>>> backup/1.21.1
     override fun isItemBarVisible(stack: ItemStack): Boolean = true
 
     override fun getItemBarStep(stack: ItemStack): Int =
@@ -184,6 +260,7 @@ open class JetpackItem : ArmorItem(
             else -> 0xFF4A4A
         }
     }
+<<<<<<< HEAD
 
     override fun createFullVariant(): ItemStack {
         return ItemStack(this).also {
@@ -242,4 +319,6 @@ internal class JetpackFluidStorage(
         }
         return mutableListOf(view).iterator() as MutableIterator<StorageView<FluidVariant>>
     }
+=======
+>>>>>>> backup/1.21.1
 }

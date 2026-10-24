@@ -22,7 +22,11 @@ This index contains detailed documentation for every machine.
 | [Extractor](../machines/extractor.md) | extractor.md | Tier 1 (LV) | 2 EU/t | 4 |
 | [Metal Former](../machines/metal_former.md) | metal-former.md | Tier 1 (LV) | 10 EU/t | 4 |
 | [Electric Furnace](../machines/electric_furnace.md) | electric-furnace.md | Tier 1 (LV) | 3 EU/t | 0 |
+<<<<<<< HEAD
 | [Induction Furnace](../machines/induction_furnace.md) | induction-furnace.md | Tier 2 (MV) | variable | 2 |
+=======
+| [Induction Furnace](../machines/induction_furnace.md) | induction-furnace.md | Tier 2 (MV) | variable | 0 |
+>>>>>>> backup/1.21.1
 | [Fluid Canner](../machines/fluid_canner.md) | fluid-bottler.md | Tier 1 (LV) | 2 EU/t | - |
 | [Solid Canner](../machines/solid_canner.md) | solid-canner.md | Tier 1 (LV) | 2 EU/t | - |
 | [Canner](../machines/canner.md) | canner.md | Tier 2 (MV) | 4 EU/t | - |
@@ -41,7 +45,11 @@ This index contains detailed documentation for every machine.
 | [Steam Generator](../machines/steam_generator.md) | steam-generator.md | Tier 2 (MV) | Steam | Water + Heat (HU) |
 | [Geothermal Generator](../machines/geo_generator.md) | geo-generator.md | Tier 1 (LV) | 20 EU/t | Lava |
 | [Solar Generator](../machines/solar_generator.md) | solar-generator.md | Tier 1 (LV) | 1 EU/t | Sunlight |
+<<<<<<< HEAD
 | [Wind Generator](../machines/wind_generator.md) | wind-generator.md | Tier 1 (LV) | 3 EU/t above Y=74 | Height threshold |
+=======
+| [Wind Generator](../machines/wind_generator.md) | wind-generator.md | Tier 1 (LV) | variable | Altitude / Weather |
+>>>>>>> backup/1.21.1
 | [Kinetic Generator](../machines/kinetic_generator.md) | kinetic-generator.md | Tier 3 (HV) | 512 EU/t | Kinetic (KU) |
 | [Creative Generator](../machines/creative_generator.md) | creative-generator.md | Tier 1 (LV) | 32 EU/t | Infinite (creative) |
 
@@ -103,8 +111,12 @@ This index contains detailed documentation for every machine.
 
 | Machine | File | Notes |
 |------|------|------|
+<<<<<<< HEAD
 | [Nuclear Reactor](../machines/nuclear_reactor.md) | nuclear-reactor.md | Reactor + chamber (electric mode) |
 | [Fluid-Cooled Reactor](../machines/nuclear_reactor_fluid_mode.md) | nuclear-reactor-fluid-mode.md | Vessel, fluid port, access hatch, redstone port (fluid mode) |
+=======
+| [Nuclear Reactor](../machines/nuclear_reactor.md) | nuclear-reactor.md | Reactor + chamber, vessel, fluid port, redstone port |
+>>>>>>> backup/1.21.1
 
 ## UUMatter
 
@@ -130,6 +142,10 @@ This index contains detailed documentation for every machine.
 |------|------|------|
 | [Tesla Coil](../machines/tesla_coil.md) | tesla-coil.md | Redstone-triggered monster zapper |
 | [Luminator Flat](../machines/luminator_flat.md) | luminator.md | Light source that mounts on all 6 faces |
+<<<<<<< HEAD
+=======
+| [Advanced Solar Add-ons](../machines/advanced_solar.md) | advanced-solar.md | Tier 4 advanced solar panel + molecular converter + quantum generator |
+>>>>>>> backup/1.21.1
 
 ---
 
@@ -140,3 +156,7 @@ This index contains detailed documentation for every machine.
 - [Upgrade System](../guides/upgrades.md) - upgrade slot details
 - [Kinetic System](../systems/kinetic_transmission.md) - KU transmission details
 - [Heat System](../systems/heat_system.md) - HU heat
+<<<<<<< HEAD
+=======
+- [Nuclear Reactor](../systems/nuclear_reactor.md) - nuclear system
+>>>>>>> backup/1.21.1

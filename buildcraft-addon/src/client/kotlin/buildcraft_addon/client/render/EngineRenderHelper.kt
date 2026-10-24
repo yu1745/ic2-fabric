@@ -7,8 +7,11 @@ import net.minecraft.client.texture.Sprite
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+<<<<<<< HEAD
 import org.joml.Matrix3f
 import org.joml.Matrix4f
+=======
+>>>>>>> backup/1.21.1
 import org.joml.Quaternionf
 import net.minecraft.util.math.BlockPos
 
@@ -92,6 +95,7 @@ object EngineRenderHelper {
         sprite: Sprite
     ) {
         val ctx = matrices.peek()
+<<<<<<< HEAD
         val posMat = ctx.positionMatrix
         val normMat = ctx.normalMatrix
 
@@ -111,6 +115,24 @@ object EngineRenderHelper {
             x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1,
             8f, 12f, 16f, 12f, 16f, 0f, 8f, 0f, -1f, 0f, 0f, sprite)
         emitQuadBothSidesPx(buffer, posMat, normMat, light, overlay,
+=======
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+            x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2,
+            0f, 0f, 8f, 0f, 8f, 8f, 0f, 8f, 0f, -1f, 0f, sprite)
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+            x1, y2, z1, x2, y2, z1, x2, y2, z2, x1, y2, z2,
+            0f, 0f, 8f, 0f, 8f, 8f, 0f, 8f, 0f, 1f, 0f, sprite)
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+            x2, y1, z1, x1, y1, z1, x1, y2, z1, x2, y2, z1,
+            8f, 12f, 16f, 12f, 16f, 0f, 8f, 0f, 0f, 0f, -1f, sprite)
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+            x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2,
+            8f, 12f, 16f, 12f, 16f, 0f, 8f, 0f, 0f, 0f, 1f, sprite)
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+            x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1,
+            8f, 12f, 16f, 12f, 16f, 0f, 8f, 0f, -1f, 0f, 0f, sprite)
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+>>>>>>> backup/1.21.1
             x2, y1, z2, x2, y1, z1, x2, y2, z1, x2, y2, z2,
             8f, 12f, 16f, 12f, 16f, 0f, 8f, 0f, 1f, 0f, 0f, sprite)
     }
@@ -121,6 +143,7 @@ object EngineRenderHelper {
         sprite: Sprite
     ) {
         val ctx = matrices.peek()
+<<<<<<< HEAD
         val posMat = ctx.positionMatrix
         val normMat = ctx.normalMatrix
         val vBottom = progressSize.coerceIn(0f, 16f)
@@ -136,6 +159,21 @@ object EngineRenderHelper {
             x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1,
             3f, vBottom, 13f, vBottom, 13f, vTop, 3f, vTop, -1f, 0f, 0f, sprite)
         emitQuadBothSidesPx(buffer, posMat, normMat, light, overlay,
+=======
+        val vBottom = progressSize.coerceIn(0f, 16f)
+        val vTop = 0f
+
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+            x2, y1, z1, x1, y1, z1, x1, y2, z1, x2, y2, z1,
+            3f, vBottom, 13f, vBottom, 13f, vTop, 3f, vTop, 0f, 0f, -1f, sprite)
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+            x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2,
+            3f, vBottom, 13f, vBottom, 13f, vTop, 3f, vTop, 0f, 0f, 1f, sprite)
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+            x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1,
+            3f, vBottom, 13f, vBottom, 13f, vTop, 3f, vTop, -1f, 0f, 0f, sprite)
+        emitQuadBothSidesPx(buffer, ctx, light, overlay,
+>>>>>>> backup/1.21.1
             x2, y1, z2, x2, y1, z1, x2, y2, z1, x2, y2, z2,
             3f, vBottom, 13f, vBottom, 13f, vTop, 3f, vTop, 1f, 0f, 0f, sprite)
     }
@@ -146,6 +184,7 @@ object EngineRenderHelper {
         topBottomSprite: Sprite, sideSprite: Sprite, allFaces: Boolean
     ) {
         val ctx = matrices.peek()
+<<<<<<< HEAD
         val posMat = ctx.positionMatrix
         val normMat = ctx.normalMatrix
 
@@ -167,23 +206,55 @@ object EngineRenderHelper {
             x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1,
             0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, -1f, 0f, 0f, sideSprite)
         emitQuadBothSides(buffer, posMat, normMat, light, overlay,
+=======
+        if (allFaces) {
+            emitQuadBothSides(buffer, ctx, light, overlay,
+                x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2,
+                0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f, 0f, -1f, 0f, topBottomSprite)
+            emitQuadBothSides(buffer, ctx, light, overlay,
+                x1, y2, z1, x2, y2, z1, x2, y2, z2, x1, y2, z2,
+                0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f, 0f, 1f, 0f, topBottomSprite)
+        }
+        emitQuadBothSides(buffer, ctx, light, overlay,
+            x2, y1, z1, x1, y1, z1, x1, y2, z1, x2, y2, z1,
+            0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, 0f, 0f, -1f, sideSprite)
+        emitQuadBothSides(buffer, ctx, light, overlay,
+            x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2,
+            0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, sideSprite)
+        emitQuadBothSides(buffer, ctx, light, overlay,
+            x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1,
+            0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, -1f, 0f, 0f, sideSprite)
+        emitQuadBothSides(buffer, ctx, light, overlay,
+>>>>>>> backup/1.21.1
             x2, y1, z2, x2, y1, z1, x2, y2, z1, x2, y2, z2,
             0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, 1f, 0f, 0f, sideSprite)
     }
 
     fun emitQuadBothSides(
         buffer: VertexConsumer,
+<<<<<<< HEAD
         posMat: Matrix4f, normMat: Matrix3f, light: Int, overlay: Int,
+=======
+        entry: MatrixStack.Entry, light: Int, overlay: Int,
+>>>>>>> backup/1.21.1
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
         nx: Float, ny: Float, nz: Float, sprite: Sprite
     ) {
+<<<<<<< HEAD
         emitQuad(buffer, posMat, normMat, light, overlay,
             x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
             u0, v0, u1, v1, u2, v2, u3, v3,
             nx, ny, nz, sprite)
         emitQuad(buffer, posMat, normMat, light, overlay,
+=======
+        emitQuad(buffer, entry, light, overlay,
+            x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
+            u0, v0, u1, v1, u2, v2, u3, v3,
+            nx, ny, nz, sprite)
+        emitQuad(buffer, entry, light, overlay,
+>>>>>>> backup/1.21.1
             x3, y3, z3, x2, y2, z2, x1, y1, z1, x0, y0, z0,
             u3, v3, u2, v2, u1, v1, u0, v0,
             -nx, -ny, -nz, sprite)
@@ -191,7 +262,11 @@ object EngineRenderHelper {
 
     fun emitQuadBothSidesPx(
         buffer: VertexConsumer,
+<<<<<<< HEAD
         posMat: Matrix4f, normMat: Matrix3f, light: Int, overlay: Int,
+=======
+        entry: MatrixStack.Entry, light: Int, overlay: Int,
+>>>>>>> backup/1.21.1
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
@@ -202,7 +277,11 @@ object EngineRenderHelper {
         val su2 = u2 / 16f; val sv2 = v2 / 16f
         val su3 = u3 / 16f; val sv3 = v3 / 16f
         emitQuadBothSides(
+<<<<<<< HEAD
             buffer, posMat, normMat, light, overlay,
+=======
+            buffer, entry, light, overlay,
+>>>>>>> backup/1.21.1
             x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
             su0, sv0, su1, sv1, su2, sv2, su3, sv3, nx, ny, nz, sprite
         )
@@ -210,7 +289,11 @@ object EngineRenderHelper {
 
     fun emitQuad(
         buffer: VertexConsumer,
+<<<<<<< HEAD
         posMat: Matrix4f, normMat: Matrix3f, light: Int, overlay: Int,
+=======
+        entry: MatrixStack.Entry, light: Int, overlay: Int,
+>>>>>>> backup/1.21.1
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
@@ -221,6 +304,7 @@ object EngineRenderHelper {
         fun mapU(u: Float) = minU + u * (maxU - minU)
         fun mapV(v: Float) = minV + v * (maxV - minV)
 
+<<<<<<< HEAD
         buffer.vertex(posMat, x0, y0, z0).color(255, 255, 255, 255)
             .texture(mapU(u0), mapV(v0)).overlay(overlay).light(light).normal(normMat, nx, ny, nz).next()
         buffer.vertex(posMat, x1, y1, z1).color(255, 255, 255, 255)
@@ -229,5 +313,15 @@ object EngineRenderHelper {
             .texture(mapU(u2), mapV(v2)).overlay(overlay).light(light).normal(normMat, nx, ny, nz).next()
         buffer.vertex(posMat, x3, y3, z3).color(255, 255, 255, 255)
             .texture(mapU(u3), mapV(v3)).overlay(overlay).light(light).normal(normMat, nx, ny, nz).next()
+=======
+        buffer.vertex(entry.positionMatrix, x0, y0, z0).color(255, 255, 255, 255)
+            .texture(mapU(u0), mapV(v0)).overlay(overlay).light(light).normal(entry, nx, ny, nz)
+        buffer.vertex(entry.positionMatrix, x1, y1, z1).color(255, 255, 255, 255)
+            .texture(mapU(u1), mapV(v1)).overlay(overlay).light(light).normal(entry, nx, ny, nz)
+        buffer.vertex(entry.positionMatrix, x2, y2, z2).color(255, 255, 255, 255)
+            .texture(mapU(u2), mapV(v2)).overlay(overlay).light(light).normal(entry, nx, ny, nz)
+        buffer.vertex(entry.positionMatrix, x3, y3, z3).color(255, 255, 255, 255)
+            .texture(mapU(u3), mapV(v3)).overlay(overlay).light(light).normal(entry, nx, ny, nz)
+>>>>>>> backup/1.21.1
     }
 }

@@ -1,0 +1,50 @@
+{
+  "values": [
+    "ic2_120:biofuel",
+    "ic2_120:flowing_biofuel",
+    {
+      "id": "#c:fuel",
+      "required": false
+    },
+    {
+      "id": "#c:fuel_oil",
+      "required": false
+    },
+    {
+      "id": "#c:diesel",
+      "required": false
+    },
+    {
+      "id": "#c:gasoline",
+      "required": false
+    },
+    {
+      "id": "#c:refined_fuel",
+      "required": false
+    },
+    {
+      "id": "#c:biofuels",
+      "required": false
+    },
+    {
+      "id": "#c:biofuel",
+      "required": false
+    },
+    {
+      "id": "#c:biodiesel",
+      "required": false
+    },
+    {
+      "id": "#c:ethanol",
+      "required": false
+    },
+    {
+      "id": "#c:plant_oil",
+      "required": false
+    },
+    {
+      "id": "#c:seed_oil",
+      "required": false
+    }
+  ]
+}

@@ -45,6 +45,8 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.registry.RegistryWrapper
+import io.netty.buffer.Unpooled
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandler
@@ -71,7 +73,11 @@ class FluidHeatExchangerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
+<<<<<<< HEAD
 ) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IFluidPipeUpgradeSupport, ic2_120.content.upgrade.IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+=======
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, ic2_120.content.upgrade.IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = FluidHeatExchangerBlock.ACTIVE
 
@@ -121,12 +127,15 @@ class FluidHeatExchangerBlockEntity(
         const val SLOT_OUTPUT_FILLED_CONTAINER = 16
 
         const val INVENTORY_SIZE = 17
+<<<<<<< HEAD
 
         // SLOT_INPUT_EMPTY_CONTAINER 是消耗满容器（岩浆/热冷却液单元）后返还的空容器槽
         // （ScreenHandler 用 OUTPUT_ONLY_SLOT_SPEC），必须纳入弹出升级扫描范围。
         // SLOT_OUTPUT_FILLED_CONTAINER 是装满后输出槽（OUTPUT_ONLY），同样应弹出。
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_INPUT_EMPTY_CONTAINER, SLOT_OUTPUT_FILLED_CONTAINER)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT_FILLED_CONTAINER)
+=======
+>>>>>>> backup/1.21.1
 
         private const val NBT_INPUT_TANK = "InputTank"
         private const val NBT_INPUT_FLUID = "InputFluid"
@@ -170,6 +179,7 @@ class FluidHeatExchangerBlockEntity(
         extractSlots = SLOT_UPGRADE_INDICES + SLOT_INPUT_INDICES + SLOT_OUTPUT_INDICES + intArrayOf(SLOT_OUTPUT_EMPTY_CONTAINER),
         markDirty = { markDirty() }
     )
+<<<<<<< HEAD
 
     override val routedItemStorage get() = itemStorage
     private val heatConductorItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "heat_conductor")) }
@@ -177,6 +187,13 @@ class FluidHeatExchangerBlockEntity(
     private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
     private val lavaCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "lava_cell")) }
     private val hotCoolantCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "hot_coolant_cell")) }
+=======
+    private val heatConductorItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "heat_conductor")) }
+    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val lavaCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "lava_cell")) }
+    private val hotCoolantCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "hot_coolant_cell")) }
+>>>>>>> backup/1.21.1
 
     val syncedData = SyncedData()
     override val heatFlow = HeatFlowSync(syncedData, this)
@@ -192,7 +209,11 @@ class FluidHeatExchangerBlockEntity(
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
+<<<<<<< HEAD
         override fun canInsert(variant: FluidVariant): Boolean = isAcceptedInputFluid(variant.fluid) && !variant.isBlank
+=======
+        override fun canInsert(variant: FluidVariant): Boolean = isAcceptedInputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
+>>>>>>> backup/1.21.1
 
         private fun syncTankState() {
             sync.inputFluid = toMilliBuckets(amount)
@@ -235,6 +256,7 @@ class FluidHeatExchangerBlockEntity(
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
 
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -244,6 +266,13 @@ class FluidHeatExchangerBlockEntity(
                 markDirty()
                 actual
             }
+=======
+            amount += actual
+            if (variant.isBlank) variant = FluidVariant.of(normalized)
+            syncTankState()
+            markDirty()
+            return actual
+>>>>>>> backup/1.21.1
         }
 
         fun consumeInternal(toConsume: Long): Long {
@@ -251,6 +280,7 @@ class FluidHeatExchangerBlockEntity(
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
 
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -260,6 +290,13 @@ class FluidHeatExchangerBlockEntity(
                 markDirty()
                 actual
             }
+=======
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            syncTankState()
+            markDirty()
+            return actual
+>>>>>>> backup/1.21.1
         }
     }
 
@@ -280,7 +317,11 @@ class FluidHeatExchangerBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
+<<<<<<< HEAD
         override fun canExtract(variant: FluidVariant): Boolean = isAcceptedOutputFluid(variant.fluid) && !variant.isBlank
+=======
+        override fun canExtract(variant: FluidVariant): Boolean = isAcceptedOutputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
+>>>>>>> backup/1.21.1
 
         override fun onFinalCommit() {
             syncTankState()
@@ -318,6 +359,7 @@ class FluidHeatExchangerBlockEntity(
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
 
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -327,6 +369,13 @@ class FluidHeatExchangerBlockEntity(
                 markDirty()
                 actual
             }
+=======
+            amount += actual
+            if (variant.isBlank) variant = outputVariant
+            syncTankState()
+            markDirty()
+            return actual
+>>>>>>> backup/1.21.1
         }
 
         fun consumeInternal(toConsume: Long): Long {
@@ -334,6 +383,7 @@ class FluidHeatExchangerBlockEntity(
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
 
+<<<<<<< HEAD
             return Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= actual
@@ -343,6 +393,13 @@ class FluidHeatExchangerBlockEntity(
                 markDirty()
                 actual
             }
+=======
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            syncTankState()
+            markDirty()
+            return actual
+>>>>>>> backup/1.21.1
         }
     }
 
@@ -437,8 +494,8 @@ class FluidHeatExchangerBlockEntity(
     private fun fheMatchesInputFilledContainer(stack: ItemStack): Boolean = when {
         stack.item == Items.LAVA_BUCKET -> true
         stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-        Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "lava_cell") -> true
-        Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "hot_coolant_cell") -> true
+        Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "lava_cell") -> true
+        Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "hot_coolant_cell") -> true
         stack.item is FluidCellItem -> {
             val fluid = stack.getFluidCellVariant()?.fluid
             fluid == Fluids.LAVA || fluid == Fluids.FLOWING_LAVA ||
@@ -449,7 +506,7 @@ class FluidHeatExchangerBlockEntity(
 
     private fun fheMatchesOutputEmptyContainer(stack: ItemStack): Boolean =
         stack.item == Items.BUCKET ||
-            Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "empty_cell") ||
+            Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
             (stack.item is FluidCellItem && stack.isFluidCellEmpty())
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
@@ -463,9 +520,11 @@ class FluidHeatExchangerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.liquid_heat_exchanger")
@@ -480,9 +539,9 @@ class FluidHeatExchangerBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
 
         bufferedHeat = nbt.getLong(NBT_BUFFERED_HEAT).coerceAtLeast(0L)
@@ -497,9 +556,9 @@ class FluidHeatExchangerBlockEntity(
         )
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
 
         nbt.putLong(NBT_BUFFERED_HEAT, bufferedHeat)
@@ -516,6 +575,12 @@ class FluidHeatExchangerBlockEntity(
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         if (fluidPipeProviderEnabled) {
             FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, outputTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
+<<<<<<< HEAD
+=======
+        }
+        if (fluidPipeReceiverEnabled) {
+            FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, inputTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
+>>>>>>> backup/1.21.1
         }
         if (fluidPipeReceiverEnabled) {
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, inputTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
@@ -675,7 +740,7 @@ class FluidHeatExchangerBlockEntity(
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
+        return current.isEmpty || (ItemStack.areItemsAndComponentsEqual(current, toInsert) && current.count < current.maxCount)
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {

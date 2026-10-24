@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/hydrated_tin_dust.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,5 +12,10 @@
     "flat_8b515a": "ic2_120:item/item3d/flat_8b515a",
     "flat_9d6968": "ic2_120:item/item3d/flat_9d6968",
     "flat_979ab2": "ic2_120:item/item3d/flat_979ab2"
+=======
+  "parent": "ic2:item/default",
+  "textures": {
+    "layer0": "ic2:item/resource/dust/tin_hydrated"
+>>>>>>> backup/1.21.1
   }
 }

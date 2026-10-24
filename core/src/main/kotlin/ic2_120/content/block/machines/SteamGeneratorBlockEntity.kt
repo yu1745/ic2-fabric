@@ -9,7 +9,10 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
+<<<<<<< HEAD
 import ic2_120.integration.ftbchunks.ClaimProtection
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
@@ -30,7 +33,14 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.Fluids
 import net.minecraft.nbt.NbtCompound
+<<<<<<< HEAD
 import net.minecraft.network.PacketByteBuf
+=======
+import net.minecraft.nbt.NbtOps
+import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
+>>>>>>> backup/1.21.1
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -62,7 +72,11 @@ class SteamGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), IHeatConsumer, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport,
+<<<<<<< HEAD
     ExtendedScreenHandlerFactory {
+=======
+    ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SteamGeneratorBlock.ACTIVE
     override val tier: Int = 2
@@ -79,7 +93,10 @@ class SteamGeneratorBlockEntity(
     override var fluidPipePullingCount: Int = 1
 
     companion object {
+<<<<<<< HEAD
         const val INVENTORY_SIZE = 0
+=======
+>>>>>>> backup/1.21.1
         private const val NBT_WATER_TANK = "WaterTank"
         private const val NBT_STEAM_TANK = "SteamTank"
         private const val NBT_SYSTEM_HEAT_MILLI = "SystemHeatMilli"
@@ -111,7 +128,11 @@ class SteamGeneratorBlockEntity(
         fun dropletsToMb(droplets: Long): Long = droplets * 1000 / FluidConstants.BUCKET
     }
 
+<<<<<<< HEAD
     private val syncedData = SyncedData()
+=======
+    private val syncedData = SyncedData(this)
+>>>>>>> backup/1.21.1
     val sync = SteamGeneratorSync(syncedData)
 
     /** 系统温度 (milli-°C)，初始为生物群系温度（默认 20°C） */
@@ -129,6 +150,7 @@ class SteamGeneratorBlockEntity(
     /** 上次消耗的水是否为蒸馏水（用于蒸汽积压时回收水） */
     private var consumedWaterIsDistilled: Boolean = false
 
+<<<<<<< HEAD
     // TODO: 调试用日志字段 — 暂注释保留，后续视情况删除
 //    private var debugWindowStartTick: Long = Long.MIN_VALUE
 //    private var debugTicks: Int = 0
@@ -138,6 +160,16 @@ class SteamGeneratorBlockEntity(
 //    private var debugSteamExtractedDroplets: Long = 0L
 //    private var debugSteamRecoveredDroplets: Long = 0L
 //    private var debugSteamExplodedDroplets: Long = 0L
+=======
+    private var debugWindowStartTick: Long = Long.MIN_VALUE
+    private var debugTicks: Int = 0
+    private var debugHeatInputHu: Long = 0L
+    private var debugWaterConsumedMb: Long = 0L
+    private var debugSteamProducedDroplets: Long = 0L
+    private var debugSteamExtractedDroplets: Long = 0L
+    private var debugSteamRecoveredDroplets: Long = 0L
+    private var debugSteamExplodedDroplets: Long = 0L
+>>>>>>> backup/1.21.1
 
     // ==== 流体槽 ====
 
@@ -147,7 +179,11 @@ class SteamGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean =
+<<<<<<< HEAD
             !variant.isBlank && (variant.fluid == net.minecraft.fluid.Fluids.WATER || variant.fluid == ModFluids.DISTILLED_WATER_STILL)
+=======
+            ModFluids.isFluid(variant.fluid) && (variant.fluid == net.minecraft.fluid.Fluids.WATER || variant.fluid == ModFluids.DISTILLED_WATER_STILL)
+>>>>>>> backup/1.21.1
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 
@@ -164,12 +200,17 @@ class SteamGeneratorBlockEntity(
             val droplets = mbToDroplets(mb)
             if (droplets <= 0L || variant.isBlank) return false
             if (amount < droplets) return false
+<<<<<<< HEAD
             Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount -= droplets
                 if (amount <= 0L) variant = FluidVariant.blank()
                 tx.commit()
             }
+=======
+            amount -= droplets
+            if (amount <= 0L) variant = FluidVariant.blank()
+>>>>>>> backup/1.21.1
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return true
@@ -177,13 +218,22 @@ class SteamGeneratorBlockEntity(
 
         /** NBT 恢复 */
         fun readFromNbt(nbt: NbtCompound) {
+<<<<<<< HEAD
             variant = FluidVariant.fromNbt(nbt.getCompound("variant"))
+=======
+            val fluidTag = nbt.getCompound("variant")
+            variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
+>>>>>>> backup/1.21.1
             amount = nbt.getLong("amount")
         }
 
         /** NBT 保存 */
         fun writeToNbt(): NbtCompound = NbtCompound().also {
+<<<<<<< HEAD
             it.put("variant", variant.toNbt())
+=======
+            it.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, variant).result().orElse(NbtCompound()))
+>>>>>>> backup/1.21.1
             it.putLong("amount", amount)
         }
     }
@@ -202,7 +252,11 @@ class SteamGeneratorBlockEntity(
             if (extracted > 0L) {
                 transaction.addOuterCloseCallback { result ->
                     if (result.wasCommitted()) {
+<<<<<<< HEAD
                         // debugSteamExtractedDroplets += extracted
+=======
+                        debugSteamExtractedDroplets += extracted
+>>>>>>> backup/1.21.1
                     }
                 }
             }
@@ -220,6 +274,7 @@ class SteamGeneratorBlockEntity(
             val space = STEAM_TANK_CAPACITY - amount
             val actual = minOf(droplets, space)
             if (actual <= 0L) return 0L
+<<<<<<< HEAD
             Transaction.openOuter().use { tx ->
                 updateSnapshots(tx)
                 amount += actual
@@ -230,6 +285,14 @@ class SteamGeneratorBlockEntity(
                         FluidVariant.of(ModFluids.STEAM_STILL)
                 }
                 tx.commit()
+=======
+            amount += actual
+            if (variant.isBlank) {
+                variant = if (producingSuperheated)
+                    FluidVariant.of(ModFluids.SUPERHEATED_STEAM_STILL)
+                else
+                    FluidVariant.of(ModFluids.STEAM_STILL)
+>>>>>>> backup/1.21.1
             }
             sync.steamAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
@@ -238,13 +301,22 @@ class SteamGeneratorBlockEntity(
 
         /** NBT 恢复 */
         fun readFromNbt(nbt: NbtCompound) {
+<<<<<<< HEAD
             variant = FluidVariant.fromNbt(nbt.getCompound("variant"))
+=======
+            val fluidTag = nbt.getCompound("variant")
+            variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
+>>>>>>> backup/1.21.1
             amount = nbt.getLong("amount")
         }
 
         /** NBT 保存 */
         fun writeToNbt(): NbtCompound = NbtCompound().also {
+<<<<<<< HEAD
             it.put("variant", variant.toNbt())
+=======
+            it.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, variant).result().orElse(NbtCompound()))
+>>>>>>> backup/1.21.1
             it.putLong("amount", amount)
         }
     }
@@ -268,21 +340,38 @@ class SteamGeneratorBlockEntity(
 
         override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
             val views = mutableListOf<StorageView<FluidVariant>>()
+<<<<<<< HEAD
+=======
+            if (!waterTank.variant.isBlank && waterTank.amount > 0L) {
+>>>>>>> backup/1.21.1
                 views.add(object : StorageView<FluidVariant> {
                     override fun getResource(): FluidVariant = waterTank.variant
                     override fun getAmount(): Long = waterTank.amount
                     override fun getCapacity(): Long = WATER_TANK_CAPACITY
                     override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
+<<<<<<< HEAD
                     override fun isResourceBlank(): Boolean = waterTank.variant.isBlank
                 })
+=======
+                    override fun isResourceBlank(): Boolean = false
+                })
+            }
+            if (!steamTank.variant.isBlank && steamTank.amount > 0L) {
+>>>>>>> backup/1.21.1
                 views.add(object : StorageView<FluidVariant> {
                     override fun getResource(): FluidVariant = steamTank.variant
                     override fun getAmount(): Long = steamTank.amount
                     override fun getCapacity(): Long = STEAM_TANK_CAPACITY
                     override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long =
                         steamTank.extract(resource, maxAmount, transaction)
+<<<<<<< HEAD
                     override fun isResourceBlank(): Boolean = steamTank.variant.isBlank
                 })
+=======
+                    override fun isResourceBlank(): Boolean = false
+                })
+            }
+>>>>>>> backup/1.21.1
             return views.iterator()
         }
     }
@@ -316,9 +405,17 @@ class SteamGeneratorBlockEntity(
 
     // ==== ScreenHandler ====
 
+<<<<<<< HEAD
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+=======
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.size())
+        return buf
+>>>>>>> backup/1.21.1
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.steam_generator")
@@ -334,8 +431,13 @@ class SteamGeneratorBlockEntity(
 
     // ==== NBT ====
 
+<<<<<<< HEAD
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
+=======
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         syncedData.readNbt(nbt)
         systemHeatMilli = nbt.getLong(NBT_SYSTEM_HEAT_MILLI)
         calcification = nbt.getLong(NBT_CALCIFICATION)
@@ -349,8 +451,13 @@ class SteamGeneratorBlockEntity(
         sync.calcification = calcification.coerceIn(0L, SteamGeneratorSync.MAX_CALCIFICATION).toInt()
     }
 
+<<<<<<< HEAD
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
+=======
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+>>>>>>> backup/1.21.1
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_SYSTEM_HEAT_MILLI, systemHeatMilli)
         nbt.putLong(NBT_CALCIFICATION, calcification)
@@ -369,6 +476,7 @@ class SteamGeneratorBlockEntity(
         // 取出跨 tick 累积的热量用于本 tick 处理
         val heatAvailableThisTick = heatBuffer.coerceAtMost(SteamGeneratorSync.MAX_HEAT_INPUT)
         heatBuffer = 0L
+<<<<<<< HEAD
         // debugHeatInputHu += heatAvailableThisTick
 
         // 脸对脸全量直推蒸汽：相邻的流体容器（轮机/管道）不限速一次性收走。
@@ -399,6 +507,11 @@ class SteamGeneratorBlockEntity(
         }
 
         // 流体管道输出蒸汽兜底 (默认 fluidPipeProviderEnabled=true, 无需升级)
+=======
+        debugHeatInputHu += heatAvailableThisTick
+
+        // 流体管道输出蒸汽 (默认 fluidPipeProviderEnabled=true, 无需升级)
+>>>>>>> backup/1.21.1
         FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, steamTank,
             fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
 
@@ -406,11 +519,17 @@ class SteamGeneratorBlockEntity(
         val leftoverSteam = steamTank.amount.coerceAtLeast(0L)
         if (leftoverSteam > 0L) {
             if (world.random.nextInt(10) == 0) {
+<<<<<<< HEAD
                 // debugSteamExplodedDroplets += leftoverSteam
                 if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
                     world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
                         1f, World.ExplosionSourceType.NONE)
                 }
+=======
+                debugSteamExplodedDroplets += leftoverSteam
+                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                    1f, World.ExplosionSourceType.NONE)
+>>>>>>> backup/1.21.1
             } else {
                 val recoveredDroplets = leftoverSteam / SteamGeneratorSync.STEAM_EXPANSION
                 if (recoveredDroplets > 0L) {
@@ -419,6 +538,7 @@ class SteamGeneratorBlockEntity(
                     val space = WATER_TANK_CAPACITY - waterTank.amount
                     val actual = minOf(recoveredDroplets, space)
                     if (actual > 0L) {
+<<<<<<< HEAD
                         Transaction.openOuter().use { tx ->
                             waterTank.updateSnapshots(tx)
                             if (waterTank.variant.isBlank) waterTank.variant = FluidVariant.of(fillFluid)
@@ -434,6 +554,15 @@ class SteamGeneratorBlockEntity(
                     steamTank.variant = FluidVariant.blank()
                     tx.commit()
                 }
+=======
+                        if (waterTank.variant.isBlank) waterTank.variant = FluidVariant.of(fillFluid)
+                        waterTank.amount += actual
+                    }
+                }
+                debugSteamRecoveredDroplets += leftoverSteam
+                steamTank.amount = 0L
+                steamTank.variant = FluidVariant.blank()
+>>>>>>> backup/1.21.1
             }
         }
 
@@ -485,6 +614,7 @@ class SteamGeneratorBlockEntity(
                             }
                         }
                         if (ejected > 0) {
+<<<<<<< HEAD
                             Transaction.openOuter().use { tx ->
                                 waterTank.updateSnapshots(tx)
                                 waterTank.amount -= ejected
@@ -493,6 +623,12 @@ class SteamGeneratorBlockEntity(
                             }
                             sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
                             consumedWaterIsDistilled = waterTank.isDistilled()
+=======
+                            waterTank.amount -= ejected
+                            sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
+                            consumedWaterIsDistilled = waterTank.isDistilled()
+                            if (waterTank.amount <= 0L) waterTank.variant = FluidVariant.blank()
+>>>>>>> backup/1.21.1
                             sync.outputMB = (dropletsToMb(ejected) * SteamGeneratorSync.STEAM_EXPANSION)
                                 .coerceIn(0L, Int.MAX_VALUE.toLong())
                                 .toInt()
@@ -521,12 +657,20 @@ class SteamGeneratorBlockEntity(
                     if (waterToConsume > 0L) {
                         consumedWaterIsDistilled = waterTank.isDistilled()
                         if (waterTank.consumeMb(waterToConsume)) {
+<<<<<<< HEAD
                             // debugWaterConsumedMb += waterToConsume
+=======
+                            debugWaterConsumedMb += waterToConsume
+>>>>>>> backup/1.21.1
                             // 产出蒸汽 = 水量 * 膨胀倍率
                             val steamProduced = waterToConsume * SteamGeneratorSync.STEAM_EXPANSION
                             val steamDroplets = mbToDroplets(steamProduced)
                             steamTank.produceSteam(steamDroplets)
+<<<<<<< HEAD
                             // debugSteamProducedDroplets += steamDroplets
+=======
+                            debugSteamProducedDroplets += steamDroplets
+>>>>>>> backup/1.21.1
                             sync.outputMB = steamProduced.toInt()
 
                             // 冷却 = water × (100 + pressure/220×100) × 0.5, 上限 2000 milli-°C(2°C)
@@ -553,10 +697,15 @@ class SteamGeneratorBlockEntity(
 
         // 4. 超温爆炸 — 对齐 ic2_origin heatup(): >500°C 必爆, 半径 10, 不毁地形
         if (systemHeatMilli > SteamGeneratorSync.MAX_SYSTEM_HEAT_MILLI) {
+<<<<<<< HEAD
             if (ClaimProtection.explosionCubeAllowed(world, pos, 10f, null)) {
                 world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
                     10f, World.ExplosionSourceType.NONE)
             }
+=======
+            world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                10f, World.ExplosionSourceType.NONE)
+>>>>>>> backup/1.21.1
         }
 
         // 6. 更新同步数据
@@ -577,11 +726,16 @@ class SteamGeneratorBlockEntity(
             systemHeatMilli <= SteamGeneratorSync.MAX_SYSTEM_HEAT_MILLI
         setActiveState(world, pos, state, active)
 
+<<<<<<< HEAD
         // logSteamDebug(world, pos, pressure, inputMB)
+=======
+        logSteamDebug(world, pos, pressure, inputMB)
+>>>>>>> backup/1.21.1
 
         markDirty()
     }
 
+<<<<<<< HEAD
     // TODO: 调试用日志方法 — 暂注释保留，后续视情况删除
 //    private fun logSteamDebug(world: World, pos: BlockPos, pressure: Int, inputMB: Int) {
 //        if (debugWindowStartTick == Long.MIN_VALUE) {
@@ -611,6 +765,46 @@ class SteamGeneratorBlockEntity(
 //        debugSteamRecoveredDroplets = 0L
 //        debugSteamExplodedDroplets = 0L
 //    }
+=======
+    private fun logSteamDebug(world: World, pos: BlockPos, pressure: Int, inputMB: Int) {
+        if (debugWindowStartTick == Long.MIN_VALUE) {
+            debugWindowStartTick = world.time
+        }
+        debugTicks++
+        if (debugTicks < 100) return
+
+        val ticks = debugTicks.coerceAtLeast(1)
+        val producedMb = dropletsToMb(debugSteamProducedDroplets)
+        val extractedMb = dropletsToMb(debugSteamExtractedDroplets)
+        val recoveredMb = dropletsToMb(debugSteamRecoveredDroplets)
+        val explodedMb = dropletsToMb(debugSteamExplodedDroplets)
+        val avgProduced = producedMb.toDouble() / ticks
+        val avgExtracted = extractedMb.toDouble() / ticks
+        val avgRecovered = recoveredMb.toDouble() / ticks
+        val avgHeat = debugHeatInputHu.toDouble() / ticks
+        val avgWater = debugWaterConsumedMb.toDouble() / ticks
+        val superheated = producingSuperheated
+
+        println(
+            "[SteamGenerator] pos=$pos ticks=$ticks pressure=$pressure inputMB=$inputMB " +
+                "temp=${systemHeatMilli / 1000.0}C superheated=$superheated " +
+                "avgHeatHuT=${"%.2f".format(avgHeat)} avgWaterMbT=${"%.2f".format(avgWater)} " +
+                "avgProducedMbT=${"%.2f".format(avgProduced)} avgExtractedMbT=${"%.2f".format(avgExtracted)} " +
+                "avgRecoveredMbT=${"%.2f".format(avgRecovered)} recoveredMb=$recoveredMb explodedMb=$explodedMb " +
+                "steamTankMb=${dropletsToMb(steamTank.amount)} waterTankMb=${dropletsToMb(waterTank.amount)} " +
+                "calcification=$calcification windowStart=$debugWindowStartTick tick=${world.time}"
+        )
+
+        debugWindowStartTick = world.time
+        debugTicks = 0
+        debugHeatInputHu = 0L
+        debugWaterConsumedMb = 0L
+        debugSteamProducedDroplets = 0L
+        debugSteamExtractedDroplets = 0L
+        debugSteamRecoveredDroplets = 0L
+        debugSteamExplodedDroplets = 0L
+    }
+>>>>>>> backup/1.21.1
 
     /** 获取群系温度（milli-°C），对齐 ic2_origin BiomeUtil.getBiomeTemperature */
     private fun getBiomeTemperatureMilli(world: World, pos: BlockPos): Long {

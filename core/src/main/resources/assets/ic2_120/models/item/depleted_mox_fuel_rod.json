@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/depleted_mox_fuel_rod.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -11,4 +12,10 @@
     "metal_b5b5b5": "ic2_120:item/item3d/metal_b5b5b5",
     "flat_e7e7e7": "ic2_120:item/item3d/flat_e7e7e7"
   }
+=======
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:item/resource/nuclear/depleted_mox"
+	}
+>>>>>>> backup/1.21.1
 }

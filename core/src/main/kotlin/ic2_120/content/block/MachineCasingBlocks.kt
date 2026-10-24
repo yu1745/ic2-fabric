@@ -9,7 +9,11 @@ import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+=======
+import net.minecraft.data.server.recipe.RecipeExporter
+>>>>>>> backup/1.21.1
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -19,7 +23,10 @@ import ic2_120.content.item.SteelPlate
 import ic2_120.content.item.CarbonPlate
 import ic2_120.content.item.Alloy
 import ic2_120.content.recipes.ModTags
+<<<<<<< HEAD
 import java.util.function.Consumer
+=======
+>>>>>>> backup/1.21.1
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -31,7 +38,7 @@ class MachineCasingBlock : Block(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MachineCasingBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("I I")
@@ -52,7 +59,7 @@ class AdvancedMachineCasingBlock : Block(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedMachineCasingBlock::class.instance(), 1)
                 .pattern("sgs")
                 .pattern("cxc")

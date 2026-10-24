@@ -6,12 +6,16 @@ import ic2_120.content.item.*
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
+<<<<<<< HEAD
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+=======
+import net.minecraft.data.server.recipe.RecipeExporter
+>>>>>>> backup/1.21.1
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 
 /**
  * 热能离心机配方数据生成
@@ -277,7 +281,11 @@ object CentrifugeRecipeDatagen {
         // 泥炭矿 200 -> 煤炭 + 糠
         Entry(
             "peat_ore",
+<<<<<<< HEAD
             IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "peat_ore"))), 1, 200,
+=======
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore"))), 1, 200,
+>>>>>>> backup/1.21.1
             listOf(
                 OutputEntry(Items.COAL, 1),
                 OutputEntry(BioChaff::class.instance(), 1)
@@ -287,8 +295,9 @@ object CentrifugeRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: RecipeExporter) {
         entries.forEach { entry ->
+<<<<<<< HEAD
             CentrifugeRecipeJsonProvider(
                 recipeId = Identifier("ic2_120", "centrifuging/${entry.name}"),
                 input = entry.input,
@@ -330,4 +339,20 @@ object CentrifugeRecipeDatagen {
 
         override fun getAdvancementId(): Identifier? = null
     }
+=======
+            val id = Identifier.of("ic2_120", "centrifuging/${entry.name}")
+            exporter.accept(
+                id,
+                CentrifugeRecipe(
+                    id,
+                    entry.input.toIngredient(),
+                    entry.inputCount,
+                    entry.minHeat,
+                    entry.outputs.map { ItemStack(it.item, it.count) }
+                ),
+                null
+            )
+        }
+    }
+>>>>>>> backup/1.21.1
 }

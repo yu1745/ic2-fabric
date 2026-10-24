@@ -35,11 +35,14 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+<<<<<<< HEAD
 import net.minecraft.item.Items
+=======
+import net.minecraft.recipe.input.SingleStackRecipeInput
+>>>>>>> backup/1.21.1
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.RecipeType
 import net.minecraft.recipe.SmeltingRecipe
 import net.minecraft.screen.ScreenHandler
@@ -48,7 +51,13 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+<<<<<<< HEAD
 import ic2_120.content.upgrade.IValidInputItem
+=======
+import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
+>>>>>>> backup/1.21.1
 
 /**
  * 电力熔炉方块实体。提供输入/输出槽位并实现简单 GUI。
@@ -61,7 +70,11 @@ class ElectricFurnaceBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
+<<<<<<< HEAD
     ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
+=======
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
+>>>>>>> backup/1.21.1
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricFurnaceBlock.ACTIVE
 
@@ -178,9 +191,11 @@ class ElectricFurnaceBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text =
@@ -189,9 +204,9 @@ class ElectricFurnaceBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         ElectricFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricFurnaceSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -205,9 +220,9 @@ class ElectricFurnaceBlockEntity(
         storedExperience = nbt.getFloat(FurnaceExperienceHelper.NBT_EXPERIENCE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(ElectricFurnaceSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -250,15 +265,26 @@ class ElectricFurnaceBlockEntity(
             return
         }
 
+<<<<<<< HEAD
         val recipe = smeltingRecipeFor(input, world)
         if (recipe == null) {
             resetProgress()
+=======
+        val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(input), world)
+        if (match.isEmpty) {
+            if (sync.progress != 0) sync.progress = 0
+>>>>>>> backup/1.21.1
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
 
+<<<<<<< HEAD
         val result = smeltingOutputFor(recipe, world)
+=======
+        val recipe = match.get().value
+        val result = recipe.getResult(world.registryManager).copy()
+>>>>>>> backup/1.21.1
         val outputSlot = getStack(1)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
@@ -275,10 +301,15 @@ class ElectricFurnaceBlockEntity(
             input.decrement(1)
             if (outputSlot.isEmpty()) setStack(1, result.copy())
             else outputSlot.increment(result.count)
+<<<<<<< HEAD
             storedExperience = (storedExperience + getExperienceForElectricFurnace(recipe, input))
                 .coerceAtMost(MAX_STORED_XP)
             progressF = 0f
             energyDebtF = 0f
+=======
+            storedExperience = (storedExperience + FurnaceExperienceHelper.getExperienceFromRecipe(recipe))
+                .coerceAtMost(MAX_STORED_XP)
+>>>>>>> backup/1.21.1
             sync.progress = 0
             markDirtyThrottled()
             // 完工不振荡（2026-08-26 perf）：不在此置 false——下一 tick 若输入仍在则
@@ -383,12 +414,16 @@ class ElectricFurnaceBlockEntity(
         if (stack.isEmpty || isBatteryItem(stack)) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
+<<<<<<< HEAD
         val inv = SimpleInventory(stack.copyWithCount(1))
         val found = w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found
         return found
+=======
+        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
+>>>>>>> backup/1.21.1
     }
     /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
      *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */

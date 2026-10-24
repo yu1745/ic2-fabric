@@ -12,7 +12,6 @@ import net.minecraft.client.render.entity.EntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
-import org.joml.Matrix3f
 import org.joml.Matrix4f
 import kotlin.math.atan2
 
@@ -25,7 +24,7 @@ class LaserProjectileEntityRenderer(
 ) : EntityRenderer<LaserProjectileEntity>(context) {
 
     companion object {
-        private val WHITE_TEXTURE = Identifier("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
 
         /** 弹体截面半径 */
         private val RADIUS: Float get() = Ic2Config.current.miningLaser.bulletRadius.toFloat()
@@ -125,8 +124,6 @@ class LaserProjectileEntityRenderer(
         r: Float, g: Float, b: Float, a: Int
     ) {
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
         val step = (2.0 * Math.PI / SIDES).toFloat()
 
         for (i in 0 until SIDES) {
@@ -142,10 +139,10 @@ class LaserProjectileEntityRenderer(
             val nz = (sin0 + sin1) * 0.5f
 
             // 侧面 (从尾端 z=0 到 头端 z=length)
-            vertex(vc, pos, normal, cos0 * radius, sin0 * radius, 0f, light, overlay, r, g, b, a, nx, 0f, nz)
-            vertex(vc, pos, normal, cos1 * radius, sin1 * radius, 0f, light, overlay, r, g, b, a, nx, 0f, nz)
-            vertex(vc, pos, normal, cos1 * radius, sin1 * radius, length, light, overlay, r, g, b, a, nx, 0f, nz)
-            vertex(vc, pos, normal, cos0 * radius, sin0 * radius, length, light, overlay, r, g, b, a, nx, 0f, nz)
+            vertex(vc, entry, cos0 * radius, sin0 * radius, 0f, light, overlay, r, g, b, a, nx, 0f, nz)
+            vertex(vc, entry, cos1 * radius, sin1 * radius, 0f, light, overlay, r, g, b, a, nx, 0f, nz)
+            vertex(vc, entry, cos1 * radius, sin1 * radius, length, light, overlay, r, g, b, a, nx, 0f, nz)
+            vertex(vc, entry, cos0 * radius, sin0 * radius, length, light, overlay, r, g, b, a, nx, 0f, nz)
         }
     }
 
@@ -162,8 +159,6 @@ class LaserProjectileEntityRenderer(
         r: Float, g: Float, b: Float, a: Int
     ) {
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
         val step = (2.0 * Math.PI / SIDES).toFloat()
         val tipZ = length + radius * 0.6f // 锥尖比弹体再伸出一点
 
@@ -177,29 +172,27 @@ class LaserProjectileEntityRenderer(
             val sin1 = Math.sin(angle1.toDouble()).toFloat()
 
             // 头端面 → 锥尖
-            vertex(vc, pos, normal, cos0 * radius, sin0 * radius, length, light, overlay, 1f, 1f, 1f, (a * 0.7f).toInt(), 0f, 0f, 1f)
-            vertex(vc, pos, normal, cos1 * radius, sin1 * radius, length, light, overlay, 1f, 1f, 1f, (a * 0.7f).toInt(), 0f, 0f, 1f)
-            vertex(vc, pos, normal, 0f, 0f, tipZ, light, overlay, r, g, b, a, 0f, 0f, 1f)
-            vertex(vc, pos, normal, 0f, 0f, tipZ, light, overlay, r, g, b, a, 0f, 0f, 1f)
+            vertex(vc, entry, cos0 * radius, sin0 * radius, length, light, overlay, 1f, 1f, 1f, (a * 0.7f).toInt(), 0f, 0f, 1f)
+            vertex(vc, entry, cos1 * radius, sin1 * radius, length, light, overlay, 1f, 1f, 1f, (a * 0.7f).toInt(), 0f, 0f, 1f)
+            vertex(vc, entry, 0f, 0f, tipZ, light, overlay, r, g, b, a, 0f, 0f, 1f)
+            vertex(vc, entry, 0f, 0f, tipZ, light, overlay, r, g, b, a, 0f, 0f, 1f)
         }
     }
 
     private fun vertex(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         x: Float, y: Float, z: Float,
         light: Int,
         overlay: Int,
         r: Float, g: Float, b: Float, a: Int,
         nx: Float, ny: Float, nz: Float
     ) {
-        vc.vertex(pos, x, y, z)
+        vc.vertex(entry.positionMatrix, x, y, z)
             .color(r, g, b, a / 255f)
             .texture(0f, 0f)
             .overlay(overlay)
             .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+            .normal(entry, nx, ny, nz)
     }
 }

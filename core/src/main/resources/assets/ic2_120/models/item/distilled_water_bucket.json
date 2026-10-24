@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "loader": "ic2_120:obj",
   "model": "ic2_120:models/item/item3d/distilled_water_bucket.obj",
   "parent": "ic2_120:item/item3d/display",
@@ -12,5 +13,10 @@
     "glass_c8e6ff": "ic2_120:item/item3d/glass_c8e6ff",
     "flat_969696": "ic2_120:item/item3d/flat_969696",
     "flat_353535": "ic2_120:item/item3d/flat_353535"
+=======
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2_120_advanced_solar_addon:item/sunnarium_part"
+>>>>>>> backup/1.21.1
   }
 }

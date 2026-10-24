@@ -39,7 +39,11 @@ class GeoGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+<<<<<<< HEAD
         renderBackground(context)
+=======
+        renderBackground(context, mouseX, mouseY, delta)
+>>>>>>> backup/1.21.1
         super.render(context, mouseX, mouseY, delta)
 
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
@@ -134,7 +138,11 @@ class GeoGeneratorScreen(
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val LAVA_TANK_DROPLETS = (FluidConstants.BUCKET * 8).toInt()
+<<<<<<< HEAD
         private val TEXTURE = Identifier("ic2", "textures/gui/guiheatsourcegenerator.png")
+=======
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiheatsourcegenerator.png")
+>>>>>>> backup/1.21.1
         private const val ENERGY_BAR_X = 120
         private const val ENERGY_BAR_Y = 19
         private const val ENERGY_BAR_W = 24

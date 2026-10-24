@@ -14,8 +14,11 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
+<<<<<<< HEAD
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+=======
+>>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
@@ -27,18 +30,24 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.Block
+<<<<<<< HEAD
 import net.minecraft.block.ScaffoldingBlock
+=======
+>>>>>>> backup/1.21.1
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.item.Items
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
+<<<<<<< HEAD
 import java.util.function.Consumer
 import java.util.ArrayDeque
+=======
+>>>>>>> backup/1.21.1
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.sound.SoundCategory
@@ -48,13 +57,19 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.world.event.GameEvent
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 建筑泡沫喷枪：仅储存建筑泡沫流体，容量 8 桶；每喷涂一格消耗 0.1 桶（100mb），满罐约 80 格。
  * 按住 Alt 并右键切换单格 / 多格喷涂模式。
  */
 @ModItem(name = "foam_sprayer", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
+<<<<<<< HEAD
 class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVariant {
+=======
+class FoamSprayerItem : Item(Item.Settings().maxCount(1)) {
+>>>>>>> backup/1.21.1
 
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         val world = context.world
@@ -105,29 +120,28 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVar
 
         fun getFluidAmount(stack: ItemStack): Long {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return 0L
-            return stack.nbt?.getLong(NBT_FLUID_DROPLETS)?.coerceIn(0L, CAPACITY_DROPLETS) ?: 0L
+            return stack.getCustomData()?.getLong(NBT_FLUID_DROPLETS)?.coerceIn(0L, CAPACITY_DROPLETS) ?: 0L
         }
 
         fun setFluidAmount(stack: ItemStack, amount: Long) {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return
             val v = amount.coerceIn(0L, CAPACITY_DROPLETS)
             if (v <= 0L) {
-                stack.orCreateNbt.remove(NBT_FLUID_DROPLETS)
+                stack.editCustomData { it.remove(NBT_FLUID_DROPLETS) }
             } else {
-                stack.orCreateNbt.putLong(NBT_FLUID_DROPLETS, v)
+                stack.editCustomData { it.putLong(NBT_FLUID_DROPLETS, v) }
             }
         }
 
         fun isMultiMode(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return false
-            return stack.orCreateNbt.getBoolean(NBT_MULTI_MODE)
+            return stack.getCustomData()?.getBoolean(NBT_MULTI_MODE) ?: false
         }
 
         /** @return 切换后的模式：true = 多格 */
         fun toggleMultiMode(stack: ItemStack): Boolean {
-            val nbt = stack.orCreateNbt
-            val next = !nbt.getBoolean(NBT_MULTI_MODE)
-            nbt.putBoolean(NBT_MULTI_MODE, next)
+            val next = !(stack.getCustomData()?.getBoolean(NBT_MULTI_MODE) ?: false)
+            stack.editCustomData { it.putBoolean(NBT_MULTI_MODE, next) }
             return next
         }
 
@@ -191,8 +205,20 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVar
                 listOf(foamSprayAnchorPos(world, hit))
             }
 
+<<<<<<< HEAD
             val targets = positions.map { it.toImmutable() }.distinct()
             if (!ClaimProtection.allAllowed(world, targets, player, ClaimProtection.EDIT_BLOCK)) return false
+=======
+            val cfPackStack = player.getEquippedStack(EquipmentSlot.CHEST)
+            val useCfPack = cfPackStack.item is CfPack
+
+            var budget = if (useCfPack) {
+                CfPack.getFluidAmount(cfPackStack)
+            } else {
+                getFluidAmount(stack)
+            }
+            if (!player.abilities.creativeMode && budget < DROPLETS_PER_BLOCK) return false
+>>>>>>> backup/1.21.1
 
             var placedAny = false
             for (pos in targets) {
@@ -304,7 +330,7 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVar
         private const val SCAFFOLD_MULTI_MAX_BLOCKS = 256
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val iron = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             if (iron != Items.AIR && emptyCell != Items.AIR) {

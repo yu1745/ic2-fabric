@@ -1,6 +1,6 @@
 package ic2_120.content.worldgen
 
-import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
 import ic2_120.content.block.RubberFaceState
 import ic2_120.content.block.RubberLogBlock
 import ic2_120.registry.instance
@@ -55,7 +55,7 @@ class RubberHoleTreeDecorator : TreeDecorator() {
     }
 
     companion object {
-        val CODEC: Codec<RubberHoleTreeDecorator> = Codec.unit(::RubberHoleTreeDecorator)
+        val CODEC: MapCodec<RubberHoleTreeDecorator> = MapCodec.unit(::RubberHoleTreeDecorator)
 
         private fun hasWetRubberFace(state: net.minecraft.block.BlockState): Boolean =
             listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)

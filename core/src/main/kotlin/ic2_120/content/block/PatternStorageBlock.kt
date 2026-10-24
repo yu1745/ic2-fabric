@@ -19,13 +19,14 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Item
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.state.StateManager
 import net.minecraft.text.Text
@@ -39,7 +40,9 @@ import net.minecraft.util.ItemScatterer
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
-import java.util.function.Consumer
+import net.minecraft.world.WorldView
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 @ModBlock(name = "pattern_storage", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -63,6 +66,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
     ): net.minecraft.screen.NamedScreenHandlerFactory? =
         world.getBlockEntity(pos) as? net.minecraft.screen.NamedScreenHandlerFactory
 
+<<<<<<< HEAD
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
@@ -72,6 +76,9 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
+=======
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+>>>>>>> backup/1.21.1
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
         }
@@ -81,22 +88,27 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
     @Environment(EnvType.CLIENT)
     override fun appendTooltip(
         stack: ItemStack,
-        world: BlockView?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
-        val blockEntityTag = stack.getSubNbt("BlockEntityTag")
+        super.appendTooltip(stack, context, tooltip, type)
+        val blockEntityTag = stack.getCustomData()?.getCompound("BlockEntityTag")
         val templateCount = blockEntityTag?.getList("UuTemplates", 10)?.size ?: 0
         tooltip.add(Text.literal("模板数量: $templateCount").formatted(Formatting.GRAY))
     }
 
+<<<<<<< HEAD
     override fun getPickStack(world: BlockView, pos: BlockPos, state: BlockState): ItemStack {
+=======
+    override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {
+>>>>>>> backup/1.21.1
         val itemStack = super.getPickStack(world, pos, state)
-        val blockEntity = world.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
-        val nbt = blockEntity.createNbt()
+        val blockEntity = (world as BlockView).getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
+        val lookup = (world as World).registryManager
+        val nbt = blockEntity.createNbt(lookup)
         if (!nbt.isEmpty) {
-            itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+            itemStack.editCustomData { it.put("BlockEntityTag", nbt) }
         }
         return itemStack
     }
@@ -113,7 +125,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val crystalMemory = CrystalMemory::class.instance()
             val reinforcedStone = ReinforcedStoneBlock::class.item()

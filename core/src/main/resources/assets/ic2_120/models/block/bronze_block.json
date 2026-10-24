@@ -1,6 +1,10 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
+<<<<<<< HEAD
     "all": "ic2_120:block/resource/bronze_block"
+=======
+    "all": "ic2_120:item/crafting/coal_block"
+>>>>>>> backup/1.21.1
   }
 }

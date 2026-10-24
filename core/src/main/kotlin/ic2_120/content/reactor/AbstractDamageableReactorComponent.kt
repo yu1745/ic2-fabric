@@ -1,12 +1,12 @@
 package ic2_120.content.reactor
 
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import net.minecraft.world.World
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 带耐久/热容的反应堆组件。使用 NBT "use" 存储热量，
@@ -24,7 +24,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings
  * 永远不能堆叠**。AE2 模糊卡等按 vanilla 耐久工作的外部 mod 不受影响。
  */
 abstract class AbstractDamageableReactorComponent(
-    settings: FabricItemSettings,
+    settings: Item.Settings,
     protected val maxUse: Int
 ) : AbstractReactorComponent(settings.maxDamage(maxUse)) {
 
@@ -37,7 +37,7 @@ abstract class AbstractDamageableReactorComponent(
     }
 
     protected fun getUse(stack: ItemStack): Int {
-        val nbt = stack.nbt ?: return 0
+        val nbt = stack.getCustomData() ?: return 0
         return nbt.getInt("use").coerceIn(0, maxUse)
     }
 
@@ -47,12 +47,16 @@ abstract class AbstractDamageableReactorComponent(
     fun isOperationalFuelRod(stack: ItemStack): Boolean = getUse(stack) < maxUse - 1
 
     fun setUse(stack: ItemStack, use: Int) {
+<<<<<<< HEAD
         val clamped = use.coerceIn(0, maxUse)
         val nbt = stack.orCreateNbt
         nbt.putInt("use", clamped)
         // AE2 模糊卡按 NBT "Damage" 标签 + Item.getMaxDamage() 匹配耐久（Settings.maxDamage 已设 maxUse）；
         // 同步镜像标签，让 AE2（及其他按 vanilla 耐久工作的 mod）能按热值过滤元件。
         nbt.putInt("Damage", clamped)
+=======
+        stack.editCustomData { it.putInt("use", use.coerceIn(0, maxUse)) }
+>>>>>>> backup/1.21.1
     }
 
     protected fun incrementUse(stack: ItemStack) {
@@ -82,8 +86,8 @@ abstract class AbstractDamageableReactorComponent(
         return (13.0 * remaining).toInt().coerceIn(0, 13)
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         val remaining = maxUse - getUse(stack)
         tooltip.add(Text.translatable("tooltip.ic2_120.reactor_durability", remaining, maxUse).formatted(Formatting.GRAY))
     }

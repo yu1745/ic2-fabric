@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 { "parent": "ic2_120:block/resource/ore/raw_tin_block" }
+=======
+{ "parent": "ic2:block/resource/ore/raw_tin_block" }
+>>>>>>> backup/1.21.1

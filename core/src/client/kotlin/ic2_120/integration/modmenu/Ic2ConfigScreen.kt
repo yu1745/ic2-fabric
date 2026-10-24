@@ -30,15 +30,23 @@ object Ic2ConfigScreen {
         val eb = builder.entryBuilder()
 
         val generalReader = generalCategory(builder, eb, config.general)
+<<<<<<< HEAD
         val difficultyReader = difficultyCategory(builder, eb, config.difficulty)
         val recyclerReader = recyclerCategory(builder, eb, config.recycler)
         val nuclearReader = nuclearCategory(builder, eb, config.nuclear)
         val matterGeneratorReader = matterGeneratorCategory(builder, eb, config.matterGenerator)
+=======
+        val recyclerReader = recyclerCategory(builder, eb, config.recycler)
+        val nuclearReader = nuclearCategory(builder, eb, config.nuclear)
+>>>>>>> backup/1.21.1
         val minerReader = minerCategory(builder, eb, config.miner)
         val laserReader = miningLaserCategory(builder, eb, config.miningLaser)
         val armorReader = armorCategory(builder, eb, config.armor)
         val worldgenReader = worldgenCategory(builder, eb, config.worldgen)
+<<<<<<< HEAD
         val renderingReader = renderingCategory(builder, eb, config.rendering)
+=======
+>>>>>>> backup/1.21.1
 
         // UU 复制：Map 结构不适合 GUI，引导至命令
         builder.getOrCreateCategory(Text.literal("UU 复制"))
@@ -47,6 +55,7 @@ object Ic2ConfigScreen {
             ).build())
 
         builder.setSavingRunnable {
+<<<<<<< HEAD
             val difficulty = difficultyReader()
             if (difficulty.hardMode != config.difficulty.hardMode) {
                 LOGGER.warn("困难模式已修改为 {}，需要重启游戏或服务器后完全生效", difficulty.hardMode)
@@ -63,12 +72,24 @@ object Ic2ConfigScreen {
                 armor = armorReader(),
                 worldgen = worldgenReader(),
                 rendering = renderingReader()
+=======
+            Ic2Config.save(Ic2MainConfig(
+                general = generalReader(),
+                recycler = recyclerReader(),
+                nuclear = nuclearReader(),
+                uuReplication = config.uuReplication,
+                miner = minerReader(),
+                miningLaser = laserReader(),
+                armor = armorReader(),
+                worldgen = worldgenReader()
+>>>>>>> backup/1.21.1
             ))
         }
 
         return builder.build()
     }
 
+<<<<<<< HEAD
     // ==================== 渲染 ====================
 
     private fun renderingCategory(
@@ -132,6 +153,8 @@ object Ic2ConfigScreen {
         return { MatterGeneratorConfig(allowScrapBoost = allowScrapBoost) }
     }
 
+=======
+>>>>>>> backup/1.21.1
     // ==================== 通用 ====================
 
     private fun generalCategory(
@@ -142,10 +165,13 @@ object Ic2ConfigScreen {
         var shockWhenNoEnergyFlow = cfg.shockWhenNoEnergyFlow
         var explodeWhenNoEnergyFlow = cfg.explodeWhenNoEnergyFlow
         var enableOvervoltageExplosion = cfg.enableOvervoltageExplosion
+<<<<<<< HEAD
         var cableBurnMinPercent = cfg.cableBurnMinPercent
         var cableBurnMaxPercent = cfg.cableBurnMaxPercent
         var enableAnonymousStatistics = cfg.enableAnonymousStatistics
         var analyticsEndpoint = cfg.analyticsEndpoint
+=======
+>>>>>>> backup/1.21.1
 
         val cat = builder.getOrCreateCategory(Text.literal("通用"))
         cat.addEntry(eb.startBooleanToggle(Text.literal("启用超压爆炸"), enableOvervoltageExplosion)
@@ -167,6 +193,7 @@ object Ic2ConfigScreen {
             .setDefaultValue(false)
             .setTooltip(Text.literal("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。"))
             .setSaveConsumer { explodeWhenNoEnergyFlow = it }.build())
+<<<<<<< HEAD
         cat.addEntry(eb.startIntField(Text.literal("导线烧毁最小比例（%）"), cableBurnMinPercent)
             .setDefaultValue(10)
             .setTooltip(Text.literal("低耐压导线每次烧毁时随机选择的最小比例。范围 1～100%；100% 表示全部烧毁，不要填 0。"))
@@ -183,6 +210,8 @@ object Ic2ConfigScreen {
             .setDefaultValue("")
             .setTooltip(Text.literal("形如 https://xxx.workers.dev。留空使用内置默认地址。如不希望参与统计，关闭上面的开关即可。"))
             .setSaveConsumer { analyticsEndpoint = it }.build())
+=======
+>>>>>>> backup/1.21.1
 
         return {
             GeneralConfig(
@@ -190,11 +219,15 @@ object Ic2ConfigScreen {
                 checkForUpdates = checkForUpdates,
                 shockWhenNoEnergyFlow = shockWhenNoEnergyFlow,
                 explodeWhenNoEnergyFlow = explodeWhenNoEnergyFlow,
+<<<<<<< HEAD
                 enableOvervoltageExplosion = enableOvervoltageExplosion,
                 cableBurnMinPercent = cableBurnMinPercent,
                 cableBurnMaxPercent = cableBurnMaxPercent,
                 enableAnonymousStatistics = enableAnonymousStatistics,
                 analyticsEndpoint = analyticsEndpoint
+=======
+                enableOvervoltageExplosion = enableOvervoltageExplosion
+>>>>>>> backup/1.21.1
             )
         }
     }
@@ -263,7 +296,11 @@ object Ic2ConfigScreen {
         val cat = builder.getOrCreateCategory(Text.literal("采矿机"))
         cat.addEntry(eb.startStrList(Text.literal("额外可挖方块"), additionalBlocks)
             .setDefaultValue(emptyList())
+<<<<<<< HEAD
             .setTooltip(Text.literal("主要用于普通采矿机的自动扫描：默认矿石通过名称自动匹配（含 ore），此列表用于添加特殊方块或者别的 mod 的方块。高级采矿机使用 GUI 中的黑名单/白名单过滤槽手动指定目标。"))
+=======
+            .setTooltip(Text.literal("采矿机额外可挖方块 id 列表。默认矿石通过名称自动匹配（含 ore），此列表用于添加特殊方块或者别的 mod 的方块。"))
+>>>>>>> backup/1.21.1
             .setSaveConsumer { additionalBlocks = it.toMutableList() }.build())
 
         return { MinerConfig(additionalMineableBlocks = additionalBlocks.toList()) }
@@ -388,15 +425,19 @@ object Ic2ConfigScreen {
     ): () -> ArmorConfig {
         val jetpackReader = jetpackConfig(eb, builder, cfg.jetpack)
         val electricJetpackReader = electricJetpackConfig(eb, builder, cfg.electricJetpack)
+<<<<<<< HEAD
         val electricArmorReader = electricArmorConfig(
             eb, builder, cfg.electricArmorDamageCostMultiplier, cfg.quantumArmorPreservesHitReaction
         )
+=======
+>>>>>>> backup/1.21.1
         val chestplateReader = quantumChestplateConfig(eb, builder, cfg.quantumChestplate)
         val helmetReader = quantumHelmetConfig(eb, builder, cfg.quantumHelmet)
         val leggingsReader = quantumLeggingsConfig(eb, builder, cfg.quantumLeggings)
         val bootsReader = quantumBootsConfig(eb, builder, cfg.quantumBoots)
         val nightVisionReader = nightVisionConfig(eb, builder, cfg.nightVision)
         val rubberBootsReader = rubberBootsConfig(eb, builder, cfg.rubberBoots)
+<<<<<<< HEAD
         return {
             val electricArmorSettings = electricArmorReader()
             ArmorConfig(
@@ -404,6 +445,13 @@ object Ic2ConfigScreen {
                 electricJetpack = electricJetpackReader(),
                 electricArmorDamageCostMultiplier = electricArmorSettings.first,
                 quantumArmorPreservesHitReaction = electricArmorSettings.second,
+=======
+
+        return {
+            ArmorConfig(
+                jetpack = jetpackReader(),
+                electricJetpack = electricJetpackReader(),
+>>>>>>> backup/1.21.1
                 quantumChestplate = chestplateReader(),
                 quantumHelmet = helmetReader(),
                 quantumLeggings = leggingsReader(),
@@ -414,6 +462,7 @@ object Ic2ConfigScreen {
         }
     }
 
+<<<<<<< HEAD
     private fun electricArmorConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, initialMultiplier: Double,
         initialPreservesHitReaction: Boolean
@@ -436,6 +485,8 @@ object Ic2ConfigScreen {
         return { multiplier to preservesHitReaction }
     }
 
+=======
+>>>>>>> backup/1.21.1
     private fun jetpackConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: JetpackConfig
     ): () -> JetpackConfig {
@@ -476,7 +527,11 @@ object Ic2ConfigScreen {
         cat.addEntry(eb.startLongField(Text.literal("最大能量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("飞行时长（秒）"), flightDuration)
+<<<<<<< HEAD
             .setDefaultValue(3600).setSaveConsumer { flightDuration = it }.build())
+=======
+            .setDefaultValue(1200).setSaveConsumer { flightDuration = it }.build())
+>>>>>>> backup/1.21.1
 
         return { QuantumChestplateConfig(maxEnergy = maxEnergy, flightDurationSeconds = flightDuration) }
     }
@@ -499,24 +554,41 @@ object Ic2ConfigScreen {
         val cat = builder.getOrCreateCategory(Text.literal("护甲 • 量子护腿"))
         var maxEnergy = cfg.maxEnergy
         var speedDuration = cfg.speedBoostDurationSeconds
+<<<<<<< HEAD
         var groundBoostTier2 = cfg.groundBoostTier2
         var waterBoostTier2 = cfg.waterBoostTier2
+=======
+        var speed1 = cfg.speedMultiplierTier1
+        var speed2 = cfg.speedMultiplierTier2
+>>>>>>> backup/1.21.1
 
         cat.addEntry(eb.startLongField(Text.literal("参考容量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("神行时长（秒，2档满电）"), speedDuration)
             .setDefaultValue(1800).setSaveConsumer { speedDuration = it }.build())
+<<<<<<< HEAD
         cat.addEntry(eb.startDoubleField(Text.literal("2 档地面推进力（1 档减半）"), groundBoostTier2)
             .setDefaultValue(0.22).setSaveConsumer { groundBoostTier2 = it }.build())
         cat.addEntry(eb.startDoubleField(Text.literal("2 档水中推进力（1 档减半）"), waterBoostTier2)
             .setDefaultValue(0.1).setSaveConsumer { waterBoostTier2 = it }.build())
+=======
+        cat.addEntry(eb.startDoubleField(Text.literal("1 档速度倍率"), speed1)
+            .setDefaultValue(0.2).setSaveConsumer { speed1 = it }.build())
+        cat.addEntry(eb.startDoubleField(Text.literal("2 档速度倍率"), speed2)
+            .setDefaultValue(0.4).setSaveConsumer { speed2 = it }.build())
+>>>>>>> backup/1.21.1
 
         return {
             QuantumLeggingsConfig(
                 maxEnergy = maxEnergy,
                 speedBoostDurationSeconds = speedDuration,
+<<<<<<< HEAD
                 groundBoostTier2 = groundBoostTier2,
                 waterBoostTier2 = waterBoostTier2
+=======
+                speedMultiplierTier1 = speed1,
+                speedMultiplierTier2 = speed2
+>>>>>>> backup/1.21.1
             )
         }
     }
@@ -526,16 +598,22 @@ object Ic2ConfigScreen {
     ): () -> QuantumBootsConfig {
         val cat = builder.getOrCreateCategory(Text.literal("护甲 • 量子靴子"))
         var maxEnergy = cfg.maxEnergy
+<<<<<<< HEAD
         var permanentFallProtection = cfg.permanentFallProtection
+=======
+>>>>>>> backup/1.21.1
         var jumpCost = cfg.jumpEnergyCost
         var jumpHeight = cfg.jumpHeightMultiplier
 
         cat.addEntry(eb.startLongField(Text.literal("参考容量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
+<<<<<<< HEAD
         cat.addEntry(eb.startBooleanToggle(Text.literal("永久免摔伤"), permanentFallProtection)
             .setDefaultValue(true)
             .setTooltip(Text.literal("开启：穿着量子靴时按原版 IC2 规则保护任意摔落，前 10 格免费，超过部分每点消耗 20,000 EU。关闭：仅保护量子大跳产生的落地伤害。"))
             .setSaveConsumer { permanentFallProtection = it }.build())
+=======
+>>>>>>> backup/1.21.1
         cat.addEntry(eb.startLongField(Text.literal("每次大跳消耗能量（EU）"), jumpCost)
             .setDefaultValue(10_000L).setSaveConsumer { jumpCost = it }.build())
         cat.addEntry(eb.startDoubleField(Text.literal("跳跃高度倍率"), jumpHeight)
@@ -544,7 +622,10 @@ object Ic2ConfigScreen {
         return {
             QuantumBootsConfig(
                 maxEnergy = maxEnergy,
+<<<<<<< HEAD
                 permanentFallProtection = permanentFallProtection,
+=======
+>>>>>>> backup/1.21.1
                 jumpEnergyCost = jumpCost,
                 jumpHeightMultiplier = jumpHeight
             )
@@ -610,8 +691,12 @@ object Ic2ConfigScreen {
     ): () -> RubberTreeWorldgenConfig {
         val cat = builder.getOrCreateCategory(Text.literal("世界生成 • 橡胶树"))
         var enabled = cfg.enabled
+<<<<<<< HEAD
         var saplingGuaranteeEnabled = cfg.saplingGuaranteeEnabled
         var saplingDropExpected = cfg.saplingDropExpected
+=======
+        var biomes = cfg.biomes.toMutableList()
+>>>>>>> backup/1.21.1
         var countPerChunk = cfg.countPerChunk
         var rarityChance = cfg.rarityChance
         var maxWaterDepth = cfg.maxWaterDepth
@@ -631,6 +716,7 @@ object Ic2ConfigScreen {
             .setDefaultValue(true)
             .setTooltip(Text.literal("是否允许自然生成橡胶树。变更后需要重启。"))
             .setSaveConsumer { enabled = it }.build())
+<<<<<<< HEAD
         cat.addEntry(eb.startBooleanToggle(Text.literal("开启树苗保底"), saplingGuaranteeEnabled)
             .setDefaultValue(true)
             .setTooltip(Text.literal("数学期望包含保底；开启后每棵树至少掉落 1 个树苗"))
@@ -644,6 +730,16 @@ object Ic2ConfigScreen {
             .setSaveConsumer { countPerChunk = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("基础稀有度"), rarityChance)
             .setDefaultValue(2).setTooltip(Text.literal("2 表示森林/丛林基准每次尝试约 1/2，沼泽会更高"))
+=======
+        cat.addEntry(eb.startStrList(Text.literal("允许生成的生物群系"), biomes)
+            .setDefaultValue(DEFAULT_RUBBER_BIOMES)
+            .setTooltip(Text.literal("生物群系列表，填写 biome id。变更后需要重启。"))
+            .setSaveConsumer { biomes = it.toMutableList() }.build())
+        cat.addEntry(eb.startIntField(Text.literal("每区块放置尝试次数"), countPerChunk)
+            .setDefaultValue(1).setSaveConsumer { countPerChunk = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("稀有度"), rarityChance)
+            .setDefaultValue(64).setTooltip(Text.literal("64 表示每次尝试平均 1/64 概率通过"))
+>>>>>>> backup/1.21.1
             .setSaveConsumer { rarityChance = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("最大地表水深"), maxWaterDepth)
             .setDefaultValue(0).setSaveConsumer { maxWaterDepth = it }.build())
@@ -673,8 +769,12 @@ object Ic2ConfigScreen {
         return {
             RubberTreeWorldgenConfig(
                 enabled = enabled,
+<<<<<<< HEAD
                 saplingGuaranteeEnabled = saplingGuaranteeEnabled,
                 saplingDropExpected = saplingDropExpected,
+=======
+                biomes = biomes.toList(),
+>>>>>>> backup/1.21.1
                 countPerChunk = countPerChunk,
                 rarityChance = rarityChance,
                 maxWaterDepth = maxWaterDepth,
@@ -739,6 +839,16 @@ object Ic2ConfigScreen {
         }
     }
 
+<<<<<<< HEAD
+=======
+    private val DEFAULT_RUBBER_BIOMES = listOf(
+        "minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest",
+        "minecraft:dark_forest", "minecraft:taiga", "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga", "minecraft:jungle", "minecraft:sparse_jungle",
+        "minecraft:bamboo_jungle", "minecraft:swamp"
+    )
+
+>>>>>>> backup/1.21.1
     private val DEFAULT_PEAT_BIOMES = listOf(
         "minecraft:jungle", "minecraft:sparse_jungle",
         "minecraft:bamboo_jungle", "minecraft:mushroom_fields"

@@ -15,12 +15,11 @@ import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.FoodComponent
+import net.minecraft.component.type.FoodComponent
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.Ingredient
@@ -28,16 +27,15 @@ import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 金属成型机制品 ==========
 
 @ModItem(name = "tin_can", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class EmptyTinCanItem : Item(FabricItemSettings()) {
+class EmptyTinCanItem : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val tinIngot = TinIngot::class.instance()
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
@@ -62,10 +60,10 @@ class EmptyTinCanItem : Item(FabricItemSettings()) {
  */
 @ModItem(name = "filled_tin_can", tab = CreativeTab.IC2_MATERIALS, group = "parts")
 class FilledTinCanItem : Item(
-    FabricItemSettings()
+    Item.Settings()
         .food(
             FoodComponent.Builder()
-                .hunger(2)
+                .nutrition(2)
                 .saturationModifier(0.2f)
                 .snack()
                 .alwaysEdible()
@@ -74,10 +72,10 @@ class FilledTinCanItem : Item(
 ) {
 
     private val emptyTinCanItem: Item
-        get() = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "tin_can"))
+        get() = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "tin_can"))
 
     /** 10 tick ≈ 1秒吃2个） */
-    override fun getMaxUseTime(stack: ItemStack): Int = 10
+    override fun getMaxUseTime(stack: ItemStack, user: LivingEntity): Int = 10
 
     override fun finishUsing(stack: ItemStack, world: World, user: LivingEntity): ItemStack {
         if (!world.isClient && user is PlayerEntity) {
@@ -115,7 +113,7 @@ class SmallPowerUnitItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             //   C F
             // B X M
             //   C F
@@ -149,7 +147,7 @@ class PowerUnitItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // B C F
             // B X M
             // B C F
@@ -172,16 +170,16 @@ class PowerUnitItem : BatteryItemBase(
 }
 
 @ModItem(name = "fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class EmptyFuelRodItem : Item(FabricItemSettings())
+class EmptyFuelRodItem : Item(Item.Settings())
 
 @ModItem(name = "iron_shaft", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class ToolHandleIronItem : Item(FabricItemSettings())
+class ToolHandleIronItem : Item(Item.Settings())
 
 @ModItem(name = "steel_shaft", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class ToolHandleSteelItem : Item(FabricItemSettings())
+class ToolHandleSteelItem : Item(Item.Settings())
 
 @ModItem(name = "bronze_shaft", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class ToolHandleBronzeItem : Item(FabricItemSettings())
+class ToolHandleBronzeItem : Item(Item.Settings())
 
 @ModItem(name = "coin", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class IndustrialCurrencyItem : Item(FabricItemSettings())
+class IndustrialCurrencyItem : Item(Item.Settings())

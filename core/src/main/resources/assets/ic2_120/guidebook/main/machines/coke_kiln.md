@@ -28,11 +28,14 @@ Build the kiln around the hatch:
 
 The Coke Kiln block is the item GUI and item automation point. The grate is the creosote tank and fluid extraction point.
 
+<<<<<<< HEAD
 <GameScene zoom="6" interactive={true} fullWidth={true}>
   <IsometricCamera yaw="45" pitch="30" />
   <ImportStructure src="coke_kiln_structure.snbt" />
 </GameScene>
 
+=======
+>>>>>>> backup/1.21.1
 ## Recipe
 
 The Coke Kiln produces two primary recipes:

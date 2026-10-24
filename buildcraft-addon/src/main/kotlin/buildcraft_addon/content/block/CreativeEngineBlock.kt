@@ -1,6 +1,10 @@
 package buildcraft_addon.content.block
 
 import buildcraft_addon.content.blockentity.CreativeEngineBlockEntity
+<<<<<<< HEAD
+=======
+import com.mojang.serialization.MapCodec
+>>>>>>> backup/1.21.1
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import net.minecraft.block.Block
@@ -19,7 +23,10 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
 import net.minecraft.util.ActionResult
 import net.minecraft.util.BlockRotation
+<<<<<<< HEAD
 import net.minecraft.util.Hand
+=======
+>>>>>>> backup/1.21.1
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -34,9 +41,18 @@ class CreativeEngineBlock : BlockWithEntity(
 ), BlockEntityProvider {
 
     companion object {
+<<<<<<< HEAD
         private val SHAPE_ENGINE: VoxelShape = VoxelShapes.fullCube()
     }
 
+=======
+        private val CODEC: MapCodec<CreativeEngineBlock> = Block.createCodec { CreativeEngineBlock() }
+        private val SHAPE_ENGINE: VoxelShape = VoxelShapes.fullCube()
+    }
+
+    override fun getCodec(): MapCodec<out BlockWithEntity> = CODEC
+
+>>>>>>> backup/1.21.1
     init {
         defaultState = stateManager.defaultState.with(Properties.FACING, Direction.UP)
     }
@@ -51,7 +67,11 @@ class CreativeEngineBlock : BlockWithEntity(
 
     override fun onUse(
         state: BlockState, world: World, pos: BlockPos,
+<<<<<<< HEAD
         player: PlayerEntity, hand: Hand, hit: BlockHitResult
+=======
+        player: PlayerEntity, hit: BlockHitResult
+>>>>>>> backup/1.21.1
     ): ActionResult {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? CreativeEngineBlockEntity ?: return ActionResult.PASS

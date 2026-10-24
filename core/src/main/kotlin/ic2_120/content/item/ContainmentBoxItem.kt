@@ -8,9 +8,8 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -20,34 +19,36 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.world.World
-import java.util.function.Consumer
+import ic2_120.editCustomData
+import ic2_120.getCustomData
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 防辐射容纳盒：12 格物品栏，数据存于物品 NBT；禁止再放入容纳盒避免嵌套。
  */
 @ModItem(name = "containment_box", tab = CreativeTab.IC2_MATERIALS, group = "containment")
-class ContainmentBoxItem : Item(FabricItemSettings().maxCount(1)) {
+class ContainmentBoxItem : Item(Item.Settings().maxCount(1)) {
 
     override fun use(world: World, player: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
         val stack = player.getStackInHand(hand)
         if (world.isClient) return TypedActionResult.success(stack)
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return TypedActionResult.pass(stack)
 
-        player.openHandledScreen(object : ExtendedScreenHandlerFactory {
+        player.openHandledScreen(object : ExtendedScreenHandlerFactory<PacketByteBuf> {
             override fun getDisplayName(): Text = Text.translatable("item.ic2_120.containment_box")
 
-            override fun writeScreenOpeningData(
-                serverPlayer: net.minecraft.server.network.ServerPlayerEntity,
-                buf: PacketByteBuf
-            ) {
+            override fun getScreenOpeningData(serverPlayer: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+                val buf = PacketByteBuf(Unpooled.buffer())
                 buf.writeEnumConstant(hand)
+                return buf
             }
 
             override fun createMenu(
@@ -64,7 +65,7 @@ class ContainmentBoxItem : Item(FabricItemSettings().maxCount(1)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val chest = Items.CHEST
             val leadCasing = LeadCasing::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ContainmentBoxItem::class.instance(), 1)
@@ -113,11 +114,11 @@ class ContainmentBoxInventory(
         for (i in 0 until SIZE) setStack(i, ItemStack.EMPTY)
         val stack = player.getStackInHand(hand)
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return
-        val root = stack.nbt ?: return
+        val root = stack.getCustomData() ?: return
         if (!root.contains(NBT_KEY)) return
         val tag = root.getCompound(NBT_KEY)
         val list = DefaultedList.ofSize(SIZE, ItemStack.EMPTY)
-        Inventories.readNbt(tag, list)
+        Inventories.readNbt(tag, list, player.world.registryManager)
         for (i in 0 until SIZE) setStack(i, list[i])
         } finally {
             loading = false
@@ -128,12 +129,11 @@ class ContainmentBoxInventory(
     private fun saveToStack() {
         val stack = player.getStackInHand(hand)
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return
-        val nbt = stack.orCreateNbt
         val tag = NbtCompound()
         val list = DefaultedList.ofSize(SIZE, ItemStack.EMPTY)
         for (i in 0 until SIZE) list[i] = getStack(i).copy()
-        Inventories.writeNbt(tag, list)
-        nbt.put(NBT_KEY, tag)
+        Inventories.writeNbt(tag, list, player.world.registryManager)
+        stack.editCustomData { it.put(NBT_KEY, tag) }
     }
 
     companion object {

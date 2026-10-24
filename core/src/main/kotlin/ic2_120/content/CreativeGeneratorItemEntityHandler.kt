@@ -11,7 +11,7 @@ import net.minecraft.util.Identifier
  */
 object CreativeGeneratorItemEntityHandler {
 
-    private val CREATIVE_GENERATOR_ID = Identifier(Ic2_120.MOD_ID, "creative_generator")
+    private val CREATIVE_GENERATOR_ID = Identifier.of(Ic2_120.MOD_ID, "creative_generator")
 
     fun register() {
         ServerEntityEvents.ENTITY_LOAD.register { entity, _ ->

@@ -14,7 +14,11 @@ object BuildCraftAddon : ModInitializer {
     const val MOD_ID = "buildcraft_addon"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
+<<<<<<< HEAD
     fun id(path: String): Identifier = Identifier(MOD_ID, path)
+=======
+    fun id(path: String): Identifier = Identifier.of(MOD_ID, path)
+>>>>>>> backup/1.21.1
 
     override fun onInitialize() {
         // Register fluids first

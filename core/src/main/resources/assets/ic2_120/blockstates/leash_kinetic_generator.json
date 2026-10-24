@@ -29,6 +29,7 @@
     "facing=west,active=true": {
       "model": "ic2_120:block/leash_kinetic_generator",
       "y": 270
+<<<<<<< HEAD
     },
     "facing=up,active=false": {
       "model": "ic2_120:block/leash_kinetic_generator",
@@ -45,6 +46,8 @@
     "facing=down,active=true": {
       "model": "ic2_120:block/leash_kinetic_generator",
       "x": 90
+=======
+>>>>>>> backup/1.21.1
     }
   }
 }

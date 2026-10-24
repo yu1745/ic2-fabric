@@ -14,12 +14,15 @@
 
 IndustrialCraft 2 Minecraft 1.20.1 Fabric port, written in Kotlin.
 
+<<<<<<< HEAD
 ## Installation Statistics
 
 The chart below shows the daily active installs over the last 30 days (anonymous, counts only, no personal data; can be disabled in config):
 
 ![Daily installs](https://ic2-analytics.wangyu174551226.workers.dev/chart.svg?days=30&lang=en)
 
+=======
+>>>>>>> backup/1.21.1
 **Player Guide**: Gameplay documentation is maintained only in the in-game Guidebook under `core/src/main/resources/assets/ic2_120/guidebook/main`. This document is for developers.
 
 ## Project Features

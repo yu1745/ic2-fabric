@@ -19,29 +19,45 @@ data class EnergyStorageConfig(
             tier = 1,
             capacity = 40_000L,
             slotCount = 2,
+<<<<<<< HEAD
             useEquipmentSlots = false,
             emitRedstoneWhenNotFull = true
+=======
+            useEquipmentSlots = false
+>>>>>>> backup/1.21.1
         )
         val CESU = EnergyStorageConfig(
             tier = 2,
             capacity = 300_000L,
             slotCount = 2,
+<<<<<<< HEAD
             useEquipmentSlots = false,
             emitRedstoneWhenNotFull = true
+=======
+            useEquipmentSlots = false
+>>>>>>> backup/1.21.1
         )
         val MFE = EnergyStorageConfig(
             tier = 3,
             capacity = 4_000_000L,
             slotCount = 2,
+<<<<<<< HEAD
             useEquipmentSlots = true,
             emitRedstoneWhenNotFull = true
+=======
+            useEquipmentSlots = true
+>>>>>>> backup/1.21.1
         )
         val MFSU = EnergyStorageConfig(
             tier = 4,
             capacity = 40_000_000L,
             slotCount = 2,
+<<<<<<< HEAD
             useEquipmentSlots = true,
             emitRedstoneWhenNotFull = true
+=======
+            useEquipmentSlots = true
+>>>>>>> backup/1.21.1
         )
         // 充电座同样支持红石模式系统（与储电箱同源，默认 0 = 不输出）
         val BATBOX_CHARGEPAD = BATBOX.copy(chargePlayersAbove = true)
