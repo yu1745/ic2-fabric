@@ -15,24 +15,24 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditio
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.state.property.Properties
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 @ModBlock(name = "fluid_heat_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
@@ -42,7 +42,7 @@ class FluidHeatGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque(
         FluidHeatGeneratorBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -51,53 +51,53 @@ class FluidHeatGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque(
             be.tick(w, p, s)
         }
 
-    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
         defaultState
-            .with(Properties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing)
+            .with(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing)
             .with(ACTIVE, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
+    ): InteractionResult {
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
             if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
-                return ActionResult.SUCCESS
+                return InteractionResult.SUCCESS
             }
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
             }
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
-    override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
+    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): net.minecraft.world.MenuProvider? {
         val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+        return be as? net.minecraft.world.MenuProvider
     }
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val casing = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             val heat = HeatConductor::class.instance()
             if (casing != Items.AIR && emptyCell != Items.AIR && heat != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, FluidHeatGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, FluidHeatGeneratorBlock::class.item(), 1)
                     .pattern("LEL")
                     .pattern("LEL")
                     .pattern("CHC")

@@ -2,12 +2,12 @@ package ic2_120.client.colorprovider
 
 import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
-import net.minecraft.block.Block
-import net.minecraft.client.color.block.BlockColorProvider
-import net.minecraft.client.color.item.ItemColorProvider
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.client.color.block.BlockColor
+import net.minecraft.client.color.item.ItemColor
+import net.minecraft.world.item.Item
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 
 /**
@@ -51,8 +51,8 @@ object StorageBoxColorProvider {
     private const val IRIDIUM_COLOR = -1
 
     fun register() {
-        val blockProvider = BlockColorProvider { state, world, pos, tintIndex ->
-            val blockId = Registries.BLOCK.getId(state.block)
+        val blockProvider = BlockColor { state, world, pos, tintIndex ->
+            val blockId = BuiltInRegistries.BLOCK.getId(state.block)
             when (blockId.path) {
                 "wooden_storage_box" -> WOODEN_COLOR
                 "iron_storage_box" -> IRON_COLOR
@@ -63,9 +63,9 @@ object StorageBoxColorProvider {
             }
         }
 
-        val itemProvider = ItemColorProvider { stack, tintIndex ->
+        val itemProvider = ItemColor { stack, tintIndex ->
             val item = stack.item
-            val itemId = Registries.ITEM.getId(item)
+            val itemId = BuiltInRegistries.ITEM.getId(item)
             when (itemId.path) {
                 "wooden_storage_box" -> WOODEN_COLOR
                 "iron_storage_box" -> IRON_COLOR
@@ -88,14 +88,14 @@ object StorageBoxColorProvider {
         var registeredBlockCount = 0
         var registeredItemCount = 0
         for (blockId in storageBoxIds) {
-            val id = Identifier.of("ic2_120", blockId)
-            val block = Registries.BLOCK.getOrEmpty(id)
+            val id = ResourceLocation.of("ic2_120", blockId)
+            val block = BuiltInRegistries.BLOCK.getOrEmpty(id)
             if (block.isPresent) {
                 ColorProviderRegistry.BLOCK.register(blockProvider, block.get())
                 registeredBlockCount++
             }
 
-            val item = Registries.ITEM.getOrEmpty(id)
+            val item = BuiltInRegistries.ITEM.getOrEmpty(id)
             if (item.isPresent) {
                 ColorProviderRegistry.ITEM.register(itemProvider, item.get())
                 registeredItemCount++

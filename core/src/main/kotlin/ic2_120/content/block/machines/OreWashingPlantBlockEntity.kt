@@ -44,28 +44,28 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluids
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.RecipeManager
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.RecipeManager
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import ic2_120.Ic2_120
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 洗矿机方块实体。
@@ -90,20 +90,20 @@ class OreWashingPlantBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = OreWashingPlantBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = OreWashingPlantBlock.ACTIVE
 
-    override fun getInventory(): net.minecraft.inventory.Inventory = this
+    override fun getInventory(): net.minecraft.world.Container = this
 
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
     override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null     // provider 流体过滤器（null = 不过滤）
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null    // receiver 流体过滤器（null = 不过滤）
-    override var fluidPipeProviderSides: MutableSet<net.minecraft.util.math.Direction> = mutableSetOf()    // provider 工作面（null = 任意面）
-    override var fluidPipeReceiverSides: MutableSet<net.minecraft.util.math.Direction> = mutableSetOf()    // receiver 工作面（null = 任意面）
+    override var fluidPipeProviderFilter: net.minecraft.world.level.material.Fluid? = null     // provider 流体过滤器（null = 不过滤）
+    override var fluidPipeReceiverFilter: net.minecraft.world.level.material.Fluid? = null    // receiver 流体过滤器（null = 不过滤）
+    override var fluidPipeProviderSides: MutableSet<net.minecraft.core.Direction> = mutableSetOf()    // provider 工作面（null = 任意面）
+    override var fluidPipeReceiverSides: MutableSet<net.minecraft.core.Direction> = mutableSetOf()    // receiver 工作面（null = 任意面）
     override var fluidPipeEjectorCount: Int = 0
     override var fluidPipePullingCount: Int = 0
 
@@ -151,7 +151,7 @@ class OreWashingPlantBlockEntity(
         }
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -254,12 +254,12 @@ class OreWashingPlantBlockEntity(
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_ORE -> isCrushedOreInput(stack)
@@ -270,20 +270,20 @@ class OreWashingPlantBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.ore_washing_plant")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.ore_washing_plant")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         OreWashingPlantScreenHandler(syncId, playerInventory, this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(OreWashingPlantSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -297,9 +297,9 @@ class OreWashingPlantBlockEntity(
         waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(OreWashingPlantSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -307,12 +307,12 @@ class OreWashingPlantBlockEntity(
         nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.getStoredAmount())
     }
 
-    private fun getFluidStorageForSide(side: net.minecraft.util.math.Direction?): Storage<FluidVariant>? {
+    private fun getFluidStorageForSide(side: net.minecraft.core.Direction?): Storage<FluidVariant>? {
         // 前方不提供流体存储
         val facing = world?.getBlockState(pos)?.get(OreWashingPlantBlock.ACTIVE)
         val front = when (facing) {
-            true -> net.minecraft.util.math.Direction.SOUTH
-            false -> net.minecraft.util.math.Direction.NORTH
+            true -> net.minecraft.core.Direction.SOUTH
+            false -> net.minecraft.core.Direction.NORTH
             else -> null
         }
         if (side == front) return null
@@ -321,7 +321,7 @@ class OreWashingPlantBlockEntity(
 
     // 配方缓存：OreWashingRecipe.matches 只检查物品类型（不看数量），结果仅依赖
     // item，因此按 item 缓存（含 null）安全，避免每 tick 重复查询 recipeManager。
-    private var cachedRecipeItem: net.minecraft.item.Item? = null
+    private var cachedRecipeItem: net.minecraft.world.item.Item? = null
     private var cachedRecipe: OreWashingRecipe? = null
     private var cachedRecipeEpoch = -1
 
@@ -351,7 +351,7 @@ class OreWashingPlantBlockEntity(
         }
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
@@ -503,8 +503,8 @@ class OreWashingPlantBlockEntity(
         val emptyStack = when (waterInput.item) {
             Items.WATER_BUCKET -> ItemStack(Items.BUCKET)
             is WaterCell -> {
-                val cellId = Identifier(Ic2_120.MOD_ID, "empty_cell")
-                ItemStack(Registries.ITEM.get(cellId))
+                val cellId = ResourceLocation(Ic2_120.MOD_ID, "empty_cell")
+                ItemStack(BuiltInRegistries.ITEM.get(cellId))
             }
             else -> return
         }

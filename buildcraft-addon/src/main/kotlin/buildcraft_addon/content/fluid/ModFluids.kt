@@ -1,25 +1,25 @@
 package buildcraft_addon.content.fluid
 
 import buildcraft_addon.BuildCraftAddon
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.FluidBlock
-import net.minecraft.fluid.FlowableFluid
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.FluidState
-import net.minecraft.fluid.Fluids
-import net.minecraft.item.BucketItem
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.state.StateManager
-import net.minecraft.util.Identifier
-import net.minecraft.world.BlockView
-import net.minecraft.world.World
-import net.minecraft.world.WorldView
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.world.level.material.FlowingFluid
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.FluidState
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.item.BucketItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.LevelReader
 
 /**
  * BC 所有流体注册。
@@ -32,53 +32,53 @@ object ModFluids {
     const val TEXTURE_NS = "ic2"
 
     // ===== 原油 =====
-    lateinit var CRUDE_OIL_STILL: FlowableFluid
-    lateinit var CRUDE_OIL_FLOWING: FlowableFluid
+    lateinit var CRUDE_OIL_STILL: FlowingFluid
+    lateinit var CRUDE_OIL_FLOWING: FlowingFluid
     lateinit var CRUDE_OIL_BLOCK: Block
 
     // ===== 油渣 =====
-    lateinit var OIL_RESIDUE_STILL: FlowableFluid
-    lateinit var OIL_RESIDUE_FLOWING: FlowableFluid
+    lateinit var OIL_RESIDUE_STILL: FlowingFluid
+    lateinit var OIL_RESIDUE_FLOWING: FlowingFluid
     lateinit var OIL_RESIDUE_BLOCK: Block
 
     // ===== 重油 =====
-    lateinit var HEAVY_OIL_STILL: FlowableFluid
-    lateinit var HEAVY_OIL_FLOWING: FlowableFluid
+    lateinit var HEAVY_OIL_STILL: FlowingFluid
+    lateinit var HEAVY_OIL_FLOWING: FlowingFluid
     lateinit var HEAVY_OIL_BLOCK: Block
 
     // ===== 稠油 =====
-    lateinit var DENSE_OIL_STILL: FlowableFluid
-    lateinit var DENSE_OIL_FLOWING: FlowableFluid
+    lateinit var DENSE_OIL_STILL: FlowingFluid
+    lateinit var DENSE_OIL_FLOWING: FlowingFluid
     lateinit var DENSE_OIL_BLOCK: Block
 
     // ===== 蒸馏油 =====
-    lateinit var DISTILLED_OIL_STILL: FlowableFluid
-    lateinit var DISTILLED_OIL_FLOWING: FlowableFluid
+    lateinit var DISTILLED_OIL_STILL: FlowingFluid
+    lateinit var DISTILLED_OIL_FLOWING: FlowingFluid
     lateinit var DISTILLED_OIL_BLOCK: Block
 
     // ===== 稠燃油 =====
-    lateinit var DENSE_FUEL_STILL: FlowableFluid
-    lateinit var DENSE_FUEL_FLOWING: FlowableFluid
+    lateinit var DENSE_FUEL_STILL: FlowingFluid
+    lateinit var DENSE_FUEL_FLOWING: FlowingFluid
     lateinit var DENSE_FUEL_BLOCK: Block
 
     // ===== 混合重燃油 =====
-    lateinit var MIXED_HEAVY_FUEL_STILL: FlowableFluid
-    lateinit var MIXED_HEAVY_FUEL_FLOWING: FlowableFluid
+    lateinit var MIXED_HEAVY_FUEL_STILL: FlowingFluid
+    lateinit var MIXED_HEAVY_FUEL_FLOWING: FlowingFluid
     lateinit var MIXED_HEAVY_FUEL_BLOCK: Block
 
     // ===== 轻燃油 =====
-    lateinit var LIGHT_FUEL_STILL: FlowableFluid
-    lateinit var LIGHT_FUEL_FLOWING: FlowableFluid
+    lateinit var LIGHT_FUEL_STILL: FlowingFluid
+    lateinit var LIGHT_FUEL_FLOWING: FlowingFluid
     lateinit var LIGHT_FUEL_BLOCK: Block
 
     // ===== 混合轻燃油 =====
-    lateinit var MIXED_LIGHT_FUEL_STILL: FlowableFluid
-    lateinit var MIXED_LIGHT_FUEL_FLOWING: FlowableFluid
+    lateinit var MIXED_LIGHT_FUEL_STILL: FlowingFluid
+    lateinit var MIXED_LIGHT_FUEL_FLOWING: FlowingFluid
     lateinit var MIXED_LIGHT_FUEL_BLOCK: Block
 
     // ===== 气态燃油 =====
-    lateinit var GASEOUS_FUEL_STILL: FlowableFluid
-    lateinit var GASEOUS_FUEL_FLOWING: FlowableFluid
+    lateinit var GASEOUS_FUEL_STILL: FlowingFluid
+    lateinit var GASEOUS_FUEL_FLOWING: FlowingFluid
     lateinit var GASEOUS_FUEL_BLOCK: Block
 
     /** 服务端安全的 ARGB 颜色映射 */
@@ -104,11 +104,11 @@ object ModFluids {
 
         // 1. Still / Flowing 流体
         val still = Registry.register(
-            Registries.FLUID, BuildCraftAddon.id(name),
+            BuiltInRegistries.FLUID, BuildCraftAddon.id(name),
             BcOilFluid.Still(name)
         )
         val flowing = Registry.register(
-            Registries.FLUID, BuildCraftAddon.id("flowing_$name"),
+            BuiltInRegistries.FLUID, BuildCraftAddon.id("flowing_$name"),
             BcOilFluid.Flowing(name)
         )
 
@@ -118,17 +118,17 @@ object ModFluids {
         fluidTintColors[still] = colorArgb
         fluidTintColors[flowing] = colorArgb
 
-        // 2. FluidBlock
-        val blockSettings = AbstractBlock.Settings.copy(Blocks.WATER)
+        // 2. LiquidBlock
+        val blockSettings = BlockBehaviour.Settings.copy(Blocks.WATER)
             .noCollision().dropsNothing()
         val block = Registry.register(
-            Registries.BLOCK, BuildCraftAddon.id(name),
-            FluidBlock(still, blockSettings)
+            BuiltInRegistries.BLOCK, BuildCraftAddon.id(name),
+            LiquidBlock(still, blockSettings)
         )
 
         // 3. 注册桶
         val bucket = Registry.register(
-            Registries.ITEM, BuildCraftAddon.id("${name}_bucket"),
+            BuiltInRegistries.ITEM, BuildCraftAddon.id("${name}_bucket"),
             BucketItem(still, Item.Settings().maxCount(1))
         )
         BcOilFluid.bucketLookup[name] = bucket
@@ -151,7 +151,7 @@ object ModFluids {
 
     // ========== BC 流体基类 ==========
 
-    abstract class BcOilFluid : FlowableFluid() {
+    abstract class BcOilFluid : FlowingFluid() {
 
         companion object {
             val fluidLookup = mutableMapOf<String, Pair<Fluid, Fluid>>()
@@ -166,19 +166,19 @@ object ModFluids {
         override fun getFlowing(): Fluid = ref.second
         override fun getBucketItem(): Item = bucketLookup[fluidName] ?: Items.AIR
         override fun toBlockState(state: FluidState): BlockState {
-            val block = Registries.BLOCK.get(Identifier(BuildCraftAddon.MOD_ID, fluidName))
-            return block.defaultState.with(FluidBlock.LEVEL, getBlockStateLevel(state))
+            val block = BuiltInRegistries.BLOCK.get(ResourceLocation(BuildCraftAddon.MOD_ID, fluidName))
+            return block.defaultState.with(LiquidBlock.LEVEL, getBlockStateLevel(state))
         }
         override fun matchesType(fluid: Fluid): Boolean = fluid == ref.first || fluid == ref.second
-        override fun isInfinite(world: World): Boolean = false
-        override fun beforeBreakingBlock(world: net.minecraft.world.WorldAccess, pos: net.minecraft.util.math.BlockPos, state: BlockState) {
+        override fun isInfinite(world: Level): Boolean = false
+        override fun beforeBreakingBlock(world: net.minecraft.world.level.LevelAccessor, pos: net.minecraft.core.BlockPos, state: BlockState) {
             val entity = if (state.hasBlockEntity()) world.getBlockEntity(pos) else null
             Block.dropStacks(state, world, pos, entity)
         }
-        override fun canBeReplacedWith(state: FluidState, world: BlockView, pos: net.minecraft.util.math.BlockPos, fluid: Fluid, direction: net.minecraft.util.math.Direction): Boolean = false
-        override fun getFlowSpeed(world: WorldView): Int = 4
-        override fun getLevelDecreasePerBlock(world: WorldView): Int = 1
-        override fun getTickRate(world: WorldView): Int = 5
+        override fun canBeReplacedWith(state: FluidState, world: BlockGetter, pos: net.minecraft.core.BlockPos, fluid: Fluid, direction: net.minecraft.core.Direction): Boolean = false
+        override fun getFlowSpeed(world: LevelReader): Int = 4
+        override fun getLevelDecreasePerBlock(world: LevelReader): Int = 1
+        override fun getTickRate(world: LevelReader): Int = 5
         override fun getBlastResistance(): Float = 100f
 
         class Still(override val fluidName: String) : BcOilFluid() {
@@ -187,7 +187,7 @@ object ModFluids {
         }
 
         class Flowing(override val fluidName: String) : BcOilFluid() {
-            override fun appendProperties(builder: StateManager.Builder<Fluid, FluidState>) {
+            override fun appendProperties(builder: StateDefinition.Builder<Fluid, FluidState>) {
                 super.appendProperties(builder); builder.add(LEVEL)
             }
             override fun getLevel(state: FluidState): Int = state.get(LEVEL)

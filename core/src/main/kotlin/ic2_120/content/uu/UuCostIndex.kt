@@ -3,11 +3,11 @@ package ic2_120.content.uu
 import ic2_120.Ic2_120
 import ic2_120.config.UuReplicationDefaults
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.minecraft.item.Items
-import net.minecraft.recipe.RecipeManager
-import net.minecraft.registry.Registries
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.RecipeManager
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.MinecraftServer
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 import java.util.IdentityHashMap
 
@@ -49,7 +49,7 @@ object UuCostIndex {
     private var ready: Boolean = false
 
     /** 动态算出的成本缓存：Item -> uB（仅含非白名单物品，避免重复查 UuGraph）*/
-    private val dynamicCache: IdentityHashMap<net.minecraft.item.Item, Long> = IdentityHashMap()
+    private val dynamicCache: IdentityHashMap<net.minecraft.world.item.Item, Long> = IdentityHashMap()
 
     fun register() {
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
@@ -91,7 +91,7 @@ object UuCostIndex {
         var dynamicCount = 0
         for ((item, _) in UuGraph.allValues()) {
             if (UuGraph.value(item).isInfinite()) continue
-            val id = Registries.ITEM.getId(item).toString()
+            val id = BuiltInRegistries.ITEM.getId(item).toString()
             if (id in whitelistIds) continue  // 白名单物品走 Ic2Config，不缓存
             val ub = UuGraph.costUb(item)
             if (ub > 0) {
@@ -117,7 +117,7 @@ object UuCostIndex {
      * 查询物品的动态 UU 成本（uB）。仅返回动态算出的；白名单物品请走 [Ic2Config]。
      * @return 动态成本，或 null（未构建完成 / 该物品无路径）
      */
-    fun dynamicCostUb(item: net.minecraft.item.Item): Long? =
+    fun dynamicCostUb(item: net.minecraft.world.item.Item): Long? =
         if (ready) dynamicCache[item] else null
 
     /** 是否已构建完成 */
@@ -128,7 +128,7 @@ object UuCostIndex {
         if (!ready) return emptyMap()
         val out = LinkedHashMap<String, Long>()
         for ((item, ub) in dynamicCache) {
-            out[Registries.ITEM.getId(item).toString()] = ub
+            out[BuiltInRegistries.ITEM.getId(item).toString()] = ub
         }
         return out
     }
@@ -146,7 +146,7 @@ object UuCostIndex {
             "ic2_120:plutonium", "ic2_120:depleted_quad_mox_fuel_rod"
         )
         for (idStr in spot) {
-            val item = Registries.ITEM.get(Identifier.tryParse(idStr))
+            val item = BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(idStr))
             if (item === Items.AIR) continue
             val expected = UuReplicationDefaults.defaultWhitelist[idStr]
             val actual = UuGraph.costUb(item)
@@ -166,11 +166,11 @@ object UuCostIndex {
 
         // 未覆盖
         logger.info("---- IC2 物品中无成本的 ----")
-        val inf = Registries.ITEM
-            .filter { it !== Items.AIR && Registries.ITEM.getId(it).namespace == Ic2_120.MOD_ID }
+        val inf = BuiltInRegistries.ITEM
+            .filter { it !== Items.AIR && BuiltInRegistries.ITEM.getId(it).namespace == Ic2_120.MOD_ID }
             .filter { UuGraph.value(it).isInfinite() }
-            .sortedBy { Registries.ITEM.getId(it).path }
-        for (item in inf) logger.info("  ∞  ${Registries.ITEM.getId(item)}")
+            .sortedBy { BuiltInRegistries.ITEM.getId(it).path }
+        for (item in inf) logger.info("  ∞  ${BuiltInRegistries.ITEM.getId(item)}")
         logger.info("(共 ${inf.size} 个)")
 
         logger.info("==================== UU Cost Dump End ====================")
@@ -189,9 +189,9 @@ object UuCostIndex {
 
             val sorted = merged.entries.sortedBy { it.value }
             val finiteCount = sorted.size
-            val infItems = Registries.ITEM
+            val infItems = BuiltInRegistries.ITEM
                 .filter { it !== Items.AIR && UuGraph.value(it).isInfinite() }
-                .sortedBy { Registries.ITEM.getId(it).toString() }
+                .sortedBy { BuiltInRegistries.ITEM.getId(it).toString() }
 
             java.io.File(path).bufferedWriter(Charsets.UTF_8).use { w ->
                 w.write("# IC2 UU 复制消耗表\n")
@@ -208,7 +208,7 @@ object UuCostIndex {
                 }
                 w.write("\n# ===== 无成本物品（∞，合成链未通到白名单叶节点）=====\n")
                 for (item in infItems) {
-                    val id = Registries.ITEM.getId(item).toString()
+                    val id = BuiltInRegistries.ITEM.getId(item).toString()
                     w.write(String.format("%-48s %s\n", "∞  $id", displayName(id)))
                 }
             }
@@ -226,7 +226,7 @@ object UuCostIndex {
         val merged = HashMap<String, String>()
         val rm = server.resourceManager
         for (ns in listOf("minecraft", "ic2", "ic2_120")) {
-            val id = Identifier(ns, "lang/zh_cn.json")
+            val id = ResourceLocation(ns, "lang/zh_cn.json")
             try {
                 val res = rm.getResource(id)
                 if (res.isPresent) {
@@ -246,8 +246,8 @@ object UuCostIndex {
 
     /** 获取物品的本地化显示名（强制中文）*/
     private fun displayName(itemId: String): String {
-        val id = Identifier.tryParse(itemId) ?: return "?"
-        val item = Registries.ITEM.get(id)
+        val id = ResourceLocation.tryParse(itemId) ?: return "?"
+        val item = BuiltInRegistries.ITEM.get(id)
         if (item === Items.AIR) return "?"
         return try {
             val key = item.translationKey

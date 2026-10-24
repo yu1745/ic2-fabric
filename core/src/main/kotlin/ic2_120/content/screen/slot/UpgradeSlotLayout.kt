@@ -2,7 +2,7 @@ package ic2_120.content.screen.slot
 
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.upgrade.UpgradeItemRegistry
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * 可复用的升级槽位布局与规则。
@@ -28,7 +28,7 @@ object UpgradeSlotLayout {
     const val SLOT_SPACING = 18
 
     /**
-     * 创建升级槽位规则，需传入机器获取器（如从 ScreenHandlerContext 获取 BlockEntity）。
+     * 创建升级槽位规则，需传入机器获取器（如从 ContainerLevelAccess 获取 BlockEntity）。
      * 仅当机器实现了该升级对应的接口时才允许放入。
      */
     fun slotSpec(machineProvider: () -> Any?): SlotSpec = SlotSpec(

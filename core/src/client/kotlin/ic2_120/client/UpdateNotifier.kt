@@ -17,11 +17,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.MinecraftClient
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.client.Minecraft
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 import org.slf4j.LoggerFactory
 
 private data class BuildInfo(
@@ -73,7 +73,7 @@ object UpdateNotifier {
         })
     }
 
-    private fun checkForUpdatesAsync(client: MinecraftClient, buildInfo: BuildInfo) {
+    private fun checkForUpdatesAsync(client: Minecraft, buildInfo: BuildInfo) {
         CompletableFuture
             .supplyAsync { fetchLatestRelease(buildInfo) }
             .thenAccept { remoteRelease ->
@@ -95,7 +95,7 @@ object UpdateNotifier {
             }
     }
 
-    private fun scheduleRetry(client: MinecraftClient, buildInfo: BuildInfo) {
+    private fun scheduleRetry(client: Minecraft, buildInfo: BuildInfo) {
         CompletableFuture.delayedExecutor(RETRY_DELAY_SECONDS, TimeUnit.SECONDS).execute {
             checkForUpdatesAsync(client, buildInfo)
         }
@@ -131,30 +131,30 @@ object UpdateNotifier {
         )
     }
 
-    private fun showUpdateMessage(client: MinecraftClient, remoteRelease: RemoteRelease, localRunNumber: Int) {
+    private fun showUpdateMessage(client: Minecraft, remoteRelease: RemoteRelease, localRunNumber: Int) {
         val localTag = "release-$localRunNumber"
         client.inGameHud.setOverlayMessage(
-            Text.translatable("message.ic2_120.update_available.overlay", remoteRelease.tagName),
+            Component.translatable("message.ic2_120.update_available.overlay", remoteRelease.tagName),
             false
         )
 
         val player = client.player ?: return
         if (!remoteRelease.htmlUrl.isNullOrBlank()) {
-            val clickableUrl = Text.literal(remoteRelease.htmlUrl)
+            val clickableUrl = Component.literal(remoteRelease.htmlUrl)
                 .styled {
-                    it.withColor(Formatting.AQUA)
+                    it.withColor(ChatFormatting.AQUA)
                         .withUnderline(true)
                         .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, remoteRelease.htmlUrl))
                         .withHoverEvent(
                             HoverEvent(
                                 HoverEvent.Action.SHOW_TEXT,
-                                Text.translatable("message.ic2_120.update_available.link_hover")
+                                Component.translatable("message.ic2_120.update_available.link_hover")
                             )
                         )
                 }
             player.sendMessage(
-                Text.translatable("message.ic2_120.update_available.chat", remoteRelease.tagName, localTag)
-                    .append(Text.literal(" "))
+                Component.translatable("message.ic2_120.update_available.chat", remoteRelease.tagName, localTag)
+                    .append(Component.literal(" "))
                     .append(clickableUrl),
                 false
             )
@@ -162,7 +162,7 @@ object UpdateNotifier {
         }
 
         player.sendMessage(
-            Text.translatable(
+            Component.translatable(
                 "message.ic2_120.update_available.chat",
                 remoteRelease.tagName,
                 localTag

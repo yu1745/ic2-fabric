@@ -1,19 +1,19 @@
 package ic2_120.content.block.nuclear
 
 import ic2_120.config.Ic2Config
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.damage.DamageSource
-import net.minecraft.particle.ParticleTypes
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.ClipContext
 import org.slf4j.LoggerFactory
 import kotlin.math.*
 import java.util.UUID
@@ -26,7 +26,7 @@ import java.util.UUID
  *  2. DESTROYING  — 每次 tick 摧毁一批方块
  */
 class NuclearExplosion private constructor(
-    val world: ServerWorld,
+    val world: ServerLevel,
     val centerX: Double,
     val centerY: Double,
     val centerZ: Double,
@@ -80,7 +80,7 @@ class NuclearExplosion private constructor(
         private const val SUB_RAYS_PER_TICK = 5_000
 
         fun create(
-            world: ServerWorld,
+            world: ServerLevel,
             x: Double, y: Double, z: Double,
             power: Float,
             damageSource: DamageSource,
@@ -92,7 +92,7 @@ class NuclearExplosion private constructor(
 
     /** FTB Chunks 保护检查（按 chunk 缓存，受保护的方块截断射线） */
     private fun isProtected(pos: BlockPos): Boolean {
-        val chunkKey = net.minecraft.util.math.ChunkPos.toLong(pos.x shr 4, pos.z shr 4)
+        val chunkKey = net.minecraft.world.level.ChunkPos.toLong(pos.x shr 4, pos.z shr 4)
         return chunkProtectionCache.getOrPut(chunkKey) {
             ic2_120.integration.ftbchunks.ClaimProtection.isExplosionProtected(world, pos, ownerUuid)
         }
@@ -285,9 +285,9 @@ class NuclearExplosion private constructor(
             segments, totalRays, blocksToDestroy.size)
 
         // 播放爆炸音效 & 粒子
-        val soundPos = Vec3d(centerX, centerY, centerZ)
+        val soundPos = Vec3(centerX, centerY, centerZ)
         world.playSound(null, soundPos.x, soundPos.y, soundPos.z,
-            SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS,
+            SoundEvents.ENTITY_GENERIC_EXPLODE, SoundSource.BLOCKS,
             4.0f, (1.0f + (world.random.nextFloat() - 0.5f) * 0.4f) * 0.7f)
         world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
             centerX, centerY, centerZ, 1, 0.0, 0.0, 0.0, 0.0)
@@ -330,13 +330,13 @@ class NuclearExplosion private constructor(
 
     private fun applyEntityDamage() {
         val q = (power * 2.0).coerceAtLeast(1.0)
-        val box = Box(
+        val box = AABB(
             centerX - q, centerY - q, centerZ - q,
             centerX + q, centerY + q, centerZ + q
         )
 
         for (entity in world.getEntitiesByClass(LivingEntity::class.java, box) { true }) {
-            val dist = entity.pos.distanceTo(Vec3d(centerX, centerY, centerZ))
+            val dist = entity.pos.distanceTo(Vec3(centerX, centerY, centerZ))
             val w = dist / q
             if (w > 1.0) continue
 
@@ -347,7 +347,7 @@ class NuclearExplosion private constructor(
 
             if (damage > 0f) entity.damage(damageSource, damage)
 
-            val dir = Vec3d(centerX, centerY, centerZ).relativize(entity.pos).normalize()
+            val dir = Vec3(centerX, centerY, centerZ).relativize(entity.pos).normalize()
             entity.addVelocity(dir.x * exposure, dir.y * exposure, dir.z * exposure)
             entity.velocityModified = true
         }
@@ -364,14 +364,14 @@ class NuclearExplosion private constructor(
             val py = box.minY + (box.maxY - box.minY) * yi / steps
             val pz = box.minZ + (box.maxZ - box.minZ) * zi / steps
 
-            val result = world.raycast(RaycastContext(
-                Vec3d(centerX, centerY, centerZ),
-                Vec3d(px, py, pz),
-                RaycastContext.ShapeType.COLLIDER,
-                RaycastContext.FluidHandling.NONE,
+            val result = world.raycast(ClipContext(
+                Vec3(centerX, centerY, centerZ),
+                Vec3(px, py, pz),
+                ClipContext.ShapeType.COLLIDER,
+                ClipContext.FluidHandling.NONE,
                 entity
             ))
-            if (result.type == net.minecraft.util.hit.HitResult.Type.MISS) visible++
+            if (result.type == net.minecraft.world.phys.HitResult.Type.MISS) visible++
         }
 
         return visible.toDouble() / total

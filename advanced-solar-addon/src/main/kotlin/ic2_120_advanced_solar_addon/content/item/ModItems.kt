@@ -11,12 +11,12 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 
 // i18n: item.ic2_120_advanced_solar_addon.sunnarium
@@ -26,9 +26,9 @@ import java.util.function.Consumer
 class Sunnarium : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 配方 1: UU物质 + 荧石粉
-//            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
+//            ShapedRecipeBuilder.create(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
 //                .pattern("UUU")
 //                .pattern("GGG")
 //                .pattern("UUU")
@@ -38,7 +38,7 @@ class Sunnarium : Item(Item.Settings()) {
 //                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_from_uu"))
 
             // 配方 2: 9个小块阳光化合物
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
                 .pattern("SSS")
                 .pattern("SSS")
                 .pattern("SSS")
@@ -56,8 +56,8 @@ class Sunnarium : Item(Item.Settings()) {
 class SunnariumPart : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-//            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SunnariumPart::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+//            ShapedRecipeBuilder.create(RecipeCategory.MISC, SunnariumPart::class.instance(), 1)
 //                .pattern(" U ")
 //                .pattern(" G ")
 //                .pattern(" U ")
@@ -76,8 +76,8 @@ class SunnariumPart : Item(Item.Settings()) {
 class SunnariumAlloy : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SunnariumAlloy::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SunnariumAlloy::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
@@ -96,9 +96,9 @@ class SunnariumAlloy : Item(Item.Settings()) {
 class PhotovoltaicIridiumPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 与 core 强化铱板相同，仅将铱矿石替换为高级太阳能附属的铱锭
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PhotovoltaicIridiumPlate::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, PhotovoltaicIridiumPlate::class.instance(), 1)
                 .pattern("IAI")
                 .pattern("ADA")
                 .pattern("IAI")
@@ -118,8 +118,8 @@ class PhotovoltaicIridiumPlate : Item(Item.Settings()) {
 class IrradiantUranium : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IrradiantUranium::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, IrradiantUranium::class.instance(), 1)
                 .pattern(" G ")
                 .pattern("GUG")
                 .pattern(" G ")
@@ -138,8 +138,8 @@ class IrradiantUranium : Item(Item.Settings()) {
 class EnrichedSunnarium : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnrichedSunnarium::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnrichedSunnarium::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
@@ -158,8 +158,8 @@ class EnrichedSunnarium : Item(Item.Settings()) {
 class EnrichedSunnariumAlloy : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy::class.instance(), 1)
                 .pattern(" E ")
                 .pattern("EAE")
                 .pattern(" E ")
@@ -178,8 +178,8 @@ class EnrichedSunnariumAlloy : Item(Item.Settings()) {
 class IrradiantGlassPane : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 6)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 6)
                 .pattern("GGG")
                 .pattern("IXI")
                 .pattern("GGG")
@@ -199,9 +199,9 @@ class IrradiantGlassPane : Item(Item.Settings()) {
 class IridiumIronPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 配方 1: 铁锭 + 铱锭
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
                 .pattern("III")
                 .pattern("IOI")
                 .pattern("III")
@@ -211,7 +211,7 @@ class IridiumIronPlate : Item(Item.Settings()) {
                 .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_iron_plate"))
 
             // // 配方 2: 铁板 + 铱锭 (简单模式)
-            // ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
+            // ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
             //     .pattern("III")
             //     .pattern("I I")
             //     .pattern("III")
@@ -229,8 +229,8 @@ class IridiumIronPlate : Item(Item.Settings()) {
 class ReinforcedIridiumIronPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReinforcedIridiumIronPlate::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReinforcedIridiumIronPlate::class.instance(), 1)
                 .pattern("ACA")
                 .pattern("CPC")
                 .pattern("ACA")
@@ -250,8 +250,8 @@ class ReinforcedIridiumIronPlate : Item(Item.Settings()) {
 class IrradiantReinforcedPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IrradiantReinforcedPlate::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, IrradiantReinforcedPlate::class.instance(), 1)
                 .pattern("RPR")
                 .pattern("LIL")
                 .pattern("RDR")
@@ -273,9 +273,9 @@ class IrradiantReinforcedPlate : Item(Item.Settings()) {
 class IridiumIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // // 配方 1: 8个铱矿石杆
-            // ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
+            // ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
             //     .pattern("III")
             //     .pattern("I I")
             //     .pattern("III")
@@ -284,7 +284,7 @@ class IridiumIngot : Item(Item.Settings()) {
             //     .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_ingot_from_ore"))
 
            // // 配方 3: 强化铱板 + 充电电池
-            // ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
+            // ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
             //     .pattern(" I ")
             //     .pattern("   ")
             //     .pattern(" B ")
@@ -303,8 +303,8 @@ class IridiumIngot : Item(Item.Settings()) {
 class MtCore : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MtCore::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, MtCore::class.instance(), 1)
                 .pattern("GNG")
                 .pattern("G G")
                 .pattern("GNG")
@@ -323,8 +323,8 @@ class MtCore : Item(Item.Settings()) {
 class QuantumCore : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuantumCore::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, QuantumCore::class.instance(), 1)
                 .pattern("ESE")
                 .pattern("SNS")
                 .pattern("ESE")

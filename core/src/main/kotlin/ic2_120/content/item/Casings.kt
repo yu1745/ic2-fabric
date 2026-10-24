@@ -9,11 +9,11 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.minecraft.item.Item
-import net.minecraft.recipe.Ingredient
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.resources.ResourceLocation
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -25,7 +25,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class BronzeCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = BronzeCasing::class.id(),
@@ -45,7 +45,7 @@ class BronzeCasing : Item(Item.Settings()) {
 class CopperCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = CopperCasing::class.id(),
@@ -65,7 +65,7 @@ class CopperCasing : Item(Item.Settings()) {
 class GoldCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = GoldCasing::class.id(),
@@ -85,7 +85,7 @@ class GoldCasing : Item(Item.Settings()) {
 class IronCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = IronCasing::class.id(),
@@ -105,7 +105,7 @@ class IronCasing : Item(Item.Settings()) {
 class LeadCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = LeadCasing::class.id(),
@@ -125,7 +125,7 @@ class LeadCasing : Item(Item.Settings()) {
 class SteelCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = SteelCasing::class.id(),
@@ -145,7 +145,7 @@ class SteelCasing : Item(Item.Settings()) {
 class TinCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = TinCasing::class.id(),

@@ -116,7 +116,7 @@ class McdebugStorageApiTest {
         val opened = ctx.api.screen.openBlock(ctx.origin, player = "fake").asJsonObject
         assertEquals("ic2_120:macerator", opened.get("handlerType").asString)
         assertEquals(43, opened.get("slots").asJsonArray.size())
-        assertTrue(opened.get("properties").asJsonArray.size() > 0, "expected macerator PropertyDelegate values")
+        assertTrue(opened.get("properties").asJsonArray.size() > 0, "expected macerator ContainerData values")
 
         val afterQuickMove = ctx.api.screen.quickMove(opened.get("screenId").asString, 0).asJsonObject
         assertEquals(opened.get("screenId").asString, afterQuickMove.get("screenId").asString)

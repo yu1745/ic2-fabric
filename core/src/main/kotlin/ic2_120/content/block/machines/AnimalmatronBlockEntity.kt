@@ -43,35 +43,35 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.entity.passive.PassiveEntity
-import net.minecraft.entity.passive.AnimalEntity
-import net.minecraft.entity.passive.SheepEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluids
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtList
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.entity.AgeableMob
+import net.minecraft.world.entity.animal.Animal
+import net.minecraft.world.entity.animal.Sheep
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.ListTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.Level
 
 @ModBlockEntity(block = AnimalmatronBlock::class)
 class AnimalmatronBlockEntity(
@@ -79,7 +79,7 @@ class AnimalmatronBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state),
-    Inventory,
+    Container,
     IRoutedSidedInventory,
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
@@ -88,13 +88,13 @@ class AnimalmatronBlockEntity(
     IEjectorUpgradeSupport,
     ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = AnimalmatronBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = AnimalmatronBlock.ACTIVE
     override val tier: Int = ANIMALMATRON_TIER
 
     override var fluidPipeProviderEnabled: Boolean = false
     override var fluidPipeReceiverEnabled: Boolean = false
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeProviderFilter: net.minecraft.world.level.material.Fluid? = null
+    override var fluidPipeReceiverFilter: net.minecraft.world.level.material.Fluid? = null
     override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeEjectorCount: Int = 0
@@ -108,7 +108,7 @@ class AnimalmatronBlockEntity(
     /** 浮点耗能债务：1.6^n 的小数余数跨 tick 结转（有受监管动物时的持续抽电）。 */
     private var energyDebtF = 0f
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -291,22 +291,22 @@ class AnimalmatronBlockEntity(
 
     private var workOffset: Int = random.nextBetween(0, WORK_INTERVAL_TICKS - 1)
 
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val waterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "water_cell")) }
-    private val distilledWaterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "distilled_water_cell")) }
-    private val weedExCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "weed_ex_cell")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val waterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "water_cell")) }
+    private val distilledWaterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "distilled_water_cell")) }
+    private val weedExCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "weed_ex_cell")) }
 
     constructor(pos: BlockPos, state: BlockState) : this(AnimalmatronBlockEntity::class.type(), pos, state)
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_SHEARS && stack.count > 1) stack.count = 1
@@ -317,14 +317,14 @@ class AnimalmatronBlockEntity(
 
     private fun matchesWaterInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
-        val waterCellId = Identifier(Ic2_120.MOD_ID, "water_cell")
-        val distilledWaterCellId = Identifier(Ic2_120.MOD_ID, "distilled_water_cell")
+        val fluidCellId = ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")
+        val waterCellId = ResourceLocation(Ic2_120.MOD_ID, "water_cell")
+        val distilledWaterCellId = ResourceLocation(Ic2_120.MOD_ID, "distilled_water_cell")
         return when {
             stack.item == Items.WATER_BUCKET || stack.item == ModFluids.DISTILLED_WATER_BUCKET -> true
-            Registries.ITEM.getId(stack.item) == waterCellId -> true
-            Registries.ITEM.getId(stack.item) == distilledWaterCellId -> true
-            Registries.ITEM.getId(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
+            BuiltInRegistries.ITEM.getId(stack.item) == waterCellId -> true
+            BuiltInRegistries.ITEM.getId(stack.item) == distilledWaterCellId -> true
+            BuiltInRegistries.ITEM.getId(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||
                     fluid == ModFluids.DISTILLED_WATER_STILL || fluid == ModFluids.DISTILLED_WATER_FLOWING
@@ -335,12 +335,12 @@ class AnimalmatronBlockEntity(
 
     private fun matchesWeedExInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
-        val weedExCellId = Identifier(Ic2_120.MOD_ID, "weed_ex_cell")
+        val fluidCellId = ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")
+        val weedExCellId = ResourceLocation(Ic2_120.MOD_ID, "weed_ex_cell")
         return when {
             stack.item == ModFluids.WEED_EX_BUCKET -> true
-            Registries.ITEM.getId(stack.item) == weedExCellId -> true
-            Registries.ITEM.getId(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
+            BuiltInRegistries.ITEM.getId(stack.item) == weedExCellId -> true
+            BuiltInRegistries.ITEM.getId(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
             }
@@ -369,26 +369,26 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.animalmatron")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.animalmatron")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         AnimalmatronScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(AnimalmatronSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -400,7 +400,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         workOffset = nbt.getInt(NBT_WORK_OFFSET).coerceIn(0, WORK_INTERVAL_TICKS - 1)
 
         // 读取动物数据
-        val animalDataList = nbt.getList(NBT_ANIMAL_DATA, 10) // 10 = NbtCompound type
+        val animalDataList = nbt.getList(NBT_ANIMAL_DATA, 10) // 10 = CompoundTag type
         animalDataMap.clear()
         for (i in 0 until animalDataList.size) {
             val dataNbt = animalDataList.getCompound(i)
@@ -409,9 +409,9 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalmatronSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
@@ -420,14 +420,14 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         nbt.putInt(NBT_WORK_OFFSET, workOffset)
 
         // 写入动物数据
-        val animalDataList = NbtList()
+        val animalDataList = ListTag()
         animalDataMap.values.forEach { data ->
             animalDataList.add(data.toNbt())
         }
         nbt.put(NBT_ANIMAL_DATA, animalDataList)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
@@ -482,13 +482,13 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         sync.syncCurrentTickFlow()
     }
 
-    private fun runScan(world: World): ScanReport {
+    private fun runScan(world: Level): ScanReport {
         val report = ScanReport()
 
         // 获取范围内的动物实体（仅包含白名单中的动物）
-        val box = Box(pos).expand(SCAN_RADIUS.toDouble())
+        val box = AABB(pos).expand(SCAN_RADIUS.toDouble())
         val animals = world.getEntitiesByClass(
-            PassiveEntity::class.java,
+            AgeableMob::class.java,
             box
         ) { it.isAlive && AnimalFoodMapping.isManagedAnimal(it) }
 
@@ -523,7 +523,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             }
         }
 
-        if (world is ServerWorld) {
+        if (world is ServerLevel) {
             tryBreedReadyAnimals(world, animals, report)
         }
 
@@ -531,7 +531,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         // P3 修复：原实现 world.getEntity(uuid)==null 即删档——动物走远致区块卸载后档案被删，
         // 回来时按"外来成体"重建直接免费 canBreed，形成免费繁殖循环。改为仅删
         // "实体仍在实体加载表中但已死亡"的确证死亡档案；未加载（null）保留，待回来续档。
-        if (world is ServerWorld) {
+        if (world is ServerLevel) {
             animalDataMap.entries.removeIf { (uuid, _) ->
                 val entity = world.getEntity(uuid)
                 entity != null && !entity.isAlive
@@ -542,7 +542,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     }
 
     private fun tryFeedAnimal(
-        animal: PassiveEntity,
+        animal: AgeableMob,
         animalData: AnimalGrowthData,
         totalAnimals: Int,
         report: ScanReport
@@ -609,7 +609,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     }
 
     private fun checkGrowthAndBreeding(
-        animal: PassiveEntity,
+        animal: AgeableMob,
         animalData: AnimalGrowthData,
         totalAnimals: Int,
         report: ScanReport
@@ -617,7 +617,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         // 原版手动繁殖同步：玩家用原版机制配对后 breedingAge>0（6000t 冷却）。此时档案的
         // breedUnlocked/canBreed 必须立即失效，否则机器会认为它"已解锁待配对"，JADE 显示
         // 与实际状态不符，且冷却结束后可能绕过机器喂食直接机器配对。
-        if (animal is AnimalEntity && animal.breedingAge > 0) {
+        if (animal is Animal && animal.breedingAge > 0) {
             animalData.breedUnlocked = false
             animalData.canBreed = false
             return
@@ -644,15 +644,15 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     }
 
     private fun tryBreedReadyAnimals(
-        world: ServerWorld,
-        animals: List<PassiveEntity>,
+        world: ServerLevel,
+        animals: List<AgeableMob>,
         report: ScanReport
     ) {
         var animalCount = animals.size
         if (animalCount >= MAX_ANIMALS_FOR_BREEDING) return
 
         val readyAnimals = animals
-            .filterIsInstance<AnimalEntity>()
+            .filterIsInstance<Animal>()
             .filter { it.isAlive && !it.isBaby && animalDataMap[it.uuid]?.canBreed == true && it.breedingAge <= 0 }
 
         if (readyAnimals.size < 2) return
@@ -770,17 +770,17 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     /**
      * 获取动物的额外产物
      */
-    private fun getExtraProduct(animal: PassiveEntity): ItemStack? {
-        val entityId = Registries.ENTITY_TYPE.getId(animal.type).toString()
+    private fun getExtraProduct(animal: AgeableMob): ItemStack? {
+        val entityId = BuiltInRegistries.ENTITY_TYPE.getId(animal.type).toString()
         return when (entityId) {
             "minecraft:chicken" -> {
                 // P5 修复：幼鸡不下蛋（原实现无 isBaby 检查）
                 if (animal.isBaby) null else ItemStack(Items.EGG, 1)
             }
             "minecraft:sheep" -> {
-                if (animal is SheepEntity && !animal.isSheared) {
+                if (animal is Sheep && !animal.isSheared) {
                     val colorName = animal.color.asString()
-                    val woolItem = Registries.ITEM.get(Identifier.of("minecraft", "${colorName}_wool"))
+                    val woolItem = BuiltInRegistries.ITEM.get(ResourceLocation.of("minecraft", "${colorName}_wool"))
                     ItemStack(woolItem, 1)
                 } else null
             }
@@ -809,11 +809,11 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     /**
      * 尝试收获额外产物
      */
-    private fun tryHarvestExtraProduct(animal: PassiveEntity, animalData: AnimalGrowthData, report: ScanReport) {
+    private fun tryHarvestExtraProduct(animal: AgeableMob, animalData: AnimalGrowthData, report: ScanReport) {
         val world = world ?: return
 
         // 检查收获间隔（羊依赖原版吃草恢复，用短间隔；其他产物 10 分钟）
-        val interval = if (animal is SheepEntity) HARVEST_INTERVAL_TICKS else EXTRA_PRODUCT_INTERVAL_TICKS
+        val interval = if (animal is Sheep) HARVEST_INTERVAL_TICKS else EXTRA_PRODUCT_INTERVAL_TICKS
         if (world.time - animalData.lastHarvestTick < interval) return
 
         val product = getExtraProduct(animal) ?: return
@@ -837,7 +837,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         }
 
         // 收获后处理（如标记羊已剪毛）——此时输出已确认可容纳，副作用不会白费
-        if (animal is SheepEntity) {
+        if (animal is Sheep) {
             animal.isSheared = true
         }
 
@@ -864,13 +864,13 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     }
 
     private fun getFrontFacing(): Direction =
-        world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
+        world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
 
-    private fun isWater(fluid: net.minecraft.fluid.Fluid): Boolean =
+    private fun isWater(fluid: net.minecraft.world.level.material.Fluid): Boolean =
         fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||
             fluid == ModFluids.DISTILLED_WATER_STILL || fluid == ModFluids.DISTILLED_WATER_FLOWING
 
-    private fun isWeedEx(fluid: net.minecraft.fluid.Fluid): Boolean =
+    private fun isWeedEx(fluid: net.minecraft.world.level.material.Fluid): Boolean =
         fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
 
     private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
@@ -969,7 +969,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         private const val NBT_WORK_OFFSET = "WorkOffset"
         private const val NBT_ANIMAL_DATA = "AnimalData"
 
-        private val random: Random = Random.create()
+        private val random: RandomSource = RandomSource.create()
 
         @Volatile
         private var fluidLookupRegistered = false

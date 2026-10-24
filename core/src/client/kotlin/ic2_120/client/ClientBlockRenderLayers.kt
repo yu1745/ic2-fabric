@@ -4,10 +4,10 @@ import ic2_120.Ic2_120
 import ic2_120.registry.BlockRenderLayerRegistry
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap
-import net.minecraft.block.Block
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.client.renderer.RenderType
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 
 object ClientBlockRenderLayers {
@@ -17,13 +17,13 @@ object ClientBlockRenderLayers {
         registerLayers(BlockRenderLayerRegistry.entries())
     }
 
-    private fun registerLayers(entries: Set<Map.Entry<Identifier, String>>) {
+    private fun registerLayers(entries: Set<Map.Entry<ResourceLocation, String>>) {
         val cutout = mutableListOf<Block>()
         val cutoutMipped = mutableListOf<Block>()
         val translucent = mutableListOf<Block>()
 
         for ((id, layerType) in entries) {
-            val block = Registries.BLOCK.getOrEmpty(id)
+            val block = BuiltInRegistries.BLOCK.getOrEmpty(id)
             if (block.isEmpty) {
                 logger.warn("跳过渲染层注册：未找到方块 {}", id)
                 continue
@@ -37,15 +37,15 @@ object ClientBlockRenderLayers {
         }
 
         if (cutout.isNotEmpty()) {
-            BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), *cutout.toTypedArray())
+            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.getCutout(), *cutout.toTypedArray())
             logger.info("已注册 {} 个方块到 cutout 渲染层", cutout.size)
         }
         if (cutoutMipped.isNotEmpty()) {
-            BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutoutMipped(), *cutoutMipped.toTypedArray())
+            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.getCutoutMipped(), *cutoutMipped.toTypedArray())
             logger.info("已注册 {} 个方块到 cutout_mipped 渲染层", cutoutMipped.size)
         }
         if (translucent.isNotEmpty()) {
-            BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getTranslucent(), *translucent.toTypedArray())
+            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.getTranslucent(), *translucent.toTypedArray())
             logger.info("已注册 {} 个方块到 translucent 渲染层", translucent.size)
         }
     }

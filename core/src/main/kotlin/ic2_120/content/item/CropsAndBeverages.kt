@@ -8,11 +8,11 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapelessRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 
 // ========== 植物种子类 ==========
 
@@ -20,16 +20,16 @@ import net.minecraft.recipe.book.RecipeCategory
 class Fertilizer : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 两个废料 + 一个骨粉 -> 两个肥料
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
                 .input(Scrap::class.instance(), 2)
                 .input(Items.BONE_MEAL)
                 .criterion(hasItem(Scrap::class.instance()), conditionsFromItem(Scrap::class.instance()))
                 .offerTo(exporter, Fertilizer::class.recipeId("from_scrap_and_bone_meal"))
 
             // 一个肥料 + 两个废料 -> 两个肥料
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
                 .input(Fertilizer::class.instance())
                 .input(Scrap::class.instance(), 2)
                 .criterion(hasItem(Fertilizer::class.instance()), conditionsFromItem(Fertilizer::class.instance()))

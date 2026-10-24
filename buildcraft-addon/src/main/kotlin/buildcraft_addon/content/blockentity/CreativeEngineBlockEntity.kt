@@ -4,13 +4,13 @@ import buildcraft_addon.content.block.CreativeEngineBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 /**
  * 创造引擎
@@ -106,7 +106,7 @@ class CreativeEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlockState(pos, cachedState.with(Properties.FACING, next))
+        world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, next))
         markDirty()
     }
 
@@ -126,7 +126,7 @@ class CreativeEngineBlockEntity(
     fun serverTick() {
         val world = world ?: return
         if (world.isClient) return
-        currentDirection = cachedState.get(Properties.FACING)
+        currentDirection = cachedState.get(BlockStateProperties.FACING)
 
         if (isRedstonePowered) {
             pendingOutputKu = getCurrentOutputMJ() * MJ_TO_KU
@@ -140,7 +140,7 @@ class CreativeEngineBlockEntity(
     fun clientTick() {
         val world = world ?: return
         if (!world.isClient) return
-        currentDirection = cachedState.get(Properties.FACING)
+        currentDirection = cachedState.get(BlockStateProperties.FACING)
 
         val powered = world.isReceivingRedstonePower(pos)
         isRedstonePowered = powered
@@ -163,7 +163,7 @@ class CreativeEngineBlockEntity(
     }
 
     // === NBT ===
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
@@ -173,7 +173,7 @@ class CreativeEngineBlockEntity(
         nbt.putInt("pendingOutputKu", pendingOutputKu)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")

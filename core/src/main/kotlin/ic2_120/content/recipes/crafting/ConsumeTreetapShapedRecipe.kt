@@ -4,17 +4,17 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.item.Treetap
 import ic2_120.registry.annotation.ModMachineRecipe
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.inventory.RecipeInputInventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.ShapedRecipe
-import net.minecraft.registry.DynamicRegistryManager
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.inventory.CraftingContainer
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.ShapedRecipe
+import net.minecraft.core.RegistryAccess
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
 import java.util.function.Consumer
 
 /**
@@ -27,11 +27,11 @@ class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
     delegate.width,
     delegate.height,
     delegate.ingredients,
-    delegate.getOutput(DynamicRegistryManager.EMPTY),
+    delegate.getOutput(RegistryAccess.EMPTY),
     delegate.showNotification()
 ) {
-    override fun getRemainder(inventory: RecipeInputInventory): DefaultedList<ItemStack> {
-        val remainder = DefaultedList.ofSize(inventory.size(), ItemStack.EMPTY)
+    override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> {
+        val remainder = NonNullList.ofSize(inventory.size(), ItemStack.EMPTY)
         for (slot in 0 until inventory.size()) {
             val stack = inventory.getStack(slot)
             if (stack.isEmpty) continue
@@ -45,25 +45,25 @@ class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
 
 @ModMachineRecipe(id = "consume_treetap_shaped", recipeClass = ConsumeTreetapShapedRecipe::class)
 object ConsumeTreetapShapedRecipeSerializer : RecipeSerializer<ConsumeTreetapShapedRecipe> {
-    override fun read(id: Identifier, json: JsonObject): ConsumeTreetapShapedRecipe {
+    override fun read(id: ResourceLocation, json: JsonObject): ConsumeTreetapShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, json)
         return ConsumeTreetapShapedRecipe(shaped)
     }
 
-    override fun read(id: Identifier, buf: PacketByteBuf): ConsumeTreetapShapedRecipe {
+    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): ConsumeTreetapShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, buf)
         return ConsumeTreetapShapedRecipe(shaped)
     }
 
-    override fun write(buf: PacketByteBuf, recipe: ConsumeTreetapShapedRecipe) {
+    override fun write(buf: FriendlyByteBuf, recipe: ConsumeTreetapShapedRecipe) {
         RecipeSerializer.SHAPED.write(buf, recipe)
     }
 }
 
 object ConsumeTreetapShapedRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeExporter>,
-        recipeId: Identifier,
+        exporter: Consumer<RecipeOutput>,
+        recipeId: ResourceLocation,
         result: Item,
         pattern: List<String>,
         keys: Map<Char, Item>,
@@ -83,13 +83,13 @@ object ConsumeTreetapShapedRecipeDatagen {
     }
 
     private class Provider(
-        private val recipeId: Identifier,
+        private val recipeId: ResourceLocation,
         private val result: Item,
         private val pattern: List<String>,
         private val keys: Map<Char, Item>,
         private val count: Int,
         private val category: String
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:consume_treetap_shaped")
             json.addProperty("category", category)
@@ -97,7 +97,7 @@ object ConsumeTreetapShapedRecipeDatagen {
             val keyObj = JsonObject()
             for ((charKey, item) in keys) {
                 val ingredient = JsonObject()
-                ingredient.addProperty("item", Registries.ITEM.getId(item).toString())
+                ingredient.addProperty("item", BuiltInRegistries.ITEM.getId(item).toString())
                 keyObj.add(charKey.toString(), ingredient)
             }
             json.add("key", keyObj)
@@ -107,7 +107,7 @@ object ConsumeTreetapShapedRecipeDatagen {
             json.add("pattern", patternArr)
 
             val resultObj = JsonObject()
-            resultObj.addProperty("item", Registries.ITEM.getId(result).toString())
+            resultObj.addProperty("item", BuiltInRegistries.ITEM.getId(result).toString())
             if (count > 1) resultObj.addProperty("count", count)
             json.add("result", resultObj)
             json.addProperty("show_notification", true)
@@ -115,10 +115,10 @@ object ConsumeTreetapShapedRecipeDatagen {
 
         override fun getSerializer(): RecipeSerializer<*> = ConsumeTreetapShapedRecipeSerializer
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

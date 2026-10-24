@@ -2,11 +2,11 @@ package ic2_120.client.compose
 
 import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.HeatProgressBar
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 
 /**
  * DSL 作用域。每个容器的 content lambda 接收一个 UiScope，
- * 在其中调用 Column / Row / Text / Button 来添加子节点。
+ * 在其中调用 Column / Row / Component / Button 来添加子节点。
  */
 @DslMarker
 annotation class UiDsl
@@ -56,12 +56,12 @@ class UiScope {
         children += node
     }
 
-    fun Text(
+    fun Component(
         text: String,
         color: Int = 0xFFFFFF,
         shadow: Boolean = true,
         center: Boolean = false,
-        tooltip: List<net.minecraft.text.Text>? = null,
+        tooltip: List<net.minecraft.network.chat.Component>? = null,
         x: Int = 0,
         y: Int = 0,
         absolute: Boolean = false,
@@ -99,10 +99,10 @@ class UiScope {
      *
      * 最简用法（完整纹理）：
      * ```
-     * Image(Identifier.of("ic2", "textures/gui/icon.png"), width = 16, height = 16)
+     * Image(ResourceLocation.of("ic2", "textures/gui/icon.png"), width = 16, height = 16)
      * ```
      *
-     * Sprite sheet 裁剪：
+     * TextureAtlasSprite sheet 裁剪：
      * ```
      * Image(texture, width = 16, height = 16,
      *       u = 32f, v = 0f, regionWidth = 16, regionHeight = 16,
@@ -110,7 +110,7 @@ class UiScope {
      * ```
      */
     fun Image(
-        texture: Identifier,
+        texture: ResourceLocation,
         width: Int,
         height: Int,
         u: Float = 0f,
@@ -133,10 +133,10 @@ class UiScope {
 
     /**
      * 渲染物品/方块图标（仅贴图，不绘制数量）。
-     * 数量可用外部 DSL 拼接，例如：`Row(spacing = 4) { ItemStack(stack); Text("${stack.count}") }`
+     * 数量可用外部 DSL 拼接，例如：`Row(spacing = 4) { ItemStack(stack); Component("${stack.count}") }`
      */
     fun ItemStack(
-        stack: net.minecraft.item.ItemStack,
+        stack: net.minecraft.world.item.ItemStack,
         size: Int = 16,
         x: Int = 0,
         y: Int = 0,
@@ -156,7 +156,7 @@ class UiScope {
         y: Int = 0,
         absolute: Boolean = false,
         modifier: Modifier = Modifier.EMPTY,
-        tooltip: List<net.minecraft.text.Text>? = null,
+        tooltip: List<net.minecraft.network.chat.Component>? = null,
         onClick: () -> Unit = {}
     ) {
         val node = ButtonNode(text, onClick, tooltip).apply {

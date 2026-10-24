@@ -2,11 +2,11 @@ package ic2_120.content.reactor
 
 import ic2_120.content.item.AbstractMoxFuelRodItem
 import ic2_120.content.item.AbstractUraniumFuelRodItem
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.tooltip.TooltipType
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 import ic2_120.editCustomData
 import ic2_120.getCustomData
 
@@ -77,12 +77,12 @@ abstract class AbstractFiniteNeutronReflectorItem(
         return (13.0 * frac).toInt().coerceIn(0, 13)
     }
 
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
         super.appendTooltip(stack, context, tooltip, type)
         if (!isDepleted(stack)) {
             tooltip.add(
-                Text.translatable("tooltip.ic2_120.neutron_reflector_pulses", remainingPulses(stack))
-                    .formatted(Formatting.GRAY)
+                Component.translatable("tooltip.ic2_120.neutron_reflector_pulses", remainingPulses(stack))
+                    .formatted(ChatFormatting.GRAY)
             )
         }
     }

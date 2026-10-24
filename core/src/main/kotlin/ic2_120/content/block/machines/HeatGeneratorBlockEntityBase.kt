@@ -3,12 +3,12 @@ package ic2_120.content.block.machines
 import ic2_120.content.heat.IHeatConsumer
 import ic2_120.content.heat.IHeatNode
 import ic2_120.content.sync.HeatFlowSync
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.state.property.Properties
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.level.Level
 
 /**
  * 热机基类：默认仅背面传热，不建立热网，直接邻接传输。
@@ -26,7 +26,7 @@ abstract class HeatGeneratorBlockEntityBase(
     abstract val heatFlow: HeatFlowSync
 
     override fun getHeatTransferFace(): Direction {
-        return cachedState.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        return cachedState.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
     }
 
     /** 获取上一 tick 产生的热量（HU） */
@@ -70,7 +70,7 @@ abstract class HeatGeneratorBlockEntityBase(
         return true
     }
 
-    protected fun tickHeatMachine(world: World, pos: BlockPos, state: BlockState) {
+    protected fun tickHeatMachine(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         resetHeatTracking()
@@ -90,9 +90,9 @@ abstract class HeatGeneratorBlockEntityBase(
         }
     }
 
-    protected open fun preGenerate(world: World, pos: BlockPos, state: BlockState) {}
+    protected open fun preGenerate(world: Level, pos: BlockPos, state: BlockState) {}
 
-    protected abstract fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long
+    protected abstract fun generateHeat(world: Level, pos: BlockPos, state: BlockState): Long
 
     protected open fun syncAdditionalData() {}
 
@@ -100,7 +100,7 @@ abstract class HeatGeneratorBlockEntityBase(
 
     protected abstract fun getActiveState(state: BlockState): Boolean
 
-    protected open override fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
+    protected open override fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         super.setActiveState(world, pos, state, active)
     }
 }

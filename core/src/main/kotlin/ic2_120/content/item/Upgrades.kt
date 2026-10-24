@@ -21,31 +21,31 @@ import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.tag.ItemTags
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.tags.ItemTags
 import java.util.function.Consumer
 import net.fabricmc.api.Environment
 import net.fabricmc.api.EnvType
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.Hand
-import net.minecraft.util.TypedActionResult
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.ChatFormatting
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResultHolder
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 
 // ========== 升级物品接口 ==========
@@ -59,46 +59,46 @@ interface IUpgradeItem
 
 abstract class FluidFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
         val filter = FluidPipeUpgradeComponent.readFilter(stack)
         if (filter != null) {
             val fluidName = filter.defaultState.blockState.block.name
-            tooltip.add(Text.literal("过滤: ").append(fluidName).formatted(Formatting.GRAY))
+            tooltip.add(Component.literal("过滤: ").append(fluidName).formatted(ChatFormatting.GRAY))
         } else {
-            tooltip.add(Text.literal("过滤: 未设置").formatted(Formatting.GRAY))
+            tooltip.add(Component.literal("过滤: 未设置").formatted(ChatFormatting.GRAY))
         }
         val sides = FluidPipeUpgradeComponent.readDirections(stack)
-        tooltip.add(Text.literal("方向: ${directionLabel(sides)}").formatted(Formatting.GRAY))
+        tooltip.add(Component.literal("方向: ${directionLabel(sides)}").formatted(ChatFormatting.GRAY))
     }
 
-    override fun use(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+    override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = user.getStackInHand(hand)
-        if (world.isClient) return TypedActionResult.success(stack)
+        if (world.isClient) return InteractionResultHolder.success(stack)
 
         if (user.isSneaking) {
             val current = FluidPipeUpgradeComponent.readDirections(stack)
             val next = FluidPipeUpgradeComponent.nextDirections(current)
             FluidPipeUpgradeComponent.writeDirections(stack, next)
-            if (user is ServerPlayerEntity) {
-                user.sendMessage(Text.literal("已设置工作方向: ${directionLabel(next)}"), true)
+            if (user is ServerPlayer) {
+                user.sendMessage(Component.literal("已设置工作方向: ${directionLabel(next)}"), true)
             }
-            return TypedActionResult.success(stack)
+            return InteractionResultHolder.success(stack)
         }
 
         // 打开配置 GUI
-        if (user is ServerPlayerEntity) {
+        if (user is ServerPlayer) {
             user.openHandledScreen(object : ExtendedScreenHandlerFactory {
-                override fun getDisplayName(): Text = Text.translatable("gui.ic2_120.fluid_upgrade.title")
-                override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+                override fun getDisplayName(): Component = Component.translatable("gui.ic2_120.fluid_upgrade.title")
+                override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
                     buf.writeEnumConstant(hand)
                 }
-                override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
+                override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
                     return FluidUpgradeScreenHandler(syncId, playerInventory, hand)
                 }
             })
         }
-        return TypedActionResult.success(stack)
+        return InteractionResultHolder.success(stack)
     }
 
     private fun directionLabel(sides: Set<Direction>): String = if (sides.isEmpty()) {
@@ -121,45 +121,45 @@ abstract class ItemFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
     protected open val directionActionLabel: String = "弹出方向"
 
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
         val filterItem = EjectorUpgradeComponent.readFilter(stack)
         if (filterItem != null) {
-            tooltip.add(Text.literal("过滤物品: ").append(filterItem.name).formatted(Formatting.GRAY))
+            tooltip.add(Component.literal("过滤物品: ").append(filterItem.name).formatted(ChatFormatting.GRAY))
         } else {
-            tooltip.add(Text.literal("过滤物品: 全部").formatted(Formatting.GRAY))
+            tooltip.add(Component.literal("过滤物品: 全部").formatted(ChatFormatting.GRAY))
         }
         val sides = EjectorUpgradeComponent.readDirections(stack)
-        tooltip.add(Text.literal("方向: ${directionLabel(sides)}").formatted(Formatting.GRAY))
+        tooltip.add(Component.literal("方向: ${directionLabel(sides)}").formatted(ChatFormatting.GRAY))
     }
 
-    override fun use(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+    override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = user.getStackInHand(hand)
-        if (world.isClient) return TypedActionResult.success(stack)
+        if (world.isClient) return InteractionResultHolder.success(stack)
 
         if (user.isSneaking) {
             val current = EjectorUpgradeComponent.readDirections(stack)
             val next = nextDirections(current)
             EjectorUpgradeComponent.writeDirections(stack, next)
-            if (user is ServerPlayerEntity) {
-                user.sendMessage(Text.literal("已设置$directionActionLabel: ${directionLabel(next)}"), true)
+            if (user is ServerPlayer) {
+                user.sendMessage(Component.literal("已设置$directionActionLabel: ${directionLabel(next)}"), true)
             }
-            return TypedActionResult.success(stack)
+            return InteractionResultHolder.success(stack)
         }
 
         // 打开配置 GUI
-        if (user is ServerPlayerEntity) {
+        if (user is ServerPlayer) {
             user.openHandledScreen(object : ExtendedScreenHandlerFactory {
-                override fun getDisplayName(): Text = Text.translatable("gui.ic2_120.item_upgrade.title")
-                override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+                override fun getDisplayName(): Component = Component.translatable("gui.ic2_120.item_upgrade.title")
+                override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
                     buf.writeEnumConstant(hand)
                 }
-                override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
+                override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
                     return ItemUpgradeScreenHandler(syncId, playerInventory, hand)
                 }
             })
         }
-        return TypedActionResult.success(stack)
+        return InteractionResultHolder.success(stack)
     }
 
     private fun directionLabel(sides: Set<Direction>): String = if (sides.isEmpty()) {
@@ -188,11 +188,11 @@ abstract class ItemFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
 class OverclockerUpgrade : Item(Item.Settings()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             fun offer(coolant: Item, count: Int, suffix: String) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, OverclockerUpgrade::class.instance(), count)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, OverclockerUpgrade::class.instance(), count)
                     .pattern("CCC")
                     .pattern("WRW")
                     .input('C', coolant)
@@ -212,11 +212,11 @@ class OverclockerUpgrade : Item(Item.Settings()), IUpgradeItem {
 class TransformerUpgrade : Item(Item.Settings()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val mv = MvTransformerBlock::class.item()
             val goldCable = DoubleInsulatedGoldCableBlock::class.item()
             val circuit = Circuit::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, TransformerUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, TransformerUpgrade::class.instance(), 1)
                 .pattern("GGG")
                 .pattern("WTW")
                 .pattern("GRG")
@@ -234,9 +234,9 @@ class TransformerUpgrade : Item(Item.Settings()), IUpgradeItem {
 class EnergyStorageUpgrade : Item(Item.Settings()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val cable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnergyStorageUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnergyStorageUpgrade::class.instance(), 1)
                 .pattern("PPP")
                 .pattern("WBW")
                 .pattern("PRP")
@@ -254,10 +254,10 @@ class EnergyStorageUpgrade : Item(Item.Settings()), IUpgradeItem {
 class RedstoneInverterUpgrade : Item(Item.Settings()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" L ")
                 .pattern("T T")
@@ -265,7 +265,7 @@ class RedstoneInverterUpgrade : Item(Item.Settings()), IUpgradeItem {
                 .input('L', Items.LEVER)
                 .criterion(hasItem(tin), conditionsFromItem(tin))
                 .offerTo(exporter)
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 9)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" L ")
                 .pattern("T T")
@@ -281,10 +281,10 @@ class RedstoneInverterUpgrade : Item(Item.Settings()), IUpgradeItem {
 class EjectorUpgrade : ItemFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" P ")
                 .pattern("T T")
@@ -292,7 +292,7 @@ class EjectorUpgrade : ItemFilterUpgradeItem() {
                 .input('P', Items.PISTON)
                 .criterion(hasItem(tin), conditionsFromItem(tin))
                 .offerTo(exporter)
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 9)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" P ")
                 .pattern("T T")
@@ -310,11 +310,11 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val hopper = Items.HOPPER
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PullingUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, PullingUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" H ")
                 .pattern("T T")
@@ -322,7 +322,7 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
                 .input('H', hopper)
                 .criterion(hasItem(hopper), conditionsFromItem(hopper))
                 .offerTo(exporter)
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PullingUpgrade::class.instance(), 9)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, PullingUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" H ")
                 .pattern("T T")
@@ -338,11 +338,11 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
 class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val motor = ElectricMotor::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" M ")
                 .pattern("T T")
@@ -350,7 +350,7 @@ class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
                 .input('M', motor)
                 .criterion(hasItem(motor), conditionsFromItem(motor))
                 .offerTo(exporter)
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 9)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" M ")
                 .pattern("T T")
@@ -366,7 +366,7 @@ class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
 class FluidPullingUpgrade : FluidFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val tap = Treetap::class.instance()

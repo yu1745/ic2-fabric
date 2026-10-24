@@ -1,24 +1,24 @@
 package ic2_120.client.renderers
 
 import ic2_120.content.block.ComposeDebugBlockEntity
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.RotationAxis
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.resources.ResourceLocation
+import com.mojang.math.Axis
 import kotlin.math.PI
 import kotlin.math.sin
 
 class ComposeDebugBlockEntityRenderer(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<ComposeDebugBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
         private const val RING_SEGMENTS = 24
     }
 
@@ -30,8 +30,8 @@ class ComposeDebugBlockEntityRenderer(
     override fun render(
         entity: ComposeDebugBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -40,7 +40,7 @@ class ComposeDebugBlockEntityRenderer(
         val bob = sin(time * 0.08f) * 0.09f
         val spinDeg = time * 3.0f
 
-        val vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
 
         matrices.push()
         matrices.translate(0.5, 0.0, 0.5)
@@ -52,7 +52,7 @@ class ComposeDebugBlockEntityRenderer(
     }
 
     private fun drawHalo(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         spinDeg: Float,
         bob: Float,
@@ -69,7 +69,7 @@ class ComposeDebugBlockEntityRenderer(
             val angle = spinDeg + (360.0f * i / RING_SEGMENTS)
             matrices.push()
             matrices.translate(0.0, y.toDouble(), 0.0)
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(angle))
+            matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(angle))
             matrices.translate(radius.toDouble(), 0.0, 0.0)
             drawCuboid(
                 matrices, vc, light, overlay,
@@ -83,7 +83,7 @@ class ComposeDebugBlockEntityRenderer(
     }
 
     private fun drawArrow(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         spinDeg: Float,
         bob: Float,
@@ -93,7 +93,7 @@ class ComposeDebugBlockEntityRenderer(
         val baseY = 1.28f + bob
         matrices.push()
         matrices.translate(0.0, baseY.toDouble(), 0.0)
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-spinDeg * 1.2f))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(-spinDeg * 1.2f))
 
         drawCuboid(
             matrices, vc, light, overlay,
@@ -114,7 +114,7 @@ class ComposeDebugBlockEntityRenderer(
     }
 
     private fun drawPyramid(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -147,7 +147,7 @@ class ComposeDebugBlockEntityRenderer(
     }
 
     private fun drawCuboid(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -174,7 +174,7 @@ class ComposeDebugBlockEntityRenderer(
 
     private fun quadColor(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -192,7 +192,7 @@ class ComposeDebugBlockEntityRenderer(
 
     private fun vertex(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         x: Float,
         y: Float,
         z: Float,

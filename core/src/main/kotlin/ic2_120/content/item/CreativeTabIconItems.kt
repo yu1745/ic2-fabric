@@ -1,9 +1,9 @@
 package ic2_120.content.item
 
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.Item
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 仅用于创造模式物品栏图标的占位物品：模型指向贴图，不参与玩法，无 EU/耐久条。
@@ -14,6 +14,6 @@ class TabIconIc2ToolsItem : Item(Item.Settings())
 
 object CreativeTabIconItemsRegistration {
     fun register(modId: String) {
-        Registry.register(Registries.ITEM, Identifier.of(modId, "tab_icon_ic2_tools"), TabIconIc2ToolsItem())
+        Registry.register(BuiltInRegistries.ITEM, ResourceLocation.of(modId, "tab_icon_ic2_tools"), TabIconIc2ToolsItem())
     }
 }

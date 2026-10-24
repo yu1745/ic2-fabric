@@ -8,23 +8,23 @@ import ic2_120.content.sync.WaterKineticGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(block = WaterKineticGeneratorBlock::class, inventorySize = WaterKineticGeneratorBlockEntity.INVENTORY_SIZE)
 class WaterKineticGeneratorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(WaterKineticGeneratorScreenHandler::class.type(), syncId) {
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData
+) : AbstractContainerMenu(WaterKineticGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = WaterKineticGeneratorSync(SyncedDataView(propertyDelegate))
 
@@ -44,7 +44,7 @@ class WaterKineticGeneratorScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
         var stack = ItemStack.EMPTY
         val slot = slots[index]
@@ -75,7 +75,7 @@ class WaterKineticGeneratorScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is WaterKineticGeneratorBlock && player.squaredDistanceTo(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
@@ -90,7 +90,7 @@ class WaterKineticGeneratorScreenHandler(
         private val ROTOR_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack ->
-                ALLOWED_ROTORS.contains(net.minecraft.registry.Registries.ITEM.getId(stack.item).path)
+                ALLOWED_ROTORS.contains(net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item).path)
             }
         )
 

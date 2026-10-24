@@ -41,32 +41,32 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.block.BlockState
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtElement
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.Tag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 @ModBlockEntity(block = NeutronFabricatorBlock::class)
 class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     MachineBlockEntity(NeutronFabricatorBlockEntity::class.type(), pos, state),
-    ITieredMachine, ExtendedScreenHandlerFactory, Inventory, IRoutedSidedInventory,
+    ITieredMachine, ExtendedScreenHandlerFactory, Container, IRoutedSidedInventory,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport {
 
@@ -112,8 +112,8 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
 
     override var fluidPipeProviderEnabled: Boolean = false
     override var fluidPipeReceiverEnabled: Boolean = false
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeProviderFilter: net.minecraft.world.level.material.Fluid? = null
+    override var fluidPipeReceiverFilter: net.minecraft.world.level.material.Fluid? = null
     override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeEjectorCount: Int = 0
@@ -127,7 +127,7 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
         schema = syncedData,
         capacity = ENERGY_PER_MB,
         tier = TIER,
-        getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time },
         capacityBonusProvider = { capacityBonus },
         maxInsertPerTickProvider = { TransformerUpgradeComponent.maxInsertForTier(TIER + voltageTierBonus) }
@@ -136,8 +136,8 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     /** ic2 通用流体单元（万能单元，可装任意流体） */
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "fluid_cell")) }
 
     /** 中子流体槽（内部产出写入，外部只能取出） */
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -221,14 +221,14 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        val facing = world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
+        val facing = world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
         // 正面（玩家面对的面）不暴露流体存储，避免与 GUI 容器槽冲突
         if (side == facing) return null
         return outputStorage
     }
 
-    // ====== Inventory ======
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    // ====== Container ======
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
 
     /**
      * 对外物品自动化通道（对齐 core 复制机）：AE2 输出总线等 Transfer API 消费方经
@@ -250,15 +250,15 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
 
     override val routedItemStorage get() = itemStorage
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) { inventory[slot] = stack; markDirty() }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     /** 槽位校验：升级槽接受已注册且本机实现的升级（不含超频）；容器输入槽接受空桶/空单元 */
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
@@ -276,7 +276,7 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
             (item == fluidCellItem && stack.isFluidCellEmpty())
     }
 
-    private fun isNeutron(fluid: net.minecraft.fluid.Fluid): Boolean =
+    private fun isNeutron(fluid: net.minecraft.world.level.material.Fluid): Boolean =
         fluid == NeutronFluid.NEUTRON_STILL || fluid == NeutronFluid.NEUTRON_FLOWING
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
@@ -285,7 +285,7 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     // ====== tick 逻辑：应用升级 → 产中子流体；容器槽自动装填 ======
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         // 应用升级效果（对齐物质生成机）：储能/高压/红石反转/流体管道/物品弹出抽入
@@ -382,23 +382,23 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     // ====== ExtendedScreenHandlerFactory ======
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120_industrial_upgrade.neutron_fabricator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120_industrial_upgrade.neutron_fabricator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         NeutronFabricatorScreenHandler(
             syncId, playerInventory,
-            ScreenHandlerContext.create(world!!, pos),
+            ContainerLevelAccess.create(world!!, pos),
             syncedData, this,
             INVENTORY_SIZE
         )
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
     // ====== NBT ======
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(NeutronFabricatorSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
         syncedData.readNbt(nbt)
@@ -414,10 +414,10 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
      * （0-3 升级 + 4 容器输入 + 5 容器输出）：旧槽 3/4 顺移为 4/5；旧充电槽 0-2 保留原位
      * （新布局下变成升级槽，若存有电池由玩家自行取出）。
      */
-    private fun readInventoryWithMigration(nbt: NbtCompound) {
+    private fun readInventoryWithMigration(nbt: CompoundTag) {
         val invNbt = nbt.getCompound("Inv")
         val oldSize = if (invNbt.contains("Size")) invNbt.getInt("Size") else INVENTORY_SIZE
-        val items = invNbt.getList("Items", NbtElement.COMPOUND_TYPE.toInt())
+        val items = invNbt.getList("Items", Tag.COMPOUND_TYPE.toInt())
         for (i in 0 until items.size) {
             val slotNbt = items.getCompound(i)
             val oldSlot = slotNbt.getInt("Slot")
@@ -427,11 +427,11 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putLong(NeutronFabricatorSync.NBT_ENERGY, sync.amount)
         syncedData.writeNbt(nbt)
-        nbt.put("Inv", Inventories.writeNbt(NbtCompound(), inventory))
+        nbt.put("Inv", ContainerHelper.writeNbt(CompoundTag(), inventory))
         nbt.putLong("TankAmount", tankInternal.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }

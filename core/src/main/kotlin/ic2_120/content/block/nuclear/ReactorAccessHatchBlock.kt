@@ -7,36 +7,36 @@ import ic2_120.registry.id
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.tag.ItemTags
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.tags.ItemTags
 import java.util.function.Consumer
 
 /**
- * 反应堆访问接口。在反应堆结构内时，右键可打开反应堆 UI；Inventory 委托到对应的中心核反应堆。
+ * 反应堆访问接口。在反应堆结构内时，右键可打开反应堆 UI；Container 委托到对应的中心核反应堆。
  */
 @ModBlock(name = "reactor_access_hatch", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor", renderLayer = "translucent")
-class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
+class ReactorAccessHatchBlock(settings: BlockBehaviour.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         ReactorAccessHatchBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? {
@@ -51,13 +51,13 @@ class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = ReactorShellBlo
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
+    ): InteractionResult {
+        if (world.isClient) return InteractionResult.SUCCESS
         // 查找反应堆，仅当访问接口在其 5×5×5 结构内部时才打开 UI（不根据距离，根据结构归属）
         for (dx in -2..2) {
             for (dy in -2..2) {
@@ -66,20 +66,20 @@ class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = ReactorShellBlo
                     val be = world.getBlockEntity(reactorPos)
                     if (be is NuclearReactorBlockEntity && be.isPositionInStructure(pos)) {
                         player.openHandledScreen(be)
-                        return ActionResult.SUCCESS
+                        return InteractionResult.SUCCESS
                     }
                 }
             }
         }
-        return ActionResult.PASS
+        return InteractionResult.PASS
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
                     .input('A', vessel)
                     .input('B', ItemTags.WOODEN_TRAPDOORS)

@@ -3,30 +3,30 @@ package ic2_120.client.renderers
 import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
 import ic2_120.content.item.CrankMaterial
 import ic2_120.content.item.CrankHandleItem
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.state.property.Properties
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.RotationAxis
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.Direction
+import com.mojang.math.Axis
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 
 class ManualKineticGeneratorBlockEntityRenderer(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<ManualKineticGeneratorBlockEntity> {
 
     companion object {
-        private val WOOD_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/wood_rotor_model.png")
-        private val IRON_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/iron_rotor_model.png")
-        private val STEEL_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/steel_rotor_model.png")
-        private val CARBON_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
+        private val WOOD_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/wood_rotor_model.png")
+        private val IRON_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/iron_rotor_model.png")
+        private val STEEL_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/steel_rotor_model.png")
+        private val CARBON_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
         
         private const val PIXEL = 1.0f / 16.0f
         private const val SHAFT_HALF = 1.0f * PIXEL
@@ -46,8 +46,8 @@ class ManualKineticGeneratorBlockEntityRenderer(
     override fun render(
         entity: ManualKineticGeneratorBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -56,11 +56,11 @@ class ManualKineticGeneratorBlockEntityRenderer(
 
         val world = entity.world ?: return
         val state = entity.cachedState
-        val facing = state.getOrEmpty(Properties.FACING).orElse(Direction.NORTH)
+        val facing = state.getOrEmpty(BlockStateProperties.FACING).orElse(Direction.NORTH)
         
         val material = (crankStack.item as? CrankHandleItem)?.material ?: return
         val texture = getTextureForMaterial(material)
-        val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(texture))
+        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(texture))
 
         val angle = entity.clientTurnAngle + if (entity.sync.isTurning) tickDelta * 15f else 0f
 
@@ -70,7 +70,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
         rotateForFacing(matrices, facing)
         
         matrices.translate(0.0, 0.5, 0.0)
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(angle))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(angle))
 
         drawShaft(matrices, vc, light, overlay)
         drawArm(matrices, vc, light, overlay)
@@ -79,7 +79,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
         matrices.pop()
     }
 
-    private fun getTextureForMaterial(material: CrankMaterial): Identifier =
+    private fun getTextureForMaterial(material: CrankMaterial): ResourceLocation =
         when (material) {
             CrankMaterial.WOOD -> WOOD_TEXTURE
             CrankMaterial.IRON -> IRON_TEXTURE
@@ -87,18 +87,18 @@ class ManualKineticGeneratorBlockEntityRenderer(
             CrankMaterial.CARBON -> CARBON_TEXTURE
         }
 
-    private fun rotateForFacing(matrices: MatrixStack, facing: Direction) {
+    private fun rotateForFacing(matrices: PoseStack, facing: Direction) {
         when (facing) {
             Direction.NORTH -> { }
-            Direction.SOUTH -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180f))
-            Direction.WEST -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90f))
-            Direction.EAST -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90f))
+            Direction.SOUTH -> matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(180f))
+            Direction.WEST -> matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(90f))
+            Direction.EAST -> matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(-90f))
             else -> { }
         }
     }
 
     private fun drawShaft(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int
@@ -111,7 +111,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
     }
 
     private fun drawArm(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int
@@ -128,7 +128,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
     }
 
     private fun drawHandle(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int
@@ -144,7 +144,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
     }
 
     private fun drawCuboid(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,

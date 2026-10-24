@@ -1,10 +1,10 @@
 package ic2_120.content.block.transmission
 
-import net.minecraft.block.BlockState
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.BlockView
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.BlockGetter
 
 object KineticConnectionRules {
     fun isTransmissionNode(state: BlockState): Boolean {
@@ -14,15 +14,15 @@ object KineticConnectionRules {
 
     fun canConnectFromDirection(state: BlockState, fromDirection: Direction): Boolean {
         return when (state.block) {
-            is TransmissionShaftBlock -> state.get(Properties.AXIS) == fromDirection.axis
+            is TransmissionShaftBlock -> state.get(BlockStateProperties.AXIS) == fromDirection.axis
             is BevelGearBlock -> true
             else -> false
         }
     }
 
-    fun nodeDirections(world: BlockView, pos: BlockPos, state: BlockState): List<Direction> {
+    fun nodeDirections(world: BlockGetter, pos: BlockPos, state: BlockState): List<Direction> {
         return when (state.block) {
-            is TransmissionShaftBlock -> when (state.get(Properties.AXIS)) {
+            is TransmissionShaftBlock -> when (state.get(BlockStateProperties.AXIS)) {
                 Direction.Axis.X -> listOf(Direction.EAST, Direction.WEST)
                 Direction.Axis.Y -> listOf(Direction.UP, Direction.DOWN)
                 Direction.Axis.Z -> listOf(Direction.SOUTH, Direction.NORTH)
@@ -33,13 +33,13 @@ object KineticConnectionRules {
         }
     }
 
-    fun isMachinePortFacing(world: BlockView, machinePos: BlockPos, directionFromNode: Direction): Boolean {
+    fun isMachinePortFacing(world: BlockGetter, machinePos: BlockPos, directionFromNode: Direction): Boolean {
         val be = world.getBlockEntity(machinePos) as? IKineticMachinePort ?: return false
         val sideFromMachine = directionFromNode.opposite
         return be.canOutputKuTo(sideFromMachine) || be.canInputKuFrom(sideFromMachine)
     }
 
-    private fun bevelDirections(world: BlockView, pos: BlockPos): List<Direction> {
+    private fun bevelDirections(world: BlockGetter, pos: BlockPos): List<Direction> {
         val candidates = Direction.entries.filter { direction ->
             val neighborPos = pos.offset(direction)
             val neighborState = world.getBlockState(neighborPos)

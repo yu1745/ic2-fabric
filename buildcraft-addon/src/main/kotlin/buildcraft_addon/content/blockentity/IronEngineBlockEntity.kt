@@ -8,20 +8,20 @@ import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 /**
  * 燃烧引擎（铁引擎）
@@ -162,7 +162,7 @@ class IronEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlockState(pos, cachedState.with(Properties.FACING, next))
+        world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, next))
         markDirty()
     }
 
@@ -195,7 +195,7 @@ class IronEngineBlockEntity(
     }
 
     // === 冷却系统 ===
-    private val propertyDelegate = object : PropertyDelegate {
+    private val propertyDelegate = object : ContainerData {
         override fun get(index: Int): Int = when (index) {
             0 -> fuelAmount
             1 -> coolantAmount
@@ -207,16 +207,16 @@ class IronEngineBlockEntity(
         override fun size(): Int = 4
     }
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
-        return IronEngineScreenHandler(syncId, playerInventory, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), propertyDelegate)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+        return IronEngineScreenHandler(syncId, playerInventory, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(4)
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.buildcraft_addon.iron_engine")
+    override fun getDisplayName(): Component = Component.translatable("block.buildcraft_addon.iron_engine")
 
     private fun updateHeatLevel() {
         val world = world ?: return
@@ -250,7 +250,7 @@ class IronEngineBlockEntity(
         if (!world.isClient) {
             if (!ClaimProtection.allAllowedUuid(world, listOf(pos), null, ClaimProtection.EDIT_BLOCK) ||
                 !ClaimProtection.explosionCubeAllowed(world, pos, 4.0f, null)) return
-            world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.World.ExplosionSourceType.BLOCK)
+            world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.level.Level.ExplosionSourceType.BLOCK)
             world.breakBlock(pos, false)
         }
     }
@@ -259,7 +259,7 @@ class IronEngineBlockEntity(
     fun serverTick() {
         val world = world ?: return
         if (world.isClient) return
-        currentDirection = cachedState.get(Properties.FACING)
+        currentDirection = cachedState.get(BlockStateProperties.FACING)
         pendingOutputKu = 0
 
         isBurning = false
@@ -297,7 +297,7 @@ class IronEngineBlockEntity(
     fun clientTick() {
         val world = world ?: return
         if (!world.isClient) return
-        currentDirection = cachedState.get(Properties.FACING)
+        currentDirection = cachedState.get(BlockStateProperties.FACING)
 
         val powered = world.isReceivingRedstonePower(pos)
         isRedstonePowered = powered
@@ -332,7 +332,7 @@ class IronEngineBlockEntity(
     }
 
     // === NBT ===
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
@@ -352,7 +352,7 @@ class IronEngineBlockEntity(
         nbt.putInt("penaltyCooling", penaltyCooling)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")

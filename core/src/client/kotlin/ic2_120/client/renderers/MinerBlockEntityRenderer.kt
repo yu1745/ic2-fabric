@@ -2,19 +2,19 @@ package ic2_120.client.renderers
 
 import ic2_120.content.block.BaseMinerBlock
 import ic2_120.content.block.machines.BaseMinerBlockEntity
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.render.model.json.ModelTransformationMode
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.math.RotationAxis
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import net.minecraft.world.item.ItemDisplayContext
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.math.Axis
 import kotlin.math.atan2
 import kotlin.math.sin
 import kotlin.math.sqrt
 
 class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<T> {
 
     private val itemRenderer = context.itemRenderer
@@ -22,8 +22,8 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
     override fun render(
         entity: T,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -38,7 +38,7 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         val renderY = targetPos.y + 0.5 + vibration
         val renderZ = targetPos.z + 0.5
 
-        val camera = MinecraftClient.getInstance().gameRenderer.camera
+        val camera = Minecraft.getInstance().gameRenderer.camera
         val cx = camera.pos.x
         val cy = camera.pos.y
         val cz = camera.pos.z
@@ -56,14 +56,14 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         val dz = renderZ - entity.pos.z
         matrices.translate(dx, dy, dz)
         // Billboard：始终朝向玩家视角，避免 2D 贴图在侧视角不可见。
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(yawDeg))
-        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-pitchDeg))
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(yawDeg))
+        matrices.multiply(Axis.POSITIVE_X.rotationDegrees(-pitchDeg))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(180.0f))
         matrices.scale(0.85f, 0.85f, 0.85f)
 
         itemRenderer.renderItem(
             drill,
-            ModelTransformationMode.FIXED,
+            ItemDisplayContext.FIXED,
             light,
             overlay,
             matrices,

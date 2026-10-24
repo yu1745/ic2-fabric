@@ -2,8 +2,8 @@ package ic2_120.content.energy.charge
 
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.EnergiumDust
-import net.minecraft.item.Items
-import net.minecraft.inventory.Inventory
+import net.minecraft.world.item.Items
+import net.minecraft.world.Container
 
 /**
  * 通用电池放电组件。
@@ -14,7 +14,7 @@ import net.minecraft.inventory.Inventory
  * 红石转化不受 canDischargeNow / maxDemand 限制，允许溢出机器容量上限。
  */
 class BatteryDischargerComponent(
-    private val inventory: Inventory,
+    private val inventory: Container,
     private val batterySlot: Int,
     private val machineTierProvider: () -> Int,
     private val canDischargeNow: () -> Boolean = { true }

@@ -4,8 +4,8 @@ import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.MinecraftClient
-import net.minecraft.text.Text
+import net.minecraft.client.Minecraft
+import net.minecraft.network.chat.Component
 import org.slf4j.LoggerFactory
 
 object SodiumCompatibilityWarning {
@@ -26,7 +26,7 @@ object SodiumCompatibilityWarning {
             }
         })
         HudRenderCallback.EVENT.register(HudRenderCallback { drawContext, _ ->
-            renderWarning(drawContext, MinecraftClient.getInstance())
+            renderWarning(drawContext, Minecraft.getInstance())
         })
     }
 
@@ -50,9 +50,9 @@ object SodiumCompatibilityWarning {
         return major == 0 && minor < 6
     }
 
-    private fun warnPlayer(client: MinecraftClient) {
+    private fun warnPlayer(client: Minecraft) {
         val player = client.player ?: return
-        val warningText = Text.translatable("message.ic2_120.sodium_without_indium")
+        val warningText = Component.translatable("message.ic2_120.sodium_without_indium")
         logger.warn(
             "Detected Sodium without Indium. Rubber log rendering may be broken on this client. " +
                 "Install Indium for Sodium versions below 0.6."
@@ -64,12 +64,12 @@ object SodiumCompatibilityWarning {
         )
     }
 
-    private fun renderWarning(drawContext: net.minecraft.client.gui.DrawContext, client: MinecraftClient) {
+    private fun renderWarning(drawContext: net.minecraft.client.gui.GuiGraphics, client: Minecraft) {
         if (System.currentTimeMillis() >= warningUntilMs) return
         if (client.player == null) return
 
         val textRenderer = client.textRenderer
-        val warningText = Text.translatable("message.ic2_120.sodium_without_indium")
+        val warningText = Component.translatable("message.ic2_120.sodium_without_indium")
         val warningLines = warningText.string.split('\n')
         val matrices = drawContext.matrices
         val scaledWidth = client.window.scaledWidth

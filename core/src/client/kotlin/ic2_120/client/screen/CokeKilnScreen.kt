@@ -8,30 +8,30 @@ import ic2_120.content.sync.CokeKilnSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = CokeKilnBlock::class)
 class CokeKilnScreen(
     handler: CokeKilnScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<CokeKilnScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<CokeKilnScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = GUI_SIZE.width
         backgroundHeight = GUI_SIZE.height
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -61,7 +61,7 @@ class CokeKilnScreen(
         // 流体槽 (115,41) 16×16，有流体时满平铺
         val fluidAmount = handler.sync.fluidAmount.coerceAtLeast(0)
         if (fluidAmount > 0) run {
-            val fluid = Registries.FLUID.get(handler.sync.fluidRawId)
+            val fluid = BuiltInRegistries.FLUID.get(handler.sync.fluidRawId)
             val fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
             val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
@@ -88,20 +88,20 @@ class CokeKilnScreen(
         val relY = mouseY - top
         if (relX in TANK_X until TANK_X + SLOT_S && relY in TANK_Y until TANK_Y + SLOT_S) {
             val lines = if (fluidAmount > 0) {
-                val fluid = Registries.FLUID.get(handler.sync.fluidRawId)
+                val fluid = BuiltInRegistries.FLUID.get(handler.sync.fluidRawId)
                 val mb = fluidAmount / DROPLETS_PER_MB
                 val capMb = 8 * FluidConstants.BUCKET / DROPLETS_PER_MB
-                listOf(Text.literal(fluid.defaultState.blockState.block.name.string),
-                    Text.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
+                listOf(Component.literal(fluid.defaultState.blockState.block.name.string),
+                    Component.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
             } else {
-                listOf(Text.literal("空"))
+                listOf(Component.literal("空"))
             }
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicokeoven.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guicokeoven.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

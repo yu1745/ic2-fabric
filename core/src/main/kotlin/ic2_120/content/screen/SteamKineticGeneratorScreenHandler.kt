@@ -11,28 +11,28 @@ import ic2_120.content.sync.SteamKineticGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 /**
- * 蒸汽动能发电机 ScreenHandler。
+ * 蒸汽动能发电机 AbstractContainerMenu。
  * 1 个涡轮槽 + 1 个升级槽 + 玩家背包。
  */
 @ModScreenHandler(block = SteamKineticGeneratorBlock::class, inventorySize = SteamKineticGeneratorBlockEntity.INVENTORY_SIZE)
 class SteamKineticGeneratorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(SteamKineticGeneratorScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(SteamKineticGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = SteamKineticGeneratorSync(SyncedDataView(propertyDelegate))
 
@@ -56,7 +56,7 @@ class SteamKineticGeneratorScreenHandler(
             addSlot(Slot(playerInventory, col, PLAYER_INV_X + col * 18, HOTBAR_Y))
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -92,7 +92,7 @@ class SteamKineticGeneratorScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is SteamKineticGeneratorBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0

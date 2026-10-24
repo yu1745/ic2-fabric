@@ -26,31 +26,31 @@ import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.Entity
-import net.minecraft.entity.mob.Monster
-import net.minecraft.entity.passive.AnimalEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.monster.Enemy
+import net.minecraft.world.entity.animal.Animal
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
 import java.util.UUID
 import kotlin.math.floor
 import kotlin.math.pow
@@ -62,7 +62,7 @@ class TeleporterBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state),
-    Inventory,
+    Container,
     IRoutedSidedInventory,
     ITieredMachine,
     IOverclockerUpgradeSupport,
@@ -70,8 +70,8 @@ class TeleporterBlockEntity(
     ITransformerUpgradeSupport,
     IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = TeleporterBlock.ACTIVE
-    override fun getInventory(): net.minecraft.inventory.Inventory = this
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = TeleporterBlock.ACTIVE
+    override fun getInventory(): net.minecraft.world.Container = this
 
     override val tier: Int = TELEPORTER_TIER
     override var speedMultiplier: Float = 1f
@@ -82,8 +82,8 @@ class TeleporterBlockEntity(
 
     companion object {
         const val TELEPORTER_TIER = 4
-        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "machine.teleporter.charge"))
-        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "machine.teleporter.use"))
+        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.of("ic2", "machine.teleporter.charge"))
+        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.of("ic2", "machine.teleporter.use"))
 
         const val SLOT_UPGRADE_0 = 0
         const val SLOT_UPGRADE_1 = 1
@@ -112,7 +112,7 @@ class TeleporterBlockEntity(
         private fun normalizeRange(value: Int): Int = if (value >= 2) TELEPORT_RANGE_MAX else TELEPORT_RANGE_MIN
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -170,10 +170,10 @@ class TeleporterBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
     override fun markDirty() = super.markDirty()
 
     override fun setStack(slot: Int, stack: ItemStack) {
@@ -198,19 +198,19 @@ class TeleporterBlockEntity(
         markDirty()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.teleporter")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.teleporter")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): net.minecraft.screen.ScreenHandler =
-        TeleporterScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): net.minecraft.world.inventory.AbstractContainerMenu =
+        TeleporterScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
 
         sync.amount = nbt.getLong(TeleporterSync.NBT_ENERGY_STORED)
@@ -249,9 +249,9 @@ class TeleporterBlockEntity(
         sync.teleportRange = teleportRange
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
 
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
@@ -278,7 +278,7 @@ class TeleporterBlockEntity(
         nbt.putInt(NBT_TELEPORT_RANGE, teleportRange)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         sync.teleportRange = teleportRange
@@ -326,7 +326,7 @@ class TeleporterBlockEntity(
         }
 
         if (isCharging()) {
-            val charging = tickCharging(world as? ServerWorld, pos, state, targetBe)
+            val charging = tickCharging(world as? ServerLevel, pos, state, targetBe)
             setActiveState(world, pos, state, charging)
             endTick(world, pos)
             return
@@ -368,16 +368,16 @@ class TeleporterBlockEntity(
         endTick(world, pos)
     }
 
-    fun hasAdjacentMfeOrMfsu(world: World, pos: BlockPos): Boolean {
+    fun hasAdjacentMfeOrMfsu(world: Level, pos: BlockPos): Boolean {
         for (dir in Direction.entries) {
-            val id = Registries.BLOCK.getId(world.getBlockState(pos.offset(dir)).block)
+            val id = BuiltInRegistries.BLOCK.getId(world.getBlockState(pos.offset(dir)).block)
             if (id.namespace == "ic2_120" && (id.path == "mfe" || id.path == "mfsu" || id.path == "mfe_chargepad" || id.path == "mfsu_chargepad")) return true
         }
         return false
     }
 
     private fun computeWeight(entity: Entity): Int {
-        if (entity is PlayerEntity) {
+        if (entity is Player) {
             var weight = 1000
             weight += entity.inventory.armor.count { !it.isEmpty } * 100
 
@@ -392,8 +392,8 @@ class TeleporterBlockEntity(
             return weight.coerceAtMost(5100)
         }
         return when (entity) {
-            is Monster -> 500
-            is AnimalEntity -> 100
+            is Enemy -> 500
+            is Animal -> 100
             else -> 500
         }
     }
@@ -416,11 +416,11 @@ class TeleporterBlockEntity(
         sync.charging = 1
         sync.chargeProgress = 0
         sync.chargeMax = chargeTicksMax
-        world?.playSound(null, pos, TELEPORTER_CHARGE_SOUND, SoundCategory.BLOCKS, 0.8f, 1.0f)
+        world?.playSound(null, pos, TELEPORTER_CHARGE_SOUND, SoundSource.BLOCKS, 0.8f, 1.0f)
         markDirty()
     }
 
-    private fun tickCharging(world: ServerWorld?, pos: BlockPos, state: BlockState, targetBe: TeleporterBlockEntity): Boolean {
+    private fun tickCharging(world: ServerLevel?, pos: BlockPos, state: BlockState, targetBe: TeleporterBlockEntity): Boolean {
         val serverWorld = world ?: run {
             clearCharging()
             return false
@@ -456,7 +456,7 @@ class TeleporterBlockEntity(
                     null,
                     pos,
                     TELEPORTER_CHARGE_SOUND,
-                    SoundCategory.BLOCKS,
+                    SoundSource.BLOCKS,
                     0.8f,
                     1.0f
                 )
@@ -485,7 +485,7 @@ class TeleporterBlockEntity(
 
         if (success) {
             teleportEntity(entity, destX, destY, destZ)
-            serverWorld.playSound(null, pos, TELEPORTER_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
+            serverWorld.playSound(null, pos, TELEPORTER_USE_SOUND, SoundSource.BLOCKS, 1.0f, 1.0f)
 
             val cooldownTicks = 20
             teleportCooldown = cooldownTicks
@@ -517,18 +517,18 @@ class TeleporterBlockEntity(
         sync.chargeMax = 0
     }
 
-    private fun endTick(world: World, pos: BlockPos) {
+    private fun endTick(world: Level, pos: BlockPos) {
         sync.syncCurrentTickFlow()
         ic2_120.content.network.NetworkManager.sendTeleporterVisualStateToNearby(world, pos, this)
     }
 
-    fun getActivationBox(pos: BlockPos): Box {
+    fun getActivationBox(pos: BlockPos): AABB {
         val side = teleportRange.toDouble().coerceIn(TELEPORT_RANGE_MIN.toDouble(), TELEPORT_RANGE_MAX.toDouble())
         val half = side / 2.0
         val centerX = pos.x + 0.5
         val centerY = pos.y + 1.5
         val centerZ = pos.z + 0.5
-        return Box(
+        return AABB(
             centerX - half, centerY - half, centerZ - half,
             centerX + half, centerY + half, centerZ + half
         )
@@ -545,7 +545,7 @@ class TeleporterBlockEntity(
     fun getTeleportRange(): Int = teleportRange
 
     fun getChargingEntityId(): Int {
-        val serverWorld = world as? ServerWorld ?: return -1
+        val serverWorld = world as? ServerLevel ?: return -1
         val uuid = chargingEntityUuid ?: return -1
         return serverWorld.getEntity(uuid)?.id ?: -1
     }
@@ -558,17 +558,17 @@ class TeleporterBlockEntity(
         clientChargingEntityId = entityId
     }
 
-    private fun canTeleportTo(world: World, entity: Entity, x: Double, y: Double, z: Double): Boolean {
+    private fun canTeleportTo(world: Level, entity: Entity, x: Double, y: Double, z: Double): Boolean {
         val offset = entity.boundingBox.offset(x - entity.x, y - entity.y, z - entity.z)
         return world.isSpaceEmpty(entity, offset)
     }
 
-    private fun extractFromAdjacentMfe(world: World, pos: BlockPos, amount: Long, tx: Transaction): Long {
+    private fun extractFromAdjacentMfe(world: Level, pos: BlockPos, amount: Long, tx: Transaction): Long {
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
             val neighborPos = pos.offset(dir)
-            val id = Registries.BLOCK.getId(world.getBlockState(neighborPos).block)
+            val id = BuiltInRegistries.BLOCK.getId(world.getBlockState(neighborPos).block)
             if (id.namespace != "ic2_120" ||
                 (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
             // 绕过单 tick 输出上限，直接修改储电盒内部 amount
@@ -587,11 +587,11 @@ class TeleporterBlockEntity(
         return amount - remaining
     }
 
-    fun simulateAdjacentMfeEnergy(world: World, pos: BlockPos): Long {
+    fun simulateAdjacentMfeEnergy(world: Level, pos: BlockPos): Long {
         var total = 0L
         for (dir in Direction.entries) {
             val neighborPos = pos.offset(dir)
-            val id = Registries.BLOCK.getId(world.getBlockState(neighborPos).block)
+            val id = BuiltInRegistries.BLOCK.getId(world.getBlockState(neighborPos).block)
             if (id.namespace != "ic2_120" ||
                 (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
             val be = world.getBlockEntity(neighborPos)
@@ -604,7 +604,7 @@ class TeleporterBlockEntity(
 
     private fun teleportEntity(entity: Entity, x: Double, y: Double, z: Double) {
         entity.requestTeleport(x, y, z)
-        entity.velocity = Vec3d.ZERO
+        entity.velocity = Vec3.ZERO
         entity.velocityModified = true
     }
 

@@ -33,7 +33,7 @@ import ic2_120.integration.jei.ClientLiveRecipeSource
 import ic2_120.integration.jei.LiveRecipeSource
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft
 
 object Ic2_120Client : ClientModInitializer {
 	override fun onInitializeClient() {
@@ -53,7 +53,7 @@ object Ic2_120Client : ClientModInitializer {
 		// 后，isModLoaded 守卫即可彻底挡住对 JEI 类图的触碰。
 		if (FabricLoader.getInstance().isModLoaded("jei")) {
 			ic2_120.integration.jei.LiveRecipeSource.scheduleOnClientThread = { action ->
-				val client = MinecraftClient.getInstance()
+				val client = Minecraft.getInstance()
 				if (client.isOnThread) false else { client.execute(action); true }
 			}
 		}

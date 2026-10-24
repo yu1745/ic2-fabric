@@ -30,30 +30,30 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
 import ic2_120.content.fluid.ModFluids
-import net.minecraft.fluid.Fluids
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.World
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.Level
 
 /**
  * 水力发电机方块实体。
@@ -70,13 +70,13 @@ class WaterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
     override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null     // provider 流体过滤器（null = 不过滤）
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null    // receiver 流体过滤器（null = 不过滤）
+    override var fluidPipeProviderFilter: net.minecraft.world.level.material.Fluid? = null     // provider 流体过滤器（null = 不过滤）
+    override var fluidPipeReceiverFilter: net.minecraft.world.level.material.Fluid? = null    // receiver 流体过滤器（null = 不过滤）
     override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()   // provider 工作面（null = 任意面）
     override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()   // receiver 工作面（null = 任意面）
     override var fluidPipeEjectorCount: Int = 0
@@ -91,7 +91,7 @@ class WaterGeneratorBlockEntity(
         /** 周围水方块检测间隔（tick） */
         private const val WATER_CHECK_INTERVAL = 20
 
-        private val random = Random.create()
+        private val random = RandomSource.create()
 
         /** 水力发电机槽位：燃料输入、空容器输出、电池充电、4个升级槽 */
         const val FUEL_SLOT = 0
@@ -118,7 +118,7 @@ class WaterGeneratorBlockEntity(
 
     override val tier: Int = GENERATOR_TIER
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = WaterGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = WaterGeneratorBlock.ACTIVE
 
     override val soundConfig: MachineSoundConfig = MachineSoundConfig.loop(
         soundId = "generator.water.loop",
@@ -127,7 +127,7 @@ class WaterGeneratorBlockEntity(
         intervalTicks = 20
     )
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -149,7 +149,7 @@ class WaterGeneratorBlockEntity(
     @RegisterEnergy
     val sync = WaterGeneratorSync(
         schema = syncedData,
-        getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
 
@@ -161,7 +161,7 @@ class WaterGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
         override fun canInsert(variant: FluidVariant): Boolean =
-            !variant.isBlank && variant.fluid == net.minecraft.fluid.Fluids.WATER
+            !variant.isBlank && variant.fluid == net.minecraft.world.level.material.Fluids.WATER
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -245,7 +245,7 @@ class WaterGeneratorBlockEntity(
         tickOffset = random.nextBetween(0, WATER_CHECK_INTERVAL - 1)
     }
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
 
     override fun size(): Int = INVENTORY_SIZE
 
@@ -253,9 +253,9 @@ class WaterGeneratorBlockEntity(
 
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
 
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == BATTERY_SLOT && stack.count > 1) stack.count = 1
@@ -267,7 +267,7 @@ class WaterGeneratorBlockEntity(
         inventory.clear()
     }
 
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     fun canPlaceInSlot(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -304,26 +304,26 @@ class WaterGeneratorBlockEntity(
         } else false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.water_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.water_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         WaterGeneratorScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(WaterGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, WaterGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -334,9 +334,9 @@ class WaterGeneratorBlockEntity(
         cachedWaterCount = nbt.getInt(NBT_CACHED_WATER_COUNT).coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(WaterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.amount)
@@ -345,7 +345,7 @@ class WaterGeneratorBlockEntity(
         nbt.putInt(NBT_CACHED_WATER_COUNT, cachedWaterCount)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         adjacentEnergyTransfer.tick()
@@ -395,7 +395,7 @@ class WaterGeneratorBlockEntity(
         // 燃料槽：水桶、水单元、通用流体单元（NBT 为水）倒入水罐（必须在发电之后处理，否则会干扰发电）
         // 水罐仅 1 桶容量，必须等水罐空才能倒入整桶
         val fuelStack = getStack(FUEL_SLOT)
-        val emptyCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
         val canAcceptFullBucket = waterTankInternal.amount <= 0L
         when {
             fuelStack.item == Items.WATER_BUCKET && canAcceptFullBucket -> {
@@ -431,11 +431,11 @@ class WaterGeneratorBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        if (side == (world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
+        if (side == (world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
         return waterTank
     }
 
-    private fun countWaterBlocks(world: World, center: BlockPos): Int {
+    private fun countWaterBlocks(world: Level, center: BlockPos): Int {
         var count = 0
         for (x in (center.x - 1)..(center.x + 1)) {
             for (y in (center.y - 1)..(center.y + 1)) {

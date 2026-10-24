@@ -4,28 +4,28 @@ import ic2_120.content.block.MachineBlock
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider
-import net.minecraft.loot.LootPool
-import net.minecraft.loot.LootTable
-import net.minecraft.loot.condition.InvertedLootCondition
-import net.minecraft.loot.condition.MatchToolLootCondition
-import net.minecraft.loot.entry.ItemEntry
-import net.minecraft.loot.function.ExplosionDecayLootFunction
-import net.minecraft.loot.provider.number.ConstantLootNumberProvider
-import net.minecraft.predicate.item.ItemPredicate
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.storage.loot.LootPool
+import net.minecraft.world.level.storage.loot.LootTable
+import net.minecraft.world.level.storage.loot.predicates.InvertedLootItemCondition
+import net.minecraft.world.level.storage.loot.predicates.MatchTool
+import net.minecraft.world.level.storage.loot.entries.LootItem
+import net.minecraft.world.level.storage.loot.functions.ApplyExplosionDecay
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue
+import net.minecraft.advancements.critereon.ItemPredicate
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTableProvider(output) {
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
-            Registries.ITEM.get(Identifier.of("ic2_120", "wrench")),
-            Registries.ITEM.get(Identifier.of("ic2_120", "electric_wrench"))
+            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "wrench")),
+            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "electric_wrench"))
         )
 
     override fun generate() {
-        for (block in Registries.BLOCK) {
-            val id = Registries.BLOCK.getId(block)
+        for (block in BuiltInRegistries.BLOCK) {
+            val id = BuiltInRegistries.BLOCK.getId(block)
             if (id.namespace != IC2IndustrialUpgrade.MOD_ID) continue
 
             when {
@@ -47,21 +47,21 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
         val blockItem = block.asItem()
         val casingItem = block.getCasingDrop()
 
-        val wrenchConditionBuilder = MatchToolLootCondition.builder(wrenchPredicateBuilder)
-        val notWrenchConditionBuilder = InvertedLootCondition.builder(wrenchConditionBuilder)
+        val wrenchConditionBuilder = MatchTool.builder(wrenchPredicateBuilder)
+        val notWrenchConditionBuilder = InvertedLootItemCondition.builder(wrenchConditionBuilder)
 
         return LootTable.builder()
             .pool(
                 LootPool.builder()
-                    .rolls(ConstantLootNumberProvider.create(1f))
+                    .rolls(ConstantValue.create(1f))
                     .conditionally(wrenchConditionBuilder)
-                    .with(ItemEntry.builder(blockItem).apply(ExplosionDecayLootFunction.builder()))
+                    .with(LootItem.builder(blockItem).apply(ApplyExplosionDecay.builder()))
             )
             .pool(
                 LootPool.builder()
-                    .rolls(ConstantLootNumberProvider.create(1f))
+                    .rolls(ConstantValue.create(1f))
                     .conditionally(notWrenchConditionBuilder)
-                    .with(ItemEntry.builder(casingItem).apply(ExplosionDecayLootFunction.builder()))
+                    .with(LootItem.builder(casingItem).apply(ApplyExplosionDecay.builder()))
             )
     }
 }

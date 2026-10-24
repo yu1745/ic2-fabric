@@ -13,18 +13,18 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.world.World
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.player.Player
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 /**
@@ -72,7 +72,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = CarbonPlate::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             val goggles = NightVisionGoggles::class.instance()
@@ -92,11 +92,11 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
 
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
 
         val nbt = stack.orCreateNbt
@@ -106,7 +106,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         if (energy <= 0) {
             setEnergy(stack, 0)
             nbt.putBoolean(NIGHT_VISION_KEY, false)
-            player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+            player.removeStatusEffect(MobEffects.NIGHT_VISION)
             return
         }
 
@@ -118,7 +118,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
             if (energy < toConsume) {
                 setEnergy(stack, 0)
                 nbt.putBoolean(NIGHT_VISION_KEY, false)
-                player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+                player.removeStatusEffect(MobEffects.NIGHT_VISION)
                 return
             }
             setEnergy(stack, energy - toConsume)
@@ -128,21 +128,21 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         // 光线检测（复用 NightVisionGoggles 逻辑）
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
-            player.removeStatusEffect(StatusEffects.NIGHT_VISION)
-            val blind = player.getStatusEffect(StatusEffects.BLINDNESS)
+            player.removeStatusEffect(MobEffects.NIGHT_VISION)
+            val blind = player.getStatusEffect(MobEffects.BLINDNESS)
             if (blind == null || blind.duration <= 0) {
                 player.addStatusEffect(
-                    StatusEffectInstance(StatusEffects.BLINDNESS, BLINDNESS_DURATION, 0, true, false, true)
+                    MobEffectInstance(MobEffects.BLINDNESS, BLINDNESS_DURATION, 0, true, false, true)
                 )
             }
         } else {
             player.addStatusEffect(
-                StatusEffectInstance(StatusEffects.NIGHT_VISION, NIGHT_VISION_DURATION, 0, true, false, true)
+                MobEffectInstance(MobEffects.NIGHT_VISION, NIGHT_VISION_DURATION, 0, true, false, true)
             )
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
         val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
@@ -158,11 +158,11 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
             "${remainingSeconds.toInt()}秒"
         }
 
-                tooltip.add(Text.translatable("tooltip.ic2_120.nano_helmet.night_vision",
-            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
+                tooltip.add(Component.translatable("tooltip.ic2_120.nano_helmet.night_vision",
+            Component.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
             timeText
-        ).formatted(Formatting.GRAY))
+        ).formatted(ChatFormatting.GRAY))
         val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
-        tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(ChatFormatting.GRAY))
     }
 }

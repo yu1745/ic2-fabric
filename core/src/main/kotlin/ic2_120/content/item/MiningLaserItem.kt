@@ -13,27 +13,27 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.item.Item
-import net.minecraft.item.tooltip.TooltipType
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.text.Text
-import net.minecraft.util.Hand
-import net.minecraft.util.TypedActionResult
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.util.ActionResult
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.TooltipFlag
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.InteractionResult
 import ic2_120.editCustomData
 import ic2_120.getCustomData
 
@@ -74,12 +74,12 @@ class MiningLaserItem : Item(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val alloy = Alloy::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             if (alloy == Items.AIR || crystal == Items.AIR || advCircuit == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, MiningLaserItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, MiningLaserItem::class.instance(), 1)
                 .pattern("REE")
                 .pattern("AAC")
                 .pattern(" AA")
@@ -100,9 +100,9 @@ class MiningLaserItem : Item(
     override fun getEnergy(stack: ItemStack): Long = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
-        if (world.isClient || entity !is ServerPlayerEntity) return
+        if (world.isClient || entity !is ServerPlayer) return
         val player = entity
         val uuid = player.uuid
         if (player.mainHandStack.item !is MiningLaserItem) {
@@ -114,7 +114,7 @@ class MiningLaserItem : Item(
         val hadBefore = hadMiningLaserInMainLastTick.getOrDefault(uuid, false)
         if (!hadBefore) {
             val mode = getMode(stack)
-            player.sendMessage(Text.translatable(mode.translationKey), true)
+            player.sendMessage(Component.translatable(mode.translationKey), true)
         }
         hadMiningLaserInMainLastTick[uuid] = true
     }
@@ -124,32 +124,32 @@ class MiningLaserItem : Item(
     /**
      * 右键点击实体时不执行实体交互，仍发射激光。
      */
-    override fun useOnEntity(stack: ItemStack, user: PlayerEntity, entity: LivingEntity, hand: Hand): ActionResult {
+    override fun useOnEntity(stack: ItemStack, user: Player, entity: LivingEntity, hand: InteractionHand): InteractionResult {
         return use(user.world, user, hand).result
     }
 
     /**
      * 右键点击方块时不触发方块交互，仍发射激光。
      */
-    override fun useOnBlock(context: ItemUsageContext): ActionResult {
-        return ActionResult.PASS
+    override fun useOnBlock(context: UseOnContext): InteractionResult {
+        return InteractionResult.PASS
     }
 
-    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = user.getStackInHand(hand)
 
         // 客户端在按住模式键切模式时仍可能发来 use；与切模式包同 tick 的这一次不发射（见 [MiningLaserServerSuppress]）
         if (!world.isClient) {
-            val sp = user as? ServerPlayerEntity
+            val sp = user as? ServerPlayer
             if (sp != null && MiningLaserServerSuppress.consumeSuppressNextFire(sp)) {
-                return TypedActionResult.success(stack, false)
+                return InteractionResultHolder.success(stack, false)
             }
         }
 
         val mode = getMode(stack)
 
         // 电量不足
-        if (getEnergy(stack) < mode.energyCost) return TypedActionResult.pass(stack)
+        if (getEnergy(stack) < mode.energyCost) return InteractionResultHolder.pass(stack)
 
         if (!world.isClient) {
             val pitch = user.pitch
@@ -168,9 +168,9 @@ class MiningLaserItem : Item(
                 val fwdX = -Math.sin(radYaw) * Math.cos(radPitch)
                 val fwdY = -Math.sin(radPitch)
                 val fwdZ = Math.cos(radYaw) * Math.cos(radPitch)
-                val forward = Vec3d(fwdX, fwdY, fwdZ)
+                val forward = Vec3(fwdX, fwdY, fwdZ)
                 // 右手向量：forward × up（竖直看时退化为用 X 轴做参考）
-                val upRef = if (Math.abs(forward.y) > 0.99) Vec3d(1.0, 0.0, 0.0) else Vec3d(0.0, 1.0, 0.0)
+                val upRef = if (Math.abs(forward.y) > 0.99) Vec3(1.0, 0.0, 0.0) else Vec3(0.0, 1.0, 0.0)
                 val right = forward.crossProduct(upRef).normalize()
                 val perpUp = right.crossProduct(forward).normalize()
 
@@ -197,16 +197,16 @@ class MiningLaserItem : Item(
             user.itemCooldownManager.set(this, 5)
         }
 
-        return TypedActionResult.success(stack)
+        return InteractionResultHolder.success(stack)
     }
 
     private fun spawnProjectile(
-        world: World,
-        owner: PlayerEntity,
+        world: Level,
+        owner: Player,
         pitch: Float,
         yaw: Float,
         laserMode: LaserMode,
-        spreadOffset: Vec3d = Vec3d.ZERO
+        spreadOffset: Vec3 = Vec3.ZERO
     ) {
         val projectile = LaserProjectileEntity(ModEntities.LASER_PROJECTILE, world)
         projectile.init(owner, pitch, yaw, laserMode, spreadOffset)
@@ -219,8 +219,8 @@ class MiningLaserItem : Item(
     override fun appendTooltip(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Text>,
-        type: TooltipType
+        tooltip: MutableList<Component>,
+        type: TooltipFlag
     ) {
         super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
@@ -232,9 +232,9 @@ class MiningLaserItem : Item(
 
     override fun postMine(
         stack: ItemStack,
-        world: World,
-        state: net.minecraft.block.BlockState,
-        pos: net.minecraft.util.math.BlockPos,
+        world: Level,
+        state: net.minecraft.world.level.block.state.BlockState,
+        pos: net.minecraft.core.BlockPos,
         miner: LivingEntity
     ): Boolean = true
 }

@@ -2,15 +2,15 @@ package ic2_120.client
 
 import ic2_120.registry.annotation.ModScreen
 import ic2_120.registry.type
-import net.minecraft.block.Block
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.screen.ingame.HandledScreens
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerType
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.MenuScreens
+import net.minecraft.world.entity.player.Container
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -20,7 +20,7 @@ import kotlin.reflect.full.primaryConstructor
 
 /**
  * 客户端 Screen 自动注册。
- * 扫描指定包中带 [ModScreen] 注解的 [HandledScreen] 子类，并注册到 [HandledScreens]。
+ * 扫描指定包中带 [ModScreen] 注解的 [AbstractContainerScreen] 子类，并注册到 [MenuScreens]。
  */
 object ClientScreenRegistrar {
 
@@ -138,8 +138,8 @@ object ClientScreenRegistrar {
             if (!processedClassNames.add(className)) return
             val clazz = Class.forName(className).kotlin
             val modScreen = clazz.findAnnotation<ModScreen>() ?: return
-            if (!clazz.isSubclassOf(HandledScreen::class)) {
-                logger.warn("@ModScreen 类 {} 不是 HandledScreen 的子类", className)
+            if (!clazz.isSubclassOf(AbstractContainerScreen::class)) {
+                logger.warn("@ModScreen 类 {} 不是 AbstractContainerScreen 的子类", className)
                 return
             }
 
@@ -161,17 +161,17 @@ object ClientScreenRegistrar {
 
             // 为每个 handler 名称注册一次（多个方块共用同一个 UI）
             for (handlerName in handlersToRegister) {
-                val id = Identifier.of(modId, handlerName)
-                val type = Registries.SCREEN_HANDLER.get(id)
+                val id = ResourceLocation.of(modId, handlerName)
+                val type = BuiltInRegistries.SCREEN_HANDLER.get(id)
                     ?: run {
-                        logger.error("未找到 ScreenHandler 类型: {}，请确保主端已注册 @ModScreenHandler(name = \"{}\")", id, handlerName)
+                        logger.error("未找到 AbstractContainerMenu 类型: {}，请确保主端已注册 @ModScreenHandler(name = \"{}\")", id, handlerName)
                         return@processClass
                     }
                 @Suppress("UNCHECKED_CAST")
-                val screenType = type as ScreenHandlerType<ScreenHandler>
+                val screenType = type as MenuType<AbstractContainerMenu>
                 @Suppress("UNCHECKED_CAST")
-                HandledScreens.register(screenType) { handler, playerInventory, title ->
-                    ctor.call(handler, playerInventory, title) as HandledScreen<ScreenHandler>
+                MenuScreens.register(screenType) { handler, playerInventory, title ->
+                    ctor.call(handler, playerInventory, title) as AbstractContainerScreen<AbstractContainerMenu>
                 }
                 logger.debug("已注册客户端 Screen: {} -> {}", clazz.simpleName, id)
             }
@@ -182,14 +182,14 @@ object ClientScreenRegistrar {
         }
     }
 
-    /** 从 @ModScreen 的 handler 或 block 解析出 ScreenHandler 注册名（path）。 */
+    /** 从 @ModScreen 的 handler 或 block 解析出 AbstractContainerMenu 注册名（path）。 */
     private fun resolveHandlerName(annotation: ModScreen, modId: String): String? {
         if (annotation.handler.isNotEmpty()) return annotation.handler
         if (annotation.block == Any::class) return null
         if (!annotation.block.isSubclassOf(Block::class)) return null
-        for (id in Registries.BLOCK.ids) {
+        for (id in BuiltInRegistries.BLOCK.ids) {
             if (id.namespace != modId) continue
-            val block = Registries.BLOCK.get(id)
+            val block = BuiltInRegistries.BLOCK.get(id)
             if (block::class == annotation.block) return id.path
         }
         return null

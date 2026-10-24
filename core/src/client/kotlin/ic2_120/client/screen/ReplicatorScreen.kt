@@ -13,34 +13,34 @@ import ic2_120.registry.annotation.ModScreen
 import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.components.Button
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
 import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = ReplicatorBlock::class)
 class ReplicatorScreen(
-    handler: ReplicatorScreenHandler, playerInventory: PlayerInventory, title: Text
-) : HandledScreen<ReplicatorScreenHandler>(handler, playerInventory, title) {
+    handler: ReplicatorScreenHandler, playerInventory: Inventory, title: Component
+) : AbstractContainerScreen<ReplicatorScreenHandler>(handler, playerInventory, title) {
 
     private var showTemplateInfo = false
     private var lastStatus = -1
     private var templates: List<UuTemplateEntry> = emptyList()
     private var selectedIndex = -1
     private var templateInfoText = ""
-    private var cancelBtn: ButtonWidget? = null
-    private var singleBtn: ButtonWidget? = null
-    private var repeatBtn: ButtonWidget? = null
+    private var cancelBtn: Button? = null
+    private var singleBtn: Button? = null
+    private var repeatBtn: Button? = null
 
     init {
         backgroundWidth = 176
@@ -49,19 +49,19 @@ class ReplicatorScreen(
 
     override fun init() {
         super.init()
-        cancelBtn = ButtonWidget.builder(Text.empty()) {
-            MinecraftClient.getInstance().player?.networkHandler?.sendPacket(
-                ButtonClickC2SPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_CANCEL)
+        cancelBtn = Button.builder(Component.empty()) {
+            Minecraft.getInstance().player?.networkHandler?.sendPacket(
+                ServerboundContainerButtonClickPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_CANCEL)
             )
         }.dimensions(0, 0, 18, 18).build()
-        singleBtn = ButtonWidget.builder(Text.empty()) {
-            MinecraftClient.getInstance().player?.networkHandler?.sendPacket(
-                ButtonClickC2SPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_MODE_SINGLE)
+        singleBtn = Button.builder(Component.empty()) {
+            Minecraft.getInstance().player?.networkHandler?.sendPacket(
+                ServerboundContainerButtonClickPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_MODE_SINGLE)
             )
         }.dimensions(0, 0, 18, 18).build()
-        repeatBtn = ButtonWidget.builder(Text.empty()) {
-            MinecraftClient.getInstance().player?.networkHandler?.sendPacket(
-                ButtonClickC2SPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_MODE_REPEAT)
+        repeatBtn = Button.builder(Component.empty()) {
+            Minecraft.getInstance().player?.networkHandler?.sendPacket(
+                ServerboundContainerButtonClickPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_MODE_REPEAT)
             )
         }.dimensions(0, 0, 18, 18).build()
         addDrawableChild(cancelBtn!!)
@@ -75,11 +75,11 @@ class ReplicatorScreen(
         repeatBtn?.setPosition(x + 105, y + 81)
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         updateButtons()
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
@@ -145,7 +145,7 @@ class ReplicatorScreen(
             val energy = handler.sync.energy.toLong().coerceAtLeast(0)
             val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
             context.drawTooltip(textRenderer,
-                listOf(Text.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
+                listOf(Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
                 mouseX, mouseY)
         }
 
@@ -153,39 +153,39 @@ class ReplicatorScreen(
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
             val amt = handler.sync.fluidAmount.coerceAtLeast(0)
             val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
-            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
-                        else listOf(Text.literal("空"))
+            val lines = if (amt > 0) listOf(Component.literal("UU物质"), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
+                        else listOf(Component.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
         // 模式按钮悬停
         if (relX in 71..88 && relY in 81..98) {
-            context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.replicator.cancel")), mouseX, mouseY)
+            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.replicator.cancel")), mouseX, mouseY)
         }
         if (relX in 88..105 && relY in 81..98) {
-            context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.replicator.mode_single")), mouseX, mouseY)
+            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.replicator.mode_single")), mouseX, mouseY)
         }
         if (relX in 105..122 && relY in 81..98) {
-            context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.replicator.mode_repeat")), mouseX, mouseY)
+            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.replicator.mode_repeat")), mouseX, mouseY)
         }
 
         // uptips悬停
         if (relX in 4 until 20 && relY in 4 until 20) {
             context.drawTooltip(textRenderer, listOf(
-                Text.translatable("gui.ic2_120.replicator.uptips"),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+                Component.translatable("gui.ic2_120.replicator.uptips"),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_ejector_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_pulling_upgrade"))
             ), mouseX, mouseY)
         }
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawEnergyBar(context: DrawContext, left: Int, top: Int) {
+    private fun drawEnergyBar(context: GuiGraphics, left: Int, top: Int) {
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val fraction = (energy.toFloat() / cap).coerceIn(0f, 1f)
@@ -200,7 +200,7 @@ class ReplicatorScreen(
         context.disableScissor()
     }
 
-    private fun drawFluidTank(context: DrawContext, left: Int, top: Int) {
+    private fun drawFluidTank(context: GuiGraphics, left: Int, top: Int) {
         val amt = handler.sync.fluidAmount.coerceAtLeast(0)
         if (amt <= 0) return
         val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
@@ -226,7 +226,7 @@ class ReplicatorScreen(
         context.disableScissor()
     }
 
-    private fun drawProductDetail(context: DrawContext, left: Int, top: Int) {
+    private fun drawProductDetail(context: GuiGraphics, left: Int, top: Int) {
         val template = templates.getOrNull(selectedIndex) ?: return
         val stack = templateToStack(template)
         if (!stack.isEmpty) {
@@ -234,7 +234,7 @@ class ReplicatorScreen(
         }
     }
 
-    private fun drawStatusText(context: DrawContext, left: Int, top: Int) {
+    private fun drawStatusText(context: GuiGraphics, left: Int, top: Int) {
         val text = if (showTemplateInfo) {
             templateInfoText
         } else {
@@ -274,7 +274,7 @@ class ReplicatorScreen(
     private fun navigateTemplate(delta: Int) {
         if (templates.isEmpty()) return
         val newIndex = ((selectedIndex + delta) % templates.size + templates.size) % templates.size
-        val buf = PacketByteBuf(Unpooled.buffer())
+        val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(handler.blockPos)
         buf.writeVarInt(newIndex)
         ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
@@ -287,9 +287,9 @@ class ReplicatorScreen(
     }
 
     private fun templateToStack(template: UuTemplateEntry): ItemStack {
-        val id = Identifier.tryParse(template.itemId) ?: return ItemStack.EMPTY
-        val item = Registries.ITEM.getOrEmpty(id).orElse(null) ?: return ItemStack.EMPTY
-        return if (item == net.minecraft.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
+        val id = ResourceLocation.tryParse(template.itemId) ?: return ItemStack.EMPTY
+        val item = BuiltInRegistries.ITEM.getOrEmpty(id).orElse(null) ?: return ItemStack.EMPTY
+        return if (item == net.minecraft.world.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
     }
 
     private fun statusText(status: Int): String = when (status) {
@@ -316,8 +316,8 @@ class ReplicatorScreen(
 
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guirguireplicator.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guirguireplicator.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
 
         private const val MODE_TEX_U = 198

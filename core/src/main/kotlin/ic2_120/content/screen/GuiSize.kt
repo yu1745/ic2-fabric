@@ -5,7 +5,7 @@ package ic2_120.content.screen
  *
  * ## 使用约定
  *
- * - **普通 HandledScreen**：与本枚举某档一致时，用 `val gui = GuiSize.XXX`，绘制玩家栏边框与 Compose 锚点
+ * - **普通 AbstractContainerScreen**：与本枚举某档一致时，用 `val gui = GuiSize.XXX`，绘制玩家栏边框与 Compose 锚点
  *   优先使用 `gui.playerInvY` / `gui.hotbarY`，避免再手写 `84`/`142` 或与 Handler 重复两套数。
  * - **动态高度 GUI**（如可变行数储物箱）：用 [computeHeight] 得到总高，背包 Y 可与滚动区绑定，不要求与枚举
  *   [height] 互逆。
@@ -113,7 +113,7 @@ enum class GuiSize(
      * 玩家背包起始 Y 坐标。
      *
      * 这里不直接按 `height - StandardGuiLayout.HEIGHT` 线性推导，
-     * 而是对齐项目内已有 ScreenHandler 的实际布局常量，
+     * 而是对齐项目内已有 AbstractContainerMenu 的实际布局常量，
      * 避免升级列/加高界面与老界面出现 6px 左右的系统性错位。
      */
     val playerInvY: Int get() = when (this) {

@@ -4,11 +4,11 @@ import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.util.Identifier
-import net.minecraft.world.biome.Biome
-import net.minecraft.world.gen.GenerationStep
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.biome.Biome
+import net.minecraft.world.level.levelgen.GenerationStep
 import org.slf4j.LoggerFactory
 
 /**
@@ -21,18 +21,18 @@ object OreGeneration {
 
     private val logger = LoggerFactory.getLogger("ic2_120.oregen")
 
-    val ORE_TIN_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin"))
-    val ORE_TIN_DEEP_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin_deep"))
-    val ORE_TIN_UPPER_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin_upper"))
-    val ORE_LEAD_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_lead"))
-    val ORE_URANIUM_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_uranium"))
-    val ORE_PEAT_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_peat"))
+    val ORE_TIN_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_tin"))
+    val ORE_TIN_DEEP_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_tin_deep"))
+    val ORE_TIN_UPPER_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_tin_upper"))
+    val ORE_LEAD_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_lead"))
+    val ORE_URANIUM_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_uranium"))
+    val ORE_PEAT_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_peat"))
 
     fun register() {
         BiomeModifications.addFeature(
@@ -86,13 +86,13 @@ object OreGeneration {
         )
     }
 
-    private fun toBiomeKey(rawId: String): RegistryKey<Biome>? {
-        val biomeId = Identifier.tryParse(rawId)
+    private fun toBiomeKey(rawId: String): ResourceKey<Biome>? {
+        val biomeId = ResourceLocation.tryParse(rawId)
         if (biomeId == null) {
             logger.warn("Ignoring invalid peat ore biome id in config: {}", rawId)
             return null
         }
-        return RegistryKey.of(RegistryKeys.BIOME, biomeId)
+        return ResourceKey.of(Registries.BIOME, biomeId)
     }
 
 }

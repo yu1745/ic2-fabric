@@ -10,27 +10,27 @@ import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
-import net.minecraft.state.property.Properties
-import net.minecraft.entity.EquipmentSlot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.Direction
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.entity.EquipmentSlot
 import ic2_120.registry.annotation.ScreenFactory
 
 /**
- * 储电盒 GUI 的 ScreenHandler。
+ * 储电盒 GUI 的 AbstractContainerMenu。
  * 四个等级（BatBox/CESU/MFE/MFSU）共用，根据方块类型动态配置槽位数量和规则。
  */
 @ModScreenHandler(
@@ -40,14 +40,14 @@ import ic2_120.registry.annotation.ScreenFactory
     ]
 )
 class EnergyStorageScreenHandler(
-    screenHandlerType: net.minecraft.screen.ScreenHandlerType<*>,
+    screenHandlerType: net.minecraft.world.inventory.MenuType<*>,
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    val context: ContainerLevelAccess,
+    propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(screenHandlerType, syncId) {
+) : AbstractContainerMenu(screenHandlerType, syncId) {
     private val config = resolveConfig()
     private val machineSlotCount: Int = config.slotCount
     val sync = EnergyStorageSync(
@@ -55,8 +55,8 @@ class EnergyStorageScreenHandler(
         getFacing = {
             context.get({ world, pos ->
                 val state = world.getBlockState(pos)
-                state.getOrEmpty(Properties.FACING)
-                    .orElse(state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH))
+                state.getOrEmpty(BlockStateProperties.FACING)
+                    .orElse(state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
             }, Direction.NORTH)
         },
         tier = config.tier,
@@ -70,7 +70,7 @@ class EnergyStorageScreenHandler(
     private fun resolveConfig(): EnergyStorageConfig {
         return context.get({ world, pos ->
             val block = world.getBlockState(pos).block
-            val id = Registries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getId(block)
             EnergyStorageConfig.fromBlockPath(id.path) ?: EnergyStorageConfig.BATBOX
         }, EnergyStorageConfig.BATBOX)
     }
@@ -103,7 +103,7 @@ class EnergyStorageScreenHandler(
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+    private fun addTrackedSlot(inventory: Container, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
@@ -115,7 +115,7 @@ class EnergyStorageScreenHandler(
      * 普通 Slot 的 canInsert 默认恒为 true，会导致任意物品被塞进护甲栏。
      */
     private fun armorSlot(
-        inventory: PlayerInventory,
+        inventory: Inventory,
         index: Int,
         x: Int,
         y: Int,
@@ -127,7 +127,7 @@ class EnergyStorageScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
 
         var stack = ItemStack.EMPTY
@@ -170,7 +170,7 @@ class EnergyStorageScreenHandler(
    private val hotbarEnd: Int
        get() = playerInventorySlotStart + 35
 
-   override fun canUse(player: PlayerEntity): Boolean =
+   override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             val block = world.getBlockState(pos).block
             (block is ic2_120.content.block.storage.EnergyStorageBlock || block is ChargepadBlock) &&
@@ -184,7 +184,7 @@ class EnergyStorageScreenHandler(
     val currentRedstoneMode: Int
         get() = sync.redstoneMode.coerceIn(0, 6)
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         if (id != BUTTON_REDSTONE_MODE) return super.onButtonClick(player, id)
         context.run { world, pos ->
             val be = world.getBlockEntity(pos) as? EnergyStorageBlockEntity ?: return@run
@@ -198,20 +198,20 @@ class EnergyStorageScreenHandler(
         /** GUI 红石模式循环切换按钮。 */
         const val BUTTON_REDSTONE_MODE = 100
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): EnergyStorageScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): EnergyStorageScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val slotCount = buf.readVarInt()
-            buf.readBoolean() // useEquipmentSlots, read but not stored (ScreenHandler gets config from context)
-            val ctx = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(slotCount.coerceAtLeast(1))
-            val blockId = Registries.BLOCK.getId(playerInventory.player.world.getBlockState(pos).block)
-            val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier(blockId.namespace, blockId.path))
-                ?: error("ScreenHandler type not found for $blockId")
+            buf.readBoolean() // useEquipmentSlots, read but not stored (AbstractContainerMenu gets config from context)
+            val ctx = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val blockInv = SimpleContainer(slotCount.coerceAtLeast(1))
+            val blockId = BuiltInRegistries.BLOCK.getId(playerInventory.player.world.getBlockState(pos).block)
+            val screenHandlerType = BuiltInRegistries.SCREEN_HANDLER.get(ResourceLocation(blockId.namespace, blockId.path))
+                ?: error("AbstractContainerMenu type not found for $blockId")
             @Suppress("UNCHECKED_CAST")
             return EnergyStorageScreenHandler(
-                screenHandlerType as net.minecraft.screen.ScreenHandlerType<net.minecraft.screen.ScreenHandler>,
-                syncId, playerInventory, blockInv, ctx, ArrayPropertyDelegate(propertyCount)
+                screenHandlerType as net.minecraft.world.inventory.MenuType<net.minecraft.world.inventory.AbstractContainerMenu>,
+                syncId, playerInventory, blockInv, ctx, SimpleContainerData(propertyCount)
             )
         }
     }

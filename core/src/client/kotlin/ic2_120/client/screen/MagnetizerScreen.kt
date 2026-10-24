@@ -6,29 +6,29 @@ import ic2_120.content.block.MagnetizerBlock
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.MagnetizerScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = MagnetizerBlock::class)
 class MagnetizerScreen(
     handler: MagnetizerScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<MagnetizerScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<MagnetizerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = GUI_SIZE.width
         backgroundHeight = GUI_SIZE.height
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -58,9 +58,9 @@ class MagnetizerScreen(
         // 状态文本
         val hasBoots = handler.sync.isWearingMetalBoots != 0
         val bootsText = if (hasBoots)
-            Text.translatable("gui.ic2_120.magnetizer.metal_boots_detected")
+            Component.translatable("gui.ic2_120.magnetizer.metal_boots_detected")
         else
-            Text.translatable("gui.ic2_120.magnetizer.metal_boots_not_detected")
+            Component.translatable("gui.ic2_120.magnetizer.metal_boots_not_detected")
         val bootsColor = if (hasBoots) 0x55FF55 else 0xFF5555
 
         context.drawText(textRenderer, bootsText, left + 31, top + 62, bootsColor, false)
@@ -88,24 +88,24 @@ class MagnetizerScreen(
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
             context.drawTooltip(textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY)
         }
 
         // uptips 悬停
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
             context.drawTooltip(textRenderer, listOf(
-                Text.translatable("gui.ic2_120.magnetizer.uptips"),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.redstone_inverter_upgrade"))
+                Component.translatable("gui.ic2_120.magnetizer.uptips"),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.redstone_inverter_upgrade"))
             ), mouseX, mouseY)
         }
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guimagnetizer.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guimagnetizer.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
 
@@ -126,7 +126,7 @@ class MagnetizerScreen(
         private const val BOOTS_Y = 32
 
         // uptips (4,4)
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4
         private const val UPTIPS_SIZE = 16

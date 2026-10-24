@@ -1,10 +1,10 @@
 package ic2_120.content.item.armor
 
 import ic2_120.content.item.ModArmorMaterials
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ArmorMaterial
-import net.minecraft.item.Item
-import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ArmorMaterial
+import net.minecraft.world.item.Item
+import net.minecraft.core.Holder
 
 /**
  * 纳米护甲基类
@@ -35,7 +35,7 @@ import net.minecraft.registry.entry.RegistryEntry
  * - 光线 >= 8 时移除夜视并添加致盲
  */
 abstract class NanoArmorItem(
-    material: RegistryEntry<ArmorMaterial>,
+    material: Holder<ArmorMaterial>,
     type: Type,
     settings: Item.Settings
 ) : ElectricArmorItem(material, type, settings) {

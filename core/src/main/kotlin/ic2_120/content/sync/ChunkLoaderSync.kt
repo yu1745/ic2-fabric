@@ -2,7 +2,7 @@ package ic2_120.content.sync
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
 import ic2_120.content.syncs.SyncSchema
-import net.minecraft.util.math.ChunkPos
+import net.minecraft.world.level.ChunkPos
 
 class ChunkLoaderSync(
     schema: SyncSchema,

@@ -1,6 +1,6 @@
 package ic2_120.integration.jei
 
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * JEI 显示用的离心机配方

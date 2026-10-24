@@ -10,24 +10,24 @@ import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(block = InductionFurnaceBlock::class, inventorySize = InductionFurnaceBlockEntity.INVENTORY_SIZE)
 class InductionFurnaceScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(InductionFurnaceScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(InductionFurnaceScreenHandler::class.type(), syncId) {
 
     val sync = InductionFurnaceSync(SyncedDataView(propertyDelegate))
 
@@ -57,13 +57,13 @@ class InductionFurnaceScreenHandler(
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, x: Int, y: Int, spec: SlotSpec = DEFAULT_SLOT_SPEC) {
+    private fun addTrackedSlot(inventory: Container, beSlot: Int, x: Int, y: Int, spec: SlotSpec = DEFAULT_SLOT_SPEC) {
         val handlerIndex = slots.size
         addSlot(PredicateSlot(inventory, beSlot, x, y, spec))
         beSlotToHandlerIndex[beSlot] = handlerIndex
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -95,7 +95,7 @@ class InductionFurnaceScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is InductionFurnaceBlock && player.squaredDistanceTo(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5

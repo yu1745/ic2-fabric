@@ -1,6 +1,6 @@
 package ic2_120.content.reactor
 
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * 反应堆组件基础接口。可放入反应堆槽位的物品需实现此接口。

@@ -1,7 +1,7 @@
 package ic2_120.content.item.energy
 
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
 import ic2_120.editCustomData
 import ic2_120.getCustomData
 
@@ -22,10 +22,10 @@ import ic2_120.getCustomData
  *
  * ## 实现说明
  *
- * 使用接口而非基类，便于子类继承其他类（如 [net.minecraft.item.AxeItem]）。
- * 实现类需提供 [tier]、[maxCapacity]，并重写 [net.minecraft.item.Item.appendTooltip]、
- * [net.minecraft.item.Item.isItemBarVisible]、[net.minecraft.item.Item.getItemBarStep]、
- * [net.minecraft.item.Item.getItemBarColor] 以显示电量。
+ * 使用接口而非基类，便于子类继承其他类（如 [net.minecraft.world.item.AxeItem]）。
+ * 实现类需提供 [tier]、[maxCapacity]，并重写 [net.minecraft.world.item.Item.appendTooltip]、
+ * [net.minecraft.world.item.Item.isItemBarVisible]、[net.minecraft.world.item.Item.getItemBarStep]、
+ * [net.minecraft.world.item.Item.getItemBarColor] 以显示电量。
  */
 interface IElectricTool : ITiered {
 
@@ -52,27 +52,27 @@ interface IElectricTool : ITiered {
     fun isFullyCharged(stack: ItemStack): Boolean = getEnergy(stack) >= maxCapacity
 
     /**
-     * 添加电量相关工具提示，实现类在 [net.minecraft.item.Item.appendTooltip] 中调用。
+     * 添加电量相关工具提示，实现类在 [net.minecraft.world.item.Item.appendTooltip] 中调用。
      */
-    fun appendEnergyTooltip(stack: ItemStack, tooltip: MutableList<Text>) {
+    fun appendEnergyTooltip(stack: ItemStack, tooltip: MutableList<Component>) {
         val energy = getEnergy(stack)
         val ratio = getEnergyRatio(stack)
         tooltip.add(
-            Text.literal("⚡ ${formatEnergy(energy, maxCapacity)} (${formatPercentage(ratio)})")
+            Component.literal("⚡ ${formatEnergy(energy, maxCapacity)} (${formatPercentage(ratio)})")
         )
         tooltip.add(
-            Text.literal("等级: $tier")
-                .formatted(net.minecraft.util.Formatting.GRAY)
+            Component.literal("等级: $tier")
+                .formatted(net.minecraft.ChatFormatting.GRAY)
         )
     }
 
-    /** 获取物品栏电量条步数（0-13），实现类在 [net.minecraft.item.Item.getItemBarStep] 中调用 */
+    /** 获取物品栏电量条步数（0-13），实现类在 [net.minecraft.world.item.Item.getItemBarStep] 中调用 */
     fun getEnergyBarStep(stack: ItemStack): Int {
         val ratio = getEnergyRatio(stack)
         return (ratio * 13).toInt().coerceIn(0, 13)
     }
 
-    /** 获取物品栏电量条颜色，实现类在 [net.minecraft.item.Item.getItemBarColor] 中调用 */
+    /** 获取物品栏电量条颜色，实现类在 [net.minecraft.world.item.Item.getItemBarColor] 中调用 */
     fun getEnergyBarColor(stack: ItemStack): Int {
         val ratio = getEnergyRatio(stack)
         return when {

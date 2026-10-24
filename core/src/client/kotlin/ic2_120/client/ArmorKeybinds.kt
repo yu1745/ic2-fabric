@@ -12,10 +12,10 @@ import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.client.KeyMapping
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.network.FriendlyByteBuf
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -31,27 +31,27 @@ import org.lwjgl.glfw.GLFW
 @Environment(EnvType.CLIENT)
 object ArmorKeybinds {
     private val toggleVisionKey = KeyBindingHelper.registerKeyBinding(
-        KeyBinding(
+        KeyMapping(
             "key.ic2_120.toggle_vision",
-            InputUtil.Type.KEYSYM,
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_N,
             "category.ic2_120.ic2"
         )
     )
 
     private val toggleSpeedKey = KeyBindingHelper.registerKeyBinding(
-        KeyBinding(
+        KeyMapping(
             "key.ic2_120.toggle_speed",
-            InputUtil.Type.KEYSYM,
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_L,
             "category.ic2_120.ic2"
         )
     )
 
     private val toggleJumpKey = KeyBindingHelper.registerKeyBinding(
-        KeyBinding(
+        KeyMapping(
             "key.ic2_120.toggle_jump",
-            InputUtil.Type.KEYSYM,
+            InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_J,
             "category.ic2_120.ic2"
         )
@@ -69,7 +69,7 @@ object ArmorKeybinds {
                 if (helmet.item is NightVisionGoggles) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_NIGHT_VISION_GOGGLES_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
+                        FriendlyByteBuf(Unpooled.buffer())
                     )
                     return@register
                 }
@@ -78,7 +78,7 @@ object ArmorKeybinds {
                 if (helmet.item is NanoHelmet || helmet.item is QuantumHelmet) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_NANO_VISION_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
+                        FriendlyByteBuf(Unpooled.buffer())
                     )
                 }
             }
@@ -90,7 +90,7 @@ object ArmorKeybinds {
                 if (legs.item is QuantumLeggings) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
+                        FriendlyByteBuf(Unpooled.buffer())
                     )
                 }
             }
@@ -102,20 +102,20 @@ object ArmorKeybinds {
                 if (feet.item is QuantumBoots) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_QUANTUM_BOOTS_JUMP_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
+                        FriendlyByteBuf(Unpooled.buffer())
                     )
                 }
             }
         }
     }
 
-    private fun isAltDown(client: net.minecraft.client.MinecraftClient): Boolean {
+    private fun isAltDown(client: net.minecraft.client.Minecraft): Boolean {
         val window = client.window.handle
-        return InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_LEFT_ALT) ||
-               InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_RIGHT_ALT)
+        return InputConstants.isKeyPressed(window, GLFW.GLFW_KEY_LEFT_ALT) ||
+               InputConstants.isKeyPressed(window, GLFW.GLFW_KEY_RIGHT_ALT)
     }
 
-    fun getVisionKey(): KeyBinding = toggleVisionKey
-    fun getSpeedKey(): KeyBinding = toggleSpeedKey
-    fun getJumpKey(): KeyBinding = toggleJumpKey
+    fun getVisionKey(): KeyMapping = toggleVisionKey
+    fun getSpeedKey(): KeyMapping = toggleSpeedKey
+    fun getJumpKey(): KeyMapping = toggleJumpKey
 }

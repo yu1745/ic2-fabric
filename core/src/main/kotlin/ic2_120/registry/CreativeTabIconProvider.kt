@@ -1,10 +1,10 @@
 package ic2_120.registry
 
 import ic2_120.Ic2_120
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 将 [ModCreativeTab.iconResource]（贴图路径，如 `ic2:item/tool/electric/mining_laser`）解析为用于创造栏图标的 [ItemStack]。
@@ -25,8 +25,8 @@ object CreativeTabIconProvider {
         val key = resourcePath.trim()
         val iconName = TEXTURE_PATH_TO_ICON_ITEM[key]
         if (iconName != null) {
-            val id = if (iconName.contains(':')) Identifier(iconName) else Identifier(Ic2_120.MOD_ID, iconName)
-            val item = Registries.ITEM.get(id)
+            val id = if (iconName.contains(':')) ResourceLocation(iconName) else ResourceLocation(Ic2_120.MOD_ID, iconName)
+            val item = BuiltInRegistries.ITEM.get(id)
             if (item !== Items.AIR) return ItemStack(item)
         }
         return ItemStack(Items.BARRIER)

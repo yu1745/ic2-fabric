@@ -43,26 +43,26 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import kotlin.math.ceil
 
 @ModBlockEntity(block = MatterGeneratorBlock::class)
@@ -70,14 +70,14 @@ class MatterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty = MatterGeneratorBlock.ACTIVE
     override val tier: Int = MatterGeneratorSync.MATTER_GENERATOR_TIER
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
 
     override var capacityBonus: Long = 0L
     override var redstoneInverted: Boolean = false
@@ -85,8 +85,8 @@ class MatterGeneratorBlockEntity(
 
     override var fluidPipeProviderEnabled: Boolean = false
     override var fluidPipeReceiverEnabled: Boolean = false
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeProviderFilter: net.minecraft.world.level.material.Fluid? = null
+    override var fluidPipeReceiverFilter: net.minecraft.world.level.material.Fluid? = null
     override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeEjectorCount: Int = 0
@@ -127,7 +127,7 @@ class MatterGeneratorBlockEntity(
         }
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -143,11 +143,11 @@ class MatterGeneratorBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val uuMatterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "uu_matter_cell")) }
-    private val scrapItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "scrap")) }
-    private val scrapBoxItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "scrap_box")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val uuMatterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "uu_matter_cell")) }
+    private val scrapItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "scrap")) }
+    private val scrapBoxItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "scrap_box")) }
 
     private val outputPerCycle = mbToDroplets(1)
     /** 当前 1 mB 生成周期内已经消耗的废料数量。 */
@@ -279,19 +279,19 @@ class MatterGeneratorBlockEntity(
         markDirty()
     }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     private fun matterGenIsFillableContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val itemId = Registries.ITEM.getId(stack.item)
-        return itemId == Identifier(Ic2_120.MOD_ID, "empty_cell") ||
+        val itemId = BuiltInRegistries.ITEM.getId(stack.item)
+        return itemId == ResourceLocation(Ic2_120.MOD_ID, "empty_cell") ||
             stack.item == Items.BUCKET ||
-            (itemId == Identifier(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
+            (itemId == ResourceLocation(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
@@ -301,26 +301,26 @@ class MatterGeneratorBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem && stack.item !is OverclockerUpgrade
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.matter_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.matter_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         MatterGeneratorScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(MatterGeneratorSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -332,9 +332,9 @@ class MatterGeneratorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(MatterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
@@ -343,7 +343,7 @@ class MatterGeneratorBlockEntity(
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
@@ -502,7 +502,7 @@ class MatterGeneratorBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        val facing = world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
+        val facing = world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
         if (side == facing) return null
         return outputStorage
     }
@@ -525,7 +525,7 @@ class MatterGeneratorBlockEntity(
 
     private fun isScrapFuel(stack: ItemStack): Boolean = isScrap(stack) || isScrapBox(stack)
 
-    private fun isUuMatter(fluid: net.minecraft.fluid.Fluid): Boolean =
+    private fun isUuMatter(fluid: net.minecraft.world.level.material.Fluid): Boolean =
         fluid == ModFluids.UU_MATTER_STILL || fluid == ModFluids.UU_MATTER_FLOWING
 
     private fun toMilliBuckets(amount: Long): Int =

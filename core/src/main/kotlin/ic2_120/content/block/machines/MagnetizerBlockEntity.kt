@@ -28,26 +28,26 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
 import kotlin.math.abs
 
 @ModBlockEntity(block = MagnetizerBlock::class)
@@ -55,12 +55,12 @@ class MagnetizerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = MagnetizerBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = MagnetizerBlock.ACTIVE
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
 
     override val tier: Int = 1
 
@@ -88,7 +88,7 @@ class MagnetizerBlockEntity(
         )
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -115,7 +115,7 @@ class MagnetizerBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(tier + voltageTierBonus) }
     )
 
-    private var interactingPlayer: ServerPlayerEntity? = null
+    private var interactingPlayer: ServerPlayer? = null
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
@@ -157,7 +157,7 @@ class MagnetizerBlockEntity(
         }
     }
     override fun removeStack(slot: Int, amount: Int): ItemStack {
-        val result = Inventories.splitStack(inventory, slot, amount)
+        val result = ContainerHelper.splitStack(inventory, slot, amount)
         if (slot == SLOT_BOOTS && getStack(SLOT_BOOTS).isEmpty) {
             interactingPlayer?.equipStack(EquipmentSlot.FEET, ItemStack.EMPTY)
         }
@@ -165,7 +165,7 @@ class MagnetizerBlockEntity(
     }
 
     override fun removeStack(slot: Int): ItemStack {
-        val result = Inventories.removeStack(inventory, slot)
+        val result = ContainerHelper.removeStack(inventory, slot)
         if (slot == SLOT_BOOTS) {
             interactingPlayer?.equipStack(EquipmentSlot.FEET, ItemStack.EMPTY)
         }
@@ -173,7 +173,7 @@ class MagnetizerBlockEntity(
     }
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_DISCHARGING -> !stack.isEmpty && (stack.item is IBatteryItem || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust)
@@ -182,15 +182,15 @@ class MagnetizerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.magnetizer")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.magnetizer")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
-        interactingPlayer = player as? ServerPlayerEntity
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+        interactingPlayer = player as? ServerPlayer
         // 将玩家脚部装备同步到鞋子槽位
         val boots = player?.getEquippedStack(EquipmentSlot.FEET)?.copy() ?: ItemStack.EMPTY
         if (!boots.isEmpty && isMetalBootsByStack(boots)) {
@@ -202,15 +202,15 @@ class MagnetizerBlockEntity(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MagnetizerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -221,9 +221,9 @@ class MagnetizerBlockEntity(
         sync.pulseTicksRemaining = nbt.getInt("PulseTicksRemaining").coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(MagnetizerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
@@ -232,7 +232,7 @@ class MagnetizerBlockEntity(
         nbt.putInt("PulseTicksRemaining", sync.pulseTicksRemaining)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
@@ -331,9 +331,9 @@ class MagnetizerBlockEntity(
         return maxDelta.coerceAtLeast(1)
     }
 
-    private fun applyMagneticLift(world: World, fences: List<BlockPos>) {
+    private fun applyMagneticLift(world: Level, fences: List<BlockPos>) {
         if (fences.isEmpty()) return
-        val fenceCenters = fences.map { Vec3d(it.x + 0.5, it.y + 0.5, it.z + 0.5) }
+        val fenceCenters = fences.map { Vec3(it.x + 0.5, it.y + 0.5, it.z + 0.5) }
         val topY = fences.maxOf { it.y } + 1.15
 
         val minX = fences.minOf { it.x } - 2
@@ -343,8 +343,8 @@ class MagnetizerBlockEntity(
         val maxY = fences.maxOf { it.y } + 3
         val maxZ = fences.maxOf { it.z } + 3
 
-        val searchBox = Box(minX.toDouble(), minY.toDouble(), minZ.toDouble(), maxX.toDouble(), maxY.toDouble(), maxZ.toDouble())
-        val players = world.getEntitiesByClass(PlayerEntity::class.java, searchBox) { it.isAlive && !it.isSpectator }
+        val searchBox = AABB(minX.toDouble(), minY.toDouble(), minZ.toDouble(), maxX.toDouble(), maxY.toDouble(), maxZ.toDouble())
+        val players = world.getEntitiesByClass(Player::class.java, searchBox) { it.isAlive && !it.isSpectator }
 
         for (player in players) {
             val playerPos = player.pos
@@ -361,13 +361,13 @@ class MagnetizerBlockEntity(
             val shouldLift = player.y < topY
             val vy = if (shouldLift) player.velocity.y.coerceAtLeast(0.0) + verticalBoost else player.velocity.y
 
-            player.velocity = Vec3d(vx, vy, vz)
+            player.velocity = Vec3(vx, vy, vz)
             player.velocityModified = true
             player.fallDistance = 0f
         }
     }
 
-    private fun isMetalBoots(player: PlayerEntity): Boolean {
+    private fun isMetalBoots(player: Player): Boolean {
         val boots = player.getEquippedStack(EquipmentSlot.FEET)
         return isMetalBootsByStack(boots)
     }
@@ -376,7 +376,7 @@ class MagnetizerBlockEntity(
         if (stack.isEmpty) return false
         val item = stack.item
         if (item == Items.IRON_BOOTS || item == Items.DIAMOND_BOOTS || item == Items.NETHERITE_BOOTS) return true
-        val path = net.minecraft.registry.Registries.ITEM.getId(item).path
+        val path = net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(item).path
         return path == "bronze_boots" || path == "nano_boots" || path == "quantum_boots"
     }
 

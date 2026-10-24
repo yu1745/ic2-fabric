@@ -1,25 +1,25 @@
 package ic2_120.client.compose
 
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.font.TextRenderer
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.sound.PositionedSoundInstance
-import net.minecraft.sound.SoundEvents
-import net.minecraft.text.Text
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.Font
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.network.chat.Component
 
 /**
  * Compose-like UI 入口。在 Screen 中持有一个实例，
  * 每帧调用 [render] 构建并绘制 UI 树，通过 [mouseClicked] 转发点击事件。
  *
  * ```kotlin
- * class MyScreen(...) : HandledScreen<...>(...) {
+ * class MyScreen(...) : AbstractContainerScreen<...>(...) {
  *     private val ui = ComposeUI()
  *
- *     override fun render(ctx: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+ *     override fun render(ctx: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
  *         super.render(ctx, mouseX, mouseY, delta)
  *         ui.render(ctx, textRenderer, mouseX, mouseY) {
  *             Column(spacing = 4) {
- *                 Text("Hello")
+ *                 Component("Hello")
  *                 Button("Click me") { println("clicked") }
  *             }
  *         }
@@ -44,8 +44,8 @@ class ComposeUI {
      * [nodeIdGen] is passed from outside so ScrollView nodes get stable IDs across frames.
      */
     fun render(
-        drawContext: DrawContext,
-        textRenderer: TextRenderer,
+        drawContext: GuiGraphics,
+        textRenderer: Font,
         mouseX: Int,
         mouseY: Int,
         content: UiScope.() -> Unit
@@ -57,8 +57,8 @@ class ComposeUI {
      * 仅执行布局与放置，不绘制也不记录交互命中；用于在 super.render 前拿 slot 锚点。
      */
     fun layout(
-        drawContext: DrawContext,
-        textRenderer: TextRenderer,
+        drawContext: GuiGraphics,
+        textRenderer: Font,
         mouseX: Int,
         mouseY: Int,
         content: UiScope.() -> Unit
@@ -71,7 +71,7 @@ class ComposeUI {
      * 获取鼠标位置下的 tooltip 文本。在 [render] 之后调用，用于绘制悬停提示。
      * 返回 null 表示无 tooltip。
      */
-    fun getTooltipAt(mouseX: Int, mouseY: Int): List<Text>? {
+    fun getTooltipAt(mouseX: Int, mouseY: Int): List<Component>? {
         return renderCtx.tooltipHits.lastOrNull { h ->
             mouseX in h.x until (h.x + h.w) && mouseY in h.y until (h.y + h.h)
         }?.lines
@@ -91,8 +91,8 @@ class ComposeUI {
             mx in h.x until (h.x + h.w) && my in h.y until (h.y + h.h)
         }
         if (btnHit != null) {
-            MinecraftClient.getInstance().soundManager.play(
-                PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+            Minecraft.getInstance().soundManager.play(
+                SimpleSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
             )
             btnHit.onClick()
             return true
@@ -174,8 +174,8 @@ class ComposeUI {
     }
 
     private fun execute(
-        drawContext: DrawContext,
-        textRenderer: TextRenderer,
+        drawContext: GuiGraphics,
+        textRenderer: Font,
         mouseX: Int,
         mouseY: Int,
         draw: Boolean,

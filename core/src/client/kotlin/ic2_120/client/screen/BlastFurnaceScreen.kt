@@ -8,31 +8,31 @@ import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = BlastFurnaceBlock::class)
 class BlastFurnaceScreen(
     handler: BlastFurnaceScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<BlastFurnaceScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<BlastFurnaceScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -92,30 +92,30 @@ class BlastFurnaceScreen(
         // 空气表工具提示：区域 (11,11)-(23,58)
         if (mouseX in (x + 11) until (x + 23) && mouseY in (y + 11) until (y + 58)) {
             val airLines = if (airAmountDroplets > 0) {
-                listOf(Text.translatable("gui.ic2_120.blast_furnace.air_tooltip", "%,d".format(airAmountMb), "%,d".format(AIR_CAPACITY_MB)))
+                listOf(Component.translatable("gui.ic2_120.blast_furnace.air_tooltip", "%,d".format(airAmountMb), "%,d".format(AIR_CAPACITY_MB)))
             } else {
-                listOf(Text.translatable("ic2.generic.text.empty"))
+                listOf(Component.translatable("ic2.generic.text.empty"))
             }
             context.drawTooltip(textRenderer, airLines, mouseX, mouseY)
         }
 
         // 温度条工具提示：区域 (71,70)-(92,77)
         if (mouseX in (x + 71) until (x + 92) && mouseY in (y + 70) until (y + 77)) {
-            val heatTooltip = Text.translatable("gui.ic2_120.blast_furnace.heat_tooltip",
+            val heatTooltip = Component.translatable("gui.ic2_120.blast_furnace.heat_tooltip",
                 temperature, BlastFurnaceSync.TEMP_MAX)
             context.drawTooltip(textRenderer, heatTooltip, mouseX, mouseY)
         }
 
         // 升级提示工具提示
         if (mouseX in (x + 35) until (x + 35 + 16) && mouseY in (y + 4) until (y + 4 + 16)) {
-           val upgradeTooltip = mutableListOf<Text>()
-           upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
-            upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_warmup"))
-            upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_maintain"))
-            upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_faster"))
-            upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_lower"))
+           val upgradeTooltip = mutableListOf<Component>()
+           upgradeTooltip.add(Component.translatable("gui.ic2_120.upgrade_slots"))
+            upgradeTooltip.add(Component.translatable("gui.ic2_120.blast_furnace.heat_info_warmup"))
+            upgradeTooltip.add(Component.translatable("gui.ic2_120.blast_furnace.heat_info_maintain"))
+            upgradeTooltip.add(Component.translatable("gui.ic2_120.blast_furnace.heat_info_faster"))
+            upgradeTooltip.add(Component.translatable("gui.ic2_120.blast_furnace.heat_info_lower"))
            for (id in SUPPORTED_UPGRADES) {
-                val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
+                val item = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", id))
                 upgradeTooltip.add(item.name)
             }
             context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
@@ -127,7 +127,7 @@ class BlastFurnaceScreen(
     private fun getProgressMax(temp: Int): Int = BlastFurnaceSync.getProgressMax(temp)
 
     /** 压缩空气流体渲染：区域 (11,11)-(23,58) 12×47，自底向上填充。 */
-    private fun drawAirFluid(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawAirFluid(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 12
         val barH = 47
         val fillH = (fraction * barH).toInt()
@@ -154,7 +154,7 @@ class BlastFurnaceScreen(
     }
 
     /** 热量条：21×7（从 22×7 源纹理采样），自左向右填充。 */
-    private fun drawHeatGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawHeatGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 21
         val barH = 7
         val fillW = (fraction * barW).toInt()
@@ -165,7 +165,7 @@ class BlastFurnaceScreen(
     }
 
     /** 工作状态覆盖：27×27，自底向上填充。 */
-    private fun drawWorkingState(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawWorkingState(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 27
         val barH = 27
         val fillH = (fraction * barH).toInt()
@@ -176,8 +176,8 @@ class BlastFurnaceScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiblockcutter.png")
-        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiblockcutter.png")
+        private val UPTIPS = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private val SUPPORTED_UPGRADES = listOf(
             "ejector_upgrade",
             "pulling_upgrade"

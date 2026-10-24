@@ -14,13 +14,13 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 import java.util.function.Consumer
 
 /**
@@ -78,7 +78,7 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val alloy = Alloy::class.instance()
             val nano = NanoChestplate::class.instance()
             val iridium = IridiumPlate::class.instance()
@@ -102,7 +102,7 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
         val energy = getEnergy(stack)
 
@@ -117,8 +117,8 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_chestplate.flight_time", timeText).formatted(Formatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_chestplate.flight_time", timeText).formatted(ChatFormatting.GRAY))
         val pct = "%.0f".format(getDamageReduction() * 100)
-        tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(ChatFormatting.GRAY))
     }
 }

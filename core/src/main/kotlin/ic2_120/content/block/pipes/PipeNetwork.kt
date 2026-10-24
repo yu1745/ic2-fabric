@@ -3,14 +3,14 @@ package ic2_120.content.block.pipes
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
-import net.minecraft.fluid.Fluid
+import net.minecraft.world.level.material.Fluid
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.state.property.Properties
-import net.minecraft.registry.Registries
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 class PipeNetwork {
     val pipes = mutableSetOf<Long>()
@@ -64,13 +64,13 @@ class PipeNetwork {
         lastTouchedPipes.clear()
     }
 
-    fun tickIfNeeded(world: World) {
+    fun tickIfNeeded(world: Level) {
         if (lastTickTime == world.time) return
         lastTickTime = world.time
         pushFluids(world)
     }
 
-    private fun pushFluids(world: World) {
+    private fun pushFluids(world: Level) {
         if (pipes.isEmpty()) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
@@ -82,11 +82,11 @@ class PipeNetwork {
 
         val primaryFluid = providers.firstOrNull()?.variant?.fluid
         stalledByMixedProviders = primaryFluid != null && providers.any { it.variant.fluid != primaryFluid }
-        primaryFluidId = primaryFluid?.let { Registries.FLUID.getId(it).toString() }
+        primaryFluidId = primaryFluid?.let { BuiltInRegistries.FLUID.getId(it).toString() }
 
         if (stalledByMixedProviders) {
             conflictingFluidIds = providers.asSequence()
-                .map { Registries.FLUID.getId(it.variant.fluid).toString() }
+                .map { BuiltInRegistries.FLUID.getId(it.variant.fluid).toString() }
                 .distinct()
                 .toList()
             syncPipeLoad(world, topology.pipeRates, emptyMap())
@@ -276,7 +276,7 @@ class PipeNetwork {
         return moved
     }
 
-    private fun resolveProviderVariant(storage: Storage<FluidVariant>, filterFluid: net.minecraft.fluid.Fluid?): FluidVariant? {
+    private fun resolveProviderVariant(storage: Storage<FluidVariant>, filterFluid: net.minecraft.world.level.material.Fluid?): FluidVariant? {
         // 探测量必须 ≥ 1 mB（FluidConstants.BUCKET / 1000 = 81 droplets）。
         // 否则经 ForgeCompatUtil.toForgeBucket 桥接到 Forge IFluidHandler 时会被截断成 0 mB，
         // handler.drain(0 mB) 恒返回 0，导致所有 Forge 流体容器探测失败、泵附件抽不到它们的流体。
@@ -300,14 +300,14 @@ class PipeNetwork {
         return null
     }
 
-    private fun findProviders(world: World, topology: TopologyCache): List<ProviderEndpoint> {
+    private fun findProviders(world: Level, topology: TopologyCache): List<ProviderEndpoint> {
         val providers = mutableListOf<ProviderEndpoint>()
         for (edge in topology.boundaries) {
             val sourcePos = BlockPos.fromLong(edge.cablePosLong)
             val sourceState = world.getBlockState(sourcePos)
             if (sourceState.block !is PumpAttachmentBlock) continue
             // 泵附件只能从正面抽取
-            if (sourceState.get(Properties.FACING) != edge.lookupFromNeighborSide.opposite) continue
+            if (sourceState.get(BlockStateProperties.FACING) != edge.lookupFromNeighborSide.opposite) continue
             val neighborPos = BlockPos.fromLong(edge.neighborPosLong)
             val storage = FluidStorage.SIDED.find(world, neighborPos, edge.lookupFromNeighborSide) ?: continue
             if (!storage.supportsExtraction()) continue
@@ -319,7 +319,7 @@ class PipeNetwork {
         return providers
     }
 
-    private fun findReceivers(world: World, topology: TopologyCache, primaryFluid: Fluid): List<ReceiverEndpoint> {
+    private fun findReceivers(world: Level, topology: TopologyCache, primaryFluid: Fluid): List<ReceiverEndpoint> {
         val primaryVariant = FluidVariant.of(primaryFluid)
         val receivers = mutableListOf<ReceiverEndpoint>()
         for (edge in topology.boundaries) {
@@ -334,25 +334,25 @@ class PipeNetwork {
         return receivers
     }
 
-    private fun pumpFilterFor(world: World, edge: BoundaryEdge): Fluid? {
+    private fun pumpFilterFor(world: Level, edge: BoundaryEdge): Fluid? {
         val sourceState = world.getBlockState(BlockPos.fromLong(edge.cablePosLong))
         if (sourceState.block !is PumpAttachmentBlock) return null
         val sourceBe = world.getBlockEntity(BlockPos.fromLong(edge.cablePosLong)) as? PipeBlockEntity ?: return null
         return sourceBe.pumpFilterFluid()
     }
 
-    private fun isPumpFrontFace(world: World, edge: BoundaryEdge): Boolean {
+    private fun isPumpFrontFace(world: Level, edge: BoundaryEdge): Boolean {
         val sourcePos = BlockPos.fromLong(edge.cablePosLong)
         val sourceState = world.getBlockState(sourcePos)
         val block = sourceState.block
         if (block !is PumpAttachmentBlock) return false
-        return sourceState.get(Properties.FACING) == edge.lookupFromNeighborSide.opposite
+        return sourceState.get(BlockStateProperties.FACING) == edge.lookupFromNeighborSide.opposite
     }
 
     private fun simulateInsertion(storage: Storage<FluidVariant>, variant: FluidVariant, amount: Long): Long =
         Transaction.openOuter().use { tx -> storage.insert(variant, amount, tx) }
 
-    private fun buildTopology(world: World): TopologyCache {
+    private fun buildTopology(world: Level): TopologyCache {
         val neighbors = mutableMapOf<Long, MutableList<Long>>()
         val boundaries = mutableListOf<BoundaryEdge>()
 
@@ -379,7 +379,7 @@ class PipeNetwork {
         return TopologyCache(capacityByPipe.toMap(), neighbors.mapValues { it.value.toList() }, boundaries)
     }
 
-    private fun syncPipeLoad(world: World, rates: Map<Long, Long>, remaining: Map<Long, Long>) {
+    private fun syncPipeLoad(world: Level, rates: Map<Long, Long>, remaining: Map<Long, Long>) {
         val fluidTypeChanged = primaryFluidId != lastSyncedFluidId
 
         if (fluidTypeChanged || currentTouchedPipes.isNotEmpty()) {
@@ -394,7 +394,7 @@ class PipeNetwork {
                 be.pipeLoad = used
                 be.currentFluidId = primaryFluidId
                 if (beFluidChanged) {
-                    world.updateListeners(pos, be.cachedState, be.cachedState, net.minecraft.block.Block.NOTIFY_LISTENERS)
+                    world.updateListeners(pos, be.cachedState, be.cachedState, net.minecraft.world.level.block.Block.NOTIFY_LISTENERS)
                 }
             }
         }

@@ -5,33 +5,33 @@ import ic2_120.content.block.pipes.PumpAttachmentBlock
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.screen.slot.SlotActionType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.inventory.ClickType
 import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(names = ["bronze_pump_attachment", "carbon_pump_attachment"])
 class PumpAttachmentScreenHandler(
     syncId: Int,
-    private val playerInventory: PlayerInventory,
+    private val playerInventory: Inventory,
     private val blockEntity: PipeBlockEntity?,
-    private val context: ScreenHandlerContext
-) : ScreenHandler(PumpAttachmentScreenHandler::class.type(), syncId) {
+    private val context: ContainerLevelAccess
+) : AbstractContainerMenu(PumpAttachmentScreenHandler::class.type(), syncId) {
 
-    constructor(syncId: Int, playerInventory: PlayerInventory, be: PipeBlockEntity) :
-        this(syncId, playerInventory, be, ScreenHandlerContext.create(playerInventory.player.world, be.pos))
+    constructor(syncId: Int, playerInventory: Inventory, be: PipeBlockEntity) :
+        this(syncId, playerInventory, be, ContainerLevelAccess.create(playerInventory.player.world, be.pos))
 
     init {
-        addSlot(object : Slot(SimpleInventory(1), FILTER_SLOT, 80, 31) {
+        addSlot(object : Slot(SimpleContainer(1), FILTER_SLOT, 80, 31) {
             override fun canInsert(stack: ItemStack): Boolean = false
-            override fun canTakeItems(playerEntity: PlayerEntity): Boolean = false
+            override fun canTakeItems(playerEntity: Player): Boolean = false
         })
 
         for (row in 0 until 3) {
@@ -44,7 +44,7 @@ class PumpAttachmentScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         return ItemStack.EMPTY
     }
 
@@ -58,8 +58,8 @@ class PumpAttachmentScreenHandler(
         return true
     }
 
-    override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
-        if (slotIndex == FILTER_SLOT && actionType == SlotActionType.PICKUP) {
+    override fun onSlotClick(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
+        if (slotIndex == FILTER_SLOT && actionType == ClickType.PICKUP) {
             val cursor = cursorStack
             if (cursor.isEmpty || button == 1) {
                 blockEntity?.clearPumpFilter()
@@ -74,7 +74,7 @@ class PumpAttachmentScreenHandler(
         super.onSlotClick(slotIndex, button, actionType, player)
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is PumpAttachmentBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -93,11 +93,11 @@ class PumpAttachmentScreenHandler(
         const val PLAYER_INV_START = 1
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): PumpAttachmentScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): PumpAttachmentScreenHandler {
             val pos = buf.readBlockPos()
             val world = playerInventory.player.world
             val be = world.getBlockEntity(pos) as? PipeBlockEntity
-            return PumpAttachmentScreenHandler(syncId, playerInventory, be, ScreenHandlerContext.create(world, pos))
+            return PumpAttachmentScreenHandler(syncId, playerInventory, be, ContainerLevelAccess.create(world, pos))
         }
     }
 }

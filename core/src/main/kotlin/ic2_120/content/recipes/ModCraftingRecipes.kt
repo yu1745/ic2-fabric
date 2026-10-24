@@ -11,10 +11,10 @@ import ic2_120.content.recipes.crafting.DamageToolShapelessRecipe
 import ic2_120.content.recipes.crafting.DamageToolShapelessRecipeSerializer
 import ic2_120.content.recipes.crafting.EmptyFluidCellToEmptyCellRecipe
 import ic2_120.content.recipes.crafting.EmptyFluidCellToEmptyCellRecipeSerializer
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.RecipeType
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
 
 object ModCraftingRecipes {
     val BATTERY_ENERGY_SHAPED_TYPE: RecipeType<BatteryEnergyShapedRecipe> = object : RecipeType<BatteryEnergyShapedRecipe> {
@@ -50,21 +50,21 @@ object ModCraftingRecipes {
         EmptyFluidCellToEmptyCellRecipeSerializer
 
     fun register() {
-        Registry.register(Registries.RECIPE_TYPE, Ic2_120.id("battery_energy_shaped"), BATTERY_ENERGY_SHAPED_TYPE)
-        Registry.register(Registries.RECIPE_SERIALIZER, Ic2_120.id("battery_energy_shaped"), BATTERY_ENERGY_SHAPED_SERIALIZER)
-        Registry.register(Registries.RECIPE_TYPE, Ic2_120.id("consume_treetap_shaped"), CONSUME_TREETAP_SHAPED_TYPE)
-        Registry.register(Registries.RECIPE_SERIALIZER, Ic2_120.id("consume_treetap_shaped"), CONSUME_TREETAP_SHAPED_SERIALIZER)
-        Registry.register(Registries.RECIPE_TYPE, Ic2_120.id("consume_wrench_shaped"), CONSUME_WRENCH_SHAPED_TYPE)
-        Registry.register(Registries.RECIPE_SERIALIZER, Ic2_120.id("consume_wrench_shaped"), CONSUME_WRENCH_SHAPED_SERIALIZER)
-        Registry.register(Registries.RECIPE_TYPE, Ic2_120.id("damage_tool_shapeless"), DAMAGE_TOOL_SHAPELESS_TYPE)
-        Registry.register(Registries.RECIPE_SERIALIZER, Ic2_120.id("damage_tool_shapeless"), DAMAGE_TOOL_SHAPELESS_SERIALIZER)
+        Registry.register(BuiltInRegistries.RECIPE_TYPE, Ic2_120.id("battery_energy_shaped"), BATTERY_ENERGY_SHAPED_TYPE)
+        Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, Ic2_120.id("battery_energy_shaped"), BATTERY_ENERGY_SHAPED_SERIALIZER)
+        Registry.register(BuiltInRegistries.RECIPE_TYPE, Ic2_120.id("consume_treetap_shaped"), CONSUME_TREETAP_SHAPED_TYPE)
+        Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, Ic2_120.id("consume_treetap_shaped"), CONSUME_TREETAP_SHAPED_SERIALIZER)
+        Registry.register(BuiltInRegistries.RECIPE_TYPE, Ic2_120.id("consume_wrench_shaped"), CONSUME_WRENCH_SHAPED_TYPE)
+        Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, Ic2_120.id("consume_wrench_shaped"), CONSUME_WRENCH_SHAPED_SERIALIZER)
+        Registry.register(BuiltInRegistries.RECIPE_TYPE, Ic2_120.id("damage_tool_shapeless"), DAMAGE_TOOL_SHAPELESS_TYPE)
+        Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, Ic2_120.id("damage_tool_shapeless"), DAMAGE_TOOL_SHAPELESS_SERIALIZER)
         Registry.register(
-            Registries.RECIPE_TYPE,
+            BuiltInRegistries.RECIPE_TYPE,
             Ic2_120.id("empty_fluid_cell_to_empty_cell"),
             EMPTY_FLUID_CELL_TO_EMPTY_CELL_TYPE
         )
         Registry.register(
-            Registries.RECIPE_SERIALIZER,
+            BuiltInRegistries.RECIPE_SERIALIZER,
             Ic2_120.id("empty_fluid_cell_to_empty_cell"),
             EMPTY_FLUID_CELL_TO_EMPTY_CELL_SERIALIZER
         )

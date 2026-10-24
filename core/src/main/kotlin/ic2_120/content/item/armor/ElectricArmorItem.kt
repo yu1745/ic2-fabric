@@ -1,10 +1,10 @@
 package ic2_120.content.item.armor
 
 import ic2_120.content.item.energy.IElectricTool
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ArmorMaterial
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ArmorMaterial
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
 
 /**
  * 能量护甲基类
@@ -52,7 +52,7 @@ abstract class ElectricArmorItem(
     /**
      * 电力护甲不走原版耐久系统，完全由 EU 能量驱动。
      *
-     * 若不禁用，原版 [net.minecraft.entity.LivingEntity.damageArmor]
+     * 若不禁用，原版 [net.minecraft.world.entity.LivingEntity.damageArmor]
      * 会在每次受击时同时消耗原版耐久度，导致护甲在耐久耗尽时消失，
      * 即使 EU 能量充足。详见 [ic2_120.mixin.PlayerEntityMixin]。
      */
@@ -79,7 +79,7 @@ abstract class ElectricArmorItem(
     override fun getItemBarColor(stack: ItemStack): Int =
         getEnergyBarColor(stack)
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
     }

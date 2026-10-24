@@ -9,26 +9,26 @@ import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.client.texture.Sprite
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.components.Button
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = NuclearReactorBlock::class)
 class NuclearReactorScreen(
     handler: NuclearReactorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<NuclearReactorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<NuclearReactorScreenHandler>(handler, playerInventory, title) {
 
     private val isThermal get() = handler.isThermalMode || handler.sync.isThermalMode == 1
-    private var lockButton: ButtonWidget? = null
+    private var lockButton: Button? = null
 
     private val coolantSprite by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.COOLANT_STILL)
@@ -57,11 +57,11 @@ class NuclearReactorScreen(
         super.init()
         val btnW = if (isThermal) TH_BTN_W else NT_BTN_W
         val btnH = if (isThermal) TH_BTN_H else NT_BTN_H
-        lockButton = ButtonWidget.builder(
-            Text.translatable("gui.ic2_120.nuclear_reactor.lock")
+        lockButton = Button.builder(
+            Component.translatable("gui.ic2_120.nuclear_reactor.lock")
         ) {
-            MinecraftClient.getInstance().player?.networkHandler?.sendPacket(
-                ButtonClickC2SPacket(handler.syncId, NuclearReactorScreenHandler.BUTTON_ID_TOGGLE_LOCK)
+            Minecraft.getInstance().player?.networkHandler?.sendPacket(
+                ServerboundContainerButtonClickPacket(handler.syncId, NuclearReactorScreenHandler.BUTTON_ID_TOGGLE_LOCK)
             )
         }.dimensions(0, 0, btnW, btnH).build()
         addDrawableChild(lockButton!!)
@@ -74,7 +74,7 @@ class NuclearReactorScreen(
             x + (if (isThermal) TH_BTN_X else NT_BTN_X),
             y + (if (isThermal) TH_BTN_Y else NT_BTN_Y)
         )
-        btn.message = Text.translatable(
+        btn.message = Component.translatable(
             if (isLocked) "gui.ic2_120.nuclear_reactor.unlock"
             else "gui.ic2_120.nuclear_reactor.lock"
         )
@@ -114,7 +114,7 @@ class NuclearReactorScreen(
         }
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         if (isThermal) {
             context.drawTexture(TEXTURE, x, y, TH_BG_U.toFloat(), TH_BG_V.toFloat(), TH_BG_W, TH_BG_H, TEX_W, TEX_H)
         } else {
@@ -125,7 +125,7 @@ class NuclearReactorScreen(
         if (isThermal) drawFluidBars(context)
     }
 
-    private fun drawLockOverlays(context: DrawContext) {
+    private fun drawLockOverlays(context: GuiGraphics) {
         val cols = handler.reactorCols
         val offsetX = 1
         val offsetY = 1
@@ -139,7 +139,7 @@ class NuclearReactorScreen(
         }
     }
 
-    private fun drawHeatBar(context: DrawContext) {
+    private fun drawHeatBar(context: GuiGraphics) {
         val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         val fraction = temp.toFloat() / NuclearReactorSync.HEAT_CAPACITY
         val fillW = (fraction * HEAT_W).toInt()
@@ -151,7 +151,7 @@ class NuclearReactorScreen(
         context.disableScissor()
     }
 
-    private fun drawFluidBars(context: DrawContext) {
+    private fun drawFluidBars(context: GuiGraphics) {
         // inputCoolant/outputHotCoolant 现在是 droplets，容量 = BUCKET * 16
         val inputFraction = if (COOLANT_TANK_DROPLETS > 0)
             handler.sync.inputCoolant.coerceAtLeast(0).toFloat() / COOLANT_TANK_DROPLETS else 0f
@@ -166,8 +166,8 @@ class NuclearReactorScreen(
     }
 
     private fun drawFluidTank(
-        context: DrawContext, fx: Int, fy: Int, fw: Int, fh: Int,
-        sprite: Sprite?, color: Int, fraction: Float
+        context: GuiGraphics, fx: Int, fy: Int, fw: Int, fh: Int,
+        sprite: TextureAtlasSprite?, color: Int, fraction: Float
     ) {
         val fillH = (fraction.coerceIn(0f, 1f) * fh).toInt()
         if (fillH <= 0 || sprite == null || color == -1) return
@@ -186,7 +186,7 @@ class NuclearReactorScreen(
         context.disableScissor()
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         positionSlots()
         updateLockButton()
         renderBackground(context)
@@ -197,7 +197,7 @@ class NuclearReactorScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawTextOverlay(context: DrawContext) {
+    private fun drawTextOverlay(context: GuiGraphics) {
         val scale = 7f / 9f
         if (isThermal) {
             val heatOutput = handler.sync.thermalHeatOutput / 20
@@ -224,7 +224,7 @@ class NuclearReactorScreen(
         }
     }
 
-    private fun drawGhostItems(context: DrawContext) {
+    private fun drawGhostItems(context: GuiGraphics) {
         val reactor = handler.reactor ?: return
         for (i in 0 until handler.reactorSlotCount) {
             val slot = handler.slots[i]
@@ -238,14 +238,14 @@ class NuclearReactorScreen(
         }
     }
 
-    private fun drawCustomTooltips(context: DrawContext, mouseX: Int, mouseY: Int) {
+    private fun drawCustomTooltips(context: GuiGraphics, mouseX: Int, mouseY: Int) {
         if (isThermal) {
             if (mouseX in (x + TH_HEAT_X) until (x + TH_HEAT_X + HEAT_W) &&
                 mouseY in (y + TH_HEAT_Y) until (y + TH_HEAT_Y + HEAT_H)
             ) {
                 val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
                 context.drawTooltip(textRenderer,
-                    listOf(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
+                    listOf(Component.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
                     mouseX, mouseY
                 )
             }
@@ -257,11 +257,11 @@ class NuclearReactorScreen(
                 if (inputDroplets > 0) {
                     context.drawTooltip(
                         textRenderer,
-                        listOf(Text.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputDroplets / DROPLETS_PER_MB, capMb)),
+                        listOf(Component.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputDroplets / DROPLETS_PER_MB, capMb)),
                         mouseX, mouseY
                     )
                 } else {
-                    context.drawTooltip(textRenderer, listOf(Text.literal("空")), mouseX, mouseY)
+                    context.drawTooltip(textRenderer, listOf(Component.literal("空")), mouseX, mouseY)
                 }
             }
             if (mouseX in (x + TH_FLUID_R_X) until (x + TH_FLUID_R_X2) &&
@@ -272,11 +272,11 @@ class NuclearReactorScreen(
                 if (outputDroplets > 0) {
                     context.drawTooltip(
                         textRenderer,
-                        listOf(Text.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputDroplets / DROPLETS_PER_MB, capMb)),
+                        listOf(Component.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputDroplets / DROPLETS_PER_MB, capMb)),
                         mouseX, mouseY
                     )
                 } else {
-                    context.drawTooltip(textRenderer, listOf(Text.literal("空")), mouseX, mouseY)
+                    context.drawTooltip(textRenderer, listOf(Component.literal("空")), mouseX, mouseY)
                 }
             }
             if (mouseX in (x + TH_HOVER_X1) until (x + TH_HOVER_X2) &&
@@ -290,7 +290,7 @@ class NuclearReactorScreen(
             ) {
                 val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
                 context.drawTooltip(textRenderer,
-                    listOf(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
+                    listOf(Component.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
                     mouseX, mouseY
                 )
             }
@@ -302,8 +302,8 @@ class NuclearReactorScreen(
         }
     }
 
-    private fun buildElectricInfoLines(): List<Text> {
-        val lines = mutableListOf<Text>()
+    private fun buildElectricInfoLines(): List<Component> {
+        val lines = mutableListOf<Component>()
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = NuclearReactorSync.ENERGY_CAPACITY
         val inputRate = handler.sync.getSyncedInsertedAmount()
@@ -311,17 +311,17 @@ class NuclearReactorScreen(
         val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         val heatProduced = handler.sync.totalHeatProduced
         val heatDissipated = handler.sync.totalHeatDissipated
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.energy_line",
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.energy_line",
             EnergyFormatUtils.formatEu(energy), EnergyFormatUtils.formatEu(cap)))
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.gen_output_line",
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.gen_output_line",
             EnergyFormatUtils.formatEu(inputRate), EnergyFormatUtils.formatEu(outputRate)))
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp))
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp))
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
         return lines
     }
 
-    private fun buildThermalInfoLines(): List<Text> {
-        val lines = mutableListOf<Text>()
+    private fun buildThermalInfoLines(): List<Component> {
+        val lines = mutableListOf<Component>()
         val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         val heatProduced = handler.sync.totalHeatProduced
         val heatDissipated = handler.sync.totalHeatDissipated
@@ -332,20 +332,20 @@ class NuclearReactorScreen(
         val inputMb = inputDroplets / DROPLETS_PER_MB
         val outputMb = outputDroplets / DROPLETS_PER_MB
         val capMb = COOLANT_TANK_CAPACITY_MB
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp))
-        lines.add(Text.literal("(流体堆发热翻倍)"))
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.thermal_output", thermalOutput / 20))
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.actual_dissipate", actualDissipated / 20))
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputMb, capMb))
-        lines.add(Text.literal("%.1f".format(inputDroplets.toFloat() / COOLANT_TANK_DROPLETS.toFloat() * 100) + "%"))
-        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputMb, capMb))
-        lines.add(Text.literal("%.1f".format(outputDroplets.toFloat() / COOLANT_TANK_DROPLETS.toFloat() * 100) + "%"))
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp))
+        lines.add(Component.literal("(流体堆发热翻倍)"))
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.thermal_output", thermalOutput / 20))
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.actual_dissipate", actualDissipated / 20))
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputMb, capMb))
+        lines.add(Component.literal("%.1f".format(inputDroplets.toFloat() / COOLANT_TANK_DROPLETS.toFloat() * 100) + "%"))
+        lines.add(Component.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputMb, capMb))
+        lines.add(Component.literal("%.1f".format(outputDroplets.toFloat() / COOLANT_TANK_DROPLETS.toFloat() * 100) + "%"))
         return lines
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val COOLANT_TANK_DROPLETS = (FluidConstants.BUCKET * NuclearReactorSync.COOLANT_TANK_CAPACITY_BUCKETS).toInt()
         private val COOLANT_TANK_CAPACITY_MB = (COOLANT_TANK_DROPLETS / DROPLETS_PER_MB)

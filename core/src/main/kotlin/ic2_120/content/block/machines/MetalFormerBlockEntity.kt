@@ -33,33 +33,33 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 @ModBlockEntity(block = MetalFormerBlock::class)
 @ModMachineRecipeBinding(MetalFormerRecipeSerializer::class)
 class MetalFormerBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = MetalFormerBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = MetalFormerBlock.ACTIVE
 
-    override fun getInventory(): net.minecraft.inventory.Inventory = this
+    override fun getInventory(): net.minecraft.world.Container = this
 
     override val tier: Int = METAL_FORMER_TIER
 
@@ -89,7 +89,7 @@ class MetalFormerBlockEntity(
         const val INVENTORY_SIZE = 7
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -140,15 +140,15 @@ class MetalFormerBlockEntity(
         markDirty()
     }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() {
         super.markDirty()
     }
 
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecipeInput(stack)
@@ -158,26 +158,26 @@ class MetalFormerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.metal_former")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.metal_former")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         MetalFormerScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MetalFormerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -191,9 +191,9 @@ class MetalFormerBlockEntity(
         sync.setMode(MetalFormerSync.Mode.fromId(nbt.getInt(MetalFormerSync.NBT_MODE)))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(MetalFormerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -219,7 +219,7 @@ class MetalFormerBlockEntity(
         }
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
@@ -326,12 +326,12 @@ class MetalFormerBlockEntity(
     // 配方缓存：MetalFormerRecipe.matches 只检查物品类型（不看数量），且结果同时
     // 依赖输入物品与当前模式（rolling/cutting/extruding），因此按 (item, mode) 缓存。
     // listAllOfType 每 tick 全量遍历所有金属成型配方，命中缓存可完全跳过。
-    private var cachedQueryItem: net.minecraft.item.Item? = null
+    private var cachedQueryItem: net.minecraft.world.item.Item? = null
     private var cachedQueryMode: MetalFormerSync.Mode? = null
     private var cachedRecipe: MetalFormerRecipe? = null
     private var cachedRecipeEpoch = -1
 
-    private fun findRecipe(world: World, input: ItemStack, mode: MetalFormerSync.Mode): MetalFormerRecipe? {
+    private fun findRecipe(world: Level, input: ItemStack, mode: MetalFormerSync.Mode): MetalFormerRecipe? {
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedQueryItem === input.item && cachedQueryMode == mode) return cachedRecipe
 
         // 根据当前模式获取对应的配方类
@@ -370,7 +370,7 @@ class MetalFormerBlockEntity(
 
     // 类型判定缓存：isRecipeInput 用 copyWithCount(1) 查询（配方只看物品类型），
     // 结果仅依赖 item，按 item 缓存安全。
-    private var cachedInputItem: net.minecraft.item.Item? = null
+    private var cachedInputItem: net.minecraft.world.item.Item? = null
     private var cachedIsInput = false
     private var cachedInputEpoch = -1
 

@@ -1,6 +1,6 @@
 package ic2_120.content.block.transmission
 
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 
 /**
  * 动能机器端口/存储接口（类 Storage 语义）。

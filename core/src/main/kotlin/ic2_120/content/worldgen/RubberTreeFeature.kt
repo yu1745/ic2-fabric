@@ -9,20 +9,20 @@ import ic2_120.content.block.RubberSaplingBlock
 import ic2_120.content.block.RubberSaplingGenerator
 import ic2_120.content.block.RubberTreeSaplingDrop
 import ic2_120.registry.instance
-import net.minecraft.block.Blocks
-import net.minecraft.block.Block
-import net.minecraft.block.LeavesBlock
-import net.minecraft.registry.tag.BlockTags
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.BlockView
-import net.minecraft.world.StructureWorldAccess
-import net.minecraft.world.gen.feature.Feature
-import net.minecraft.world.gen.feature.TreeFeature
-import net.minecraft.world.gen.feature.TreeFeatureConfig
-import net.minecraft.world.gen.feature.util.FeatureContext
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.LeavesBlock
+import net.minecraft.tags.BlockTags
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.WorldGenLevel
+import net.minecraft.world.level.levelgen.feature.Feature
+import net.minecraft.world.level.levelgen.feature.TreeFeature
+import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration
+import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext
 import java.util.ArrayDeque
 import kotlin.math.abs
 
@@ -30,9 +30,9 @@ import kotlin.math.abs
  * 橡胶树生成前额外检查周围是否已有其他树的树干/树叶，避免与现有树冠重叠。
  * 若当前落点不合适，会在同区块内重试若干候选位置，尽量不降低整体生成量。
  */
-class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
+class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
 
-    override fun generate(context: FeatureContext<TreeFeatureConfig>): Boolean {
+    override fun generate(context: FeaturePlaceContext<TreeConfiguration>): Boolean {
         val world = context.world
         val origin = context.origin
         val random = context.random
@@ -60,7 +60,7 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
      * 与 vanilla TreeFeature 的做法一致，避免叶子因默认 DISTANCE=7 被随机刻枯萎。
      */
     private fun updateLeafDistances(
-        world: StructureWorldAccess,
+        world: WorldGenLevel,
         logPositions: List<BlockPos>,
         leafPositions: List<BlockPos>
     ) {
@@ -104,15 +104,15 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
      * [RubberSaplingGenerator] 在调用 feature 前后会 set/clear 这个 ThreadLocal 标记，
      * 本方法先看 ThreadLocal、再 fallback 到方块检查（兼容旧的调用路径）。
      */
-    private fun isSaplingGrowth(context: FeatureContext<TreeFeatureConfig>): Boolean {
+    private fun isSaplingGrowth(context: FeaturePlaceContext<TreeConfiguration>): Boolean {
         if (RubberSaplingGenerator.SAPLING_GROWTH_FLAG.get() == true) return true
         return context.world.getBlockState(context.origin).block is RubberSaplingBlock
     }
 
-    private fun hasClearSaplingGrowthArea(context: FeatureContext<TreeFeatureConfig>, origin: BlockPos): Boolean =
+    private fun hasClearSaplingGrowthArea(context: FeaturePlaceContext<TreeConfiguration>, origin: BlockPos): Boolean =
         RubberSaplingGrowth.hasClearArea(context.world, origin)
 
-    private fun hasClearNaturalGenerationArea(context: FeatureContext<TreeFeatureConfig>, origin: BlockPos): Boolean {
+    private fun hasClearNaturalGenerationArea(context: FeaturePlaceContext<TreeConfiguration>, origin: BlockPos): Boolean {
         val world = context.world
         val ignoreVines = Ic2Config.current.worldgen.rubberTree.normalized().ignoreVines
 
@@ -152,9 +152,9 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
      * - 顶部中心列额外叶子
      */
     private fun growRubberTree(
-        world: StructureWorldAccess,
+        world: WorldGenLevel,
         origin: BlockPos,
-        random: Random
+        random: RandomSource
     ): Boolean {
         // 旧版逻辑：从 origin 上方扫描连续空气，上限 MAX_TREE_HEIGHT。
         var height = 0
@@ -175,7 +175,7 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
         val leafPositions = mutableListOf<BlockPos>()
         val logPositions = mutableListOf<BlockPos>()
        val baseLogState = rubberLog.defaultState
-           .with(Properties.AXIS, Direction.Axis.Y)
+           .with(BlockStateProperties.AXIS, Direction.Axis.Y)
            .with(RubberLogBlock.NATURAL, true)
 
         // 树级橡胶孔概率（对齐 Forge 1.12：初始 25%，每出一个 -10%）
@@ -272,7 +272,7 @@ object RubberSaplingGrowth {
      * 只有空气和 BlockTags#REPLACEABLE_BY_TREES 方块不会阻挡；任何固体方块
      * （原木、树叶、石头等）都会阻止树苗长成大树，返回 false。
      */
-    fun hasClearArea(world: BlockView, origin: BlockPos): Boolean {
+    fun hasClearArea(world: BlockGetter, origin: BlockPos): Boolean {
         val config = Ic2Config.current.worldgen.rubberTree.normalized()
         val radius = clearanceRadius(config)
         val height = clearanceHeight(config)

@@ -3,28 +3,28 @@ package buildcraft_addon.client.render
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.CreativeEngineBlockEntity
 import buildcraft_addon.content.blockentity.PowerStage
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.texture.Sprite
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.screen.PlayerScreenHandler
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.resources.ResourceLocation
 
-class CreativeEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
+class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
     BlockEntityRenderer<CreativeEngineBlockEntity> {
 
     private var spritesLoaded = false
-    private lateinit var trunkBlack: Sprite
-    private lateinit var backSprite: Sprite
-    private lateinit var sideSprite: Sprite
-    private lateinit var chamberSprite: Sprite
+    private lateinit var trunkBlack: TextureAtlasSprite
+    private lateinit var backSprite: TextureAtlasSprite
+    private lateinit var sideSprite: TextureAtlasSprite
+    private lateinit var chamberSprite: TextureAtlasSprite
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = MinecraftClient.getInstance().bakedModelManager.getAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE)
-        fun sprite(path: String) = atlas.getSprite(Identifier(BuildCraftAddon.MOD_ID, path))
+        val atlas = Minecraft.getInstance().bakedModelManager.getAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE)
+        fun sprite(path: String) = atlas.getSprite(ResourceLocation(BuildCraftAddon.MOD_ID, path))
         trunkBlack = sprite("block/engine/trunk_black")
         backSprite = sprite("block/engine/creative/back")
         sideSprite = sprite("block/engine/creative/side")
@@ -35,13 +35,13 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
     override fun render(
         entity: CreativeEngineBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: net.minecraft.client.render.VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: net.minecraft.client.renderer.MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
         ensureSprites()
-        val buffer = vertexConsumers.getBuffer(RenderLayer.getCutout())
+        val buffer = vertexConsumers.getBuffer(RenderType.getCutout())
         EngineRenderHelper.renderEngine(
             matrices = matrices,
             buffer = buffer,
@@ -49,7 +49,7 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
             overlay = overlay,
             progress = entity.progress,
             stage = PowerStage.BLACK,
-            facing = entity.cachedState.get(net.minecraft.state.property.Properties.FACING),
+            facing = entity.cachedState.get(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING),
             world = entity.world,
             pos = entity.pos,
             backSprite = backSprite,

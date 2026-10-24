@@ -4,21 +4,21 @@ import ic2_120_advanced_weapons_addon.IC2AdvancedWeaponsAddon
 import ic2_120_advanced_weapons_addon.content.item.QuantumSaber
 import net.fabricmc.api.ClientModInitializer
 
-import net.minecraft.client.item.ModelPredicateProviderRegistry
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.client.renderer.item.ItemProperties
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 object IC2AdvancedWeaponsAddonClient : ClientModInitializer {
-    private val QUANTUM_SABER_ACTIVE_ID = Identifier(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber_active")
+    private val QUANTUM_SABER_ACTIVE_ID = ResourceLocation(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber_active")
 
     override fun onInitializeClient() {
         registerQuantumSaberPredicate()
     }
 
     private fun registerQuantumSaberPredicate() {
-        val saber = Registries.ITEM.get(Identifier(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber"))
+        val saber = BuiltInRegistries.ITEM.get(ResourceLocation(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber"))
         if (saber is QuantumSaber) {
-            ModelPredicateProviderRegistry.register(
+            ItemProperties.register(
                 saber,
                 QUANTUM_SABER_ACTIVE_ID
             ) { stack, _, _, _ ->

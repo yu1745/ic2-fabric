@@ -2,7 +2,7 @@ package ic2_120.content.block
 
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.registry.FlammableBlockRegistry
-import net.minecraft.block.Blocks
+import net.minecraft.world.level.block.Blocks
 
 /**
  * 橡胶木系列可燃注册。

@@ -6,21 +6,21 @@ import mezz.jei.api.helpers.IGuiHelper
 import mezz.jei.api.recipe.IFocusGroup
 import mezz.jei.api.recipe.RecipeIngredientRole
 import mezz.jei.api.recipe.category.IRecipeCategory
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 import java.text.NumberFormat
 
 class MolecularTransformerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MolecularTransformerJeiRecipe> {
     private val background: IDrawable = guiHelper.createBlankDrawable(140, 54)
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120_advanced_solar_addon", "molecular_transformer")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120_advanced_solar_addon", "molecular_transformer")))
     )
 
     override fun getRecipeType() = Ic2AdvancedSolarAddonJeiRecipeTypes.MOLECULAR_TRANSFORMER
 
-    override fun getTitle(): Text = Text.translatable("block.ic2_120_advanced_solar_addon.molecular_transformer")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120_advanced_solar_addon.molecular_transformer")
 
     override fun getBackground(): IDrawable = background
 
@@ -37,7 +37,7 @@ class MolecularTransformerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategor
         builder.addSlot(RecipeIngredientRole.OUTPUT, 102, 18)
             .addItemStack(recipe.output)
             .addRichTooltipCallback { _, tooltip ->
-                tooltip.add(Text.translatable("jei.ic2_120_advanced_solar_addon.molecular_transformer.energy", NumberFormat.getIntegerInstance().format(recipe.energy)))
+                tooltip.add(Component.translatable("jei.ic2_120_advanced_solar_addon.molecular_transformer.energy", NumberFormat.getIntegerInstance().format(recipe.energy)))
             }
     }
 }

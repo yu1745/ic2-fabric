@@ -23,9 +23,9 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import java.util.function.Consumer
@@ -139,9 +139,9 @@ object CableRecipes {
      * 生成 11 档导线的级联合成表。由 [ic2_120_industrial_upgrade.content.recipes.ModRecipeProvider]
      * 显式调用（导线不走 @ModBlock，其 companion 不参与 ClassScanner 的 @RecipeProvider 扫描）。
      */
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         // 1 光谱：core 玻璃纤维 + 混合金属锭 + 橡胶
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SpectralCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, SpectralCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BBB")
             .pattern(" C ")
@@ -152,7 +152,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("spectral_cable"))
 
         // 2 质子：光谱导线 + 致密锡板 + 银锭
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ProtonCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, ProtonCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -163,7 +163,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("proton_cable"))
 
         // 3 奇异：质子导线 + 致密锡板 + 高级合金
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SingularCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, SingularCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -174,7 +174,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("singular_cable"))
 
         // 4 神话：奇异导线 + 致密铅板 + 高级合金 + 致密金板
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MythicalCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, MythicalCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")
@@ -186,7 +186,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("mythical_cable"))
 
         // 5 量子：神话导线 + 钢锭 + 碳板 + 青铜锭
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuantumCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, QuantumCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")
@@ -198,7 +198,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("quantum_cable"))
 
         // 6 光子：量子导线 + 致密铜板 + 致密钢板
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PhotonicCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, PhotonicCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -209,7 +209,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("photonic_cable"))
 
         // 7 中子：光子导线 + 致密铁板 + 致密度石岩板
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, NeutronCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, NeutronCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -220,7 +220,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("neutron_cable"))
 
         // 8 完美：中子导线 + 致密青金石板 + 致密青铜板
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PerfectCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, PerfectCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -231,7 +231,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("perfect_cable"))
 
         // 9 寰宇：完美导线 + 混合金属锭 + 致密铁板 + 致密青金石板
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, UniversalCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, UniversalCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")
@@ -243,7 +243,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("universal_cable"))
 
         // 10 街射：寰宇导线 + 碳板 + 混合金属锭 + 致密度石岩板
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, DiffractiveCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, DiffractiveCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")
@@ -255,7 +255,7 @@ object CableRecipes {
             .offerTo(exporter, IC2IndustrialUpgrade.id("diffractive_cable"))
 
         // 11 无限：街射导线 + 致密青金石板 + 致密青铜板 + 致密度石岩板
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, InfinityCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.create(RecipeCategory.MISC, InfinityCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")

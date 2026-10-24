@@ -3,25 +3,25 @@ package ic2_120.client.screen
 import ic2_120.content.block.nuclear.ReactorFluidPortBlock
 import ic2_120.content.screen.ReactorFluidPortScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = ReactorFluidPortBlock::class)
 class ReactorFluidPortScreen(
     handler: ReactorFluidPortScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<ReactorFluidPortScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<ReactorFluidPortScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 162
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 主 PNG 背景
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
         // 升级槽背景 (179,3)-(197,21) = 18×18，渲染至 (79,30) — 必须在 drawBackground 内，早于 super.render 的物品绘制
@@ -33,7 +33,7 @@ class ReactorFluidPortScreen(
         )
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -44,7 +44,7 @@ class ReactorFluidPortScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiother.png")
         private const val TEXTURE_SIZE = 256
 
         private const val SLOT_BG_U = 179

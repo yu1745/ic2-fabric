@@ -48,12 +48,12 @@ import ic2_120.content.item.ClayDust
 import ic2_120.content.item.DiamondDust
 import ic2_120.content.item.GrinPowder
 import ic2_120.registry.instance
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.util.Identifier
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.ItemTags
+import net.minecraft.resources.ResourceLocation
 import java.util.function.Consumer
 
 object MaceratorRecipeDatagen {
@@ -65,11 +65,11 @@ object MaceratorRecipeDatagen {
         val inputCount: Int = 1
     )
 
-    /** 外部模组配方：直接写物品 ID，避免 AE2 未加载时通过 Registries 得到 air。 */
+    /** 外部模组配方：直接写物品 ID，避免 AE2 未加载时通过 BuiltInRegistries 得到 air。 */
     private data class ExternalEntry(
         val name: String,
-        val input: Identifier,
-        val output: Identifier,
+        val input: ResourceLocation,
+        val output: ResourceLocation,
         val count: Int = 1,
         val inputCount: Int = 1
     )
@@ -149,22 +149,22 @@ object MaceratorRecipeDatagen {
         // Applied Energistics 2：两种水晶分别打成对应的 AE2 粉尘。
         ExternalEntry(
             "ae2_certus_quartz_crystal_to_dust",
-            Identifier.of("ae2", "certus_quartz_crystal"),
-            Identifier.of("ae2", "certus_quartz_dust")
+            ResourceLocation.of("ae2", "certus_quartz_crystal"),
+            ResourceLocation.of("ae2", "certus_quartz_dust")
         ),
         ExternalEntry(
             "ae2_fluix_crystal_to_dust",
-            Identifier.of("ae2", "fluix_crystal"),
-            Identifier.of("ae2", "fluix_dust")
+            ResourceLocation.of("ae2", "fluix_crystal"),
+            ResourceLocation.of("ae2", "fluix_dust")
         )
     )
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             MaceratorRecipeJsonProvider(
-                recipeId = Identifier.of("ic2_120", "macerating/${entry.name}"),
+                recipeId = ResourceLocation.of("ic2_120", "macerating/${entry.name}"),
                 input = entry.input,
                 outputItem = entry.output,
                 outputCount = entry.count,
@@ -173,7 +173,7 @@ object MaceratorRecipeDatagen {
         }
         externalEntries.forEach { entry ->
             ExternalMaceratorRecipeJsonProvider(
-                recipeId = Identifier.of("ic2_120", "macerating/${entry.name}"),
+                recipeId = ResourceLocation.of("ic2_120", "macerating/${entry.name}"),
                 input = entry.input,
                 output = entry.output,
                 outputCount = entry.count,
@@ -183,12 +183,12 @@ object MaceratorRecipeDatagen {
     }
 
     private class MaceratorRecipeJsonProvider(
-        private val recipeId: Identifier,
+        private val recipeId: ResourceLocation,
         private val input: IngredientInput,
         private val outputItem: Item,
         private val outputCount: Int,
         private val inputCount: Int = 1
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(MaceratorRecipe::class)}")
             val ingredient = input.toJson()
@@ -198,27 +198,27 @@ object MaceratorRecipeDatagen {
             json.add("ingredient", ingredient)
 
             val result = JsonObject()
-            result.addProperty("item", Registries.ITEM.getId(outputItem).toString())
+            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
             result.addProperty("count", outputCount)
             json.add("result", result)
         }
 
         override fun getSerializer() = ModMachineRecipes.recipeSerializer(MaceratorRecipe::class)
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 
     private class ExternalMaceratorRecipeJsonProvider(
-        private val recipeId: Identifier,
-        private val input: Identifier,
-        private val output: Identifier,
+        private val recipeId: ResourceLocation,
+        private val input: ResourceLocation,
+        private val output: ResourceLocation,
         private val outputCount: Int,
         private val inputCount: Int = 1
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(MaceratorRecipe::class)}")
 
@@ -237,10 +237,10 @@ object MaceratorRecipeDatagen {
 
         override fun getSerializer() = ModMachineRecipes.recipeSerializer(MaceratorRecipe::class)
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

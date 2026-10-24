@@ -14,24 +14,24 @@ import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.RecipeType
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundSource
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * 铁炉方块实体。
@@ -44,12 +44,12 @@ import net.minecraft.world.World
  */
 @ModBlockEntity(block = IronFurnaceBlock::class)
 class IronFurnaceBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
-    private val activeProperty: net.minecraft.state.property.BooleanProperty = IronFurnaceBlock.ACTIVE
+    private val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = IronFurnaceBlock.ACTIVE
 
     private val soundConfig: MachineSoundConfig = MachineSoundConfig.operate(
         soundId = "machine.furnace.iron.operate",
@@ -74,7 +74,7 @@ class IronFurnaceBlockEntity(
         const val MAX_STORED_XP = 10000f
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     private var storedExperience: Float = 0f
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
@@ -107,29 +107,29 @@ class IronFurnaceBlockEntity(
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun canPlayerUse(player: PlayerEntity): Boolean =
-        Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean =
+        Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = canPlaceInSlot(slot, stack)
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text =
-        Text.translatable("block.ic2_120.iron_furnace")
+    override fun getDisplayName(): Component =
+        Component.translatable("block.ic2_120.iron_furnace")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        IronFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        IronFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.burnTime = nbt.getInt(IronFurnaceSync.NBT_BURN_TIME)
         sync.totalBurnTime = nbt.getInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME)
@@ -137,9 +137,9 @@ class IronFurnaceBlockEntity(
         storedExperience = nbt.getFloat(FurnaceExperienceHelper.NBT_EXPERIENCE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt(IronFurnaceSync.NBT_BURN_TIME, sync.burnTime)
         nbt.putInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME, sync.totalBurnTime)
@@ -147,7 +147,7 @@ class IronFurnaceBlockEntity(
         nbt.putFloat(FurnaceExperienceHelper.NBT_EXPERIENCE, storedExperience)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         val fuelItem = getStack(SLOT_FUEL)
@@ -234,7 +234,7 @@ class IronFurnaceBlockEntity(
         if (stack.isEmpty) return 0
 
         // 检查是否是岩浆桶
-        if (net.minecraft.item.Items.LAVA_BUCKET == stack.item) {
+        if (net.minecraft.world.item.Items.LAVA_BUCKET == stack.item) {
             return LAVA_BURN_TIME
         }
 
@@ -273,13 +273,13 @@ class IronFurnaceBlockEntity(
     // 配方缓存：原版 SMELTING 配方 matches 只检查物品类型（不看数量），结果仅依赖
     // item，因此按 item 缓存（含 null）安全。IronFurnace 每 tick 最多 3 次
     // getFirstMatch（hasRecipe / canAcceptOutput / 烧制完成），命中缓存全部跳过。
-    private var cachedRecipeItem: net.minecraft.item.Item? = null
-    private var cachedSmeltingRecipe: net.minecraft.recipe.SmeltingRecipe? = null
+    private var cachedRecipeItem: net.minecraft.world.item.Item? = null
+    private var cachedSmeltingRecipe: net.minecraft.world.item.crafting.SmeltingRecipe? = null
     private var cachedRecipeEpoch = -1
 
-    private fun smeltingRecipeFor(input: ItemStack, world: World): net.minecraft.recipe.SmeltingRecipe? {
+    private fun smeltingRecipeFor(input: ItemStack, world: Level): net.minecraft.world.item.crafting.SmeltingRecipe? {
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedRecipeItem === input.item) return cachedSmeltingRecipe
-        val inputInv = SimpleInventory(1).apply { setStack(0, input) }
+        val inputInv = SimpleContainer(1).apply { setStack(0, input) }
         val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inputInv, world).orElse(null)
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
@@ -289,7 +289,7 @@ class IronFurnaceBlockEntity(
 
     // 类型判定缓存：isSmeltingInput 用 copyWithCount(1) 查询（配方只看物品类型），
     // 结果仅依赖 item，按 item 缓存安全。
-    private var cachedInputItem: net.minecraft.item.Item? = null
+    private var cachedInputItem: net.minecraft.world.item.Item? = null
     private var cachedIsInput = false
     private var cachedInputEpoch = -1
 
@@ -297,7 +297,7 @@ class IronFurnaceBlockEntity(
         if (stack.isEmpty) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(1))
+        val inv = SimpleContainer(stack.copyWithCount(1))
         val found = w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
@@ -305,9 +305,9 @@ class IronFurnaceBlockEntity(
         return found
     }
 
-    fun collectXp(player: PlayerEntity) {
-        val xp = net.minecraft.util.math.MathHelper.floor(storedExperience)
-        val frac = net.minecraft.util.math.MathHelper.fractionalPart(storedExperience)
+    fun collectXp(player: Player) {
+        val xp = net.minecraft.util.Mth.floor(storedExperience)
+        val frac = net.minecraft.util.Mth.fractionalPart(storedExperience)
         var amount = xp
         if (frac != 0.0f && Math.random() < frac) amount++
         if (amount > 0) {
@@ -318,13 +318,13 @@ class IronFurnaceBlockEntity(
     }
 
     fun dropStoredExperience() {
-        val world = this.world as? ServerWorld ?: return
+        val world = this.world as? ServerLevel ?: return
         FurnaceExperienceHelper.dropExperience(world, pos, storedExperience)
         storedExperience = 0f
         markDirty()
     }
 
-    private fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
+    private fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         val wasActive = state.get(activeProperty)
         if (wasActive != active) {
             world.setBlockState(pos, state.with(activeProperty, active))
@@ -337,12 +337,12 @@ class IronFurnaceBlockEntity(
                 when {
                     !wasActive && active -> {
                         soundConfig.startSound?.let {
-                            world.playSound(null, pos, it, SoundCategory.BLOCKS, soundConfig.startVolume, soundConfig.startPitch)
+                            world.playSound(null, pos, it, SoundSource.BLOCKS, soundConfig.startVolume, soundConfig.startPitch)
                         }
                     }
                     wasActive && !active -> {
                         soundConfig.stopSound?.let {
-                            world.playSound(null, pos, it, SoundCategory.BLOCKS, soundConfig.stopVolume, soundConfig.stopPitch)
+                            world.playSound(null, pos, it, SoundSource.BLOCKS, soundConfig.stopVolume, soundConfig.stopPitch)
                         }
                     }
                 }

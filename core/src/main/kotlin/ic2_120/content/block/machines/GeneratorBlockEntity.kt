@@ -15,26 +15,26 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.registry.FuelRegistry
-import net.minecraft.block.BlockState
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * 火力发电机方块实体。燃料槽燃烧产生 EU，能量可被相邻方块提取。
@@ -42,10 +42,10 @@ import net.minecraft.world.World
  */
 @ModBlockEntity(block = GeneratorBlock::class)
 class GeneratorBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
@@ -56,7 +56,7 @@ class GeneratorBlockEntity(
 
     override val tier: Int = GENERATOR_TIER
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = GeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = GeneratorBlock.ACTIVE
 
     override val soundConfig: MachineSoundConfig = MachineSoundConfig.loop(
         soundId = "generator.generator.loop",
@@ -65,7 +65,7 @@ class GeneratorBlockEntity(
         intervalTicks = 20
     )
 
-    private val inventory = DefaultedList.ofSize(2, ItemStack.EMPTY)  // 0: 燃料槽, 1: 电池槽
+    private val inventory = NonNullList.ofSize(2, ItemStack.EMPTY)  // 0: 燃料槽, 1: 电池槽
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -85,7 +85,7 @@ class GeneratorBlockEntity(
     @RegisterEnergy
     val sync = GeneratorSync(
         syncedData,
-        { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: net.minecraft.util.math.Direction.NORTH },
+        { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: net.minecraft.core.Direction.NORTH },
         { world?.time }
     )
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
@@ -113,17 +113,17 @@ class GeneratorBlockEntity(
         inventory[slot] = stack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     /**
      * 实现 MachineBlockEntity 的 getInventory 方法
      */
-    override fun getInventory(): net.minecraft.inventory.Inventory = this
+    override fun getInventory(): net.minecraft.world.Container = this
 
     /**
      * 检查物品是否可以放入指定槽位
@@ -147,19 +147,19 @@ class GeneratorBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = canPlaceInSlot(slot, stack)
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        GeneratorScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        GeneratorScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(GeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, GeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -168,16 +168,16 @@ class GeneratorBlockEntity(
         sync.totalBurnTime = nbt.getInt("TotalBurnTime")
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(GeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("BurnTime", sync.burnTime)
         nbt.putInt("TotalBurnTime", sync.totalBurnTime)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 

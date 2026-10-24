@@ -10,22 +10,22 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Blocks
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 
 /**
@@ -33,13 +33,13 @@ import java.util.function.Consumer
  * 提供流体交互功能，通过管道输入冷却液/输出热冷却液。
  */
 @ModBlock(name = "reactor_fluid_port", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor", renderLayer = "translucent")
-class ReactorFluidPortBlock(settings: AbstractBlock.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
+class ReactorFluidPortBlock(settings: BlockBehaviour.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         ReactorFluidPortBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -50,38 +50,38 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = ReactorShellBlock
 
     override fun createScreenHandlerFactory(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos
-    ): net.minecraft.screen.NamedScreenHandlerFactory? {
+    ): net.minecraft.world.MenuProvider? {
         val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+        return be as? net.minecraft.world.MenuProvider
     }
     
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
+    ): InteractionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
             }
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val vessel = ReactorVesselBlock::class.item()
             val emptyCell = EmptyCell::class.instance()
             if (vessel != Items.AIR && emptyCell != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorFluidPortBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorFluidPortBlock::class.item(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
                     .input('A', vessel)
                     .input('B', emptyCell)

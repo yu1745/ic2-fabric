@@ -1,7 +1,7 @@
 package ic2_120.content.sound
 
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.Identifier
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 声音类型枚举
@@ -93,7 +93,7 @@ data class MachineSoundConfig(
             intervalTicks: Int = 20
         ) = MachineSoundConfig(
             soundType = SoundType.LOOP,
-            loopSound = SoundEvent.of(Identifier.of("ic2", soundId)),
+            loopSound = SoundEvent.of(ResourceLocation.of("ic2", soundId)),
             loopVolume = volume,
             loopPitch = pitch,
             loopIntervalTicks = intervalTicks
@@ -109,7 +109,7 @@ data class MachineSoundConfig(
             intervalTicks: Int = 20
         ) = MachineSoundConfig(
             soundType = SoundType.OPERATE,
-            operateSound = SoundEvent.of(Identifier.of("ic2", soundId)),
+            operateSound = SoundEvent.of(ResourceLocation.of("ic2", soundId)),
             operateVolume = volume,
             operatePitch = pitch,
             operateIntervalTicks = intervalTicks
@@ -127,13 +127,13 @@ data class MachineSoundConfig(
             loopIntervalTicks: Int = 20
         ) = MachineSoundConfig(
             soundType = SoundType.START_STOP,
-            startSound = SoundEvent.of(Identifier.of("ic2", startSoundId)),
-            stopSound = SoundEvent.of(Identifier.of("ic2", stopSoundId)),
+            startSound = SoundEvent.of(ResourceLocation.of("ic2", startSoundId)),
+            stopSound = SoundEvent.of(ResourceLocation.of("ic2", stopSoundId)),
             startVolume = volume,
             stopVolume = volume,
             startPitch = pitch,
             stopPitch = pitch,
-            loopSound = loopSoundId?.let { SoundEvent.of(Identifier.of("ic2", it)) },
+            loopSound = loopSoundId?.let { SoundEvent.of(ResourceLocation.of("ic2", it)) },
             loopIntervalTicks = loopIntervalTicks
         )
 

@@ -4,29 +4,29 @@ import ic2_120.content.block.storage.StorageBoxBlock
 import ic2_120.content.block.storage.StorageBoxBlockEntity
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.block.ShulkerBoxBlock
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemStack
+import net.minecraft.world.level.block.ShulkerBoxBlock
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.ItemStack
 
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.slot.Slot
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.Slot
+import net.minecraft.network.FriendlyByteBuf
 import ic2_120.registry.annotation.ScreenFactory
 
 /**
- * 储物箱 GUI 的 ScreenHandler
+ * 储物箱 GUI 的 AbstractContainerMenu
  *
  * 所有容量的储物箱统一使用单列 9 格布局，容量通过 ScrollView 滚动显示。
  */
 @ModScreenHandler(name = "storage_box")
 class StorageBoxScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    val inventory: Inventory
-) : ScreenHandler(StorageBoxScreenHandler::class.type(), syncId) {
+    playerInventory: Inventory,
+    val inventory: Container
+) : AbstractContainerMenu(StorageBoxScreenHandler::class.type(), syncId) {
 
     /** 玩家主背包首槽索引（随储物格数量变化） */
     val playerInventorySlotStart: Int get() = inventory.size()
@@ -73,7 +73,7 @@ class StorageBoxScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, slotIndex: Int): ItemStack {
+    override fun quickMove(player: Player, slotIndex: Int): ItemStack {
         var movedStack = ItemStack.EMPTY
         val slot = slots[slotIndex]
         if (slot.hasStack()) {
@@ -111,16 +111,16 @@ class StorageBoxScreenHandler(
         return block is ShulkerBoxBlock || block is StorageBoxBlock
     }
 
-    override fun canUse(player: PlayerEntity): Boolean {
+    override fun canUse(player: Player): Boolean {
         return inventory.canPlayerUse(player)
     }
 
     companion object {
         /**
-         * 从 PacketByteBuf 创建 ScreenHandler（客户端）
+         * 从 FriendlyByteBuf 创建 AbstractContainerMenu（客户端）
          */
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): StorageBoxScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): StorageBoxScreenHandler {
             val pos = buf.readBlockPos()
             val world = playerInventory.player.world
             val blockEntity = world.getBlockEntity(pos)
@@ -129,13 +129,13 @@ class StorageBoxScreenHandler(
                 return StorageBoxScreenHandler(syncId, playerInventory, blockEntity)
             }
 
-            throw IllegalStateException(net.minecraft.text.Text.translatable("gui.ic2_120.storage_box.entity_not_found", pos).string)
+            throw IllegalStateException(net.minecraft.network.chat.Component.translatable("gui.ic2_120.storage_box.entity_not_found", pos).string)
         }
 
         /**
-         * 直接从 BlockEntity 创建 ScreenHandler（服务端）
+         * 直接从 BlockEntity 创建 AbstractContainerMenu（服务端）
          */
-        fun create(syncId: Int, playerInventory: PlayerInventory, blockEntity: StorageBoxBlockEntity): StorageBoxScreenHandler {
+        fun create(syncId: Int, playerInventory: Inventory, blockEntity: StorageBoxBlockEntity): StorageBoxScreenHandler {
             return StorageBoxScreenHandler(syncId, playerInventory, blockEntity)
         }
     }

@@ -1,13 +1,13 @@
 package ic2_120.content.effect
 
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 object ModStatusEffects {
-    val SOLAR_GENERATING: StatusEffect
-        get() = Registries.STATUS_EFFECT.get(Identifier.of("ic2", "solar_generating"))!!
+    val SOLAR_GENERATING: MobEffect
+        get() = BuiltInRegistries.STATUS_EFFECT.get(ResourceLocation.of("ic2", "solar_generating"))!!
 
-    val RADIATION: StatusEffect
-        get() = Registries.STATUS_EFFECT.get(Identifier.of("ic2", "radiation"))!!
+    val RADIATION: MobEffect
+        get() = BuiltInRegistries.STATUS_EFFECT.get(ResourceLocation.of("ic2", "radiation"))!!
 }

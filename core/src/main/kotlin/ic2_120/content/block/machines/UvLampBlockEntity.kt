@@ -18,25 +18,25 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.particle.ParticleTypes
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.Level
 
 /**
  * 紫外线灯方块实体。
@@ -48,9 +48,9 @@ class UvLampBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -74,15 +74,15 @@ class UvLampBlockEntity(
 
     constructor(pos: BlockPos, state: BlockState) : this(UvLampBlockEntity::class.type(), pos, state)
 
-    // ========== Inventory ==========
+    // ========== Container ==========
 
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
@@ -95,37 +95,37 @@ class UvLampBlockEntity(
         return stack.item is IUpgradeItem
     }
 
-    // ========== ScreenHandler ==========
+    // ========== AbstractContainerMenu ==========
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.uv_lamp")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.uv_lamp")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         UvLampScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
     // ========== NBT ==========
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(UvLampSync.NBT_ENERGY_STORED, sync.amount)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(UvLampSync.NBT_ENERGY_STORED))
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -133,7 +133,7 @@ class UvLampBlockEntity(
 
     // ========== Tick ==========
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
@@ -157,7 +157,7 @@ class UvLampBlockEntity(
         }
 
         // 紫色粒子效果
-        if (ocCount > 0 && active && world is ServerWorld) {
+        if (ocCount > 0 && active && world is ServerLevel) {
             val particleTick = (world.time + particleOffset) % PARTICLE_INTERVAL_TICKS
             if (particleTick == 0L) {
                 spawnParticles(world, pos)
@@ -179,7 +179,7 @@ class UvLampBlockEntity(
     }
 
     /** 扫描半径 3 内的 IC2 作物，注入额外生长点数 */
-    private fun performCropScan(world: World, pos: BlockPos, ocCount: Int) {
+    private fun performCropScan(world: Level, pos: BlockPos, ocCount: Int) {
         val radius = SCAN_RADIUS
         for (dx in -radius..radius) {
             for (dy in -radius..radius) {
@@ -204,7 +204,7 @@ class UvLampBlockEntity(
     }
 
     /** 在加速区域每个格子渲染紫色传送门粒子 */
-    private fun spawnParticles(world: ServerWorld, pos: BlockPos) {
+    private fun spawnParticles(world: ServerLevel, pos: BlockPos) {
         val radius = SCAN_RADIUS
         val random = world.random
         for (dx in -radius..radius) {
@@ -227,7 +227,7 @@ class UvLampBlockEntity(
         }
     }
 
-    private fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
+    private fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         if (state.get(UvLampBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(UvLampBlock.ACTIVE, active))
         }
@@ -243,6 +243,6 @@ class UvLampBlockEntity(
         const val ESTIMATED_BASE_GROWTH = 9
         private const val PARTICLE_INTERVAL_TICKS = 40
 
-        private val random: Random = Random.create()
+        private val random: RandomSource = RandomSource.create()
     }
 }

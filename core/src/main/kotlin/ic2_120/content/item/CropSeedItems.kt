@@ -14,23 +14,23 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.Hand
-import net.minecraft.util.TypedActionResult
-import net.minecraft.world.World
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.ChatFormatting
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.level.Level
 
 object CropSeedData {
     private const val NBT_OWNER = "owner"
@@ -70,50 +70,50 @@ object CropSeedData {
         nbt.putInt(NBT_SCAN_LEVEL, scanLevel.coerceIn(0, 4))
     }
 
-    fun displayName(type: CropType): Text = Text.translatable("crop.ic2_120.${type.asString()}")
+    fun displayName(type: CropType): Component = Component.translatable("crop.ic2_120.${type.asString()}")
 }
 
 @ModItem(name = "crop_seed_bag", tab = CreativeTab.IC2_CROP_SEEDS, group = "crops")
 class CropSeedBagItem : Item(Item.Settings().maxCount(1)) {
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
-        tooltip: MutableList<Text>,
+        world: Level?,
+        tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
         val scanLevel = CropSeedData.readScanLevel(stack)
         val type = CropSeedData.readType(stack)
-        tooltip.add(Text.literal("扫描等级: $scanLevel/4").formatted(net.minecraft.util.Formatting.GRAY))
+        tooltip.add(Component.literal("扫描等级: $scanLevel/4").formatted(net.minecraft.ChatFormatting.GRAY))
         if (scanLevel <= 0 || type == null) {
-            tooltip.add(Text.literal("作物: 未知").formatted(net.minecraft.util.Formatting.DARK_GRAY))
+            tooltip.add(Component.literal("作物: 未知").formatted(net.minecraft.ChatFormatting.DARK_GRAY))
             return
         }
 
         val def = CropSystem.definition(type)
         tooltip.add(
-            Text.literal("作物: ")
+            Component.literal("作物: ")
                 .append(CropSeedData.displayName(type))
-                .formatted(net.minecraft.util.Formatting.GRAY)
+                .formatted(net.minecraft.ChatFormatting.GRAY)
         )
         buildHarvestTooltip(type)?.let { tooltip.add(it) }
         if (scanLevel >= 2) {
             tooltip.add(
-                Text.literal("属性: ${def.attributes.take(3).joinToString("/")}")
-                    .formatted(net.minecraft.util.Formatting.DARK_AQUA)
+                Component.literal("属性: ${def.attributes.take(3).joinToString("/")}")
+                    .formatted(net.minecraft.ChatFormatting.DARK_AQUA)
             )
         }
         if (scanLevel >= 3) {
             tooltip.add(
-                Text.literal("等级: ${def.tier}  成熟龄: ${def.maxVisualAge}")
-                    .formatted(net.minecraft.util.Formatting.BLUE)
+                Component.literal("等级: ${def.tier}  成熟龄: ${def.maxVisualAge}")
+                    .formatted(net.minecraft.ChatFormatting.BLUE)
             )
         }
         if (scanLevel >= 4) {
             val stats = CropSeedData.readStats(stack)
             tooltip.add(
-                Text.literal("G:${stats.growth} Ga:${stats.gain} R:${stats.resistance}")
-                    .formatted(net.minecraft.util.Formatting.DARK_GREEN)
+                Component.literal("G:${stats.growth} Ga:${stats.gain} R:${stats.resistance}")
+                    .formatted(net.minecraft.ChatFormatting.DARK_GREEN)
             )
         }
     }
@@ -144,58 +144,58 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
-        tooltip: MutableList<Text>,
+        world: Level?,
+        tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
-        tooltip.add(Text.literal("右键打开 GUI 扫描种子袋").formatted(net.minecraft.util.Formatting.GRAY))
+        tooltip.add(Component.literal("右键打开 GUI 扫描种子袋").formatted(net.minecraft.ChatFormatting.GRAY))
     }
 
-    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val scanner = user.getStackInHand(hand)
-        if (world.isClient) return TypedActionResult.success(scanner)
+        if (world.isClient) return InteractionResultHolder.success(scanner)
 
         user.openHandledScreen(object : ExtendedScreenHandlerFactory {
-            override fun getDisplayName(): Text = Text.translatable("item.ic2_120.cropnalyzer")
+            override fun getDisplayName(): Component = Component.translatable("item.ic2_120.cropnalyzer")
 
-            override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+            override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
                 buf.writeEnumConstant(hand)
             }
 
-            override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): net.minecraft.screen.ScreenHandler {
+            override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): net.minecraft.world.inventory.AbstractContainerMenu {
                 return CropnalyzerScreenHandler(syncId, playerInventory, hand)
             }
         })
 
-        return TypedActionResult.success(scanner)
+        return InteractionResultHolder.success(scanner)
     }
 
-    override fun useOnBlock(context: net.minecraft.item.ItemUsageContext): ActionResult {
+    override fun useOnBlock(context: net.minecraft.world.item.context.UseOnContext): InteractionResult {
         val world = context.world
-        if (world.isClient) return ActionResult.SUCCESS
-        val player = context.player ?: return ActionResult.PASS
+        if (world.isClient) return InteractionResult.SUCCESS
+        val player = context.player ?: return InteractionResult.PASS
         val stack = context.stack
         val be = world.getBlockEntity(context.blockPos)
-        val cropBe = be as? ic2_120.content.block.CropBlockEntity ?: return ActionResult.PASS
+        val cropBe = be as? ic2_120.content.block.CropBlockEntity ?: return InteractionResult.PASS
         val cropState = world.getBlockState(context.blockPos)
         val type = cropState.get(ic2_120.content.block.CropBlock.CROP_TYPE)
 
         val energy = getEnergy(stack)
         if (energy < CROP_INSPECTION_ENERGY) {
-            player.sendMessage(Text.literal("Cropnalyzer 电量不足").formatted(net.minecraft.util.Formatting.RED), true)
-            return ActionResult.SUCCESS
+            player.sendMessage(Component.literal("Cropnalyzer 电量不足").formatted(net.minecraft.ChatFormatting.RED), true)
+            return InteractionResult.SUCCESS
         }
         setEnergy(stack, energy - CROP_INSPECTION_ENERGY)
 
-        val msg = Text.literal("作物 ")
+        val msg = Component.literal("作物 ")
             .append(CropSeedData.displayName(type))
             .append(
-                Text.literal(" | G:${cropBe.stats.growth} Ga:${cropBe.stats.gain} R:${cropBe.stats.resistance}")
+                Component.literal(" | G:${cropBe.stats.growth} Ga:${cropBe.stats.gain} R:${cropBe.stats.resistance}")
             )
         player.sendMessage(msg, false)
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     companion object {
@@ -211,11 +211,11 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropnalyzerItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, CropnalyzerItem::class.instance(), 1)
                 .pattern("CC ")
                 .pattern("RGR")
                 .pattern("RXR")
@@ -227,40 +227,40 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
                 .offerTo(exporter, CropnalyzerItem::class.id())
         }
 
-        fun buildResultMessage(type: CropType, stats: CropStats, level: Int): Text {
+        fun buildResultMessage(type: CropType, stats: CropStats, level: Int): Component {
             return when {
-                level <= 0 -> Text.literal("扫描失败")
-                level == 1 -> Text.literal("扫描 Lv1: ").append(CropSeedData.displayName(type))
-                level == 2 -> Text.literal("扫描 Lv2: ").append(CropSeedData.displayName(type)).append(Text.literal(" | 属性已解锁"))
-                level == 3 -> Text.literal("扫描 Lv3: ").append(CropSeedData.displayName(type)).append(Text.literal(" | 生长信息已解锁"))
-                else -> Text.literal("扫描 Lv4: ").append(CropSeedData.displayName(type))
-                    .append(Text.literal(" | G:${stats.growth} Ga:${stats.gain} R:${stats.resistance}"))
+                level <= 0 -> Component.literal("扫描失败")
+                level == 1 -> Component.literal("扫描 Lv1: ").append(CropSeedData.displayName(type))
+                level == 2 -> Component.literal("扫描 Lv2: ").append(CropSeedData.displayName(type)).append(Component.literal(" | 属性已解锁"))
+                level == 3 -> Component.literal("扫描 Lv3: ").append(CropSeedData.displayName(type)).append(Component.literal(" | 生长信息已解锁"))
+                else -> Component.literal("扫描 Lv4: ").append(CropSeedData.displayName(type))
+                    .append(Component.literal(" | G:${stats.growth} Ga:${stats.gain} R:${stats.resistance}"))
             }
         }
     }
 }
 
-private fun buildHarvestTooltip(type: CropType): Text? {
+private fun buildHarvestTooltip(type: CropType): Component? {
     val items = CropSystem.harvestItems(type)
     if (items.isEmpty()) return null
 
-    val text = Text.translatable("tooltip.ic2_120.harvest")
+    val text = Component.translatable("tooltip.ic2_120.harvest")
     items.forEachIndexed { i, h ->
-        if (i > 0) text.append(Text.translatable("tooltip.ic2_120.harvest.sep"))
-        text.append(Text.translatable(h.item.translationKey))
+        if (i > 0) text.append(Component.translatable("tooltip.ic2_120.harvest.sep"))
+        text.append(Component.translatable(h.item.translationKey))
         when (h.qty) {
-            is CropSystem.HQt.N -> text.append(Text.translatable("tooltip.ic2_120.harvest.qty_n", h.qty.n))
-            is CropSystem.HQt.Age -> text.append(Text.translatable("tooltip.ic2_120.harvest.qty_age"))
-            is CropSystem.HQt.Rng -> text.append(Text.translatable("tooltip.ic2_120.harvest.qty_rng", h.qty.min, h.qty.max))
+            is CropSystem.HQt.N -> text.append(Component.translatable("tooltip.ic2_120.harvest.qty_n", h.qty.n))
+            is CropSystem.HQt.Age -> text.append(Component.translatable("tooltip.ic2_120.harvest.qty_age"))
+            is CropSystem.HQt.Rng -> text.append(Component.translatable("tooltip.ic2_120.harvest.qty_rng", h.qty.min, h.qty.max))
             is CropSystem.HQt.One -> {}
         }
         if (h.chance in 1..99) {
-            text.append(Text.translatable("tooltip.ic2_120.harvest.chance", h.chance))
+            text.append(Component.translatable("tooltip.ic2_120.harvest.chance", h.chance))
         }
     }
     for (key in CropSystem.harvestNoteKeys(type)) {
-        text.append(Text.literal(" "))
-        text.append(Text.translatable("tooltip.ic2_120.harvest.note.$key"))
+        text.append(Component.literal(" "))
+        text.append(Component.translatable("tooltip.ic2_120.harvest.note.$key"))
     }
-    return text.formatted(Formatting.GRAY)
+    return text.formatted(ChatFormatting.GRAY)
 }

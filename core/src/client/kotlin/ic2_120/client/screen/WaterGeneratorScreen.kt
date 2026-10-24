@@ -9,30 +9,30 @@ import ic2_120.content.screen.WaterGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluids
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = WaterGeneratorBlock::class)
 class WaterGeneratorScreen(
     handler: WaterGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<WaterGeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<WaterGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = GUI_SIZE.width
         backgroundHeight = GUI_SIZE.height
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -94,16 +94,16 @@ class WaterGeneratorScreen(
             val lines = if (waterDroplets > 0) {
                 val mb = waterDroplets / DROPLETS_PER_MB
                 val capMb = 8 * FluidConstants.BUCKET / DROPLETS_PER_MB
-                listOf(Text.literal("水"), Text.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
+                listOf(Component.literal("水"), Component.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
             } else {
-                listOf(Text.literal("空"))
+                listOf(Component.literal("空"))
             }
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiwatergenerator.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiwatergenerator.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

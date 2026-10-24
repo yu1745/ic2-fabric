@@ -7,15 +7,15 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.RubberLeavesBlock
 import ic2_120.content.block.RubberLogBlock
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
-import net.minecraft.registry.Registries
-import net.minecraft.server.command.CommandManager
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.text.Text
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.chunk.ChunkStatus
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.commands.Commands
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.network.chat.Component
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.chunk.status.ChunkStatus
 import java.util.ArrayDeque
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -25,26 +25,26 @@ object RubberTreeCommand {
     private const val PERMISSION_LEVEL = 4
     private const val LEAF_SEARCH_DISTANCE = 6
     private val searchExecutor = Executors.newFixedThreadPool(4)
-    private val rubberLogBlock by lazy { Registries.BLOCK.get(Ic2_120.id("rubber_log")) }
+    private val rubberLogBlock by lazy { BuiltInRegistries.BLOCK.get(Ic2_120.id("rubber_log")) }
 
     fun register() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
-                CommandManager.literal("ic2rubber")
+                Commands.literal("ic2rubber")
                     .requires { source -> source.hasPermissionLevel(PERMISSION_LEVEL) }
                     .executes { ctx -> execute(ctx, radius = 64, teleport = false) }
                     .then(
-                        CommandManager.argument("radius", IntegerArgumentType.integer(1))
+                        Commands.argument("radius", IntegerArgumentType.integer(1))
                             .executes { ctx ->
                                 val radius = IntegerArgumentType.getInteger(ctx, "radius")
                                 execute(ctx, radius, teleport = false)
                             }
                     )
                     .then(
-                        CommandManager.literal("tp")
+                        Commands.literal("tp")
                             .executes { ctx -> execute(ctx, radius = 1000, teleport = true) }
                             .then(
-                                CommandManager.argument("radius", IntegerArgumentType.integer(1))
+                                Commands.argument("radius", IntegerArgumentType.integer(1))
                                     .executes { ctx ->
                                         val radius = IntegerArgumentType.getInteger(ctx, "radius")
                                         execute(ctx, radius, teleport = true)
@@ -55,16 +55,16 @@ object RubberTreeCommand {
         }
     }
 
-    private fun execute(ctx: CommandContext<ServerCommandSource>, radius: Int, teleport: Boolean): Int {
+    private fun execute(ctx: CommandContext<CommandSourceStack>, radius: Int, teleport: Boolean): Int {
         val source = ctx.source
         val player = source.player ?: run {
-            source.sendError(Text.literal("此命令只能由玩家执行"))
+            source.sendError(Component.literal("此命令只能由玩家执行"))
             return 0
         }
 
         val world = source.world
 
-        source.sendFeedback({ Text.literal("正在搜索 ${radius} 格范围内的橡胶树...") }, true)
+        source.sendFeedback({ Component.literal("正在搜索 ${radius} 格范围内的橡胶树...") }, true)
 
         val startTime = System.currentTimeMillis()
 
@@ -76,7 +76,7 @@ object RubberTreeCommand {
 
             if (result.trees.isEmpty()) {
                 source.sendFeedback({
-                    Text.literal("在 ${radius} 格范围内未找到橡胶树 (耗时 ${elapsedMs}ms)")
+                    Component.literal("在 ${radius} 格范围内未找到橡胶树 (耗时 ${elapsedMs}ms)")
                 }, false)
                 return@thenAcceptAsync
             }
@@ -86,11 +86,11 @@ object RubberTreeCommand {
                 val tpPos = findSafeTeleportPos(world, nearest)
                 player.teleport(player.serverWorld, tpPos.x + 0.5, tpPos.y.toDouble(), tpPos.z + 0.5, player.yaw, player.pitch)
                 source.sendFeedback({
-                    Text.literal("已传送到橡胶树位置 [${nearest.x}, ${nearest.y}, ${nearest.z}] (共 ${result.count} 棵, 耗时 ${elapsedMs}ms)")
+                    Component.literal("已传送到橡胶树位置 [${nearest.x}, ${nearest.y}, ${nearest.z}] (共 ${result.count} 棵, 耗时 ${elapsedMs}ms)")
                 }, true)
             } else {
                 source.sendFeedback({
-                    Text.literal("找到 ${result.count} 棵橡胶树，最近的: [${nearest.x}, ${nearest.y}, ${nearest.z}] (耗时 ${elapsedMs}ms)")
+                    Component.literal("找到 ${result.count} 棵橡胶树，最近的: [${nearest.x}, ${nearest.y}, ${nearest.z}] (耗时 ${elapsedMs}ms)")
                 }, false)
                 highlightTree(world, player, nearest)
             }
@@ -104,7 +104,7 @@ object RubberTreeCommand {
         val count: Int
     )
 
-    private fun searchRubberTrees(world: ServerWorld, center: BlockPos, radius: Int): SearchResult {
+    private fun searchRubberTrees(world: ServerLevel, center: BlockPos, radius: Int): SearchResult {
         val treeXZ = mutableSetOf<Pair<Int, Int>>()
         val treePositions = mutableListOf<BlockPos>()
 
@@ -132,7 +132,7 @@ object RubberTreeCommand {
     }
 
     private fun searchChunk(
-        world: ServerWorld,
+        world: ServerLevel,
         chunkX: Int,
         chunkZ: Int,
         center: BlockPos,
@@ -174,7 +174,7 @@ object RubberTreeCommand {
         }
     }
 
-    private fun hasConnectedRubberLeaves(world: ServerWorld, startPos: BlockPos): Boolean {
+    private fun hasConnectedRubberLeaves(world: ServerLevel, startPos: BlockPos): Boolean {
         val queue = ArrayDeque<Pair<BlockPos, Int>>()
         val visited = HashSet<BlockPos>()
 
@@ -203,7 +203,7 @@ object RubberTreeCommand {
         return false
     }
 
-    private fun findSafeTeleportPos(world: ServerWorld, logPos: BlockPos): BlockPos {
+    private fun findSafeTeleportPos(world: ServerLevel, logPos: BlockPos): BlockPos {
         for (y in logPos.y downTo world.bottomY) {
             val pos = BlockPos(logPos.x, y, logPos.z)
             val state = world.getBlockState(pos)
@@ -235,7 +235,7 @@ object RubberTreeCommand {
         return logPos.up()
     }
 
-    private fun findGroundAt(world: ServerWorld, pos: BlockPos): BlockPos? {
+    private fun findGroundAt(world: ServerLevel, pos: BlockPos): BlockPos? {
         for (y in pos.y downTo maxOf(world.bottomY, pos.y - 10)) {
             val checkPos = BlockPos(pos.x, y, pos.z)
             val state = world.getBlockState(checkPos)
@@ -252,11 +252,11 @@ object RubberTreeCommand {
         return null
     }
 
-    private fun highlightTree(world: ServerWorld, player: net.minecraft.server.network.ServerPlayerEntity, pos: BlockPos) {
-        val vec = Vec3d.ofCenter(pos)
+    private fun highlightTree(world: ServerLevel, player: net.minecraft.server.level.ServerPlayer, pos: BlockPos) {
+        val vec = Vec3.ofCenter(pos)
         world.spawnParticles(
             player,
-            net.minecraft.particle.ParticleTypes.HEART,
+            net.minecraft.core.particles.ParticleTypes.HEART,
             true,
             vec.x, vec.y, vec.z,
             10,

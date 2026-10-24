@@ -14,74 +14,74 @@ import ic2_120.registry.type
 import ic2_120.registry.id
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import ic2_120.content.block.machines.BaseMinerBlockEntity
 import ic2_120.content.item.AdvancedScannerItem
 import ic2_120.content.item.OdScannerItem
 import ic2_120.content.item.ScannerType
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.item.ItemStack
-import net.minecraft.util.ItemScatterer
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.Containers
 
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
 abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
-    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
         super.getPlacementState(ctx)?.with(ACTIVE, false)
 
     override fun createScreenHandlerFactory(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos
-    ): net.minecraft.screen.NamedScreenHandlerFactory? {
+    ): net.minecraft.world.MenuProvider? {
         val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+        return be as? net.minecraft.world.MenuProvider
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
+    ): InteractionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
             if (be is BaseMinerBlockEntity) {
                 for (stack in be.itemCache) {
-                    if (!stack.isEmpty) net.minecraft.util.ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack.copy())
+                    if (!stack.isEmpty) net.minecraft.world.Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack.copy())
                 }
                 be.itemCache.clear()
                 be.cacheItemCount = 0
@@ -91,7 +91,7 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings().nonOpaque(
         super.onStateReplaced(state, world, pos, newState, moved)
     }
 
-    private fun retrieveMiningPipes(world: World, pos: BlockPos) {
+    private fun retrieveMiningPipes(world: Level, pos: BlockPos) {
         // 读取采矿机的扫描范围，用于回收水平方向铺设的管道
         val be = world.getBlockEntity(pos)
         val radius = if (be is BaseMinerBlockEntity) {
@@ -138,7 +138,7 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings().nonOpaque(
         for (pipePos in planned) {
             val state = world.getBlockState(pipePos)
             if (state.block !is MiningPipeBlock) continue
-            ItemScatterer.spawn(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), ItemStack(state.block.asItem()))
+            Containers.spawn(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), ItemStack(state.block.asItem()))
             world.setBlockState(pipePos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
         }
     }
@@ -152,7 +152,7 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings().nonOpaque(
 class MinerBlock : BaseMinerBlock() {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = MinerBlockEntity(pos, state)
 
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(world, type, MinerBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
@@ -160,13 +160,13 @@ class MinerBlock : BaseMinerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val miningPipe = MiningPipeBlock::class.item()
             val chest = Items.CHEST
             if (machine != Items.AIR && circuit != Items.AIR && miningPipe != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MinerBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, MinerBlock::class.item(), 1)
                     .pattern(" C ")
                     .pattern("cMc")
                     .pattern(" P ")
@@ -188,7 +188,7 @@ class AdvancedMinerBlock : BaseMinerBlock() {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = AdvancedMinerBlockEntity(pos, state)
 
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(world, type, AdvancedMinerBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
@@ -196,14 +196,14 @@ class AdvancedMinerBlock : BaseMinerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val alloy = Alloy::class.instance()
             val miner = MinerBlock::class.item()
             val teleporter = TeleporterBlock::class.item()
             val advCasing = AdvancedMachineCasingBlock::class.item()
             val mfe = MfeBlock::class.item()
             if (alloy != Items.AIR && miner != Items.AIR && teleporter != Items.AIR && advCasing != Items.AIR && mfe != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedMinerBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedMinerBlock::class.item(), 1)
                     .pattern("AmA")
                     .pattern("TUM")
                     .pattern("AmA")

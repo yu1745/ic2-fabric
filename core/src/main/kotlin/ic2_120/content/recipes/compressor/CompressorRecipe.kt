@@ -1,37 +1,37 @@
 package ic2_120.content.recipes.compressor
 
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.Recipe
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.RecipeType
-import net.minecraft.registry.DynamicRegistryManager
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.core.RegistryAccess
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.Level
 import ic2_120.content.recipes.ModMachineRecipes
 
 class CompressorRecipe(
-    private val id: Identifier,
+    private val id: ResourceLocation,
     val ingredient: Ingredient,
     val inputCount: Int,
     val output: ItemStack,
     val containerReturn: ItemStack = ItemStack.EMPTY
-) : Recipe<SimpleInventory> {
-    override fun matches(inventory: SimpleInventory, world: World): Boolean {
+) : Recipe<SimpleContainer> {
+    override fun matches(inventory: SimpleContainer, world: Level): Boolean {
         val stack = inventory.getStack(0)
         return ingredient.test(stack) && stack.count >= inputCount
     }
 
-    override fun craft(inventory: SimpleInventory, registryManager: DynamicRegistryManager): ItemStack {
+    override fun craft(inventory: SimpleContainer, registryManager: RegistryAccess): ItemStack {
         return output.copy()
     }
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getOutput(registryManager: DynamicRegistryManager): ItemStack = output.copy()
+    override fun getOutput(registryManager: RegistryAccess): ItemStack = output.copy()
 
-    override fun getId(): Identifier = id
+    override fun getId(): ResourceLocation = id
 
     override fun getSerializer(): RecipeSerializer<*> = CompressorRecipeSerializer
 

@@ -15,11 +15,11 @@ import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.MinecraftClient
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactories
+import net.minecraft.client.Minecraft
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers
 
 object IC2AdvancedSolarAddonClient : ClientModInitializer {
     private val configReceiver = ChunkedConfigReceiver { json ->
@@ -39,20 +39,20 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         // Register Block Entity Renderers
         val beType = MolecularTransformerBlockEntity::class.type()
         println("[MT-BER] Registering BER for type: $beType")
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             beType,
             ::MolecularTransformerBlockEntityRenderer
         )
         println("[MT-BER] Registration complete")
 
         // Register item renderer for Molecular Transformer
-        val mtBlock = Registries.BLOCK.get(Identifier.of("ic2_120_advanced_solar_addon", "molecular_transformer"))
+        val mtBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.of("ic2_120_advanced_solar_addon", "molecular_transformer"))
         val mtItemEntity = MolecularTransformerBlockEntity(
             BlockPos.ORIGIN,
             mtBlock.defaultState.with(MolecularTransformerBlock.ACTIVE, false)
         )
         BuiltinItemRendererRegistry.INSTANCE.register(mtBlock.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-            MinecraftClient.getInstance().blockEntityRenderDispatcher.renderEntity(
+            Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(
                 mtItemEntity,
                 matrices,
                 vertexConsumers,

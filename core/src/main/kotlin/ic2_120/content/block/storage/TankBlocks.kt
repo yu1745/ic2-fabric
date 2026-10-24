@@ -20,33 +20,33 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.BlockState
-import net.minecraft.block.BlockRenderType
-import net.minecraft.block.BlockWithEntity
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RenderShape
+import net.minecraft.world.level.block.BaseEntityBlock
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.BlockItem
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.Registries
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.BlockView
-import net.minecraft.world.World
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.ItemTags
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 /**
@@ -58,33 +58,33 @@ import java.util.function.Consumer
  * - 扳手拆卸保留流体
  * - 不同材质容量不同
  */
-abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(settings) {
+abstract class TankBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(settings) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return TankBlockEntity(pos, state)
     }
 
-    override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
+    override fun getRenderType(state: BlockState): RenderShape = RenderShape.MODEL
 
-    @Deprecated("Override without Hand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
+    @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
+    ): InteractionResult {
+        if (world.isClient) return InteractionResult.SUCCESS
 
-        val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ActionResult.PASS
+        val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return InteractionResult.PASS
         val storage = FluidStorage.SIDED.find(world, pos, hit.side)
         if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
-            return ActionResult.SUCCESS
+            return InteractionResult.SUCCESS
         }
 
         player.openHandledScreen(be)
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     /**
@@ -94,7 +94,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
      */
     private fun applyTankBlockEntityNbt(stack: ItemStack, be: TankBlockEntity) {
         if (be.fluidAmount <= 0L && be.fluidVariant.isBlank) return
-        val nbt = NbtCompound()
+        val nbt = CompoundTag()
         nbt.putLong(NBT_FLUID_AMOUNT, be.fluidAmount)
         if (!be.fluidVariant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, be.fluidVariant.toNbt())
@@ -103,13 +103,13 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
     }
 
     @Deprecated("override deprecated method", level = DeprecationLevel.WARNING)
-    override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is TankBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
                 val itemStack = ItemStack(this.asItem())
                 applyTankBlockEntityNbt(itemStack, blockEntity)
-                val itemEntity = net.minecraft.entity.ItemEntity(
+                val itemEntity = net.minecraft.world.entity.item.ItemEntity(
                     world,
                     pos.x.toDouble() + 0.5,
                     pos.y.toDouble() + 0.5,
@@ -125,11 +125,11 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
     }
 
     @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
-    override fun onStacksDropped(state: BlockState, world: ServerWorld, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
+    override fun onStacksDropped(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
         // 不调用 super，防止默认掉落行为
     }
 
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
+    override fun onBreak(world: Level, pos: BlockPos, state: BlockState, player: Player) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos)
             if (be is TankBlockEntity) {
@@ -148,7 +148,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         super.onBreak(world, pos, state, player)
     }
 
-    override fun getPickStack(world: net.minecraft.world.BlockView, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getPickStack(world: net.minecraft.world.level.BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getPickStack(world, pos, state)
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is TankBlockEntity) {
@@ -161,7 +161,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
     override fun hasComparatorOutput(state: BlockState): Boolean = true
 
     @Deprecated("Override without BlockState param", level = DeprecationLevel.WARNING)
-    override fun getComparatorOutput(state: BlockState, world: net.minecraft.world.World, pos: BlockPos): Int {
+    override fun getComparatorOutput(state: BlockState, world: net.minecraft.world.level.Level, pos: BlockPos): Int {
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is TankBlockEntity) {
             return blockEntity.comparatorOutput
@@ -175,8 +175,8 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
     @Environment(EnvType.CLIENT)
     override fun appendTooltip(
         stack: ItemStack,
-        world: BlockView?,
-        tooltip: MutableList<Text>,
+        world: BlockGetter?,
+        tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
@@ -195,13 +195,13 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             amountRaw.toInt().coerceIn(0, capMb)
 
         if (variant.isBlank || amountRaw <= 0L) {
-            tooltip.add(Text.literal("流体: 无").formatted(Formatting.GRAY))
+            tooltip.add(Component.literal("流体: 无").formatted(ChatFormatting.GRAY))
         } else {
             tooltip.add(
-                Text.literal("流体: ").append(FluidVariantAttributes.getName(variant)).formatted(Formatting.GRAY)
+                Component.literal("流体: ").append(FluidVariantAttributes.getName(variant)).formatted(ChatFormatting.GRAY)
             )
         }
-        tooltip.add(Text.literal("储量: $amountMb / $capMb mB").formatted(Formatting.GRAY))
+        tooltip.add(Component.literal("储量: $amountMb / $capMb mB").formatted(ChatFormatting.GRAY))
     }
 
     companion object {
@@ -209,8 +209,8 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         private const val NBT_FLUID_VARIANT = "FluidVariant"
 
         /** 与 [TankBlockEntity] 对应的容量（mB），用于 tooltip */
-        private fun fluidCapacityMbForBlock(block: net.minecraft.block.Block): Int {
-            val path = Registries.BLOCK.getId(block).path
+        private fun fluidCapacityMbForBlock(block: net.minecraft.world.level.block.Block): Int {
+            val path = BuiltInRegistries.BLOCK.getId(block).path
             return when (path) {
                 "steel_tank" -> TankBlockEntity.STEEL_CAPACITY_MB
                 "iridium_tank" -> TankBlockEntity.IRIDIUM_CAPACITY_MB
@@ -226,14 +226,14 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
  * 青铜储罐 - 32 桶容量 (32000 mB)
  */
 @ModBlock(name = "bronze_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
-class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+class BronzeTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = BronzePlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeTankBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, BronzeTankBlock::class.item(), 1)
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
@@ -250,14 +250,14 @@ class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.bloc
  * 铁储罐 - 32 桶容量 (32000 mB)
  */
 @ModBlock(name = "iron_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
-class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+class IronTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = IronPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronTankBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, IronTankBlock::class.item(), 1)
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
@@ -274,14 +274,14 @@ class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.
  * 钢制储罐 - 128 桶容量 (128000 mB)
  */
 @ModBlock(name = "steel_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
-class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
+class SteelTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = SteelPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelTankBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, SteelTankBlock::class.item(), 1)
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
@@ -298,14 +298,14 @@ class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block
  * 铱储罐 - 1024 桶容量 (1024000 mB)
  */
 @ModBlock(name = "iridium_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
-class IridiumTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
+class IridiumTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = IridiumPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumTankBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumTankBlock::class.item(), 1)
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")

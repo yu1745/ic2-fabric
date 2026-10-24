@@ -10,30 +10,30 @@ import ic2_120.content.sync.MinerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.screen.slot.SlotActionType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.inventory.ClickType
 import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(names = ["miner", "advanced_miner"])
 class MinerScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null,
     val isAdvanced: Boolean = false
-) : ScreenHandler(MinerScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(MinerScreenHandler::class.type(), syncId) {
 
     val sync = MinerSync(
         SyncedDataView(propertyDelegate),
@@ -109,13 +109,13 @@ class MinerScreenHandler(
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+    private fun addTrackedSlot(inventory: Container, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         beSlotToHandlerIndex[beSlotIndex] = slots.size
         addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int, maxItemCount: Int) {
+    private fun addTrackedSlot(inventory: Container, beSlotIndex: Int, x: Int, y: Int, maxItemCount: Int) {
         val base = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val spec = base.copy(maxItemCount = maxItemCount)
         beSlotToHandlerIndex[beSlotIndex] = slots.size
@@ -123,7 +123,7 @@ class MinerScreenHandler(
         addSlot(slot)
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? BaseMinerBlockEntity ?: return@get false
             when (id) {
@@ -138,7 +138,7 @@ class MinerScreenHandler(
         return true
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -185,9 +185,9 @@ class MinerScreenHandler(
         return stack
     }
 
-    override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
+    override fun onSlotClick(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
         val pipeSlotIndex = beSlotToHandlerIndex[BaseMinerBlockEntity.SLOT_PIPE]
-        if (slotIndex == pipeSlotIndex && actionType == SlotActionType.PICKUP) {
+        if (slotIndex == pipeSlotIndex && actionType == ClickType.PICKUP) {
             val miner = getMinerBlockEntity()
             if (miner != null) {
                 val cursor = cursorStack
@@ -222,7 +222,7 @@ class MinerScreenHandler(
     private val playerSlotStart: Int
         get() = if (isAdvanced) 21 else 22
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is BaseMinerBlock && player.squaredDistanceTo(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
@@ -236,13 +236,13 @@ class MinerScreenHandler(
         const val BUTTON_RECOVER_PIPES = 3
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): MinerScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): MinerScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val isAdvanced = buf.readBoolean()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(BaseMinerBlockEntity.INVENTORY_SIZE)
-            return MinerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), isAdvanced = isAdvanced)
+            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val blockInv = SimpleContainer(BaseMinerBlockEntity.INVENTORY_SIZE)
+            return MinerScreenHandler(syncId, playerInventory, blockInv, context, SimpleContainerData(propertyCount), isAdvanced = isAdvanced)
         }
     }
 }

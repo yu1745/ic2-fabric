@@ -3,34 +3,34 @@ package ic2_120.content.entity
 import ic2_120.config.Ic2Config
 import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.annotation.ModEntity
-import net.minecraft.block.AbstractFireBlock
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.data.DataTracker
-import net.minecraft.entity.data.TrackedData
-import net.minecraft.entity.data.TrackedDataHandlerRegistry
-import net.minecraft.entity.projectile.ProjectileEntity
-import net.minecraft.entity.projectile.ProjectileUtil
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.recipe.RecipeType
-import net.minecraft.registry.tag.BlockTags
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
-import net.minecraft.world.World
+import net.minecraft.world.level.block.BaseFireBlock
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.network.syncher.SynchedEntityData
+import net.minecraft.network.syncher.EntityDataAccessor
+import net.minecraft.network.syncher.EntityDataSerializers
+import net.minecraft.world.entity.projectile.Projectile
+import net.minecraft.world.entity.projectile.ProjectileUtil
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.tags.BlockTags
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.Level
 
 /**
  * 采矿镭射枪弹射实体。
@@ -39,8 +39,8 @@ import net.minecraft.world.World
 @ModEntity(name = "laser_projectile", width = 0.1f, height = 0.1f, maxTrackingRange = 256, trackingTickInterval = 1, dataFixerType = "minecraft:arrow")
 class LaserProjectileEntity(
     entityType: EntityType<out LaserProjectileEntity>,
-    world: World
-) : ProjectileEntity(entityType, world) {
+    world: Level
+) : Projectile(entityType, world) {
 
     companion object {
         /** 视觉长度 (blocks)，渲染时使用 */
@@ -48,10 +48,10 @@ class LaserProjectileEntity(
         /** 最大存活 tick 数 */
         private val MAX_LIFE: Int get() = Ic2Config.current.miningLaser.maxLife
 
-        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "item.laser.hit"))
+        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.of("ic2", "item.laser.hit"))
 
-        private val MODE: TrackedData<String> = DataTracker.registerData(
-            LaserProjectileEntity::class.java, TrackedDataHandlerRegistry.STRING
+        private val MODE: EntityDataAccessor<String> = SynchedEntityData.registerData(
+            LaserProjectileEntity::class.java, EntityDataSerializers.STRING
         )
 
         /** 不会被镭射破坏的方块硬度阈值（黑曜石=50，防爆石等更高） */
@@ -81,7 +81,7 @@ class LaserProjectileEntity(
     /**
      * 从发射者位置和视角方向初始化弹射，指定模式。
      */
-    fun init(owner: Entity, pitch: Float, yaw: Float, laserMode: LaserMode, spreadOffset: Vec3d = Vec3d.ZERO) {
+    fun init(owner: Entity, pitch: Float, yaw: Float, laserMode: LaserMode, spreadOffset: Vec3 = Vec3.ZERO) {
         setOwner(owner)
         mode = laserMode
         remainingRange = laserMode.range
@@ -100,7 +100,7 @@ class LaserProjectileEntity(
         val velX = -Math.sin(radYaw) * Math.cos(radPitch)
         val velY = -Math.sin(radPitch)
         val velZ = Math.cos(radYaw) * Math.cos(radPitch)
-        val dir = Vec3d(velX, velY, velZ).normalize()
+        val dir = Vec3(velX, velY, velZ).normalize()
         this.velocity = dir.multiply(laserMode.speed)
         setVelocity(this.velocity)
     }
@@ -116,14 +116,14 @@ class LaserProjectileEntity(
             }
         }
 
-        // 方块碰撞检测 - 使用 RaycastContext
+        // 方块碰撞检测 - 使用 ClipContext
         val currentPos = pos
         val nextPos = currentPos.add(velocity)
-        val raycastContext = RaycastContext(
+        val raycastContext = ClipContext(
             currentPos,
             nextPos,
-            RaycastContext.ShapeType.COLLIDER,
-            RaycastContext.FluidHandling.NONE,
+            ClipContext.ShapeType.COLLIDER,
+            ClipContext.FluidHandling.NONE,
             this
         )
         val blockHit = world.raycast(raycastContext)
@@ -163,7 +163,7 @@ class LaserProjectileEntity(
             val g = ((col shr 8) and 0xFF) / 255f
             val b = (col and 0xFF) / 255f
             world.addParticle(
-                net.minecraft.particle.DustParticleEffect(
+                net.minecraft.core.particles.DustParticleOptions(
                     org.joml.Vector3f(r, g, b), 0.4f
                 ),
                 x, y, z, 0.0, 0.0, 0.0
@@ -187,7 +187,7 @@ class LaserProjectileEntity(
                 this,
                 x, y, z,
                 currentMode.explosionPower,
-                World.ExplosionSourceType.TNT
+                Level.ExplosionSourceType.TNT
             )
             tryRandomIgniteAfterBreak(pos)
             discard()
@@ -208,7 +208,7 @@ class LaserProjectileEntity(
                 world.breakBlock(pos, true, owner)
                 tryRandomIgniteAfterBreak(pos)
             }
-            world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
+            world.playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
             discard()
             return
         }
@@ -222,7 +222,7 @@ class LaserProjectileEntity(
             val hardness = state.block.hardness.coerceAtLeast(0.1f)
             remainingRange -= hardness.toDouble()
             world.breakBlock(pos, true, owner)
-            world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
+            world.playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
             if (remainingRange > 0) {
                 nudgePastBlock(hitResult)
                 return
@@ -234,7 +234,7 @@ class LaserProjectileEntity(
         // 其他模式：破坏方块
         if (canBreak(state) && !ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) {
             world.breakBlock(pos, true, owner)
-            world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
+            world.playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
         }
 
         discard()
@@ -245,7 +245,7 @@ class LaserProjectileEntity(
         if (world.random.nextFloat() >= POST_BREAK_IGNITE_CHANCE) return
         if (!world.isInBuildLimit(pos)) return
         if (ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) return
-        if (!AbstractFireBlock.canPlaceAt(world, pos, Direction.UP)) return
+        if (!BaseFireBlock.canPlaceAt(world, pos, Direction.UP)) return
         if (!world.getBlockState(pos).isReplaceable) return
         world.setBlockState(pos, Blocks.FIRE.defaultState)
     }
@@ -284,7 +284,7 @@ class LaserProjectileEntity(
                 this,
                 x, y, z,
                 currentMode.explosionPower,
-                World.ExplosionSourceType.TNT
+                Level.ExplosionSourceType.TNT
             )
             tryRandomIgniteAfterBreak(BlockPos.ofFloored(x, y, z))
         }
@@ -296,26 +296,26 @@ class LaserProjectileEntity(
      * 超级热线模式：查找方块的熔炼配方，将方块替换为熔炼产物。
      * 对原木无效。
      */
-    private fun smeltBlock(pos: net.minecraft.util.math.BlockPos, state: BlockState) {
+    private fun smeltBlock(pos: net.minecraft.core.BlockPos, state: BlockState) {
         if (state.isIn(BlockTags.LOGS) || state.isIn(BlockTags.LOGS_THAT_BURN)) return
         if (!canBreak(state)) return
         if (ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) return
 
-        val serverWorld = world as? ServerWorld ?: return
+        val serverWorld = world as? ServerLevel ?: return
         val blockItem = state.block.asItem()
-        if (blockItem == net.minecraft.item.Items.AIR) return
+        if (blockItem == net.minecraft.world.item.Items.AIR) return
 
         val inputStack = ItemStack(blockItem)
-        val inventory = SimpleInventory(inputStack)
+        val inventory = SimpleContainer(inputStack)
         val recipe = serverWorld.recipeManager.getFirstMatch(RecipeType.SMELTING, inventory, serverWorld).orElse(null)
 
         if (recipe != null) {
             val output = recipe.craft(inventory, serverWorld.registryManager)
             if (!output.isEmpty) {
                 world.breakBlock(pos, false)
-                net.minecraft.block.Block.dropStack(serverWorld, pos, output.copy())
+                net.minecraft.world.level.block.Block.dropStack(serverWorld, pos, output.copy())
                 tryRandomIgniteAfterBreak(pos)
-                world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
+                world.playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
                 return
             }
         }
@@ -323,7 +323,7 @@ class LaserProjectileEntity(
         // 没有熔炼配方的方块直接破坏
         world.breakBlock(pos, true, owner)
         tryRandomIgniteAfterBreak(pos)
-        world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
+        world.playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
     }
 
     private fun explosionAllowedAt(center: BlockPos, power: Float): Boolean {
@@ -343,7 +343,7 @@ class LaserProjectileEntity(
         return state.block.hardness >= 0
     }
 
-    override fun readCustomDataFromNbt(nbt: NbtCompound) {
+    override fun readCustomDataFromNbt(nbt: CompoundTag) {
         remainingRange = nbt.getDouble("RemainingRange")
         lifeTicks = nbt.getInt("LifeTicks")
         try {
@@ -353,7 +353,7 @@ class LaserProjectileEntity(
         }
     }
 
-    override fun writeCustomDataToNbt(nbt: NbtCompound) {
+    override fun writeCustomDataToNbt(nbt: CompoundTag) {
         nbt.putDouble("RemainingRange", remainingRange)
         nbt.putInt("LifeTicks", lifeTicks)
         nbt.putString("Mode", mode.name)

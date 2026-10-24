@@ -3,15 +3,15 @@ package ic2_120.content.worldgen
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.loot.LootPool
-import net.minecraft.loot.entry.EmptyEntry
-import net.minecraft.loot.entry.ItemEntry
-import net.minecraft.loot.function.SetCountLootFunction
-import net.minecraft.loot.provider.number.UniformLootNumberProvider
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.storage.loot.LootPool
+import net.minecraft.world.level.storage.loot.entries.EmptyLootItem
+import net.minecraft.world.level.storage.loot.entries.LootItem
+import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction
+import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 以代码方式向原版奖励箱追加 IC2 战利品，避免整表覆盖并降低与其他模组的冲突概率。
@@ -136,7 +136,7 @@ object ChestLootInjector {
 
     private fun createIndustrialPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .rolls(UniformGenerator.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
             .withIridiumShard(8, 2f, 5f)
@@ -146,7 +146,7 @@ object ChestLootInjector {
 
     private fun createAdventurePool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .rolls(UniformGenerator.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
             .withIridiumShard(8, 1f, 2f)
@@ -160,7 +160,7 @@ object ChestLootInjector {
 
     private fun createDungeonPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .rolls(UniformGenerator.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 10, 2f, 5f)
             .withWeightedItem(modItem("tin_ingot"), 10, 2f, 5f)
             .withIridiumOre(2, 1f, 2f)
@@ -169,13 +169,13 @@ object ChestLootInjector {
 
     private fun createSpawnBonusPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 1f))
+            .rolls(UniformGenerator.create(1f, 1f))
             .withWeightedItem(modItem("treetap"), 8)
             .withEmpty(2)
 
     private fun createStrongholdCorridorPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .rolls(UniformGenerator.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
             .withIridiumOre(1, 1f, 4f)
@@ -190,7 +190,7 @@ object ChestLootInjector {
 
     private fun createStrongholdStandardPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .rolls(UniformGenerator.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
             .withIridiumOre(1)
@@ -205,7 +205,7 @@ object ChestLootInjector {
 
     private fun createVillageBlacksmithPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .rolls(UniformGenerator.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
             .withIridiumShard(8, 3f, 7f)
@@ -221,7 +221,7 @@ object ChestLootInjector {
 
     private fun createAncientCityPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .rolls(UniformGenerator.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 8, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 7, 1f, 5f)
             .withIridiumOre(3, 1f, 3f)
@@ -231,7 +231,7 @@ object ChestLootInjector {
 
     private fun createBastionPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 3f))
+            .rolls(UniformGenerator.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 8, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 7, 1f, 5f)
             .withIridiumShard(8, 2f, 8f)
@@ -242,7 +242,7 @@ object ChestLootInjector {
 
     private fun createShipwreckPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 2f))
+            .rolls(UniformGenerator.create(1f, 2f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 1f, 4f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 3f)
             .withIridiumShard(6, 1f, 4f)
@@ -251,7 +251,7 @@ object ChestLootInjector {
 
     private fun createUnderwaterRuinPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 1f))
+            .rolls(UniformGenerator.create(1f, 1f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 1f, 3f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 2f)
             .withIridiumShard(5, 1f, 3f)
@@ -259,7 +259,7 @@ object ChestLootInjector {
 
     private fun createVillageHousePool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 1f))
+            .rolls(UniformGenerator.create(1f, 1f))
             .withWeightedItem(Items.COPPER_INGOT, 8, 1f, 3f)
             .withWeightedItem(modItem("tin_ingot"), 7, 1f, 2f)
             .withIridiumShard(4, 1f, 3f)
@@ -268,7 +268,7 @@ object ChestLootInjector {
 
     private fun createVillageWorkerPool(): LootPool.Builder =
         LootPool.builder()
-            .rolls(UniformLootNumberProvider.create(1f, 2f))
+            .rolls(UniformGenerator.create(1f, 2f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 1f, 4f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 3f)
             .withIridiumShard(6, 1f, 4f)
@@ -277,15 +277,15 @@ object ChestLootInjector {
             .withEmpty(45)
 
     private fun LootPool.Builder.withWeightedItem(item: Item, weight: Int, min: Float? = null, max: Float? = null): LootPool.Builder {
-        val entry = ItemEntry.builder(item).weight(weight)
+        val entry = LootItem.builder(item).weight(weight)
         if (min != null && max != null) {
-            entry.apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(min, max)))
+            entry.apply(SetItemCountFunction.builder(UniformGenerator.create(min, max)))
         }
         return with(entry)
     }
 
     private fun LootPool.Builder.withEmpty(weight: Int): LootPool.Builder =
-        with(EmptyEntry.builder().weight(weight))
+        with(EmptyLootItem.builder().weight(weight))
 
     private fun LootPool.Builder.withIridiumOre(
         weight: Int, min: Float? = null, max: Float? = null
@@ -299,7 +299,7 @@ object ChestLootInjector {
         return withWeightedItem(modItem("iridium_shard"), weight, min / divisor, max / divisor)
     }
 
-    private fun modItem(path: String): Item = Registries.ITEM.get(Ic2_120.id(path))
+    private fun modItem(path: String): Item = BuiltInRegistries.ITEM.get(Ic2_120.id(path))
 
-    private fun chest(path: String): Identifier = Identifier.of("minecraft", "chests/$path")
+    private fun chest(path: String): ResourceLocation = ResourceLocation.of("minecraft", "chests/$path")
 }

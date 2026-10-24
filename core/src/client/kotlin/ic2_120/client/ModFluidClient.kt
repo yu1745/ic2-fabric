@@ -4,8 +4,8 @@ import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.util.Identifier
+import net.minecraft.client.renderer.RenderType
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 
 /**
@@ -115,7 +115,7 @@ object ModFluidClient {
 
         // 流体方块使用半透明渲染层
         BlockRenderLayerMap.INSTANCE.putFluids(
-            RenderLayer.getTranslucent(),
+            RenderType.getTranslucent(),
             ModFluids.COOLANT_STILL,
             ModFluids.COOLANT_FLOWING,
             ModFluids.HOT_COOLANT_STILL,
@@ -150,8 +150,8 @@ object ModFluidClient {
      * tint 颜色从 ModFluids.getFluidTintOrNull() 读取（单一数据源），调用方无需传参。
      */
     private fun registerFluid(
-        still: net.minecraft.fluid.Fluid,
-        flowing: net.minecraft.fluid.Fluid,
+        still: net.minecraft.world.level.material.Fluid,
+        flowing: net.minecraft.world.level.material.Fluid,
         stillTex: String,
         flowTex: String
     ) {
@@ -172,19 +172,19 @@ object ModFluidClient {
         }
     }
 
-    private fun parseTextureId(path: String): Identifier {
+    private fun parseTextureId(path: String): ResourceLocation {
         return if (path.contains(':')) {
-            Identifier.tryParse(path) ?: Identifier.of(TEXTURE_NS, path)
+            ResourceLocation.tryParse(path) ?: ResourceLocation.of(TEXTURE_NS, path)
         } else {
-            Identifier.of(TEXTURE_NS, path)
+            ResourceLocation.of(TEXTURE_NS, path)
         }
     }
 
     private fun logFluidRegistration(
-        stillFluid: net.minecraft.fluid.Fluid,
-        flowingFluid: net.minecraft.fluid.Fluid,
-        stillId: Identifier,
-        flowId: Identifier,
+        stillFluid: net.minecraft.world.level.material.Fluid,
+        flowingFluid: net.minecraft.world.level.material.Fluid,
+        stillId: ResourceLocation,
+        flowId: ResourceLocation,
         tintColor: Int?
     ) {
         val stillPath = "/assets/${stillId.namespace}/textures/${stillId.path}.png"

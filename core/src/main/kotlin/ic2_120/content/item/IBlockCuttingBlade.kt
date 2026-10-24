@@ -1,6 +1,6 @@
 package ic2_120.content.item
 
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * 方块切割机锯片接口。

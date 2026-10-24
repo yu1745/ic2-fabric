@@ -1,32 +1,32 @@
 package ic2_120.content.recipes.extractor
 
-import net.minecraft.item.ItemStack
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.Recipe
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.RecipeType
-import net.minecraft.recipe.input.RecipeInput
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.world.item.crafting.RecipeInput
+import net.minecraft.core.HolderLookup
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.Level
 import ic2_120.content.recipes.ModMachineRecipes
 
 class ExtractorRecipe(
-    private val id: Identifier,
+    private val id: ResourceLocation,
     val ingredient: Ingredient,
     val output: ItemStack
 ) : Recipe<RecipeInput> {
-    override fun matches(input: RecipeInput, world: World): Boolean {
+    override fun matches(input: RecipeInput, world: Level): Boolean {
         return ingredient.test(input.getStackInSlot(0))
     }
 
-    override fun craft(input: RecipeInput, lookup: RegistryWrapper.WrapperLookup): ItemStack {
+    override fun craft(input: RecipeInput, lookup: HolderLookup.WrapperLookup): ItemStack {
         return output.copy()
     }
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getResult(lookup: RegistryWrapper.WrapperLookup): ItemStack = output.copy()
+    override fun getResult(lookup: HolderLookup.WrapperLookup): ItemStack = output.copy()
     override fun getSerializer(): RecipeSerializer<*> = ExtractorRecipeSerializer
 
     override fun getType(): RecipeType<*> = ModMachineRecipes.recipeType(ExtractorRecipe::class)

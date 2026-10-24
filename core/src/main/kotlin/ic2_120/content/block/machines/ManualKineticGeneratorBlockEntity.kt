@@ -8,36 +8,36 @@ import ic2_120.content.sync.ManualKineticGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.state.property.Properties
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.text.Text
-import net.minecraft.world.World
-import net.minecraft.registry.RegistryWrapper
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
+import net.minecraft.network.chat.Component
+import net.minecraft.world.level.Level
+import net.minecraft.core.HolderLookup
 
 @ModBlockEntity(block = ManualKineticGeneratorBlock::class)
 class ManualKineticGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IKineticMachinePort {
+) : MachineBlockEntity(type, pos, state), Container, IKineticMachinePort {
 
     companion object {
         const val CRANK_SLOT = 0
@@ -46,9 +46,9 @@ class ManualKineticGeneratorBlockEntity(
     }
 
     override val tier: Int = 1
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = ManualKineticGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = ManualKineticGeneratorBlock.ACTIVE
 
-    private val inventory = DefaultedList.ofSize(1, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(1, ItemStack.EMPTY)
     private val syncedData = SyncedData()
     val sync = ManualKineticGeneratorSync(syncedData)
 
@@ -69,7 +69,7 @@ class ManualKineticGeneratorBlockEntity(
         state
     )
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
 
     fun getCrankStack(): ItemStack = inventory[CRANK_SLOT]
 
@@ -86,12 +86,12 @@ class ManualKineticGeneratorBlockEntity(
     }
 
     private fun isAllowedCrank(stack: ItemStack): Boolean {
-        val id = net.minecraft.registry.Registries.ITEM.getId(stack.item)
+        val id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item)
         return ALLOWED_CRANKS.contains(id.path)
     }
 
-    fun onUse(player: PlayerEntity, hand: Hand, world: World, pos: BlockPos, state: BlockState): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
+    fun onUse(player: Player, hand: InteractionHand, world: Level, pos: BlockPos, state: BlockState): InteractionResult {
+        if (world.isClient) return InteractionResult.SUCCESS
 
         val heldStack = player.getStackInHand(hand)
         val crankStack = inventory[CRANK_SLOT]
@@ -104,26 +104,26 @@ class ManualKineticGeneratorBlockEntity(
                 if (!player.inventory.insertStack(extracted)) {
                     player.dropItem(extracted, false)
                 }
-                return ActionResult.SUCCESS
+                return InteractionResult.SUCCESS
             }
 
             heldStack.item is CrankHandleItem && crankStack.isEmpty -> {
                 inventory[CRANK_SLOT] = heldStack.split(1)
                 markDirtyAndSync()
-                return ActionResult.SUCCESS
+                return InteractionResult.SUCCESS
             }
 
             heldStack.isEmpty && hasCrank() -> {
                 driverTick[player] = world.time
-                return ActionResult.SUCCESS
+                return InteractionResult.SUCCESS
             }
 
             heldStack.isEmpty && !hasCrank() -> {
-                player.sendMessage(Text.translatable("message.ic2_120.manual_kinetic_no_crank"), true)
-                return ActionResult.SUCCESS
+                player.sendMessage(Component.translatable("message.ic2_120.manual_kinetic_no_crank"), true)
+                return InteractionResult.SUCCESS
             }
 
-            else -> return ActionResult.PASS
+            else -> return InteractionResult.PASS
         }
     }
 
@@ -141,7 +141,7 @@ class ManualKineticGeneratorBlockEntity(
         val lastTick = driverTick[entity] ?: return false
         val world = world ?: return false
         if (world.time - lastTick > 6) return false
-        val distance = entity.pos.distanceTo(Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5))
+        val distance = entity.pos.distanceTo(Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5))
         if (distance > MAX_USE_DISTANCE) return false
         return true
     }
@@ -149,12 +149,12 @@ class ManualKineticGeneratorBlockEntity(
     fun dropCrank() {
         val world = world ?: return
         if (world.isClient || inventory[CRANK_SLOT].isEmpty) return
-        net.minecraft.util.ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), inventory[CRANK_SLOT])
+        net.minecraft.world.Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), inventory[CRANK_SLOT])
         inventory[CRANK_SLOT] = ItemStack.EMPTY
         markDirty()
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) {
             if (sync.isTurning) {
                 clientTurnAngle += 15f
@@ -229,7 +229,7 @@ class ManualKineticGeneratorBlockEntity(
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerWorld)?.chunkManager?.markForUpdate(pos)
+            (world as? ServerLevel)?.chunkManager?.markForUpdate(pos)
         }
     }
 
@@ -240,7 +240,7 @@ class ManualKineticGeneratorBlockEntity(
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
     override fun removeStack(slot: Int, amount: Int): ItemStack {
-        val result = Inventories.splitStack(inventory, slot, amount)
+        val result = ContainerHelper.splitStack(inventory, slot, amount)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
@@ -248,7 +248,7 @@ class ManualKineticGeneratorBlockEntity(
     }
 
     override fun removeStack(slot: Int): ItemStack {
-        val result = Inventories.removeStack(inventory, slot)
+        val result = ContainerHelper.removeStack(inventory, slot)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
@@ -272,24 +272,24 @@ class ManualKineticGeneratorBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
         inventory[CRANK_SLOT] = ItemStack.EMPTY
-        Inventories.readNbt(nbt, inventory, lookup)
+        ContainerHelper.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         nbt.putInt("PendingKu", pendingOutputKu)
-        Inventories.writeNbt(nbt, inventory, lookup)
+        ContainerHelper.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
+    override fun toInitialChunkDataNbt(lookup: HolderLookup.WrapperLookup): CompoundTag = createNbt(lookup)
 
-    override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
+    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 }

@@ -48,27 +48,27 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluids
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 流体/固体装罐机方块实体。
@@ -85,19 +85,19 @@ class CannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = CannerBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CannerBlock.ACTIVE
 
     override val soundConfig: MachineSoundConfig = MachineSoundConfig.none()
 
-    override fun getInventory(): net.minecraft.inventory.Inventory = this
+    override fun getInventory(): net.minecraft.world.Container = this
 
     override var fluidPipeProviderEnabled: Boolean = false
     override var fluidPipeReceiverEnabled: Boolean = false
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeProviderFilter: net.minecraft.world.level.material.Fluid? = null
+    override var fluidPipeReceiverFilter: net.minecraft.world.level.material.Fluid? = null
     override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeEjectorCount: Int = 0
@@ -137,7 +137,7 @@ class CannerBlockEntity(
         private const val TANK_CAPACITY_BUCKETS = 8
         private val TANK_CAPACITY = FluidConstants.BUCKET * TANK_CAPACITY_BUCKETS
 
-        private val tinCanItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "tin_can")) }
+        private val tinCanItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "tin_can")) }
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -150,7 +150,7 @@ class CannerBlockEntity(
         }
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -192,7 +192,7 @@ class CannerBlockEntity(
         override fun onFinalCommit() {
             sync.leftFluidAmount = amount.toInt().coerceAtLeast(0)
             sync.leftFluidCapacity = TANK_CAPACITY.toInt()
-            sync.leftFluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
+            sync.leftFluidRawId = if (variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(variant.fluid)
             markDirty()
         }
     }
@@ -211,7 +211,7 @@ class CannerBlockEntity(
         override fun onFinalCommit() {
             sync.rightFluidAmount = amount.toInt().coerceAtLeast(0)
             sync.rightFluidCapacity = TANK_CAPACITY.toInt()
-            sync.rightFluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
+            sync.rightFluidRawId = if (variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(variant.fluid)
             markDirty()
         }
     }
@@ -255,12 +255,12 @@ class CannerBlockEntity(
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     private fun cannerIsFilledFluidContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -309,19 +309,19 @@ class CannerBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.canner")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.canner")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        CannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        CannerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -340,15 +340,15 @@ class CannerBlockEntity(
         rightTankInternal.variant = if (rightFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(rightFluidTag)
         sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
         sync.leftFluidCapacity = TANK_CAPACITY.toInt()
-        sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
+        sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(leftTankInternal.variant.fluid)
         sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
         sync.rightFluidCapacity = TANK_CAPACITY.toInt()
-        sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
+        sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(rightTankInternal.variant.fluid)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -372,7 +372,7 @@ class CannerBlockEntity(
         }
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
@@ -464,9 +464,9 @@ class CannerBlockEntity(
             tx.commit()
         }
         sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
-        sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
+        sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(leftTankInternal.variant.fluid)
         sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
-        sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
+        sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(rightTankInternal.variant.fluid)
         resetProgress()
         markDirty()
         return beforeLeft != leftTankInternal.amount ||
@@ -478,8 +478,8 @@ class CannerBlockEntity(
     // 双输入数量安全缓存（SolidCannerRecipe.matches 检查 slot0/slot1 数量）：
     // 非 null 仅当两槽数量均 >= 对应 slotXCount；null 仅当两槽数量均未增加
     // （任一槽增加都可能让此前数量不足的配方匹配）。
-    private var cachedContainerItem: net.minecraft.item.Item? = null
-    private var cachedMaterialItem: net.minecraft.item.Item? = null
+    private var cachedContainerItem: net.minecraft.world.item.Item? = null
+    private var cachedMaterialItem: net.minecraft.world.item.Item? = null
     private var cachedContainerCount = 0
     private var cachedMaterialCount = 0
     private var cachedSolidCannerRecipe: SolidCannerRecipe? = null
@@ -494,7 +494,7 @@ class CannerBlockEntity(
         }
         val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
         // 配方匹配包含 slot0/slot1 的数量要求，不能将输入堆叠压成 1 个。
-        val recipeInventory = SimpleInventory(container, material)
+        val recipeInventory = SimpleContainer(container, material)
         val match = world.recipeManager.getFirstMatch(recipeType, recipeInventory, world) ?: return null
         val recipe = if (match.isEmpty) null else match.get()
         cachedRecipeEpoch = RecipeCacheEpoch.current()
@@ -699,9 +699,9 @@ class CannerBlockEntity(
                 }
             }
             sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
-            sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
+            sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(leftTankInternal.variant.fluid)
             sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
-            sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
+            sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(rightTankInternal.variant.fluid)
         }
     }
 
@@ -746,7 +746,7 @@ class CannerBlockEntity(
                             if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, emptyResult)
                             else outputSlot.increment(1)
                             sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
-                            sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
+                            sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(leftTankInternal.variant.fluid)
                             return
                         }
                     }

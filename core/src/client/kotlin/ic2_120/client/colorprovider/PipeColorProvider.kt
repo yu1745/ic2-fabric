@@ -2,10 +2,10 @@ package ic2_120.client.colorprovider
 
 import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
-import net.minecraft.client.color.block.BlockColorProvider
-import net.minecraft.client.color.item.ItemColorProvider
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.client.color.block.BlockColor
+import net.minecraft.client.color.item.ItemColor
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 
 /**
@@ -31,9 +31,9 @@ object PipeColorProvider {
     private const val CARBON_COLOR = 0x191919
 
     fun register() {
-        val blockProvider = BlockColorProvider { state, world, pos, tintIndex ->
-            if (tintIndex != 0) return@BlockColorProvider 0xFFFFFF
-            val blockId = Registries.BLOCK.getId(state.block)
+        val blockProvider = BlockColor { state, world, pos, tintIndex ->
+            if (tintIndex != 0) return@BlockColor 0xFFFFFF
+            val blockId = BuiltInRegistries.BLOCK.getId(state.block)
             when {
                 blockId.path.startsWith("bronze_pipe") || blockId.path == "bronze_pump_attachment" -> BRONZE_COLOR
                 blockId.path.startsWith("carbon_pipe") || blockId.path == "carbon_pump_attachment" -> CARBON_COLOR
@@ -41,10 +41,10 @@ object PipeColorProvider {
             }
         }
 
-        val itemProvider = ItemColorProvider { stack, tintIndex ->
-            if (tintIndex != 0) return@ItemColorProvider 0xFFFFFF
+        val itemProvider = ItemColor { stack, tintIndex ->
+            if (tintIndex != 0) return@ItemColor 0xFFFFFF
             val item = stack.item
-            val itemId = Registries.ITEM.getId(item)
+            val itemId = BuiltInRegistries.ITEM.getId(item)
             when {
                 itemId.path.startsWith("bronze_pipe") || itemId.path == "bronze_pump_attachment" -> BRONZE_COLOR
                 itemId.path.startsWith("carbon_pipe") || itemId.path == "carbon_pump_attachment" -> CARBON_COLOR
@@ -69,15 +69,15 @@ object PipeColorProvider {
         var registeredBlockCount = 0
         var registeredItemCount = 0
         for (pipeId in pipeIds) {
-            val id = Identifier.of("ic2_120", pipeId)
+            val id = ResourceLocation.of("ic2_120", pipeId)
 
-            val block = Registries.BLOCK.getOrEmpty(id)
+            val block = BuiltInRegistries.BLOCK.getOrEmpty(id)
             if (block.isPresent) {
                 ColorProviderRegistry.BLOCK.register(blockProvider, block.get())
                 registeredBlockCount++
             }
 
-            val item = Registries.ITEM.getOrEmpty(id)
+            val item = BuiltInRegistries.ITEM.getOrEmpty(id)
             if (item.isPresent) {
                 ColorProviderRegistry.ITEM.register(itemProvider, item.get())
                 registeredItemCount++

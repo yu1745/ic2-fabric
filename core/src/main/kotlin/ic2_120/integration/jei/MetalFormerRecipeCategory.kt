@@ -6,10 +6,10 @@ import mezz.jei.api.helpers.IGuiHelper
 import mezz.jei.api.recipe.IFocusGroup
 import mezz.jei.api.recipe.RecipeIngredientRole
 import mezz.jei.api.recipe.category.IRecipeCategory
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 金属成型机 JEI 分类 - 辊压模式 — 使用机器纹理 [guimetalformer.png]。
@@ -18,15 +18,15 @@ import net.minecraft.util.Identifier
  */
 class MetalFormerRollingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerRollingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
+        ResourceLocation.of("ic2", "textures/gui/guimetalformer.png"),
         4, 5, 146, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "metal_former")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_ROLLING
-    override fun getTitle(): Text = Text.translatable("block.ic2_120.metal_former.rolling")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120.metal_former.rolling")
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
@@ -50,15 +50,15 @@ class MetalFormerRollingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
  */
 class MetalFormerCuttingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerCuttingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
+        ResourceLocation.of("ic2", "textures/gui/guimetalformer.png"),
         4, 5, 146, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "metal_former")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_CUTTING
-    override fun getTitle(): Text = Text.translatable("block.ic2_120.metal_former.cutting")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120.metal_former.cutting")
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
@@ -82,15 +82,15 @@ class MetalFormerCuttingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
  */
 class MetalFormerExtrudingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerExtrudingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
+        ResourceLocation.of("ic2", "textures/gui/guimetalformer.png"),
         4, 5, 146, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "metal_former")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING
-    override fun getTitle(): Text = Text.translatable("block.ic2_120.metal_former.extruding")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120.metal_former.extruding")
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon

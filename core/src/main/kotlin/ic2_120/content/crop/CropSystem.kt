@@ -2,11 +2,11 @@ package ic2_120.content.crop
 
 import ic2_120.content.item.*
 import ic2_120.registry.instance
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.util.StringIdentifiable
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.util.StringRepresentable
 
-enum class CropType(private val id: String) : StringIdentifiable {
+enum class CropType(private val id: String) : StringRepresentable {
     WEED("weed"),
     ACACIA_SAPLING("acacia_sapling"),
     AURELIA("aurelia"),

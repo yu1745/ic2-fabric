@@ -1,44 +1,44 @@
 package ic2_120.content.recipes.metalformer
 
 import ic2_120.content.recipes.ModMachineRecipes
-import net.minecraft.item.ItemStack
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.Recipe
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.RecipeType
-import net.minecraft.recipe.input.RecipeInput
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.world.item.crafting.RecipeInput
+import net.minecraft.core.HolderLookup
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.Level
 
 /**
  * 金属成型机配方基类
  */
 sealed class MetalFormerRecipe(
-    @JvmField val recipeId: Identifier,
+    @JvmField val recipeId: ResourceLocation,
     val ingredient: Ingredient,
     val output: ItemStack
 ) : Recipe<MetalFormerRecipe.Input> {
 
-    override fun matches(inventory: Input, world: World): Boolean {
+    override fun matches(inventory: Input, world: Level): Boolean {
         return ingredient.test(inventory.getStack(0))
     }
 
-    override fun craft(inventory: Input, lookup: RegistryWrapper.WrapperLookup): ItemStack {
+    override fun craft(inventory: Input, lookup: HolderLookup.WrapperLookup): ItemStack {
         return output.copy()
     }
 
-    fun getId(): Identifier = recipeId
+    fun getId(): ResourceLocation = recipeId
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getResult(lookup: RegistryWrapper.WrapperLookup): ItemStack = output.copy()
+    override fun getResult(lookup: HolderLookup.WrapperLookup): ItemStack = output.copy()
 
-    override fun getRemainder(inventory: Input): net.minecraft.util.collection.DefaultedList<ItemStack> {
-        return net.minecraft.util.collection.DefaultedList.ofSize(1, ItemStack.EMPTY)
+    override fun getRemainder(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
+        return net.minecraft.core.NonNullList.ofSize(1, ItemStack.EMPTY)
     }
 
-    class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.inventory.Inventory {
+    class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.world.Container {
         override fun getStack(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
         override fun getStackInSlot(slot: Int): ItemStack = getStack(slot)
         override fun getSize(): Int = 1
@@ -49,7 +49,7 @@ sealed class MetalFormerRecipe(
         override fun removeStack(slot: Int): ItemStack = ItemStack.EMPTY
         override fun removeStack(slot: Int, amount: Int): ItemStack = ItemStack.EMPTY
         override fun markDirty() {}
-        override fun canPlayerUse(player: net.minecraft.entity.player.PlayerEntity): Boolean = true
+        override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = true
     }
 
     override fun getSerializer(): RecipeSerializer<*> = ModMachineRecipes.recipeSerializer(MetalFormerRecipe::class)
@@ -65,7 +65,7 @@ sealed class MetalFormerRecipe(
  * 辊压模式配方：锭 -> 板，板 -> 外壳
  */
 class RollingRecipe(
-    recipeId: Identifier,
+    recipeId: ResourceLocation,
     ingredient: Ingredient,
     output: ItemStack
 ) : MetalFormerRecipe(recipeId, ingredient, output)
@@ -74,7 +74,7 @@ class RollingRecipe(
  * 切割模式配方：板 -> 导线，外壳 -> 货币
  */
 class CuttingRecipe(
-    recipeId: Identifier,
+    recipeId: ResourceLocation,
     ingredient: Ingredient,
     output: ItemStack
 ) : MetalFormerRecipe(recipeId, ingredient, output)
@@ -83,7 +83,7 @@ class CuttingRecipe(
  * 挤压模式配方：锭/板/块 -> 导线或组件
  */
 class ExtrudingRecipe(
-    recipeId: Identifier,
+    recipeId: ResourceLocation,
     ingredient: Ingredient,
     output: ItemStack
 ) : MetalFormerRecipe(recipeId, ingredient, output)

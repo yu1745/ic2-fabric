@@ -1,6 +1,6 @@
 package ic2_120.content.item
 
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.level.ServerPlayer
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -11,14 +11,14 @@ import java.util.concurrent.ConcurrentHashMap
 object MiningLaserServerSuppress {
     private val toggleTickByPlayer = ConcurrentHashMap<UUID, Int>()
 
-    fun onMiningLaserModeToggled(player: ServerPlayerEntity) {
+    fun onMiningLaserModeToggled(player: ServerPlayer) {
         toggleTickByPlayer[player.uuid] = player.server.ticks
     }
 
     /**
      * 若本 tick 内已处理过切模式，返回 true 并清除标记；否则清理过期标记并返回 false。
      */
-    fun consumeSuppressNextFire(player: ServerPlayerEntity): Boolean {
+    fun consumeSuppressNextFire(player: ServerPlayer): Boolean {
         val marked = toggleTickByPlayer[player.uuid] ?: return false
         val cur = player.server.ticks
         if (marked != cur) {

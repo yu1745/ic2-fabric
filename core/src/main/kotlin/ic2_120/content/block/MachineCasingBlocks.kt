@@ -5,13 +5,13 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
 import ic2_120.registry.recipeId
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.content.item.IronPlate
@@ -27,12 +27,12 @@ import ic2_120.registry.annotation.RecipeProvider
  */
 @ModBlock(name = "machine", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "machine_casing")
 class MachineCasingBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+    BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MachineCasingBlock::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, MachineCasingBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("I I")
                 .pattern("III")
@@ -48,12 +48,12 @@ class MachineCasingBlock : Block(
  */
 @ModBlock(name = "advanced_machine", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "machine_casing")
 class AdvancedMachineCasingBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+    BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedMachineCasingBlock::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedMachineCasingBlock::class.instance(), 1)
                 .pattern("sgs")
                 .pattern("cxc")
                 .pattern("sgs")

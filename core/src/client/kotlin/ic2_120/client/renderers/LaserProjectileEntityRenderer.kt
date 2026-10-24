@@ -2,16 +2,16 @@ package ic2_120.client.renderers
 
 import ic2_120.config.Ic2Config
 import ic2_120.content.entity.LaserProjectileEntity
-import net.minecraft.client.render.LightmapTextureManager
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.entity.EntityRenderer
-import net.minecraft.client.render.entity.EntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.renderer.LightTexture
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.entity.EntityRenderer
+import net.minecraft.client.renderer.entity.EntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import kotlin.math.atan2
 
@@ -20,11 +20,11 @@ import kotlin.math.atan2
  * 将弹射体渲染为沿飞行方向、长度为 VISUAL_LENGTH 的发光棱柱体（子弹形态）。
  */
 class LaserProjectileEntityRenderer(
-    context: EntityRendererFactory.Context
+    context: EntityRendererProvider.Context
 ) : EntityRenderer<LaserProjectileEntity>(context) {
 
     companion object {
-        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
 
         /** 弹体截面半径 */
         private val RADIUS: Float get() = Ic2Config.current.miningLaser.bulletRadius.toFloat()
@@ -42,14 +42,14 @@ class LaserProjectileEntityRenderer(
         val ignored = context
     }
 
-    override fun getTexture(entity: LaserProjectileEntity): Identifier = WHITE_TEXTURE
+    override fun getTexture(entity: LaserProjectileEntity): ResourceLocation = WHITE_TEXTURE
 
     override fun render(
         entity: LaserProjectileEntity,
         yaw: Float,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int
     ) {
         // 零距离渲染会占满屏幕，只有飞出一定距离后才显示
@@ -89,22 +89,22 @@ class LaserProjectileEntityRenderer(
 
         // 弹体尾端对齐实体位置（头部朝飞行方向前方）
         // 先旋转到飞行方向
-        matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotationDegrees(dirYaw))
-        matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_X.rotationDegrees(dirPitch))
+        matrices.multiply(com.mojang.math.Axis.POSITIVE_Y.rotationDegrees(dirYaw))
+        matrices.multiply(com.mojang.math.Axis.POSITIVE_X.rotationDegrees(dirPitch))
 
-        val fullLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
+        val fullLight = LightTexture.MAX_LIGHT_COORDINATE
         val overlay = OverlayTexture.DEFAULT_UV
 
         // --- 外层辉光 ---
-        val glowVc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEXTURE))
+        val glowVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
         drawPrism(matrices, glowVc, fullLight, overlay, length, RADIUS * GLOW_RADIUS_MULT, r, g, b, GLOW_ALPHA)
 
         // --- 核心弹体 ---
-        val coreVc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEXTURE))
+        val coreVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
         drawPrism(matrices, coreVc, fullLight, overlay, length, RADIUS, r, g, b, 220)
 
         // --- 头部亮点 ---
-        val tipVc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEXTURE))
+        val tipVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
         drawTip(matrices, tipVc, fullLight, overlay, length, RADIUS, r, g, b, 220)
 
         matrices.pop()
@@ -115,7 +115,7 @@ class LaserProjectileEntityRenderer(
      * 在局部坐标系中，Z+ 为飞行方向。
      */
     private fun drawPrism(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -150,7 +150,7 @@ class LaserProjectileEntityRenderer(
      * 绘制头端锥形亮点，制造子弹头部高光效果。
      */
     private fun drawTip(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -181,7 +181,7 @@ class LaserProjectileEntityRenderer(
 
     private fun vertex(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         x: Float, y: Float, z: Float,
         light: Int,
         overlay: Int,

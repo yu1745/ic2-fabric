@@ -3,10 +3,10 @@ package ic2_120.content.network
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import io.netty.buffer.Unpooled
 
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.packet.Packet
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.protocol.Packet
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.level.ServerPlayer
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
@@ -23,7 +23,7 @@ object BandwidthStatsService {
     private var lastSecondTick = -1L
 
     @JvmStatic
-    fun recordPacket(player: ServerPlayerEntity, packet: Packet<*>) {
+    fun recordPacket(player: ServerPlayer, packet: Packet<*>) {
         val bytes = estimatePacketBytes(packet)
         if (bytes <= 0) return
         val counter = counters.computeIfAbsent(player.uuid) { PlayerCounter(player.name.string) }

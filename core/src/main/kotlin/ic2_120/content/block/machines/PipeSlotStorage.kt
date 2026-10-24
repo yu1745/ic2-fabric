@@ -2,7 +2,7 @@ package ic2_120.content.block.machines
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.item.base.SingleStackStorage
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * 采矿管道专用 Storage，容量 [capacity]，不依赖 ItemStack.getMaxCount()。
@@ -12,7 +12,7 @@ class PipeSlotStorage(
     private val inventory: MutableList<ItemStack>,
     private val slotIndex: Int,
     private val capacity: Int,
-    private val pipeItem: () -> net.minecraft.item.Item,
+    private val pipeItem: () -> net.minecraft.world.item.Item,
     private val markDirty: () -> Unit
 ) : SingleStackStorage() {
 

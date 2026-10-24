@@ -5,15 +5,15 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.TransformerUpgradeComponent
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.sound.SoundCategory
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.sounds.SoundSource
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import java.util.UUID
-import net.minecraft.registry.RegistryWrapper
+import net.minecraft.core.HolderLookup
 
 /**
  * 机器 BlockEntity 基类
@@ -31,7 +31,7 @@ abstract class MachineBlockEntity(
 ) : BlockEntity(type, pos, state), ITieredMachine, IOwned {
 
     /** Per-instance startup phase prevents all loaded machines dirtying the same tick. */
-    private val initialDirtyDelayTicks = kotlin.random.Random.nextLong(1L, DIRTY_INTERVAL_TICKS + 1L)
+    private val initialDirtyDelayTicks = kotlin.random.RandomSource.nextLong(1L, DIRTY_INTERVAL_TICKS + 1L)
     private var nextDirtyTick = Long.MIN_VALUE
 
     /**
@@ -53,7 +53,7 @@ abstract class MachineBlockEntity(
 
     override var ownerUuid: UUID? = null
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         ownerUuid = if (nbt.containsUuid(NBT_OWNER_UUID)) nbt.getUuid(NBT_OWNER_UUID) else null
         if (this is ITransformerUpgradeSupport) {
@@ -61,7 +61,7 @@ abstract class MachineBlockEntity(
             // 此处立即从存档恢复，消除「BE 已加载但尚未首次 tick（bonus=0）」窗口：
             // 电网超压检测在 END_SERVER_TICK 运行，电网 BFS / 其他 BE tick 可能在机器首次 tick
             // 之前同步强载其区块，导致装了高压升级的机器被误判为耐压不足而爆炸。
-            // 子类 inventory 此时尚未载入内存，直接解析 "Items" NBT（与 Inventories 落盘键一致）。
+            // 子类 inventory 此时尚未载入内存，直接解析 "Items" NBT（与 ContainerHelper 落盘键一致）。
             voltageTierBonus = TransformerUpgradeComponent.countUpgradesInNbt(nbt)
         }
     }
@@ -69,9 +69,9 @@ abstract class MachineBlockEntity(
     /**
      * 客户端跳过 markDirty；服务端每台机器最多每 20 tick 标脏一次。
      *
-     * Create 等模组在装配 contraption（矿车、轴承等）时会用 [net.minecraft.world.World] 的
+     * Create 等模组在装配 contraption（矿车、轴承等）时会用 [net.minecraft.world.level.Level] 的
      * 虚拟实现（如 VirtualRenderWorld）通过 be.load(nbt) 重建 BlockEntity。这类世界的 chunk
-     * 不是原版 [net.minecraft.world.chunk.WorldChunk]，基类 markDirty 会强转失败导致客户端 ClassCastException 崩溃。
+     * 不是原版 [net.minecraft.world.level.chunk.LevelChunk]，基类 markDirty 会强转失败导致客户端 ClassCastException 崩溃。
      * 客户端 markDirty 本就是空操作，跳过既安全又无副作用。
      *
      * 全局限流是明确的性能/崩溃恢复取舍：正常区块卸载与关服仍会序列化当前内存状态；
@@ -92,7 +92,7 @@ abstract class MachineBlockEntity(
         super.markDirty()
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         ownerUuid?.let { nbt.putUuid(NBT_OWNER_UUID, it) }
         if (this is ITransformerUpgradeSupport) {
@@ -114,13 +114,13 @@ abstract class MachineBlockEntity(
      * 子类需要实现此方法以提供 inventory 访问。
      * 如果机器没有 inventory，返回 null。
      */
-    protected abstract fun getInventory(): net.minecraft.inventory.Inventory?
+    protected abstract fun getInventory(): net.minecraft.world.Container?
 
     /**
      * 对应的 Block 的 ACTIVE 属性（BooleanProperty）。
      * 子类必须覆写此属性。
      */
-    protected abstract val activeProperty: net.minecraft.state.property.BooleanProperty
+    protected abstract val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty
 
     /**
      * 机器声音配置。默认无声音。
@@ -139,7 +139,7 @@ abstract class MachineBlockEntity(
      *
      * 子类可通过覆写此方法并在末尾调用 super.setActiveState() 来扩展行为。
      */
-    protected open fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
+    protected open fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         val wasActive = state.get(activeProperty)
         if (wasActive == active) return
         world.setBlockState(pos, state.with(activeProperty, active))
@@ -152,7 +152,7 @@ abstract class MachineBlockEntity(
         playSound(world, pos, wasActive, active)
     }
 
-    private fun playSound(world: World, pos: BlockPos, wasActive: Boolean, isActive: Boolean) {
+    private fun playSound(world: Level, pos: BlockPos, wasActive: Boolean, isActive: Boolean) {
         val config = soundConfig
 
         when (config.soundType) {
@@ -162,13 +162,13 @@ abstract class MachineBlockEntity(
                     !wasActive && isActive -> {
                         // false -> true: 播放 start
                         config.startSound?.let {
-                            world.playSound(null, pos, it, SoundCategory.BLOCKS, config.startVolume, config.startPitch)
+                            world.playSound(null, pos, it, SoundSource.BLOCKS, config.startVolume, config.startPitch)
                         }
                     }
                     wasActive && !isActive -> {
                         // true -> false: 播放 stop
                         config.stopSound?.let {
-                            world.playSound(null, pos, it, SoundCategory.BLOCKS, config.stopVolume, config.stopPitch)
+                            world.playSound(null, pos, it, SoundSource.BLOCKS, config.stopVolume, config.stopPitch)
                         }
                     }
                     // false -> false: 不播放

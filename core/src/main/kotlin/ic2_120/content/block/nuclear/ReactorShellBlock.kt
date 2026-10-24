@@ -1,19 +1,19 @@
 package ic2_120.content.block.nuclear
 
 import ic2_120.content.block.MachineBlock
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.sound.BlockSoundGroup
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.BlockView
-import net.minecraft.world.WorldAccess
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.level.block.SoundType
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.LevelAccessor
 
 /**
  * 反应堆透明外壳基类：压力容器与三种接口共用（铅框 + 强化玻璃，堆芯从外面直接可见）。
@@ -23,19 +23,19 @@ import net.minecraft.world.WorldAccess
  * - 六向连接属性（相邻是外壳或反应堆核心即为连接）：方块模型只在"两侧面都未连接"的棱上画铅框，
  *   整个 5×5×3 外壳只剩外轮廓一圈框（multipart，见 tools/model3d/reactor_shell.py）。
  */
-abstract class ReactorShellBlock(settings: AbstractBlock.Settings = shellSettings()) : MachineBlock(settings) {
+abstract class ReactorShellBlock(settings: BlockBehaviour.Settings = shellSettings()) : MachineBlock(settings) {
 
     companion object {
         /** 六向连接属性：该方向相邻的是外壳或反应堆核心 */
         val CONNECT: Map<Direction, BooleanProperty> = mapOf(
-            Direction.NORTH to Properties.NORTH, Direction.SOUTH to Properties.SOUTH,
-            Direction.EAST to Properties.EAST, Direction.WEST to Properties.WEST,
-            Direction.UP to Properties.UP, Direction.DOWN to Properties.DOWN,
+            Direction.NORTH to BlockStateProperties.NORTH, Direction.SOUTH to BlockStateProperties.SOUTH,
+            Direction.EAST to BlockStateProperties.EAST, Direction.WEST to BlockStateProperties.WEST,
+            Direction.UP to BlockStateProperties.UP, Direction.DOWN to BlockStateProperties.DOWN,
         )
 
-        fun shellSettings(): AbstractBlock.Settings =
-            AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
-                .sounds(BlockSoundGroup.GLASS).nonOpaque()
+        fun shellSettings(): BlockBehaviour.Settings =
+            BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+                .sounds(SoundType.GLASS).nonOpaque()
                 .solidBlock { _, _, _ -> false }.suffocates { _, _, _ -> false }.blockVision { _, _, _ -> false }
     }
 
@@ -43,12 +43,12 @@ abstract class ReactorShellBlock(settings: AbstractBlock.Settings = shellSetting
         defaultState = CONNECT.values.fold(defaultState) { st, prop -> st.with(prop, false) }
     }
 
-    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
         super.appendProperties(builder)
         CONNECT.values.forEach { builder.add(it) }
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? {
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? {
         var state = super.getPlacementState(ctx) ?: return null
         for ((dir, prop) in CONNECT) {
             state = state.with(prop, connects(ctx.world.getBlockState(ctx.blockPos.offset(dir))))
@@ -59,7 +59,7 @@ abstract class ReactorShellBlock(settings: AbstractBlock.Settings = shellSetting
     @Deprecated("Deprecated in Java")
     override fun getStateForNeighborUpdate(
         state: BlockState, direction: Direction, neighborState: BlockState,
-        world: WorldAccess, pos: BlockPos, neighborPos: BlockPos,
+        world: LevelAccessor, pos: BlockPos, neighborPos: BlockPos,
     ): BlockState = super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
         .let { if (it.block === this) it.with(CONNECT.getValue(direction), connects(neighborState)) else it }
 
@@ -71,7 +71,7 @@ abstract class ReactorShellBlock(settings: AbstractBlock.Settings = shellSetting
         stateFrom.block is ReactorShellBlock || super.isSideInvisible(state, stateFrom, direction)
 
     @Deprecated("Deprecated in Java")
-    override fun getAmbientOcclusionLightLevel(state: BlockState, world: BlockView, pos: BlockPos): Float = 1.0f
+    override fun getAmbientOcclusionLightLevel(state: BlockState, world: BlockGetter, pos: BlockPos): Float = 1.0f
 
-    override fun isTransparent(state: BlockState, world: BlockView, pos: BlockPos): Boolean = true
+    override fun isTransparent(state: BlockState, world: BlockGetter, pos: BlockPos): Boolean = true
 }

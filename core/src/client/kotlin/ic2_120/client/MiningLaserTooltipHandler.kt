@@ -5,10 +5,10 @@ import ic2_120.content.item.MiningLaserItem
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.util.InputUtil
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.client.Minecraft
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -28,38 +28,38 @@ object MiningLaserTooltipHandler {
             val shots = if (cost > 0) energy / cost else 0L
 
             lines.add(
-                Text.translatable("tooltip.ic2_120.mining_laser.current_mode")
-                    .formatted(Formatting.GRAY)
-                    .append(Text.translatable(mode.translationKey).formatted(Formatting.AQUA))
+                Component.translatable("tooltip.ic2_120.mining_laser.current_mode")
+                    .formatted(ChatFormatting.GRAY)
+                    .append(Component.translatable(mode.translationKey).formatted(ChatFormatting.AQUA))
             )
 
             lines.add(
-                Text.translatable("tooltip.ic2_120.mining_laser.remaining_shots", shots)
-                    .formatted(Formatting.GRAY)
+                Component.translatable("tooltip.ic2_120.mining_laser.remaining_shots", shots)
+                    .formatted(ChatFormatting.GRAY)
             )
 
             lines.add(
-                Text.translatable("tooltip.ic2_120.mining_laser.toggle_mode_prefix")
-                    .formatted(Formatting.GRAY)
-                    .append(Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(Formatting.YELLOW))
+                Component.translatable("tooltip.ic2_120.mining_laser.toggle_mode_prefix")
+                    .formatted(ChatFormatting.GRAY)
+                    .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(ChatFormatting.YELLOW))
             )
 
             val shift = isShiftDown()
             if (!shift) {
-                lines.add(Text.translatable(mode.descriptionKey).formatted(Formatting.DARK_GRAY))
+                lines.add(Component.translatable(mode.descriptionKey).formatted(ChatFormatting.DARK_GRAY))
                 lines.add(
-                    Text.translatable("tooltip.ic2_120.mining_laser.shift_hint")
-                        .formatted(Formatting.DARK_GRAY)
+                    Component.translatable("tooltip.ic2_120.mining_laser.shift_hint")
+                        .formatted(ChatFormatting.DARK_GRAY)
                 )
             } else {
-                lines.add(Text.translatable("tooltip.ic2_120.mining_laser.modes_header").formatted(Formatting.GOLD))
+                lines.add(Component.translatable("tooltip.ic2_120.mining_laser.modes_header").formatted(ChatFormatting.GOLD))
                 for (m in LaserMode.entries) {
                     lines.add(
-                        Text.literal("• ")
-                            .formatted(Formatting.GRAY)
-                            .append(Text.translatable(m.translationKey).formatted(Formatting.AQUA))
-                            .append(Text.literal(" — ").formatted(Formatting.DARK_GRAY))
-                            .append(Text.translatable(m.descriptionKey).formatted(Formatting.GRAY))
+                        Component.literal("• ")
+                            .formatted(ChatFormatting.GRAY)
+                            .append(Component.translatable(m.translationKey).formatted(ChatFormatting.AQUA))
+                            .append(Component.literal(" — ").formatted(ChatFormatting.DARK_GRAY))
+                            .append(Component.translatable(m.descriptionKey).formatted(ChatFormatting.GRAY))
                     )
                 }
             }
@@ -67,8 +67,8 @@ object MiningLaserTooltipHandler {
     }
 
     private fun isShiftDown(): Boolean {
-        val handle = MinecraftClient.getInstance().window.handle
-        return InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_LEFT_SHIFT) ||
-            InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_SHIFT)
+        val handle = Minecraft.getInstance().window.handle
+        return InputConstants.isKeyPressed(handle, GLFW.GLFW_KEY_LEFT_SHIFT) ||
+            InputConstants.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_SHIFT)
     }
 }

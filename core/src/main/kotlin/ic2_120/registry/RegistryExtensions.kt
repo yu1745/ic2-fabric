@@ -1,14 +1,14 @@
 package ic2_120.registry
 
 import ic2_120.Ic2_120
-import net.minecraft.block.Block
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerType
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.item.Item
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.resources.ResourceLocation
 import kotlin.reflect.KClass
 
 // ========== Block 扩展 ==========
@@ -24,8 +24,8 @@ fun <T : Block> KClass<T>.instance(): T =
  * 获取 Block 的注册 ID
  */
 @JvmName("blockId")
-fun <T : Block> KClass<T>.id(): Identifier =
-    Registries.BLOCK.getId(instance())
+fun <T : Block> KClass<T>.id(): ResourceLocation =
+    BuiltInRegistries.BLOCK.getId(instance())
 
 /**
  * 获取 Block 对应的 Item
@@ -46,17 +46,17 @@ fun <T : Item> KClass<T>.instance(): T =
  * 获取 Item 的注册 ID
  */
 @JvmName("itemId")
-fun <T : Item> KClass<T>.id(): Identifier =
-    Registries.ITEM.getId(instance())
+fun <T : Item> KClass<T>.id(): ResourceLocation =
+    BuiltInRegistries.ITEM.getId(instance())
 
 /**
  * 生成配方 ID（带可选后缀）
  * 用于区分同一物品的多个配方
  */
 @JvmName("itemRecipeId")
-fun <T : Item> KClass<T>.recipeId(suffix: String = ""): Identifier {
-    val baseId = Registries.ITEM.getId(instance()).path
-    return Identifier.of(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
+fun <T : Item> KClass<T>.recipeId(suffix: String = ""): ResourceLocation {
+    val baseId = BuiltInRegistries.ITEM.getId(instance()).path
+    return ResourceLocation.of(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
 }
 
 /**
@@ -64,9 +64,9 @@ fun <T : Item> KClass<T>.recipeId(suffix: String = ""): Identifier {
  * 用于区分同一方块的多个配方
  */
 @JvmName("blockRecipeId")
-fun <T : Block> KClass<T>.recipeId(suffix: String = ""): Identifier {
-    val baseId = Registries.BLOCK.getId(instance()).path
-    return Identifier.of(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
+fun <T : Block> KClass<T>.recipeId(suffix: String = ""): ResourceLocation {
+    val baseId = BuiltInRegistries.BLOCK.getId(instance()).path
+    return ResourceLocation.of(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
 }
 
 // ========== BlockEntity 扩展 ==========
@@ -77,10 +77,10 @@ fun <T : Block> KClass<T>.recipeId(suffix: String = ""): Identifier {
 fun <T : BlockEntity> KClass<T>.type(): BlockEntityType<T> =
     ClassScanner.getBlockEntityType(this)
 
-// ========== ScreenHandler 扩展 ==========
+// ========== AbstractContainerMenu 扩展 ==========
 
 /**
- * 获取 ScreenHandlerType
+ * 获取 MenuType
  */
-fun <T : ScreenHandler> KClass<T>.type(): ScreenHandlerType<T> =
+fun <T : AbstractContainerMenu> KClass<T>.type(): MenuType<T> =
     ClassScanner.getScreenHandlerType(this)

@@ -8,29 +8,29 @@ import ic2_120.content.screen.ChunkLoaderScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.ChunkLoaderSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.Heightmap
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.levelgen.Heightmap
 import java.util.concurrent.Executors
 
 @ModScreen(block = ChunkLoaderBlock::class)
 class ChunkLoaderScreen(
     handler: ChunkLoaderScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<ChunkLoaderScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<ChunkLoaderScreenHandler>(handler, playerInventory, title) {
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guichunkloader.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guichunkloader.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val GUI_WIDTH = 176
         private const val GUI_HEIGHT = 250
@@ -47,15 +47,15 @@ class ChunkLoaderScreen(
         private const val MAP_SIZE = GRID * CELL_SIZE
         private const val CENTER_INDEX = GRID / 2 * GRID + GRID / 2
 
-        /** 缓存：BlockPos → Identifier (注册纹理) */
-        private val mapTextureCache = mutableMapOf<BlockPos, Identifier>()
+        /** 缓存：BlockPos → ResourceLocation (注册纹理) */
+        private val mapTextureCache = mutableMapOf<BlockPos, ResourceLocation>()
         /** NativeImage 引用，用于关闭释放 */
-        private val mapImageCache = mutableMapOf<Identifier, NativeImage>()
+        private val mapImageCache = mutableMapOf<ResourceLocation, NativeImage>()
 
         /**
          * 后台采样线程池（客户端单例，daemon 线程随 JVM 退出）。
          *
-         * 采样读 ClientWorld 有偶发脏读风险（主线程可能正在修改区块），
+         * 采样读 ClientLevel 有偶发脏读风险（主线程可能正在修改区块），
          * 最坏情况是某像素颜色不一致，下次 5s 刷新即修正——参考 FTB Chunks 的同类设计。
          */
         private val samplingExecutor = Executors.newSingleThreadExecutor { r ->
@@ -67,7 +67,7 @@ class ChunkLoaderScreen(
     private var tickCount = 0
     /** 当前 GUI 实际使用的纹理 id（与 mapTextureCache 中对应条目一致；removed 时清理它） */
     @Volatile
-    private var currentTextureId: Identifier? = null
+    private var currentTextureId: ResourceLocation? = null
     /** 防重入：后台采样未完成时不接受新的采样请求 */
     @Volatile
     private var samplingInProgress = false
@@ -79,11 +79,11 @@ class ChunkLoaderScreen(
         setSlotPositions()
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -108,7 +108,7 @@ class ChunkLoaderScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.translatable("gui.ic2_120.chunk_loader.restart_bootstrap_hint"),
+                Component.translatable("gui.ic2_120.chunk_loader.restart_bootstrap_hint"),
                 mouseX, mouseY
             )
         }
@@ -129,12 +129,12 @@ class ChunkLoaderScreen(
         }
     }
 
-    private fun drawTitle(context: DrawContext, left: Int, top: Int) {
+    private fun drawTitle(context: GuiGraphics, left: Int, top: Int) {
         val tx = left + (backgroundWidth - textRenderer.getWidth(title)) / 2
         context.drawText(textRenderer, title, tx, top + 6, 0x404040, false)
     }
 
-    private fun drawMap(context: DrawContext, left: Int, top: Int, mouseX: Int, mouseY: Int) {
+    private fun drawMap(context: GuiGraphics, left: Int, top: Int, mouseX: Int, mouseY: Int) {
         val textureId = getMapTexture() ?: return
         val mapLeft = left + MAP_LEFT
         val mapTop = top + MAP_TOP
@@ -183,7 +183,7 @@ class ChunkLoaderScreen(
 
     }
 
-    private fun drawSideText(context: DrawContext, left: Int, top: Int) {
+    private fun drawSideText(context: GuiGraphics, left: Int, top: Int) {
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = ChunkLoaderSync.ENERGY_CAPACITY
         val chunkCount = handler.sync.getChunkCount()
@@ -212,7 +212,7 @@ class ChunkLoaderScreen(
      *
      * 改造前是主线程同步采样 20k 像素（卡首帧），现在后台跑，玩家看到的是"地图延迟 1-2 帧出现"。
      */
-    private fun getMapTexture(): Identifier? {
+    private fun getMapTexture(): ResourceLocation? {
         val bePos = handler.machinePos
         if (bePos == BlockPos.ORIGIN) return null
 
@@ -235,8 +235,8 @@ class ChunkLoaderScreen(
         if (!force && mapTextureCache.containsKey(machinePos)) return
         samplingInProgress = true
 
-        val client = MinecraftClient.getInstance()
-        val textureId = Identifier.of("ic2_120", "chunk_map_${machinePos.asLong()}")
+        val client = Minecraft.getInstance()
+        val textureId = ResourceLocation.of("ic2_120", "chunk_map_${machinePos.asLong()}")
         // 主线程捕获 world 引用，避免后台线程访问 client 实例（client 非线程安全）
         val world = client.world
         val centerX = machinePos.x shr 4
@@ -264,7 +264,7 @@ class ChunkLoaderScreen(
                                 }
                             }
                         }
-                        val texture = NativeImageBackedTexture(image)
+                        val texture = DynamicTexture(image)
                         client.textureManager.registerTexture(textureId, texture)
                         texture.upload()
                         mapTextureCache[machinePos] = textureId
@@ -290,11 +290,11 @@ class ChunkLoaderScreen(
      * - 用 [BlockPos.Mutable] 复用，消除 20k×2 个临时 BlockPos 对象
      * - 每像素只查一次 chunk（原实现走 world.getBlockState 会重复 hashmap 查找）
      *
-     * 线程安全：world 读 ClientWorld 有偶发脏读风险（主线程可能正在修改区块），
+     * 线程安全：world 读 ClientLevel 有偶发脏读风险（主线程可能正在修改区块），
      * 最坏某像素颜色不一致，下次 5s 刷新即修正。NativeImage.setColor 无渲染线程断言，可后台用。
      */
     private fun sampleMapImage(
-        world: net.minecraft.world.World,
+        world: net.minecraft.world.level.Level,
         centerX: Int,
         centerZ: Int,
         bottomY: Int
@@ -352,7 +352,7 @@ class ChunkLoaderScreen(
                     val index = row * GRID + col
                     if (index != CENTER_INDEX) {
                         client?.player?.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, index)
+                            ServerboundContainerButtonClickPacket(handler.syncId, index)
                         )
                     }
                     return true
@@ -365,7 +365,7 @@ class ChunkLoaderScreen(
     /**
      * 定时重采样：每 100 tick (5s) 强制重新采样当前机器周围的地图。
      *
-     * 用 `handledScreenTick` 而非 `tick`：HandledScreen.tick 在 vanilla 1.20.1 是 final，
+     * 用 `handledScreenTick` 而非 `tick`：AbstractContainerScreen.tick 在 vanilla 1.20.1 是 final，
      * 它内部每 tick 调用本方法（仅当玩家存活且未移除时），语义等价、且是官方预留的子类钩子。
      *
      * 这解决了改造前"地图只生成一次、永不刷新"的问题——玩家在 ChunkLoader 周围修了建筑/挖了坑，
@@ -397,7 +397,7 @@ class ChunkLoaderScreen(
         if (bePos == BlockPos.ORIGIN) return
         val id = mapTextureCache.remove(bePos) ?: return
         mapImageCache.remove(id)?.close()
-        MinecraftClient.getInstance().textureManager.destroyTexture(id)
+        Minecraft.getInstance().textureManager.destroyTexture(id)
         if (currentTextureId == id) {
             currentTextureId = null
         }

@@ -16,35 +16,35 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.BlockRenderType
-import net.minecraft.block.BlockWithEntity
-import net.minecraft.block.Blocks
-import net.minecraft.block.FarmlandBlock
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.ItemScatterer
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
-import net.minecraft.world.WorldAccess
-import net.minecraft.world.WorldView
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RenderShape
+import net.minecraft.world.level.block.BaseEntityBlock
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.FarmBlock
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.Containers
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.LevelAccessor
+import net.minecraft.world.level.LevelReader
 
 @ModBlock(
     name = "crop_stick",
@@ -53,31 +53,31 @@ import net.minecraft.world.WorldView
     group = "crops",
     renderLayer = "cutout"
 )
-class CropStickBlock : BlockWithEntity(
-    AbstractBlock.Settings.copy(Blocks.WHEAT)
+class CropStickBlock : BaseEntityBlock(
+    BlockBehaviour.Settings.copy(Blocks.WHEAT)
         .breakInstantly()
         .noCollision()
         .nonOpaque()
 ) {
-    override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
+    override fun getRenderType(state: BlockState): RenderShape = RenderShape.MODEL
 
     init {
         defaultState = stateManager.defaultState.with(CROSSING_BASE, false)
     }
 
-    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(CROSSING_BASE)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState =
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState =
         defaultState.with(CROSSING_BASE, false)
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         CropStickBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -85,9 +85,9 @@ class CropStickBlock : BlockWithEntity(
         else validateTicker(world, type, CropStickBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean {
+    override fun canPlaceAt(state: BlockState, world: LevelReader, pos: BlockPos): Boolean {
         val below = world.getBlockState(pos.down())
-        return below.block is FarmlandBlock
+        return below.block is FarmBlock
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -95,7 +95,7 @@ class CropStickBlock : BlockWithEntity(
         state: BlockState,
         direction: Direction,
         neighborState: BlockState,
-        world: WorldAccess,
+        world: LevelAccessor,
         pos: BlockPos,
         neighborPos: BlockPos
     ): BlockState {
@@ -108,13 +108,13 @@ class CropStickBlock : BlockWithEntity(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
+    ): InteractionResult {
+        if (world.isClient) return InteractionResult.SUCCESS
         val stack = player.getStackInHand(hand)
         val isCreative = player.abilities.creativeMode
 
@@ -122,7 +122,7 @@ class CropStickBlock : BlockWithEntity(
         if (!state.get(CROSSING_BASE) && stack.item == this.asItem()) {
             if (!isCreative) stack.decrement(1)
             world.setBlockState(pos, state.with(CROSSING_BASE, true), Block.NOTIFY_ALL)
-            return ActionResult.SUCCESS
+            return InteractionResult.SUCCESS
         }
 
         // 空架种植基础种子
@@ -138,7 +138,7 @@ class CropStickBlock : BlockWithEntity(
                     be?.scanLevel = CropSeedData.readScanLevel(stack)
                     be?.markDirty()
                     if (!isCreative) stack.decrement(1)
-                    return ActionResult.SUCCESS
+                    return InteractionResult.SUCCESS
                 }
             }
 
@@ -151,25 +151,25 @@ class CropStickBlock : BlockWithEntity(
                 be?.scanLevel = 0
                 be?.markDirty()
                 if (!isCreative) stack.decrement(1)
-                return ActionResult.SUCCESS
+                return InteractionResult.SUCCESS
             }
         }
 
         // 右键空手可拆除杂交底座并返还一根作物架
         if (state.get(CROSSING_BASE) && stack.isEmpty) {
             world.setBlockState(pos, state.with(CROSSING_BASE, false), Block.NOTIFY_ALL)
-            ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), this.asItem().defaultStack)
-            return ActionResult.SUCCESS
+            Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), this.asItem().defaultStack)
+            return InteractionResult.SUCCESS
         }
 
-        return ActionResult.PASS
+        return InteractionResult.PASS
     }
 
     /**
      * 固定周期 tick（对齐原版 performTick），由 BlockEntityTicker 驱动。
      * 原 randomTick 改为固定 TICK_RATE=256 周期，避免 randomTickSpeed 影响杂交频率。
      */
-    fun performTick(world: net.minecraft.server.world.ServerWorld, pos: BlockPos, state: BlockState, random: net.minecraft.util.math.random.Random) {
+    fun performTick(world: net.minecraft.server.level.ServerLevel, pos: BlockPos, state: BlockState, random: net.minecraft.util.RandomSource) {
         if (!state.get(CROSSING_BASE)) {
             val stickBe = world.getBlockEntity(pos) as? CropStickBlockEntity
             if (stickBe?.hasWeedExProtection(random) == true) return
@@ -187,7 +187,7 @@ class CropStickBlock : BlockWithEntity(
         attemptSpreading(world, pos, random)
     }
 
-    private fun attemptCrossing(world: net.minecraft.server.world.ServerWorld, pos: BlockPos, random: net.minecraft.util.math.random.Random): Boolean {
+    private fun attemptCrossing(world: net.minecraft.server.level.ServerLevel, pos: BlockPos, random: net.minecraft.util.RandomSource): Boolean {
         if (random.nextInt(3) != 0) return false
         val sources = mutableListOf<CropBlockEntity>()
         for (dir in HORIZONTAL_DIRS) {
@@ -240,7 +240,7 @@ class CropStickBlock : BlockWithEntity(
         return true
     }
 
-    private fun attemptSpreading(world: net.minecraft.server.world.ServerWorld, pos: BlockPos, random: net.minecraft.util.math.random.Random): Boolean {
+    private fun attemptSpreading(world: net.minecraft.server.level.ServerLevel, pos: BlockPos, random: net.minecraft.util.RandomSource): Boolean {
         val neighbors = mutableListOf<CropBlockEntity>()
         for (dir in HORIZONTAL_DIRS) {
             val be = world.getBlockEntity(pos.offset(dir)) as? CropBlockEntity ?: continue
@@ -278,8 +278,8 @@ class CropStickBlock : BlockWithEntity(
         fun defaultStickState(): BlockState = CropStickBlock::class.instance().defaultState.with(CROSSING_BASE, false)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropStickBlock::class.item(), 2)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, CropStickBlock::class.item(), 2)
                 .pattern("   ")
                 .pattern("S S")
                 .pattern("S S")
@@ -308,17 +308,17 @@ class CropStickBlockEntity(
 
     constructor(pos: BlockPos, state: BlockState) : this(CropStickBlockEntity::class.type(), pos, state)
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         if (world.time % STICK_TICK_RATE.toLong() != 0L) return
         val block = state.block as? CropStickBlock ?: return
-        val serverWorld = world as? net.minecraft.server.world.ServerWorld ?: return
+        val serverWorld = world as? net.minecraft.server.level.ServerLevel ?: return
         block.performTick(serverWorld, pos, state, world.random)
     }
 
     fun storageSnapshot(): Triple<Int, Int, Int> = Triple(storageNutrients, storageWater, storageWeedEx)
 
-    fun hasWeedExProtection(random: net.minecraft.util.math.random.Random): Boolean {
+    fun hasWeedExProtection(random: net.minecraft.util.RandomSource): Boolean {
         if (storageWeedEx <= 0) return false
         if (random.nextInt(10) == 0) {
             storageWeedEx = (storageWeedEx - 5).coerceAtLeast(0)
@@ -365,14 +365,14 @@ class CropStickBlockEntity(
         return accepted
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putInt("nutrients", storageNutrients)
         nbt.putInt("water", storageWater)
         nbt.putInt("weed_ex", storageWeedEx)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         storageNutrients = nbt.getInt("nutrients")
         storageWater = nbt.getInt("water")

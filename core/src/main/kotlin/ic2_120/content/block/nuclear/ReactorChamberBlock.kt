@@ -7,25 +7,25 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
@@ -37,37 +37,37 @@ import ic2_120.registry.annotation.RecipeProvider
  * 与核反应堆相邻时，右键等效于右键反应堆，打开反应堆的 UI。
  */
 @ModBlock(name = "reactor_chamber", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor")
-class ReactorChamberBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
+class ReactorChamberBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
+    ): InteractionResult {
+        if (world.isClient) return InteractionResult.SUCCESS
         for (dir in Direction.values()) {
             val neighborPos = pos.offset(dir)
             val neighborState = world.getBlockState(neighborPos)
             if (neighborState.block is NuclearReactorBlock) {
                 val be = world.getBlockEntity(neighborPos)
-                if (be is net.minecraft.screen.NamedScreenHandlerFactory) {
+                if (be is net.minecraft.world.MenuProvider) {
                     player.openHandledScreen(be)
-                    return ActionResult.SUCCESS
+                    return InteractionResult.SUCCESS
                 }
             }
         }
-        return ActionResult.PASS
+        return InteractionResult.PASS
     }
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         ReactorChamberBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? {
@@ -81,11 +81,11 @@ class ReactorChamberBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val machine = MachineCasingBlock::class.item()
             val leadPlate = ic2_120.content.item.LeadPlate::class.instance()
             if (machine != Items.AIR && leadPlate != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorChamberBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorChamberBlock::class.item(), 1)
                     .pattern("L L").pattern(" M ").pattern("L L")
                     .input('L', leadPlate).input('M', machine)
                     .criterion(hasItem(leadPlate), conditionsFromItem(leadPlate))

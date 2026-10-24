@@ -5,23 +5,23 @@ import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.Slot
+import net.minecraft.core.BlockPos
 
 @ModScreenHandler(name = "limiter_cable")
 class LimiterCableScreenHandler(
     syncId: Int,
-    private val playerInventory: PlayerInventory,
+    private val playerInventory: Inventory,
     private val pos: BlockPos,
-    private val propertyDelegate: PropertyDelegate = ArrayPropertyDelegate(PROPERTY_COUNT)
-) : ScreenHandler(LimiterCableScreenHandler::class.type(), syncId) {
+    private val propertyDelegate: ContainerData = SimpleContainerData(PROPERTY_COUNT)
+) : AbstractContainerMenu(LimiterCableScreenHandler::class.type(), syncId) {
 
     companion object {
         const val PROPERTY_COUNT = 2
@@ -43,7 +43,7 @@ class LimiterCableScreenHandler(
         const val BUTTON_PLUS_1000  = 7
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): LimiterCableScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): LimiterCableScreenHandler {
             val pos = buf.readBlockPos()
             val initialLimit = buf.readLong()
             val handler = LimiterCableScreenHandler(syncId, playerInventory, pos)
@@ -52,7 +52,7 @@ class LimiterCableScreenHandler(
         }
     }
 
-    /** 32-bit limit value split across two 16-bit PropertyDelegate entries. */
+    /** 32-bit limit value split across two 16-bit ContainerData entries. */
     var limit: Long
         get() {
             val low = propertyDelegate.get(PROP_LOW).toLong() and 0xFFFFL
@@ -79,7 +79,7 @@ class LimiterCableScreenHandler(
         }
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         val world = player.world
         if (world.isClient) return true
         val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return false
@@ -106,9 +106,9 @@ class LimiterCableScreenHandler(
         return true
     }
 
-    override fun canUse(player: PlayerEntity): Boolean = true
+    override fun canUse(player: Player): Boolean = true
 
-    override fun quickMove(player: PlayerEntity, slotIndex: Int): ItemStack {
+    override fun quickMove(player: Player, slotIndex: Int): ItemStack {
         var moved = ItemStack.EMPTY
         val slot = slots[slotIndex]
         if (!slot.hasStack()) return ItemStack.EMPTY

@@ -2,16 +2,16 @@ package ic2_120.content.block.transmission
 
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.core.BlockPos
 
 /**
  * 传动系统方块实体（仅用于客户端 BER 动画渲染）。
@@ -48,27 +48,27 @@ class TransmissionBlockEntity(
         if (currentKu == clamped) return
         currentKu = clamped
         markDirty()
-        val world = world as? ServerWorld ?: return
+        val world = world as? ServerLevel ?: return
         val state = world.getBlockState(pos)
         world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
         world.chunkManager.markForUpdate(pos)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         currentKu = nbt.getInt("CurrentKu").coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putInt("CurrentKu", currentKu)
     }
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
 
-    override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
+    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 
-    fun tick(world: net.minecraft.world.World) {
+    fun tick(world: net.minecraft.world.level.Level) {
         if (world.isClient) return
         KineticNetworkManager.tickAt(world, pos)
     }

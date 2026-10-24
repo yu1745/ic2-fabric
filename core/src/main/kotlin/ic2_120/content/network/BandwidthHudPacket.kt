@@ -1,10 +1,10 @@
 package ic2_120.content.network
 
 import ic2_120.Ic2_120
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.packet.CustomPayload
-import net.minecraft.util.Identifier
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
+import net.minecraft.resources.ResourceLocation
 
 data class BandwidthPlayerStat(
     val name: String,
@@ -15,17 +15,17 @@ data class BandwidthPlayerStat(
 class BandwidthHudPacket(
     val serverBytesPerSecond: Long,
     val players: List<BandwidthPlayerStat>
-) : CustomPayload {
-    override fun getId(): CustomPayload.Id<*> = ID
+) : CustomPacketPayload {
+    override fun getId(): CustomPacketPayload.Id<*> = ID
 
     companion object {
-        val ID = CustomPayload.Id<BandwidthHudPacket>(Identifier.of(Ic2_120.MOD_ID, "bandwidth_hud"))
-        val CODEC: PacketCodec<PacketByteBuf, BandwidthHudPacket> = PacketCodec.of(
+        val ID = CustomPacketPayload.Id<BandwidthHudPacket>(ResourceLocation.of(Ic2_120.MOD_ID, "bandwidth_hud"))
+        val CODEC: StreamCodec<FriendlyByteBuf, BandwidthHudPacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }
         )
 
-        fun read(buf: PacketByteBuf): BandwidthHudPacket {
+        fun read(buf: FriendlyByteBuf): BandwidthHudPacket {
             val serverBytesPerSecond = buf.readVarLong()
             val size = buf.readVarInt()
             val players = ArrayList<BandwidthPlayerStat>(size)
@@ -39,7 +39,7 @@ class BandwidthHudPacket(
             return BandwidthHudPacket(serverBytesPerSecond, players)
         }
 
-        fun write(packet: BandwidthHudPacket, buf: PacketByteBuf) {
+        fun write(packet: BandwidthHudPacket, buf: FriendlyByteBuf) {
             buf.writeVarLong(packet.serverBytesPerSecond)
             buf.writeVarInt(packet.players.size)
             for (player in packet.players) {

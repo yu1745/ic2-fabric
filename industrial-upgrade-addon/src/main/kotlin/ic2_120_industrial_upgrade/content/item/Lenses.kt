@@ -9,11 +9,11 @@ import ic2_120.registry.item
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 
 /**
@@ -28,9 +28,9 @@ import java.util.function.Consumer
 class SunLinse : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 十字：强化玻璃聚萤石之光
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SunLinse::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SunLinse::class.instance(), 1)
                 .pattern(" G ")
                 .pattern("GSG")
                 .pattern(" G ")
@@ -48,9 +48,9 @@ class SunLinse : Item(Item.Settings()) {
 class NightLinse : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 十字：强化玻璃聚煤之暗
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, NightLinse::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, NightLinse::class.instance(), 1)
                 .pattern(" C ")
                 .pattern("CSC")
                 .pattern(" C ")
@@ -68,9 +68,9 @@ class NightLinse : Item(Item.Settings()) {
 class RainLinse : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 原版配方：2×日光镜 + 1×夜光镜
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RainLinse::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, RainLinse::class.instance(), 1)
                 .pattern("USU")
                 .input('U', SunLinse::class.instance())
                 .input('S', NightLinse::class.instance())

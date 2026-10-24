@@ -9,10 +9,10 @@ import ic2_120.content.item.UraniumFuelRodItem
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.Item
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import java.util.function.Consumer
 
 /**
@@ -48,10 +48,10 @@ object SolidCannerRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             SolidCannerRecipeJsonProvider(
-                recipeId = Identifier.of("ic2_120", "solid_canning/${entry.name}"),
+                recipeId = ResourceLocation.of("ic2_120", "solid_canning/${entry.name}"),
                 slot0Ingredient = entry.slot0Ingredient,
                 slot0Count = entry.slot0Count,
                 slot1Ingredient = entry.slot1Ingredient,
@@ -63,14 +63,14 @@ object SolidCannerRecipeDatagen {
     }
 
     private class SolidCannerRecipeJsonProvider(
-        private val recipeId: Identifier,
+        private val recipeId: ResourceLocation,
         private val slot0Ingredient: IngredientInput,
         private val slot0Count: Int,
         private val slot1Ingredient: IngredientInput,
         private val slot1Count: Int,
         private val outputItem: Item,
         private val outputCount: Int
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(SolidCannerRecipe::class)}")
             json.add("slot0_ingredient", slot0Ingredient.toJson())
@@ -79,17 +79,17 @@ object SolidCannerRecipeDatagen {
             json.addProperty("slot1_count", slot1Count)
 
             val result = JsonObject()
-            result.addProperty("item", Registries.ITEM.getId(outputItem).toString())
+            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
             result.addProperty("count", outputCount)
             json.add("result", result)
         }
 
         override fun getSerializer() = ModMachineRecipes.recipeSerializer(SolidCannerRecipe::class)
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

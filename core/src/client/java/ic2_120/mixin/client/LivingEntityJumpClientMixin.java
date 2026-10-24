@@ -1,11 +1,11 @@
 package ic2_120.mixin.client;
 
 import ic2_120.content.item.armor.QuantumBoots;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,14 +20,14 @@ public class LivingEntityJumpClientMixin {
     @Inject(method = "jump", at = @At("TAIL"))
     private void ic2$onClientJump(CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof ClientPlayerEntity player)) return;
+        if (!(self instanceof LocalPlayer player)) return;
 
         ItemStack boots = player.getEquippedStack(EquipmentSlot.FEET);
         if (boots.isEmpty() || !(boots.getItem() instanceof QuantumBoots)) return;
         if (!QuantumBoots.isSuperJumpEnabled(boots)) return;
         if (!QuantumBoots.consumeJumpEnergy(boots)) return;
 
-        Vec3d vel = player.getVelocity();
+        Vec3 vel = player.getVelocity();
         double multiplier = QuantumBoots.getJumpHeightMultiplier();
         player.setVelocity(vel.x, vel.y * multiplier, vel.z);
     }

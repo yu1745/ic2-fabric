@@ -17,15 +17,15 @@ import ic2_120.content.block.WaterGeneratorBlock
 import ic2_120.content.block.WindGeneratorBlock
 import ic2_120.content.block.nuclear.NuclearReactorBlock
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.minecraft.block.BlockState
-import net.minecraft.client.sound.MovingSoundInstance
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.random.Random
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.util.RandomSource
 
 object MachineLoopSoundController {
     private const val SCAN_RADIUS = 16
@@ -42,7 +42,7 @@ object MachineLoopSoundController {
             val world = client.world
             val player = client.player
             if (world == null || player == null) {
-                activeSounds.values.forEach { it.setDone() }
+                activeSounds.values.forEach { it.stop() }
                 activeSounds.clear()
                 return@register
             }
@@ -59,7 +59,7 @@ object MachineLoopSoundController {
         }
     }
 
-    private fun collectActiveMachines(world: ClientWorld, center: BlockPos): Map<Long, LoopDef> {
+    private fun collectActiveMachines(world: ClientLevel, center: BlockPos): Map<Long, LoopDef> {
         val result = HashMap<Long, LoopDef>()
         for (x in center.x - SCAN_RADIUS..center.x + SCAN_RADIUS) {
             for (y in center.y - SCAN_RADIUS..center.y + SCAN_RADIUS) {
@@ -100,11 +100,11 @@ object MachineLoopSoundController {
         return LoopDef(eventId = eventId, volume = 0.5f, pitch = 1.0f)
     }
 
-    private fun syncSounds(client: net.minecraft.client.MinecraftClient, desired: Map<Long, LoopDef>) {
+    private fun syncSounds(client: net.minecraft.client.Minecraft, desired: Map<Long, LoopDef>) {
         for ((key, def) in desired) {
             val existing = activeSounds[key]
             if (existing == null || existing.isDone || existing.eventId != def.eventId) {
-                existing?.setDone()
+                existing?.stop()
                 val pos = BlockPos.fromLong(key)
                 val created = BlockLoopSoundInstance(pos, def)
                 activeSounds[key] = created
@@ -126,10 +126,10 @@ object MachineLoopSoundController {
     }
 
     private class BlockLoopSoundInstance(pos: BlockPos, def: LoopDef) :
-        MovingSoundInstance(
-            SoundEvent.of(Identifier.of("ic2", def.eventId)),
-            SoundCategory.BLOCKS,
-            Random.create()
+        AbstractTickableSoundInstance(
+            SoundEvent.of(ResourceLocation.of("ic2", def.eventId)),
+            SoundSource.BLOCKS,
+            RandomSource.create()
         ) {
         val eventId: String = def.eventId
         private var fadingOut = false
@@ -148,7 +148,7 @@ object MachineLoopSoundController {
         override fun tick() {
             if (fadingOut) {
                 volume = (volume - FADE_OUT_STEP).coerceAtLeast(0f)
-                if (volume <= 0.001f) setDone()
+                if (volume <= 0.001f) stop()
             } else {
                 volume = baseVolume
             }

@@ -7,24 +7,24 @@ import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(names = ["trade_o_mat"])
 class TradeOMatScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
     val isOwner: Boolean
-) : ScreenHandler(TradeOMatScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(TradeOMatScreenHandler::class.type(), syncId) {
 
     init {
         checkSize(blockInventory, TradeOMatBlockEntityBase.INVENTORY_SIZE)
@@ -61,7 +61,7 @@ class TradeOMatScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -91,7 +91,7 @@ class TradeOMatScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is TradeOMatBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -132,11 +132,11 @@ class TradeOMatScreenHandler(
         const val HOTBAR_END = 40
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): TradeOMatScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): TradeOMatScreenHandler {
             val pos = buf.readBlockPos()
             val isOwner = buf.readBoolean()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(TradeOMatBlockEntityBase.INVENTORY_SIZE)
+            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val blockInv = SimpleContainer(TradeOMatBlockEntityBase.INVENTORY_SIZE)
             return TradeOMatScreenHandler(syncId, playerInventory, blockInv, context, isOwner)
         }
     }

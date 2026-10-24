@@ -4,23 +4,23 @@ import ic2_120.content.block.MachineBlock
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.registry.tag.BlockTags
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.HolderLookup
+import net.minecraft.tags.BlockTags
 import java.util.concurrent.CompletableFuture
 
 class ModBlockTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<RegistryWrapper.WrapperLookup>,
+    registriesFuture: CompletableFuture<HolderLookup.WrapperLookup>,
 ) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
 
-    override fun configure(registries: RegistryWrapper.WrapperLookup) {
+    override fun configure(registries: HolderLookup.WrapperLookup) {
         val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).setReplace(false)
         val ironToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).setReplace(false)
         val stoneToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL).setReplace(false)
 
-        for (block in Registries.BLOCK) {
-            val id = Registries.BLOCK.getId(block)
+        for (block in BuiltInRegistries.BLOCK) {
+            val id = BuiltInRegistries.BLOCK.getId(block)
             if (id.namespace != IC2IndustrialUpgrade.MOD_ID) continue
 
             when {

@@ -5,23 +5,23 @@ import ic2_120.content.block.RubberLogBlock
 import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext
-import net.minecraft.world.BlockRenderView
-import net.minecraft.block.BlockState
-import net.minecraft.block.PillarBlock
-import net.minecraft.client.render.model.BakedModel
-import net.minecraft.client.render.model.Baker
-import net.minecraft.client.render.model.ModelBakeSettings
-import net.minecraft.client.render.model.UnbakedModel
-import net.minecraft.client.render.model.json.ModelOverrideList
-import net.minecraft.client.render.model.json.ModelTransformation
-import net.minecraft.client.texture.Sprite
-import net.minecraft.client.util.SpriteIdentifier
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PlayerScreenHandler
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.random.Random
+import net.minecraft.world.level.BlockAndTintGetter
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RotatedPillarBlock
+import net.minecraft.client.resources.model.BakedModel
+import net.minecraft.client.resources.model.ModelBaker
+import net.minecraft.client.resources.model.ModelState
+import net.minecraft.client.resources.model.UnbakedModel
+import net.minecraft.client.renderer.block.model.ItemOverrides
+import net.minecraft.client.renderer.block.model.ItemTransforms
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.client.resources.model.Material
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.util.RandomSource
 import java.util.function.Function
 import java.util.function.Supplier
 
@@ -32,18 +32,18 @@ import java.util.function.Supplier
 @Suppress("OVERRIDE_DEPRECATION")
 class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
 
-    private var sprites: Array<Sprite?> = arrayOfNulls(6)
+    private var sprites: Array<TextureAtlasSprite?> = arrayOfNulls(6)
 
-    override fun getModelDependencies() = emptySet<Identifier>()
-    override fun setParents(modelLoader: Function<Identifier, UnbakedModel>) {}
+    override fun getModelDependencies() = emptySet<ResourceLocation>()
+    override fun setParents(modelLoader: Function<ResourceLocation, UnbakedModel>) {}
 
     override fun bake(
-        baker: Baker,
-        textureGetter: Function<SpriteIdentifier, Sprite>,
-        rotationContainer: ModelBakeSettings
+        baker: ModelBaker,
+        textureGetter: Function<Material, TextureAtlasSprite>,
+        rotationContainer: ModelState
     ): BakedModel {
-        val atlas = PlayerScreenHandler.BLOCK_ATLAS_TEXTURE
-        val tex = { path: String -> SpriteIdentifier(atlas, Identifier.of("ic2", "block/resource/$path")) }
+        val atlas = InventoryMenu.BLOCK_ATLAS_TEXTURE
+        val tex = { path: String -> Material(atlas, ResourceLocation.of("ic2", "block/resource/$path")) }
         sprites[0] = textureGetter.apply(tex("rubber_wood_wet_front"))
         sprites[1] = textureGetter.apply(tex("rubber_wood_dry_front"))
         sprites[2] = textureGetter.apply(tex("rubber_wood_wet_leftrightback"))
@@ -53,34 +53,34 @@ class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
         return this
     }
 
-    private fun spriteFor(face: RubberFaceState, anyWet: Boolean): Sprite = when (face) {
+    private fun spriteFor(face: RubberFaceState, anyWet: Boolean): TextureAtlasSprite = when (face) {
         RubberFaceState.NONE -> if (anyWet) sprites[2]!! else sprites[3]!!
         RubberFaceState.WET -> sprites[0]!!
         RubberFaceState.DRY -> sprites[1]!!
     }
 
-    override fun getQuads(state: BlockState?, face: Direction?, random: Random) = emptyList<net.minecraft.client.render.model.BakedQuad>()
+    override fun getQuads(state: BlockState?, face: Direction?, random: RandomSource) = emptyList<net.minecraft.client.renderer.block.model.BakedQuad>()
 
     override fun useAmbientOcclusion() = true
     override fun hasDepth() = false
     override fun isSideLit() = true
     override fun isBuiltin() = false
     override fun getParticleSprite() = sprites[2]!!
-    override fun getTransformation() = ModelTransformation.NONE
-    override fun getOverrides() = ModelOverrideList.EMPTY
+    override fun getTransformation() = ItemTransforms.NONE
+    override fun getOverrides() = ItemOverrides.EMPTY
 
     override fun isVanillaAdapter() = false
 
     override fun emitBlockQuads(
-        blockView: BlockRenderView,
+        blockView: BlockAndTintGetter,
         state: BlockState,
         pos: BlockPos,
-        randomSupplier: Supplier<Random>,
+        randomSupplier: Supplier<RandomSource>,
         context: RenderContext
     ) {
         if (state.block !is RubberLogBlock) return
         val block = state.block as RubberLogBlock
-        val axis = state.get(PillarBlock.AXIS) ?: Direction.Axis.Y
+        val axis = state.get(RotatedPillarBlock.AXIS) ?: Direction.Axis.Y
         val n = block.getRubberState(state, Direction.NORTH)
         val s = block.getRubberState(state, Direction.SOUTH)
         val e = block.getRubberState(state, Direction.EAST)
@@ -104,7 +104,7 @@ class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
         }
     }
 
-    override fun emitItemQuads(stack: ItemStack?, randomSupplier: Supplier<Random>?, context: RenderContext) {
+    override fun emitItemQuads(stack: ItemStack?, randomSupplier: Supplier<RandomSource>?, context: RenderContext) {
         val emitter = context.emitter
         val sprite = sprites[2]!!
         for (dir in Direction.values()) {

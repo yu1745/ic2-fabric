@@ -4,10 +4,10 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.tooltip.TooltipType
-import net.minecraft.text.Text
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
+import net.minecraft.network.chat.Component
 import ic2_120.editCustomData
 import ic2_120.getCustomData
 
@@ -96,8 +96,8 @@ abstract class BatteryItemBase(
     override fun appendTooltip(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Text>,
-        type: TooltipType
+        tooltip: MutableList<Component>,
+        type: TooltipFlag
     ) {
         super.appendTooltip(stack, context, tooltip, type)
 
@@ -106,20 +106,20 @@ abstract class BatteryItemBase(
 
         // 电量文本：如 "3,000 / 10,000 EU (30.0%)"
         tooltip.add(
-            Text.literal("⚡ ${formatEnergy(energy, maxCapacity)} (${formatPercentage(ratio)})")
+            Component.literal("⚡ ${formatEnergy(energy, maxCapacity)} (${formatPercentage(ratio)})")
         )
 
         // 等级和速度信息
         tooltip.add(
-            Text.literal("等级: $tier | 速度: ${nominalEuPerTick()} EU/t")
-                .formatted(net.minecraft.util.Formatting.GRAY)
+            Component.literal("等级: $tier | 速度: ${nominalEuPerTick()} EU/t")
+                .formatted(net.minecraft.ChatFormatting.GRAY)
         )
 
         // 无线充电提示
         if (canChargeWireless) {
             tooltip.add(
-                Text.literal("可无线充电")
-                    .formatted(net.minecraft.util.Formatting.AQUA)
+                Component.literal("可无线充电")
+                    .formatted(net.minecraft.ChatFormatting.AQUA)
             )
         }
     }

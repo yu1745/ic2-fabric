@@ -1,7 +1,7 @@
 package ic2_120.content.crop
 
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.core.BlockPos
 
 interface CropCareTarget {
     // 施肥
@@ -26,7 +26,7 @@ data class CropCareResult(
 )
 
 object CropCareService {
-    fun applyInArea(world: ServerWorld, center: BlockPos, radius: Int, ops: CropCareOps): CropCareResult {
+    fun applyInArea(world: ServerLevel, center: BlockPos, radius: Int, ops: CropCareOps): CropCareResult {
         val result = CropCareResult()
         val r = radius.coerceAtLeast(0)
         for (x in -r..r) {

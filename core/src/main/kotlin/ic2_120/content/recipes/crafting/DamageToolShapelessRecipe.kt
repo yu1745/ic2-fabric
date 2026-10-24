@@ -7,19 +7,19 @@ import ic2_120.content.item.ForgeHammer
 import ic2_120.content.item.Treetap
 import ic2_120.content.item.Wrench
 import ic2_120.registry.annotation.ModMachineRecipe
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.inventory.RecipeInputInventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.ShapelessRecipe
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.DynamicRegistryManager
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.inventory.CraftingContainer
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.ShapelessRecipe
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.core.RegistryAccess
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
 import java.util.function.Consumer
 
 /**
@@ -33,11 +33,11 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
     delegate.id,
     delegate.group,
     delegate.category,
-    delegate.getOutput(DynamicRegistryManager.EMPTY),
+    delegate.getOutput(RegistryAccess.EMPTY),
     delegate.ingredients
 ) {
-    override fun getRemainder(inventory: RecipeInputInventory): DefaultedList<ItemStack> {
-        val remainder = DefaultedList.ofSize(inventory.size(), ItemStack.EMPTY)
+    override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> {
+        val remainder = NonNullList.ofSize(inventory.size(), ItemStack.EMPTY)
         for (slot in 0 until inventory.size()) {
             val stack = inventory.getStack(slot)
             if (stack.isEmpty) continue
@@ -66,17 +66,17 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
 
 @ModMachineRecipe(id = "damage_tool_shapeless", recipeClass = DamageToolShapelessRecipe::class)
 object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapelessRecipe> {
-    override fun read(id: Identifier, json: JsonObject): DamageToolShapelessRecipe {
+    override fun read(id: ResourceLocation, json: JsonObject): DamageToolShapelessRecipe {
         val shapeless = RecipeSerializer.SHAPELESS.read(id, json)
         return DamageToolShapelessRecipe(shapeless)
     }
 
-    override fun read(id: Identifier, buf: PacketByteBuf): DamageToolShapelessRecipe {
+    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): DamageToolShapelessRecipe {
         val shapeless = RecipeSerializer.SHAPELESS.read(id, buf)
         return DamageToolShapelessRecipe(shapeless)
     }
 
-    override fun write(buf: PacketByteBuf, recipe: DamageToolShapelessRecipe) {
+    override fun write(buf: FriendlyByteBuf, recipe: DamageToolShapelessRecipe) {
         RecipeSerializer.SHAPELESS.write(buf, recipe)
     }
 }
@@ -101,8 +101,8 @@ object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapeles
  */
 object DamageToolShapelessRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeExporter>,
-        recipeId: Identifier,
+        exporter: Consumer<RecipeOutput>,
+        recipeId: ResourceLocation,
         result: Item,
         resultCount: Int = 1,
         ingredients: List<Ingredient>,
@@ -123,12 +123,12 @@ object DamageToolShapelessRecipeDatagen {
         Ingredient.ofItems(tool)
 
     private class Provider(
-        private val recipeId: Identifier,
+        private val recipeId: ResourceLocation,
         private val result: Item,
         private val resultCount: Int,
         private val ingredients: List<Ingredient>,
         private val category: String
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:damage_tool_shapeless")
             json.addProperty("category", category)
@@ -140,17 +140,17 @@ object DamageToolShapelessRecipeDatagen {
             json.add("ingredients", ingredientsArr)
 
             val resultObj = JsonObject()
-            resultObj.addProperty("item", Registries.ITEM.getId(result).toString())
+            resultObj.addProperty("item", BuiltInRegistries.ITEM.getId(result).toString())
             if (resultCount > 1) resultObj.addProperty("count", resultCount)
             json.add("result", resultObj)
         }
 
         override fun getSerializer(): RecipeSerializer<*> = DamageToolShapelessRecipeSerializer
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

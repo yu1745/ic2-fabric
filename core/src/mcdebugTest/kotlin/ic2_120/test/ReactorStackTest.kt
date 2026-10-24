@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
  * 修复见 ReactorComponentStackMixin：getMaxCount 返回 64、isStackable 恒 true；
  * 合并本身仍由 vanilla canCombine 把关（item + NBT 一致才合并）。
  *
- * 注意：合并用例走箱子 GUI shift-click（ScreenHandler.insertItem 的真实
+ * 注意：合并用例走箱子 GUI shift-click（AbstractContainerMenu.insertItem 的真实
  * vanilla 路径），因为 inv.insert 的 areItemsEqual 只比 item 不比 NBT。
  */
 @McDebugTest

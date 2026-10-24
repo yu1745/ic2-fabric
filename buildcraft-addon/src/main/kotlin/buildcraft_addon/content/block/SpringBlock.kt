@@ -4,32 +4,32 @@ import buildcraft_addon.content.blockentity.OilSpringBlockEntity
 import buildcraft_addon.content.fluid.ModFluids
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockEntityProvider
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.fluid.Fluid
-import net.minecraft.item.ItemStack
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.EnumProperty
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.StringIdentifiable
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.EntityBlock
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.item.ItemStack
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.EnumProperty
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.util.StringRepresentable
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.Level
 
-enum class SpringType(val fluid: Fluid) : StringIdentifiable {
-    WATER(net.minecraft.fluid.Fluids.WATER),
+enum class SpringType(val fluid: Fluid) : StringRepresentable {
+    WATER(net.minecraft.world.level.material.Fluids.WATER),
     OIL(ModFluids.CRUDE_OIL_STILL);
 
     override fun asString(): String = name.lowercase()
@@ -37,8 +37,8 @@ enum class SpringType(val fluid: Fluid) : StringIdentifiable {
 
 @ModBlock(name = "spring", registerItem = true, tab = CreativeTab.BUILDCRAFT)
 class SpringBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.BEDROCK).strength(-1.0f, 6000000.0f)
-), BlockEntityProvider {
+    BlockBehaviour.Settings.copy(Blocks.BEDROCK).strength(-1.0f, 6000000.0f)
+), EntityBlock {
 
     companion object {
         val SPRING_TYPE: EnumProperty<SpringType> = EnumProperty.of("spring_type", SpringType::class.java)
@@ -48,24 +48,24 @@ class SpringBlock : Block(
         defaultState = stateManager.defaultState.with(SPRING_TYPE, SpringType.WATER)
     }
 
-    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
         builder.add(SPRING_TYPE)
     }
 
     override fun hasRandomTicks(state: BlockState): Boolean = false
 
-    override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+    override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         if (!world.isClient) {
             world.scheduleBlockTick(pos, this, 20)
         }
     }
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun scheduledTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
+    override fun scheduledTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
         generateSpringFluid(world, pos, state)
     }
 
-    private fun generateSpringFluid(world: World, pos: BlockPos, state: BlockState) {
+    private fun generateSpringFluid(world: Level, pos: BlockPos, state: BlockState) {
         val springType = state.get(SPRING_TYPE)
         val upPos = pos.up()
         val upState = world.getBlockState(upPos)
@@ -78,26 +78,26 @@ class SpringBlock : Block(
         world.scheduleBlockTick(pos, this, 20)
     }
 
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hand: Hand, hit: BlockHitResult): ActionResult {
+    override fun onUse(state: BlockState, world: Level, pos: BlockPos, player: Player, hand: InteractionHand, hit: BlockHitResult): InteractionResult {
         if (!world.isClient && state.get(SPRING_TYPE) == SpringType.OIL) {
             val held = player.getStackInHand(hand)
-            if (held.isOf(net.minecraft.item.Items.GLASS_BOTTLE)) {
+            if (held.isOf(net.minecraft.world.item.Items.GLASS_BOTTLE)) {
                 held.decrement(1)
-                player.giveItemStack(ItemStack(net.minecraft.item.Items.EMERALD))
-                world.playSound(null, pos, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.BLOCKS, 1.0f, 1.0f)
-                return ActionResult.SUCCESS
+                player.giveItemStack(ItemStack(net.minecraft.world.item.Items.EMERALD))
+                world.playSound(null, pos, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundSource.BLOCKS, 1.0f, 1.0f)
+                return InteractionResult.SUCCESS
             }
         }
-        return ActionResult.PASS
+        return InteractionResult.PASS
     }
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return OilSpringBlockEntity(pos, state)
     }
 
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? = null
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? = null
 
-    override fun getPickStack(world: net.minecraft.world.BlockView, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getPickStack(world: net.minecraft.world.level.BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
         return ItemStack(this)
     }
 }

@@ -10,17 +10,17 @@ import ic2_120.content.block.transmission.KineticConnectionRules
 import ic2_120.content.block.transmission.ShaftMaterial
 import ic2_120.content.block.transmission.TransmissionBlockEntity
 import ic2_120.content.block.transmission.TransmissionShaftBlock
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.RotationAxis
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.Direction
+import com.mojang.math.Axis
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -28,10 +28,10 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class TransmissionBlockEntityRenderer(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<TransmissionBlockEntity> {
     companion object {
-        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
         private const val SHAFT_HALF = 1.0f / 6.0f
         private const val SHAFT_LENGTH_HALF = 0.5f
         private const val BEVEL_GEAR_TOOTH_COUNT = 8
@@ -52,8 +52,8 @@ class TransmissionBlockEntityRenderer(
     override fun render(
         entity: TransmissionBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -64,8 +64,8 @@ class TransmissionBlockEntityRenderer(
             else ((world.time + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
         when (val block = state.block) {
             is TransmissionShaftBlock -> {
-                val axis = if (isItem) Direction.Axis.Y else state.get(Properties.AXIS)
-                val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(WHITE_TEXTURE))
+                val axis = if (isItem) Direction.Axis.Y else state.get(BlockStateProperties.AXIS)
+                val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = baseColorForMaterial(block.material)
                 matrices.push()
                 matrices.translate(0.5, 0.5, 0.5)
@@ -79,7 +79,7 @@ class TransmissionBlockEntityRenderer(
                 val gearFaceWidthHalf = (gearThickness * 0.5f).coerceAtLeast(0.02f)
                 val pitchRadius = (0.5f - gearFaceWidthHalf).coerceAtLeast(0.05f)
                 val gearOffset = pitchRadius
-                val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(WHITE_TEXTURE))
+                val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = intArrayOf(122, 126, 132)
 
                 matrices.push()
@@ -149,13 +149,13 @@ class TransmissionBlockEntityRenderer(
      * - 禁止：2 面对穿
      * - 禁止：3 面正交
      */
-    private fun bevelRenderDirections(world: net.minecraft.world.World, pos: net.minecraft.util.math.BlockPos): List<Direction> {
+    private fun bevelRenderDirections(world: net.minecraft.world.level.Level, pos: net.minecraft.core.BlockPos): List<Direction> {
         return KineticConnectionRules.nodeDirections(world, pos, world.getBlockState(pos))
     }
 
     private fun isRenderableTransmissionConnection(
-        world: net.minecraft.world.World,
-        centerPos: net.minecraft.util.math.BlockPos,
+        world: net.minecraft.world.level.Level,
+        centerPos: net.minecraft.core.BlockPos,
         direction: Direction
     ): Boolean {
         val neighborPos = centerPos.offset(direction)
@@ -200,7 +200,7 @@ class TransmissionBlockEntityRenderer(
         ShaftMaterial.CARBON -> intArrayOf(72, 76, 82)
     }
 
-    private fun translateAlongAxis(matrices: MatrixStack, axis: Direction.Axis, offset: Float) {
+    private fun translateAlongAxis(matrices: PoseStack, axis: Direction.Axis, offset: Float) {
         when (axis) {
             Direction.Axis.X -> matrices.translate(offset.toDouble(), 0.0, 0.0)
             Direction.Axis.Y -> matrices.translate(0.0, offset.toDouble(), 0.0)
@@ -208,7 +208,7 @@ class TransmissionBlockEntityRenderer(
         }
     }
 
-    private fun gearSideSign(world: net.minecraft.world.World, pos: net.minecraft.util.math.BlockPos, axis: Direction.Axis, preferPositive: Boolean): Float {
+    private fun gearSideSign(world: net.minecraft.world.level.Level, pos: net.minecraft.core.BlockPos, axis: Direction.Axis, preferPositive: Boolean): Float {
         val positiveDirection = positiveDirectionForAxis(axis)
         val negativeDirection = positiveDirection.opposite
         val hasPositiveShaft = hasMatchingConnection(world, pos, positiveDirection, axis)
@@ -231,8 +231,8 @@ class TransmissionBlockEntityRenderer(
     }
 
     private fun hasMatchingConnection(
-        world: net.minecraft.world.World,
-        centerPos: net.minecraft.util.math.BlockPos,
+        world: net.minecraft.world.level.Level,
+        centerPos: net.minecraft.core.BlockPos,
         direction: Direction,
         axis: Direction.Axis
     ): Boolean {
@@ -241,11 +241,11 @@ class TransmissionBlockEntityRenderer(
         val block = state.block
 
         if (block is TransmissionShaftBlock) {
-            return state.get(Properties.AXIS) == axis
+            return state.get(BlockStateProperties.AXIS) == axis
         }
 
-        if (!state.contains(Properties.HORIZONTAL_FACING)) return false
-        val facing = state.get(Properties.HORIZONTAL_FACING)
+        if (!state.contains(BlockStateProperties.HORIZONTAL_FACING)) return false
+        val facing = state.get(BlockStateProperties.HORIZONTAL_FACING)
         return when (block) {
             // 风力动能发生机：吸附渲染放宽为相邻即识别，输出方向由服务端逻辑决定。
             is WindKineticGeneratorBlock -> true
@@ -257,16 +257,16 @@ class TransmissionBlockEntityRenderer(
         }
     }
 
-    private fun rotateByAxis(matrices: MatrixStack, axis: Direction.Axis, angle: Float) {
+    private fun rotateByAxis(matrices: PoseStack, axis: Direction.Axis, angle: Float) {
         when (axis) {
-            Direction.Axis.X -> matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(angle))
-            Direction.Axis.Y -> matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(angle))
-            Direction.Axis.Z -> matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle))
+            Direction.Axis.X -> matrices.multiply(Axis.POSITIVE_X.rotationDegrees(angle))
+            Direction.Axis.Y -> matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(angle))
+            Direction.Axis.Z -> matrices.multiply(Axis.POSITIVE_Z.rotationDegrees(angle))
         }
     }
 
     private fun drawShaftAlongAxis(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -277,7 +277,7 @@ class TransmissionBlockEntityRenderer(
     }
 
     private fun drawOctagonalShaft(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -372,7 +372,7 @@ class TransmissionBlockEntityRenderer(
     }
 
     private fun drawGear8Teeth(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -474,7 +474,7 @@ class TransmissionBlockEntityRenderer(
     }
 
     private fun drawExtrudedGearFromOutline(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -570,7 +570,7 @@ class TransmissionBlockEntityRenderer(
     }
 
     private fun drawCuboid(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -594,7 +594,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun quad(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -617,7 +617,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun quadUv(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float, u1: Float, v1: Float,
@@ -635,7 +635,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun triangleUv(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float, u1: Float, v1: Float,
@@ -654,7 +654,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun vertex(
         vc: VertexConsumer,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         x: Float,
         y: Float,
         z: Float,

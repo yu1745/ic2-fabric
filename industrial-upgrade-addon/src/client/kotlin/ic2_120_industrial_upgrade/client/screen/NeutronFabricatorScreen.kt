@@ -6,11 +6,11 @@ import ic2_120_industrial_upgrade.content.screen.NeutronFabricatorScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 中子制造机客户端 GUI。
@@ -23,25 +23,25 @@ import net.minecraft.util.Identifier
 @ModScreen(handler = "neutron_fabricator")
 class NeutronFabricatorScreen(
     handler: NeutronFabricatorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<NeutronFabricatorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<NeutronFabricatorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
-        // 隐藏父类 HandledScreen 默认绘制的容器 title（由本类 render 手动居中绘制，避免重复）
+        // 隐藏父类 AbstractContainerScreen 默认绘制的容器 title（由本类 render 手动居中绘制，避免重复）
         titleX = -1000
         titleY = -1000
         // 玩家背包标题位置（贴图默认）
         playerInventoryTitleY = backgroundHeight - 94
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -71,7 +71,7 @@ class NeutronFabricatorScreen(
         val pct = handler.sync.progress.coerceIn(0, 100)
         context.drawText(
             textRenderer,
-            Text.translatable("gui.ic2_120.matter_generator.progress_pct", pct),
+            Component.translatable("gui.ic2_120.matter_generator.progress_pct", pct),
             left + 12, top + 43, 0x000000, false
         )
 
@@ -85,11 +85,11 @@ class NeutronFabricatorScreen(
             val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
                 listOf(
-                    Text.translatable("fluid.ic2_120_industrial_upgrade.neutron"),
-                    Text.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB")
+                    Component.translatable("fluid.ic2_120_industrial_upgrade.neutron"),
+                    Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB")
                 )
             } else {
-                listOf(Text.literal("空"))
+                listOf(Component.literal("空"))
             }
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -98,7 +98,7 @@ class NeutronFabricatorScreen(
     }
 
     /** 绘制中子流体槽内的流体（按填充比例着色平铺） */
-    private fun drawFluidTank(context: DrawContext, left: Int, top: Int) {
+    private fun drawFluidTank(context: GuiGraphics, left: Int, top: Int) {
         val amt = handler.sync.fluidAmount.coerceAtLeast(0)
         if (amt <= 0) return
         val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
@@ -126,7 +126,7 @@ class NeutronFabricatorScreen(
 
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guimattergenerator.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guimattergenerator.png")
         private const val TEX_SIZE = 256
 
         // 流体槽区域（与 core 物质制造机贴图布局一致）

@@ -11,28 +11,28 @@ import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import ic2_120_industrial_upgrade.content.block.NeutronFabricatorBlockEntity
 import ic2_120_industrial_upgrade.content.sync.NeutronFabricatorSync
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.Direction
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.core.Direction
 
 @ModScreenHandler(names = ["neutron_fabricator"])
 class NeutronFabricatorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate,
-    blockInventory: Inventory? = null,
+    playerInventory: Inventory,
+    private val context: ContainerLevelAccess,
+    propertyDelegate: ContainerData,
+    blockInventory: Container? = null,
     private val machineSlotCount: Int = 0
-) : ScreenHandler(NeutronFabricatorScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(NeutronFabricatorScreenHandler::class.type(), syncId) {
 
     /** 客户端通过 SyncedDataView 包装 propertyDelegate 读取同步字段，供 Screen 渲染使用 */
     val sync = NeutronFabricatorSync(
@@ -66,7 +66,7 @@ class NeutronFabricatorScreenHandler(
         private val containerInputSpec = SlotSpec(
             canInsert = { stack ->
                 val item = stack.item
-                item == net.minecraft.item.Items.BUCKET ||
+                item == net.minecraft.world.item.Items.BUCKET ||
                     item is EmptyCell ||
                     item is FluidCellItem
             }
@@ -74,13 +74,13 @@ class NeutronFabricatorScreenHandler(
 
         @ScreenFactory
         @JvmStatic
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): NeutronFabricatorScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): NeutronFabricatorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val propertyDelegate = ArrayPropertyDelegate(propertyCount)
-            // 客户端用临时 SimpleInventory 占位（真实数据由服务端同步）
-            val inv = SimpleInventory(NeutronFabricatorBlockEntity.INVENTORY_SIZE)
+            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val propertyDelegate = SimpleContainerData(propertyCount)
+            // 客户端用临时 SimpleContainer 占位（真实数据由服务端同步）
+            val inv = SimpleContainer(NeutronFabricatorBlockEntity.INVENTORY_SIZE)
             return NeutronFabricatorScreenHandler(syncId, playerInventory, context, propertyDelegate, inv, NeutronFabricatorBlockEntity.INVENTORY_SIZE)
         }
     }
@@ -113,7 +113,7 @@ class NeutronFabricatorScreenHandler(
 
     private val hotbarEnd: Int get() = machineSlotCount + 36
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
         var stack = ItemStack.EMPTY
         val slot = slots[index]
@@ -134,7 +134,7 @@ class NeutronFabricatorScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)

@@ -10,34 +10,34 @@ import ic2_120.content.sync.SemifluidGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.resource.language.I18n
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.registry.Registries
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.minecraft.client.resources.language.I18n
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.TagKey
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = SemifluidGeneratorBlock::class)
 class SemifluidGeneratorScreen(
     handler: SemifluidGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<SemifluidGeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<SemifluidGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 161
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -73,20 +73,20 @@ class SemifluidGeneratorScreen(
         if (mouseX in x + 120 until x + 144 && mouseY in y + 19 until y + 35) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
 
         // 燃料槽悬停 (82,23)-(94,69) = 12×46
         if (mouseX in x + 82 until x + 94 && mouseY in y + 23 until y + 69) {
-            val fuelLines = mutableListOf<Text>()
+            val fuelLines = mutableListOf<Component>()
             if (fuelDroplets > 0) {
                 val fuelMb = fuelDroplets / DROPLETS_PER_MB
                 val fuelCapMb = fuelCapDroplets / DROPLETS_PER_MB
-                fuelLines.add(Text.translatable("gui.ic2_120.semifluid_generator.fuel_tooltip", "%,d".format(fuelMb), "%,d".format(fuelCapMb)))
+                fuelLines.add(Component.translatable("gui.ic2_120.semifluid_generator.fuel_tooltip", "%,d".format(fuelMb), "%,d".format(fuelCapMb)))
             } else {
-                fuelLines.add(Text.translatable("ic2.generic.text.empty"))
+                fuelLines.add(Component.translatable("ic2.generic.text.empty"))
             }
             addSupportedFluidTooltipLines(fuelLines)
             context.drawTooltip(textRenderer, fuelLines, mouseX, mouseY)
@@ -95,7 +95,7 @@ class SemifluidGeneratorScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawEnergyGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 24
         val barH = 16
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
@@ -105,14 +105,14 @@ class SemifluidGeneratorScreen(
         context.disableScissor()
     }
 
-    private fun drawFuelBar(context: DrawContext, gx: Int, gy: Int, fraction: Float, fuelFluidRawId: Int) {
+    private fun drawFuelBar(context: GuiGraphics, gx: Int, gy: Int, fraction: Float, fuelFluidRawId: Int) {
         val barW = 12
         val barH = 46
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
         if (fillH <= 0) return
 
         // 获取流体 sprite 和颜色
-        val fluid = if (fuelFluidRawId > 0) Registries.FLUID.get(fuelFluidRawId) else null
+        val fluid = if (fuelFluidRawId > 0) BuiltInRegistries.FLUID.get(fuelFluidRawId) else null
         val fluidHandler = fluid?.let { FluidRenderHandlerRegistry.INSTANCE.get(it) }
         val sprites = fluidHandler?.getFluidSprites(null, null, fluid.defaultState)
         val sprite = sprites?.getOrNull(0)
@@ -142,57 +142,57 @@ class SemifluidGeneratorScreen(
         }
     }
 
-    private fun addSupportedFluidTooltipLines(lines: MutableList<Text>) {
-        lines.add(Text.translatable("gui.ic2_120.semifluid_generator.supported_fluids").formatted(Formatting.GOLD))
+    private fun addSupportedFluidTooltipLines(lines: MutableList<Component>) {
+        lines.add(Component.translatable("gui.ic2_120.semifluid_generator.supported_fluids").formatted(ChatFormatting.GOLD))
         addSupportedFluidGroup(
             lines,
-            Text.translatable("gui.ic2_120.semifluid_generator.biofuel_equivalent", "32,000", "16").formatted(Formatting.GRAY),
+            Component.translatable("gui.ic2_120.semifluid_generator.biofuel_equivalent", "32,000", "16").formatted(ChatFormatting.GRAY),
             ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT
         )
         addSupportedFluidGroup(
             lines,
-            Text.translatable("gui.ic2_120.semifluid_generator.creosote_equivalent", "3,200", "8").formatted(Formatting.GRAY),
+            Component.translatable("gui.ic2_120.semifluid_generator.creosote_equivalent", "3,200", "8").formatted(ChatFormatting.GRAY),
             ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT
         )
     }
 
-    private fun addSupportedFluidGroup(lines: MutableList<Text>, header: Text, tag: TagKey<Fluid>) {
+    private fun addSupportedFluidGroup(lines: MutableList<Component>, header: Component, tag: TagKey<Fluid>) {
         lines.add(header)
         val fluids = supportedFluids(tag)
         if (fluids.isEmpty()) {
-            lines.add(Text.translatable("gui.ic2_120.semifluid_generator.no_supported_fluids").formatted(Formatting.DARK_GRAY))
+            lines.add(Component.translatable("gui.ic2_120.semifluid_generator.no_supported_fluids").formatted(ChatFormatting.DARK_GRAY))
             return
         }
         fluids.forEach { fluid ->
-            lines.add(Text.literal("  - ").formatted(Formatting.DARK_GRAY).append(fluidDisplayText(fluid)))
+            lines.add(Component.literal("  - ").formatted(ChatFormatting.DARK_GRAY).append(fluidDisplayText(fluid)))
         }
     }
 
     private fun supportedFluids(tag: TagKey<Fluid>): List<Fluid> {
         val fluids = mutableListOf<Fluid>()
-        Registries.FLUID.forEach { fluid ->
+        BuiltInRegistries.FLUID.forEach { fluid ->
             // Fluid.isIn(TagKey) 在 1.20.1 已 @Deprecated，改用未废弃的 FluidState.isIn。
             if (fluid.defaultState.isIn(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
         }
-        return fluids.sortedBy { Registries.FLUID.getId(it).toString() }
+        return fluids.sortedBy { BuiltInRegistries.FLUID.getId(it).toString() }
     }
 
-    private fun fluidDisplayText(fluid: Fluid): Text {
-        val id = Registries.FLUID.getId(fluid)
+    private fun fluidDisplayText(fluid: Fluid): Component {
+        val id = BuiltInRegistries.FLUID.getId(fluid)
         val fluidKey = "fluid.${id.namespace}.${id.path}"
         val blockKey = "block.${id.namespace}.${id.path}"
         val fluidName = when {
-            I18n.hasTranslation(fluidKey) -> Text.translatable(fluidKey)
-            I18n.hasTranslation(blockKey) -> Text.translatable(blockKey)
-            else -> Text.literal(humanizeFluidPath(id.path))
-        }.formatted(Formatting.DARK_AQUA)
+            I18n.hasTranslation(fluidKey) -> Component.translatable(fluidKey)
+            I18n.hasTranslation(blockKey) -> Component.translatable(blockKey)
+            else -> Component.literal(humanizeFluidPath(id.path))
+        }.formatted(ChatFormatting.DARK_AQUA)
         if (id.namespace == "ic2_120") return fluidName
-        return Text.literal("[${id.namespace}] ").formatted(Formatting.DARK_GRAY)
+        return Component.literal("[${id.namespace}] ").formatted(ChatFormatting.DARK_GRAY)
             .append(fluidName)
     }
 
     private fun isFlowingVariant(fluid: Fluid): Boolean {
-        val path = Registries.FLUID.getId(fluid).path
+        val path = BuiltInRegistries.FLUID.getId(fluid).path
         return path.startsWith("flowing_") || path.endsWith("_flowing")
     }
 
@@ -209,7 +209,7 @@ class SemifluidGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiheatsourcegenerator.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiheatsourcegenerator.png")
         private const val DROPLETS_PER_MB = FluidConstants.BUCKET / 1000
     }
 }

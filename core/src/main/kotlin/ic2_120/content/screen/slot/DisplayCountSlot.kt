@@ -1,14 +1,14 @@
 package ic2_120.content.screen.slot
 
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
 
 /**
  * Slot that keeps the backing inventory stack intact while exposing a safe count
  * to vanilla screen synchronization.
  */
 class DisplayCountSlot(
-    inventory: Inventory,
+    inventory: Container,
     index: Int,
     x: Int,
     y: Int,

@@ -3,24 +3,24 @@ package ic2_120.content.block.pipes
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.Block
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.text.Text
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.network.chat.Component
+import net.minecraft.world.level.Level
 
 @ModBlockEntity(
     name = "pipe",
@@ -56,21 +56,21 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         return (disabledMask and bit) != 0
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         // 网络管理（创建/关联）在 end server tick 统一推动 fluid 传输
         if (network == null) network = PipeNetworkManager.getOrCreateNetwork(world, pos)
     }
 
     fun pumpFilterFluid(): Fluid? {
         val raw = pumpFilterFluidId ?: return null
-        val id = Identifier.tryParse(raw) ?: return null
-        return if (Registries.FLUID.containsId(id)) Registries.FLUID.get(id) else null
+        val id = ResourceLocation.tryParse(raw) ?: return null
+        return if (BuiltInRegistries.FLUID.containsId(id)) BuiltInRegistries.FLUID.get(id) else null
     }
 
     fun isPumpAttachment(): Boolean = cachedState.block is PumpAttachmentBlock
 
     fun setPumpFilterFluid(fluid: Fluid) {
-        pumpFilterFluidId = Registries.FLUID.getId(fluid).toString()
+        pumpFilterFluidId = BuiltInRegistries.FLUID.getId(fluid).toString()
         markDirty()
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
@@ -81,7 +81,7 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         disabledMask = nbt.getInt("DisabledMask")
         pipeLoad = nbt.getLong("PipeLoad")
@@ -89,7 +89,7 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         pumpFilterFluidId = nbt.getString("PumpFilterFluid").takeIf { it.isNotBlank() }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putInt("DisabledMask", disabledMask)
         nbt.putLong("PipeLoad", pipeLoad)
@@ -99,16 +99,16 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         }
     }
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
 
-    override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
+    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.pump_attachment")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.pump_attachment")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         ic2_120.content.screen.PumpAttachmentScreenHandler(syncId, playerInventory, this)
 }

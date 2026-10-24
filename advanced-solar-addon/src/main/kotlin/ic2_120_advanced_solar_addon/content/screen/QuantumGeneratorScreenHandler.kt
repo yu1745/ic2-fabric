@@ -2,15 +2,15 @@ package ic2_120_advanced_solar_addon.content.screen
 
 import ic2_120_advanced_solar_addon.content.block.QuantumGeneratorBlockEntity
 import ic2_120_advanced_solar_addon.content.sync.QuantumGeneratorSync
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.Direction
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.core.Direction
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.content.syncs.SyncedDataView
@@ -19,10 +19,10 @@ import ic2_120.registry.type
 @ModScreenHandler(block = ic2_120_advanced_solar_addon.content.block.QuantumGeneratorBlock::class)
 class QuantumGeneratorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(QuantumGeneratorScreenHandler::class.type(), syncId) {
+    playerInventory: Inventory,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData
+) : AbstractContainerMenu(QuantumGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = QuantumGeneratorSync(
         schema = SyncedDataView(propertyDelegate),
@@ -53,7 +53,7 @@ class QuantumGeneratorScreenHandler(
      * 源槽永不落入 insertItem 目标区间，无自合并风险（与 Tank/Scanner 等同构实现一致）。
      * 本 GUI 无机器槽位，不需要 no-op。
      */
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -75,7 +75,7 @@ class QuantumGeneratorScreenHandler(
         return stack
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         if (player.world.isClient) return true
         // 使用双参数版本 get(BiFunction, defaultValue)，返回 T? 而不是 Optional<T>
         val be = context.get({ world, pos -> world.getBlockEntity(pos) }, null)
@@ -100,7 +100,7 @@ class QuantumGeneratorScreenHandler(
         return true
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -133,11 +133,11 @@ class QuantumGeneratorScreenHandler(
 
         @ScreenFactory
         @JvmStatic
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): QuantumGeneratorScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): QuantumGeneratorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val propertyDelegate = net.minecraft.screen.ArrayPropertyDelegate(propertyCount)
+            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val propertyDelegate = net.minecraft.world.inventory.SimpleContainerData(propertyCount)
             return QuantumGeneratorScreenHandler(syncId, playerInventory, context, propertyDelegate)
         }
     }

@@ -13,21 +13,21 @@ import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * 固体加热机：
@@ -40,9 +40,9 @@ class SolidHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = SolidHeatGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SolidHeatGeneratorBlock.ACTIVE
 
     companion object {
         const val SLOT_FUEL = 0
@@ -53,7 +53,7 @@ class SolidHeatGeneratorBlockEntity(
     }
 
     override val tier: Int = 1
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -79,30 +79,30 @@ class SolidHeatGeneratorBlockEntity(
         state
     )
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.solid_heat_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solid_heat_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         SolidHeatGeneratorScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData
         )
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: net.minecraft.entity.player.PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = Container.canPlayerUse(this, player)
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         markDirty()
@@ -113,9 +113,9 @@ class SolidHeatGeneratorBlockEntity(
         else -> false
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         burnTime = nbt.getInt("BurnTime").coerceAtLeast(0)
         burnTotal = nbt.getInt("BurnTotal").coerceAtLeast(0)
@@ -123,15 +123,15 @@ class SolidHeatGeneratorBlockEntity(
         sync.burnTotal = burnTotal
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt("BurnTime", burnTime)
         nbt.putInt("BurnTotal", burnTotal)
     }
 
-    override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
+    override fun generateHeat(world: Level, pos: BlockPos, state: BlockState): Long {
         if (burnTime <= 0) {
             val fuel = getStack(SLOT_FUEL)
             val fuelTicks = getFuelTimeForSolidHeat(fuel)
@@ -163,7 +163,7 @@ class SolidHeatGeneratorBlockEntity(
     override fun getActiveState(state: BlockState): Boolean =
         state.get(SolidHeatGeneratorBlock.ACTIVE)
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         tickHeatMachine(world, pos, state)
     }
 
@@ -172,7 +172,7 @@ class SolidHeatGeneratorBlockEntity(
         val item = stack.item
         val isSupported = item == Items.COAL ||
             item == Items.CHARCOAL ||
-            item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier.of("ic2_120", "coke"))
+            item == net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.of("ic2_120", "coke"))
         if (!isSupported) return 0
         val furnaceTicks = FuelRegistry.INSTANCE.get(item) ?: return 0
         return (furnaceTicks / SOLID_HEAT_BURN_DIVISOR).coerceAtLeast(1)

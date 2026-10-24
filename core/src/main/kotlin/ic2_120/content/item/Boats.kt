@@ -13,21 +13,21 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.ShapelessRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
 
 /** 破损的橡皮艇 - 使用后在水面生成可乘坐的船实体 */
 @ModItem(name = "broken_rubber_boat", tab = CreativeTab.IC2_TOOLS, group = "boats")
 class BrokenRubberBoatItem : Ic2BoatItem(ModEntities.BROKEN_RUBBER_BOAT, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapelessRecipeBuilder.create(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
                 .input(BrokenRubberBoatItem::class.instance())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(BrokenRubberBoatItem::class.instance()), conditionsFromItem(BrokenRubberBoatItem::class.instance()))
@@ -41,10 +41,10 @@ class BrokenRubberBoatItem : Ic2BoatItem(ModEntities.BROKEN_RUBBER_BOAT, Item.Se
 class CarbonBoatItem : Ic2BoatItem(ModEntities.CARBON_BOAT, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = CarbonPlate::class.instance()
             if (plate != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.TRANSPORTATION, CarbonBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.TRANSPORTATION, CarbonBoatItem::class.instance(), 1)
                     .pattern("   ")
                     .pattern("P P")
                     .pattern("PPP")
@@ -61,10 +61,10 @@ class CarbonBoatItem : Ic2BoatItem(ModEntities.CARBON_BOAT, Item.Settings()) {
 class RubberBoatItem : Ic2BoatItem(ModEntities.RUBBER_BOAT, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val rubber = RubberItem::class.instance()
             if (rubber != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
                     .pattern("   ")
                     .pattern("R R")
                     .pattern("RRR")
@@ -81,13 +81,13 @@ class RubberBoatItem : Ic2BoatItem(ModEntities.RUBBER_BOAT, Item.Settings()) {
 class ElectricBoatItem : Ic2BoatItem(ModEntities.ELECTRIC_BOAT, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val cable = InsulatedCopperCableBlock::class.item()
             val plate = IronPlate::class.instance()
             val motor = ElectricMotor::class.instance()
             val rotor = IronRotor::class.instance()
             if (cable != Items.AIR && plate != Items.AIR && motor != Items.AIR && rotor != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.TRANSPORTATION, ElectricBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.TRANSPORTATION, ElectricBoatItem::class.instance(), 1)
                     .pattern("CCC")
                     .pattern("IMI")
                     .pattern("IRI")

@@ -6,30 +6,30 @@ import ic2_120.content.block.BlockCutterBlock
 import ic2_120.content.screen.BlockCutterScreenHandler
 import ic2_120.content.sync.BlockCutterSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = BlockCutterBlock::class)
 class BlockCutterScreen(
     handler: BlockCutterScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<BlockCutterScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<BlockCutterScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -116,9 +116,9 @@ class BlockCutterScreen(
             relY in BLADE_WARN_Y until BLADE_WARN_Y + BLADE_WARN_H
         ) {
             val warnText = if (bladeMissing) {
-                Text.literal("机器无工作刀片！！！")
+                Component.literal("机器无工作刀片！！！")
             } else {
-                Text.literal("当前刀片工作硬度不足！！！")
+                Component.literal("当前刀片工作硬度不足！！！")
             }
             context.drawTooltip(textRenderer, warnText, mouseX, mouseY)
         }
@@ -129,7 +129,7 @@ class BlockCutterScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -138,10 +138,10 @@ class BlockCutterScreen(
         if (relX in UPGRADE_ICON_X until UPGRADE_ICON_X + 16 &&
             relY in UPGRADE_ICON_Y until UPGRADE_ICON_Y + 16
         ) {
-            val upgradeTooltip = mutableListOf<Text>()
-            upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
+            val upgradeTooltip = mutableListOf<Component>()
+            upgradeTooltip.add(Component.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
-                val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
+                val item = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", id))
                 upgradeTooltip.add(item.name)
             }
             context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
@@ -149,8 +149,8 @@ class BlockCutterScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiblockcuttingmachine.png")
-        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiblockcuttingmachine.png")
+        private val UPTIPS = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 升级提示图标

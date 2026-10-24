@@ -3,20 +3,20 @@ package ic2_120_advanced_solar_addon.client.screen
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlock
 import ic2_120_advanced_solar_addon.content.screen.MolecularTransformerScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = MolecularTransformerBlock::class)
 class MolecularTransformerScreen(
     handler: MolecularTransformerScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<MolecularTransformerScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<MolecularTransformerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = GUI_WIDTH
@@ -24,11 +24,11 @@ class MolecularTransformerScreen(
         playerInventoryTitleY = -20000
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -52,7 +52,7 @@ class MolecularTransformerScreen(
         val tx = x + TEXT_X
 
         // 输入: itemName at (59, 25)
-        val inputLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.input").string
+        val inputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.input").string
         context.drawText(textRenderer, inputLabel, tx, y + TEXT_Y_INPUT, 0xFFFFFF, false)
         if (hasRecipe) {
             val inputName = getItemName(handler.sync.inputItemId)
@@ -60,7 +60,7 @@ class MolecularTransformerScreen(
         }
 
         // 输出: outputName at (59, 38)
-        val outputLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.output").string
+        val outputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.output").string
         context.drawText(textRenderer, outputLabel, tx, y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
         if (hasRecipe) {
             val outputName = getItemName(handler.sync.outputItemId)
@@ -68,21 +68,21 @@ class MolecularTransformerScreen(
         }
 
         // 能耗: total required EU at (59, 51)
-        val energyLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.energy_per_operation").string
+        val energyLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.energy_per_operation").string
         context.drawText(textRenderer, energyLabel, tx, y + TEXT_Y_ENERGY, 0xFFFFFF, false)
         if (hasRecipe) {
             context.drawText(textRenderer, formatNum(requiredEnergy) + " EU", tx + textRenderer.getWidth(energyLabel), y + TEXT_Y_ENERGY, 0xFFFFFF, false)
         }
 
         // EU输入: avgInserted at (59, 64)
-        val euInputLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.energy_per_tick").string
+        val euInputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.energy_per_tick").string
         context.drawText(textRenderer, euInputLabel, tx, y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
         if (hasRecipe) {
             context.drawText(textRenderer, formatNum(inputEuPerTick) + " EU/t", tx + textRenderer.getWidth(euInputLabel), y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
         }
 
         // 进度: percentage% at (59, 77)
-        val progressLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.progress").string
+        val progressLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.progress").string
         context.drawText(textRenderer, progressLabel, tx, y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
         if (hasRecipe) {
             val progressPercent = String.format("%d%%", (progressFraction * 100f).toInt())
@@ -101,7 +101,7 @@ class MolecularTransformerScreen(
     private fun formatNum(n: Long): String = String.format("%,d", n)
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2_120_advanced_solar_addon", "textures/gui/moleculartransformer.png")
+        private val TEXTURE = ResourceLocation.of("ic2_120_advanced_solar_addon", "textures/gui/moleculartransformer.png")
 
         private const val TEX_WIDTH = 256
         private const val TEX_HEIGHT = 256

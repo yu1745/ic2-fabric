@@ -5,18 +5,18 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
-import net.minecraft.text.Text
+import net.minecraft.client.KeyMapping
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.network.chat.Component
 import org.lwjgl.glfw.GLFW
 
 @Environment(EnvType.CLIENT)
 object BandwidthHudKeybinds {
     private val toggleBandwidthHudKey = KeyBindingHelper.registerKeyBinding(
-        KeyBinding(
+        KeyMapping(
             "key.ic2_120.toggle_bandwidth_hud",
-            InputUtil.Type.KEYSYM,
-            InputUtil.UNKNOWN_KEY.getCode(),
+            InputConstants.Type.KEYSYM,
+            InputConstants.UNKNOWN_KEY.getCode(),
             "category.ic2_120.ic2"
         )
     )
@@ -26,7 +26,7 @@ object BandwidthHudKeybinds {
             while (toggleBandwidthHudKey.wasPressed()) {
                 BandwidthHudState.enabled = !BandwidthHudState.enabled
                 client.player?.sendMessage(
-                    Text.literal("Bandwidth HUD: " + if (BandwidthHudState.enabled) "ON" else "OFF"),
+                    Component.literal("Bandwidth HUD: " + if (BandwidthHudState.enabled) "ON" else "OFF"),
                     true
                 )
             }

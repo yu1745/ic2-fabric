@@ -15,27 +15,27 @@ import ic2_120.content.sync.FermenterSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Identifier
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.resources.ResourceLocation
 
 @ModScreenHandler(block = FermenterBlock::class, inventorySize = FermenterBlockEntity.INVENTORY_SIZE)
 class FermenterScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    private val blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(FermenterScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(FermenterScreenHandler::class.type(), syncId) {
 
     val sync = FermenterSync(SyncedDataView(propertyDelegate))
 
@@ -88,7 +88,7 @@ class FermenterScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (!slot.hasStack()) return stack
@@ -127,7 +127,7 @@ class FermenterScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is FermenterBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -146,14 +146,14 @@ class FermenterScreenHandler(
         const val PLAYER_INV_START = 7
         const val HOTBAR_END = 42
 
-        private val biomassCellId = Identifier.of("ic2_120", "biomass_cell")
-        private val emptyCellId = Identifier.of("ic2_120", "empty_cell")
+        private val biomassCellId = ResourceLocation.of("ic2_120", "biomass_cell")
+        private val emptyCellId = ResourceLocation.of("ic2_120", "empty_cell")
 
         private val INPUT_FILLED_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
                 when {
                     stack.item == ModFluids.BIOMASS_BUCKET -> true
-                    Registries.ITEM.getId(stack.item) == biomassCellId -> true
+                    BuiltInRegistries.ITEM.getId(stack.item) == biomassCellId -> true
                     stack.item is FluidCellItem -> {
                         val fluid = stack.getFluidCellVariant()?.fluid
                         fluid == ModFluids.BIOMASS_STILL || fluid == ModFluids.BIOMASS_FLOWING
@@ -166,7 +166,7 @@ class FermenterScreenHandler(
         private val OUTPUT_EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
                 stack.item == Items.BUCKET ||
-                    Registries.ITEM.getId(stack.item) == emptyCellId ||
+                    BuiltInRegistries.ITEM.getId(stack.item) == emptyCellId ||
                     (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             }
         )

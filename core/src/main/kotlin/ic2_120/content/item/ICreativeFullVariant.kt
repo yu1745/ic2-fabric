@@ -1,6 +1,6 @@
 package ic2_120.content.item
 
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * 物品实现此接口后，扫描器会在创造模式物品栏中自动追加一个「满变体」[ItemStack]。

@@ -6,10 +6,10 @@ import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.recipes.ModTags
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
-import net.minecraft.fluid.Fluid
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 /** 从物品容器中读取半流质发电机可用燃料流体。 */
 fun ItemStack.getSemifluidFuelFluid(): Fluid? {
@@ -17,11 +17,11 @@ fun ItemStack.getSemifluidFuelFluid(): Fluid? {
 
     ModFluids.getFluidFromModBucket(item)?.let { return it }
 
-    if (item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biofuel_cell"))) {
+    if (item == BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "biofuel_cell"))) {
         return ModFluids.BIOFUEL_STILL
     }
 
-    if (item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell"))) {
+    if (item == BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell"))) {
         return getFluidCellVariant()?.fluid
     }
 
@@ -34,7 +34,7 @@ fun ItemStack.getSemifluidFuelFluid(): Fluid? {
 fun ItemStack.isSemifluidFuel(): Boolean {
     val fluid = getSemifluidFuelFluid() ?: return false
     // Fluid.isIn(TagKey) 与 Fluid.getRegistryEntry() 在 1.20.1 均已 @Deprecated，
-    // 改用未废弃的 FluidState.isIn（其内部委托 RegistryEntry.isIn）。
+    // 改用未废弃的 FluidState.isIn（其内部委托 Holder.isIn）。
     val state = fluid.defaultState
     return state.isIn(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) ||
         state.isIn(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT)

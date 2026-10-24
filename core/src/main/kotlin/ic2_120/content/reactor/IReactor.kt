@@ -1,15 +1,15 @@
 package ic2_120.content.reactor
 
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * 核反应堆接口。由 NuclearReactorBlockEntity 实现，供 IReactorComponent 访问。
  */
 interface IReactor {
 
-    fun getWorld(): World?
+    fun getWorld(): Level?
     fun getPos(): BlockPos
 
     /** 当前堆温（贮存热量） */

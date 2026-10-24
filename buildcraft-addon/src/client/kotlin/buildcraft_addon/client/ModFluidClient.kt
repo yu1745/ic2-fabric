@@ -4,8 +4,8 @@ import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.fluid.ModFluids
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler
-import net.minecraft.fluid.Fluid
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.resources.ResourceLocation
 
 /**
  * BC 流体客户端渲染注册。
@@ -14,8 +14,8 @@ import net.minecraft.util.Identifier
  */
 object ModFluidClient {
 
-    private val STILL_TEX = Identifier.of("ic2", "block/fluid/fluid_still")
-    private val FLOW_TEX = Identifier.of("ic2", "block/fluid/fluid_flow")
+    private val STILL_TEX = ResourceLocation.of("ic2", "block/fluid/fluid_still")
+    private val FLOW_TEX = ResourceLocation.of("ic2", "block/fluid/fluid_flow")
 
     fun register() {
         val fluids = listOf(

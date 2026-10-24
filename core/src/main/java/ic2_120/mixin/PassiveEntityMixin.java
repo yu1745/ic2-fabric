@@ -2,7 +2,7 @@ package ic2_120.mixin;
 
 import ic2_120.content.block.AnimalmatronBlock;
 import ic2_120.content.entity.AnimalFoodMapping;
-import net.minecraft.entity.passive.PassiveEntity;
+import net.minecraft.world.entity.AgeableMob;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 实现：
  * 1. 阻止牲畜监管机范围内动物的自然生长
  */
-@Mixin(PassiveEntity.class)
+@Mixin(AgeableMob.class)
 public class PassiveEntityMixin {
 
     @Unique
@@ -26,9 +26,9 @@ public class PassiveEntityMixin {
      */
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void ic2AnimalmatronStartNaturalGrowthGuard(CallbackInfo ci) {
-        PassiveEntity entity = (PassiveEntity) (Object) this;
+        AgeableMob entity = (AgeableMob) (Object) this;
         this.ic2_120$blockingNaturalGrowth =
-                entity.getWorld() instanceof net.minecraft.server.world.ServerWorld &&
+                entity.getWorld() instanceof net.minecraft.server.level.ServerLevel &&
                         entity.isBaby() &&
                         AnimalFoodMapping.isManagedAnimal(entity);
     }
@@ -47,7 +47,7 @@ public class PassiveEntityMixin {
             return;
         }
 
-        PassiveEntity entity = (PassiveEntity) (Object) this;
+        AgeableMob entity = (AgeableMob) (Object) this;
 
         if (age <= entity.getBreedingAge()) {
             return;

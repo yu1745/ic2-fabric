@@ -19,24 +19,24 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * 电力加热机：
@@ -51,9 +51,9 @@ class ElectricHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IRedstoneControlSupport, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IRedstoneControlSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricHeatGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = ElectricHeatGeneratorBlock.ACTIVE
 
     companion object {
         const val SLOT_COUNT = 11
@@ -64,7 +64,7 @@ class ElectricHeatGeneratorBlockEntity(
     override val tier: Int = 4
     override var redstoneInverted: Boolean = false
 
-    private val inventory = DefaultedList.ofSize(SLOT_COUNT, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(SLOT_COUNT, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -79,7 +79,7 @@ class ElectricHeatGeneratorBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val coilItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "coil")) }
+    private val coilItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "coil")) }
 
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
@@ -105,31 +105,31 @@ class ElectricHeatGeneratorBlockEntity(
         state
     )
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.electric_heat_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.electric_heat_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         ElectricHeatGeneratorScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
     override fun size(): Int = SLOT_COUNT
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: net.minecraft.entity.player.PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         in 0 until SLOT_DISCHARGING -> !stack.isEmpty && stack.item == coilItem
@@ -158,9 +158,9 @@ class ElectricHeatGeneratorBlockEntity(
         markDirty()
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, ElectricHeatGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -168,15 +168,15 @@ class ElectricHeatGeneratorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
-    override fun preGenerate(world: World, pos: BlockPos, state: BlockState) {
+    override fun preGenerate(world: Level, pos: BlockPos, state: BlockState) {
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
@@ -197,7 +197,7 @@ class ElectricHeatGeneratorBlockEntity(
     /** 当前安装的线圈数量。 */
     fun getCoilCount(): Int = inventory.count { !it.isEmpty && it.item == coilItem }
 
-    override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
+    override fun generateHeat(world: Level, pos: BlockPos, state: BlockState): Long {
         val redstoneAllowsRun = RedstoneControlComponent.canRun(world, pos, this)
         val coilCount = getCoilCount()
         val maxHuPerTick = coilCount * HU_PER_COIL_PER_TICK
@@ -223,7 +223,7 @@ class ElectricHeatGeneratorBlockEntity(
     override fun getActiveState(state: BlockState): Boolean =
         state.get(ElectricHeatGeneratorBlock.ACTIVE)
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         tickHeatMachine(world, pos, state)
     }
 }

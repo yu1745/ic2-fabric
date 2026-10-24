@@ -5,14 +5,14 @@ import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import ic2_120_advanced_solar_addon.content.recipe.MTRecipes
 import ic2_120_industrial_upgrade.content.fluid.NeutronFluid
 import net.fabricmc.api.ModInitializer
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 
 object IC2IndustrialUpgrade : ModInitializer {
     const val MOD_ID = "ic2_120_industrial_upgrade"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
-    fun id(path: String): Identifier = Identifier(MOD_ID, path)
+    fun id(path: String): ResourceLocation = ResourceLocation(MOD_ID, path)
 
     override fun onInitialize() {
         LOGGER.info("Initializing IC2 Industrial Upgrade addon...")
@@ -20,7 +20,7 @@ object IC2IndustrialUpgrade : ModInitializer {
         // 1. 注册中子流体（独立注册，不走 ClassScanner）
         NeutronFluid.register()
 
-        // 2. 使用本体 mod 的 ClassScanner 注册附属内容（方块/物品/ScreenHandler）
+        // 2. 使用本体 mod 的 ClassScanner 注册附属内容（方块/物品/AbstractContainerMenu）
         ClassScanner.scanAndRegister(
             MOD_ID,
             listOf(

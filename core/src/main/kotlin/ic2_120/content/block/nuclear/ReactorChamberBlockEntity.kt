@@ -6,27 +6,27 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import team.reborn.energy.api.EnergyStorage
 
 /**
  * 核反应仓方块实体。
- * 与核反应堆相邻时，共享反应堆的能量实例；Inventory 直接委托到中心核反应堆，一切操作都是对中心的操作。
+ * 与核反应堆相邻时，共享反应堆的能量实例；Container 直接委托到中心核反应堆，一切操作都是对中心的操作。
  * 实现了 ITieredMachine 接口，能量等级为 5。
  */
 @ModBlockEntity(block = ReactorChamberBlock::class)
 class ReactorChamberBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IGenerator, ITieredMachine {
+) : BlockEntity(type, pos, state), Container, IGenerator, ITieredMachine {
 
     override val tier: Int = CHAMBER_TIER
     private var adjacentEnergyTransfer: AdjacentEnergyTransferComponent? = null
@@ -74,7 +74,7 @@ class ReactorChamberBlockEntity(
         adjacentEnergyTransfer?.tick()
     }
 
-    // ========== Inventory 委托到中心反应堆 ==========
+    // ========== Container 委托到中心反应堆 ==========
     override fun size(): Int = findAdjacentReactor()?.size() ?: 0
     override fun getStack(slot: Int): ItemStack = findAdjacentReactor()?.getStack(slot) ?: ItemStack.EMPTY
     override fun setStack(slot: Int, stack: ItemStack) = findAdjacentReactor()?.setStack(slot, stack) ?: Unit
@@ -89,13 +89,13 @@ class ReactorChamberBlockEntity(
     }
     override fun isValid(slot: Int, stack: ItemStack): Boolean =
         findAdjacentReactor()?.isValid(slot, stack) ?: true
-    override fun canPlayerUse(player: PlayerEntity): Boolean =
+    override fun canPlayerUse(player: Player): Boolean =
         findAdjacentReactor()?.canPlayerUse(player) ?: false
 
     companion object {
         const val CHAMBER_TIER = 5
 
-        fun tick(world: World, pos: BlockPos, state: BlockState, be: ReactorChamberBlockEntity) {
+        fun tick(world: Level, pos: BlockPos, state: BlockState, be: ReactorChamberBlockEntity) {
             be.tickAdjacentEnergyTransfer()
             // 红石中继：EU 模式下反应仓自身接收红石信号并推送给中心反应堆
             // （对齐 IC2 原版 TileEntityReactorChamberElectric.redstone.linkTo(reactor.redstone)：

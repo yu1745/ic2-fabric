@@ -9,13 +9,13 @@ import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
-import net.minecraft.block.Block
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.registry.tag.BlockTags
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.HolderLookup
+import net.minecraft.tags.BlockTags
+import net.minecraft.tags.TagKey
+import net.minecraft.resources.ResourceLocation
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 
@@ -23,12 +23,12 @@ import kotlin.reflect.KClass
  * 生成方块标签：挖掘标签 + [@ModBlock] materialTags 对应的 c:/forge:/compat:。
  *
  * 注意：除 [MachineBlock] 外，导线 [BaseCableBlock]、变压器 [DirectionalMachineBlock]、
- * 储物箱、储罐、以及大量装饰/金属方块均为普通 [net.minecraft.block.Block]，必须在下方分支中显式覆盖，
+ * 储物箱、储罐、以及大量装饰/金属方块均为普通 [net.minecraft.world.level.block.Block]，必须在下方分支中显式覆盖，
  * 否则不会进入 mineable 类标签，表现为镐挖极慢。
  */
 class ModBlockTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<RegistryWrapper.WrapperLookup>,
+    registriesFuture: CompletableFuture<HolderLookup.WrapperLookup>,
 ) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
     private val compatPathsBuilt = mutableSetOf<String>()
 
@@ -74,7 +74,7 @@ class ModBlockTagProvider(
         "iridium_tank",
     )
 
-    override fun configure(registries: RegistryWrapper.WrapperLookup) {
+    override fun configure(registries: HolderLookup.WrapperLookup) {
         val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).setReplace(false)
         val ironToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).setReplace(false)
         val stoneToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL).setReplace(false)
@@ -87,12 +87,12 @@ class ModBlockTagProvider(
 
         // 将橡胶原木添加到原版 logs 标签，使橡胶树叶能正确识别原木
         val logsBuilder = getOrCreateTagBuilder(BlockTags.LOGS)
-        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "rubber_log"))!!)
-        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "stripped_rubber_log"))!!)
-        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "rubber_wood"))!!)
+        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.of(Ic2_120.MOD_ID, "rubber_log"))!!)
+        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.of(Ic2_120.MOD_ID, "stripped_rubber_log"))!!)
+        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.of(Ic2_120.MOD_ID, "rubber_wood"))!!)
 
-        for (block in Registries.BLOCK) {
-            val id = Registries.BLOCK.getId(block)
+        for (block in BuiltInRegistries.BLOCK) {
+            val id = BuiltInRegistries.BLOCK.getId(block)
             if (id.namespace != Ic2_120.MOD_ID) continue
 
             if (block is Ic2ScaffoldBlock) climbableBuilder.add(block)
@@ -171,11 +171,11 @@ class ModBlockTagProvider(
     }
 
     private fun cBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", path))
+        TagKey.of(Registries.BLOCK, ResourceLocation.of("c", path))
 
     private fun forgeBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier.of("forge", path))
+        TagKey.of(Registries.BLOCK, ResourceLocation.of("forge", path))
 
     private fun compatBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier.of("ic2_120", "compat/$path"))
+        TagKey.of(Registries.BLOCK, ResourceLocation.of("ic2_120", "compat/$path"))
 }

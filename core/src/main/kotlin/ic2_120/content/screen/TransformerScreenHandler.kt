@@ -4,22 +4,22 @@ import ic2_120.content.sync.TransformerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.network.FriendlyByteBuf
 
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.Direction
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.Direction
 import ic2_120.registry.annotation.ScreenFactory
 
 /**
- * 变压器的 ScreenHandler。
+ * 变压器的 AbstractContainerMenu。
  * 提供固定升压 / 固定降压两个按钮。
  *
  * 所有电压等级的变压器（LV、MV、HV、EV）共用此 UI。
@@ -27,11 +27,11 @@ import ic2_120.registry.annotation.ScreenFactory
 @ModScreenHandler(names = ["lv_transformer", "mv_transformer", "hv_transformer", "ev_transformer"])
 class TransformerScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    private val context: ContainerLevelAccess,
+    propertyDelegate: ContainerData,
     private val tier: Int = 1
-) : ScreenHandler(TransformerScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(TransformerScreenHandler::class.type(), syncId) {
 
     val sync = TransformerSync(
         SyncedDataView(propertyDelegate),
@@ -41,11 +41,11 @@ class TransformerScreenHandler(
 
     private fun getFacingDirection(): Direction {
         return context.get({ world, pos ->
-            world.getBlockState(pos).get(Properties.FACING)
+            world.getBlockState(pos).get(BlockStateProperties.FACING)
         }, Direction.NORTH)
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos)
             if (be is ic2_120.content.block.machines.TransformerBlockEntity) {
@@ -73,27 +73,27 @@ class TransformerScreenHandler(
         }
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             val block = world.getBlockState(pos).block
             block is ic2_120.content.block.TransformerBlock &&
                     player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
-    override fun quickMove(player: PlayerEntity, slot: Int): net.minecraft.item.ItemStack =
-        net.minecraft.item.ItemStack.EMPTY
+    override fun quickMove(player: Player, slot: Int): net.minecraft.world.item.ItemStack =
+        net.minecraft.world.item.ItemStack.EMPTY
 
     companion object {
         const val BUTTON_ID_STEP_UP = 0
         const val BUTTON_ID_STEP_DOWN = 1
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): TransformerScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): TransformerScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val tier = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            return TransformerScreenHandler(syncId, playerInventory, context, ArrayPropertyDelegate(propertyCount), tier)
+            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            return TransformerScreenHandler(syncId, playerInventory, context, SimpleContainerData(propertyCount), tier)
         }
     }
 }

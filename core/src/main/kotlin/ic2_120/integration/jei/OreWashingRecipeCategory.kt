@@ -7,11 +7,11 @@ import mezz.jei.api.recipe.IFocusGroup
 import mezz.jei.api.recipe.RecipeIngredientRole
 import mezz.jei.api.recipe.category.IRecipeCategory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.fluid.Fluids
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 洗矿机 JEI 分类 — 使用机器纹理 [guiorewashingplant.png] 作为背景。
@@ -22,15 +22,15 @@ import net.minecraft.util.Identifier
  */
 class OreWashingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<OreWashingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2", "textures/gui/guiorewashingplant.png"),
+        ResourceLocation.of("ic2", "textures/gui/guiorewashingplant.png"),
         4, 6, 144, 75
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "ore_washing_plant")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "ore_washing_plant")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.ORE_WASHING
-    override fun getTitle(): Text = Text.translatable("block.ic2_120.ore_washing_plant")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120.ore_washing_plant")
     @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon

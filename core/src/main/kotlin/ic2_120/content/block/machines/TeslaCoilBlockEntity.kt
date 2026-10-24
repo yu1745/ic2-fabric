@@ -8,23 +8,23 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.damage.DamageSource
-import net.minecraft.item.ArmorItem
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
 
 /**
  * 特斯拉线圈方块实体。无物品槽，仅能量存储。
@@ -33,7 +33,7 @@ import net.minecraft.world.World
  */
 @ModBlockEntity(block = TeslaCoilBlock::class)
 class TeslaCoilBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
 ) : BlockEntity(type, pos, state), ITieredMachine {
@@ -58,7 +58,7 @@ class TeslaCoilBlockEntity(
         state
     )
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(TeslaCoilSync.NBT_ENERGY_STORED).coerceIn(0L, TeslaCoilSync.ENERGY_CAPACITY)
@@ -68,7 +68,7 @@ class TeslaCoilBlockEntity(
         lastHitTargetUuid = if (nbt.contains("LastHitTarget")) nbt.getUuid("LastHitTarget") else null
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         syncedData.writeNbt(nbt)
         nbt.putLong(TeslaCoilSync.NBT_ENERGY_STORED, sync.amount)
@@ -76,13 +76,13 @@ class TeslaCoilBlockEntity(
         if (lastHitTargetUuid != null) nbt.putUuid("LastHitTarget", lastHitTargetUuid!!)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         adjacentEnergyTransfer.tick()
 
-        val powered = state.get(Properties.POWERED)
+        val powered = state.get(BlockStateProperties.POWERED)
         if (!powered) {
             shotCooldown = 0
             lastHitTargetUuid = null
@@ -111,13 +111,13 @@ class TeslaCoilBlockEntity(
             return
         }
 
-        val serverWorld = world as? ServerWorld ?: run {
+        val serverWorld = world as? ServerLevel ?: run {
             sync.syncCurrentTickFlow()
             return
         }
-        val center = Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+        val center = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
         val range = 9.0
-        val box = Box(
+        val box = AABB(
             center.x - range, center.y - range, center.z - range,
             center.x + range, center.y + range, center.z + range
         )
@@ -159,14 +159,14 @@ class TeslaCoilBlockEntity(
         sync.syncCurrentTickFlow()
     }
 
-    private fun createTeslaDamageSource(world: ServerWorld): DamageSource {
-        val registry = world.registryManager.get(RegistryKeys.DAMAGE_TYPE)
-        val key = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("ic2_120", "tesla_coil"))
+    private fun createTeslaDamageSource(world: ServerLevel): DamageSource {
+        val registry = world.registryManager.get(Registries.DAMAGE_TYPE)
+        val key = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.of("ic2_120", "tesla_coil"))
         val entry = registry.getEntry(key).orElseThrow { IllegalStateException("Tesla coil damage type not registered") }
         return DamageSource(entry)
     }
 
-    private fun damageArmorDurability(world: World, entity: LivingEntity, min: Int, max: Int) {
+    private fun damageArmorDurability(world: Level, entity: LivingEntity, min: Int, max: Int) {
         val amount = if (min >= max) min else world.random.nextBetween(min, max)
         for (slot in EquipmentSlot.entries) {
             if (slot.type != EquipmentSlot.Type.ARMOR) continue

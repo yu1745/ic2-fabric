@@ -2,9 +2,9 @@ package ic2_120.client.colorprovider
 
 import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
-import net.minecraft.client.color.world.BiomeColors
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.client.renderer.BiomeColors
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 //todo 目前橡胶树叶还是不够显眼，这是有问题的，不好找
 
@@ -22,8 +22,8 @@ object RubberLeavesColorProvider {
     private const val DEFAULT_RUBBER_LEAVES_COLOR = 0xc4b848
 
     fun register() {
-        val block = Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "rubber_leaves"))
-        val item = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "rubber_leaves"))
+        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.of(Ic2_120.MOD_ID, "rubber_leaves"))
+        val item = BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "rubber_leaves"))
 
         ColorProviderRegistry.BLOCK.register({ _, world, pos, _ ->
             if (world != null && pos != null) {

@@ -9,36 +9,36 @@ import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.Sprite
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluids
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = GeoGeneratorBlock::class)
 class GeoGeneratorScreen(
     handler: GeoGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<GeoGeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<GeoGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 161
     }
 
-    private val lavaSprite: Sprite? by lazy {
+    private val lavaSprite: TextureAtlasSprite? by lazy {
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.LAVA) ?: return@lazy null
         handler.getFluidSprites(null, null, Fluids.LAVA.defaultState)?.getOrNull(0)
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -84,22 +84,22 @@ class GeoGeneratorScreen(
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
             context.drawTooltip(textRenderer,
-                listOf(Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
+                listOf(Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
                 mouseX, mouseY)
         }
         if (relX in LAVA_BAR_X until LAVA_BAR_X + LAVA_BAR_W &&
             relY in LAVA_BAR_Y until LAVA_BAR_Y + LAVA_BAR_H
         ) {
             val lavaLines = if (lavaMb > 0) {
-                listOf(Text.translatable("gui.ic2_120.geo_generator.lava_tooltip", "%,d".format(lavaMb / DROPLETS_PER_MB), "%,d".format(lavaCapMb / DROPLETS_PER_MB)))
+                listOf(Component.translatable("gui.ic2_120.geo_generator.lava_tooltip", "%,d".format(lavaMb / DROPLETS_PER_MB), "%,d".format(lavaCapMb / DROPLETS_PER_MB)))
             } else {
-                listOf(Text.translatable("ic2.generic.text.empty"))
+                listOf(Component.translatable("ic2.generic.text.empty"))
             }
             context.drawTooltip(textRenderer, lavaLines, mouseX, mouseY)
         }
     }
 
-    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawEnergyGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 24
         val barH = 16
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
@@ -110,7 +110,7 @@ class GeoGeneratorScreen(
     }
 
     /** 自下而上平铺流体纹理 + 流体颜色着色 */
-    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, sprite: Sprite?, fluid: net.minecraft.fluid.Fluid) {
+    private fun drawFluidTank(context: GuiGraphics, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, sprite: TextureAtlasSprite?, fluid: net.minecraft.world.level.material.Fluid) {
         val fillH = (fraction.coerceIn(0f, 1f) * h).toInt()
         if (fillH <= 0) return
         val fillY = gy + h - fillH
@@ -134,7 +134,7 @@ class GeoGeneratorScreen(
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val LAVA_TANK_DROPLETS = (FluidConstants.BUCKET * 8).toInt()
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiheatsourcegenerator.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiheatsourcegenerator.png")
         private const val ENERGY_BAR_X = 120
         private const val ENERGY_BAR_Y = 19
         private const val ENERGY_BAR_W = 24

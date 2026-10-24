@@ -16,24 +16,24 @@ import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(block = FluidHeatExchangerBlock::class, inventorySize = FluidHeatExchangerBlockEntity.INVENTORY_SIZE)
 class FluidHeatExchangerScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    private val blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(FluidHeatExchangerScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(FluidHeatExchangerScreenHandler::class.type(), syncId) {
 
     private val syncedView = SyncedDataView(propertyDelegate)
     private val heatFlow = HeatFlowSync(
@@ -102,7 +102,7 @@ class FluidHeatExchangerScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (!slot.hasStack()) return stack
@@ -150,7 +150,7 @@ class FluidHeatExchangerScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is FluidHeatExchangerBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -173,21 +173,21 @@ class FluidHeatExchangerScreenHandler(
         private val EXCHANGER_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack ->
-                !stack.isEmpty && net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier.of("ic2_120", "heat_conductor")
+                !stack.isEmpty && net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item) == net.minecraft.resources.ResourceLocation.of("ic2_120", "heat_conductor")
             }
         )
 
         private val INPUT_FILLED_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
                 when {
-                    stack.item == net.minecraft.item.Items.LAVA_BUCKET -> true
+                    stack.item == net.minecraft.world.item.Items.LAVA_BUCKET -> true
                     stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier.of("ic2_120", "lava_cell") -> true
-                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier.of("ic2_120", "hot_coolant_cell") -> true
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item) == net.minecraft.resources.ResourceLocation.of("ic2_120", "lava_cell") -> true
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item) == net.minecraft.resources.ResourceLocation.of("ic2_120", "hot_coolant_cell") -> true
                     stack.item is FluidCellItem -> {
                         val fluid = stack.getFluidCellVariant()?.fluid
-                        fluid == net.minecraft.fluid.Fluids.LAVA ||
-                            fluid == net.minecraft.fluid.Fluids.FLOWING_LAVA ||
+                        fluid == net.minecraft.world.level.material.Fluids.LAVA ||
+                            fluid == net.minecraft.world.level.material.Fluids.FLOWING_LAVA ||
                             fluid == ModFluids.HOT_COOLANT_STILL ||
                             fluid == ModFluids.HOT_COOLANT_FLOWING
                     }
@@ -198,8 +198,8 @@ class FluidHeatExchangerScreenHandler(
 
         private val OUTPUT_EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
-                stack.item == net.minecraft.item.Items.BUCKET ||
-                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier.of("ic2_120", "empty_cell") ||
+                stack.item == net.minecraft.world.item.Items.BUCKET ||
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item) == net.minecraft.resources.ResourceLocation.of("ic2_120", "empty_cell") ||
                     (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             }
         )

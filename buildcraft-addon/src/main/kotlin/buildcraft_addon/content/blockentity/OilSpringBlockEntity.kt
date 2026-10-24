@@ -3,11 +3,11 @@ package buildcraft_addon.content.blockentity
 import buildcraft_addon.content.block.SpringBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.BlockPos
 
 @ModBlockEntity(block = SpringBlock::class)
 class OilSpringBlockEntity(
@@ -32,12 +32,12 @@ class OilSpringBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putInt("totalSources", totalSources)
-        val progressList = NbtCompound()
+        val progressList = CompoundTag()
         pumpProgress.forEach { (uuid, info) ->
-            val entry = NbtCompound()
+            val entry = CompoundTag()
             entry.putString("name", info.playerName)
             entry.putInt("pumped", info.sourcesPumped)
             entry.putLong("lastTime", info.lastPumpTime)
@@ -46,7 +46,7 @@ class OilSpringBlockEntity(
         nbt.put("pumpProgress", progressList)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         totalSources = nbt.getInt("totalSources")
         pumpProgress.clear()

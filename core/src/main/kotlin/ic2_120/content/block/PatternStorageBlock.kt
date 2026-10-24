@@ -15,30 +15,30 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.state.StateManager
-import net.minecraft.text.Text
-import net.minecraft.inventory.Inventory
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.ItemScatterer
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.BlockView
-import net.minecraft.world.World
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.network.chat.Component
+import net.minecraft.world.Container
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.InteractionResult
+import net.minecraft.ChatFormatting
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.Containers
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 @ModBlock(name = "pattern_storage", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
@@ -51,47 +51,47 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         PatternStorageBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? = null
 
     override fun createScreenHandlerFactory(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos
-    ): net.minecraft.screen.NamedScreenHandlerFactory? =
-        world.getBlockEntity(pos) as? net.minecraft.screen.NamedScreenHandlerFactory
+    ): net.minecraft.world.MenuProvider? =
+        world.getBlockEntity(pos) as? net.minecraft.world.MenuProvider
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
+    ): InteractionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     @Environment(EnvType.CLIENT)
     override fun appendTooltip(
         stack: ItemStack,
-        world: BlockView?,
-        tooltip: MutableList<Text>,
+        world: BlockGetter?,
+        tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
         val blockEntityTag = stack.getSubNbt("BlockEntityTag")
         val templateCount = blockEntityTag?.getList("UuTemplates", 10)?.size ?: 0
-        tooltip.add(Text.literal("模板数量: $templateCount").formatted(Formatting.GRAY))
+        tooltip.add(Component.literal("模板数量: $templateCount").formatted(ChatFormatting.GRAY))
     }
 
-    override fun getPickStack(world: BlockView, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getPickStack(world: BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getPickStack(world, pos, state)
         val blockEntity = world.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
         val nbt = blockEntity.createNbt()
@@ -102,25 +102,25 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStacksDropped(state: BlockState, world: ServerWorld, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
+    override fun onStacksDropped(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
         super.onStacksDropped(state, world, pos, tool, dropExperience)
-        val be = world.getBlockEntity(pos) as? Inventory ?: return
-        ItemScatterer.spawn(world, pos, be)
+        val be = world.getBlockEntity(pos) as? Container ?: return
+        Containers.spawn(world, pos, be)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
         super.getPlacementState(ctx)
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val crystalMemory = CrystalMemory::class.instance()
             val reinforcedStone = ReinforcedStoneBlock::class.item()
             val miningLaser = MiningLaserItem::class.instance()
             val advancedCircuit = AdvancedCircuit::class.instance()
             if (advancedMachine != Items.AIR && crystalMemory != Items.AIR && reinforcedStone != Items.AIR && miningLaser != Items.AIR && advancedCircuit != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PatternStorageBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, PatternStorageBlock::class.item(), 1)
                     .pattern("SSS")
                     .pattern("CMC")
                     .pattern("LAL")

@@ -6,48 +6,48 @@ import buildcraft_addon.content.block.SpringType
 import buildcraft_addon.content.blockentity.OilSpringBlockEntity
 import buildcraft_addon.content.fluid.ModFluids
 import com.mojang.serialization.Codec
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.fluid.Fluids
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.Heightmap
-import net.minecraft.world.StructureWorldAccess
-import net.minecraft.world.gen.feature.ConfiguredFeature
-import net.minecraft.world.gen.feature.DefaultFeatureConfig
-import net.minecraft.world.gen.feature.Feature
-import net.minecraft.world.gen.feature.PlacedFeature
-import net.minecraft.world.gen.feature.util.FeatureContext
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.levelgen.Heightmap
+import net.minecraft.world.level.WorldGenLevel
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration
+import net.minecraft.world.level.levelgen.feature.Feature
+import net.minecraft.world.level.levelgen.placement.PlacedFeature
+import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext
 
 object ModWorldgen {
 
-    lateinit var WATER_SPRING_FEATURE: Feature<DefaultFeatureConfig>
-    lateinit var OIL_WELL_FEATURE: Feature<DefaultFeatureConfig>
+    lateinit var WATER_SPRING_FEATURE: Feature<NoneFeatureConfiguration>
+    lateinit var OIL_WELL_FEATURE: Feature<NoneFeatureConfiguration>
 
-    val WATER_SPRING_CONFIGURED_KEY: RegistryKey<ConfiguredFeature<*, *>> =
-        RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, BuildCraftAddon.id("water_spring"))
-    val OIL_WELL_CONFIGURED_KEY: RegistryKey<ConfiguredFeature<*, *>> =
-        RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, BuildCraftAddon.id("oil_well"))
+    val WATER_SPRING_CONFIGURED_KEY: ResourceKey<ConfiguredFeature<*, *>> =
+        ResourceKey.of(Registries.CONFIGURED_FEATURE, BuildCraftAddon.id("water_spring"))
+    val OIL_WELL_CONFIGURED_KEY: ResourceKey<ConfiguredFeature<*, *>> =
+        ResourceKey.of(Registries.CONFIGURED_FEATURE, BuildCraftAddon.id("oil_well"))
 
-    val WATER_SPRING_PLACED_KEY: RegistryKey<PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, BuildCraftAddon.id("water_spring"))
-    val OIL_WELL_PLACED_KEY: RegistryKey<PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, BuildCraftAddon.id("oil_well"))
+    val WATER_SPRING_PLACED_KEY: ResourceKey<PlacedFeature> =
+        ResourceKey.of(Registries.PLACED_FEATURE, BuildCraftAddon.id("water_spring"))
+    val OIL_WELL_PLACED_KEY: ResourceKey<PlacedFeature> =
+        ResourceKey.of(Registries.PLACED_FEATURE, BuildCraftAddon.id("oil_well"))
 
     fun register() {
         WATER_SPRING_FEATURE = Registry.register(
-            Registries.FEATURE, BuildCraftAddon.id("water_spring"),
-            WaterSpringFeature(DefaultFeatureConfig.CODEC)
+            BuiltInRegistries.FEATURE, BuildCraftAddon.id("water_spring"),
+            WaterSpringFeature(NoneFeatureConfiguration.CODEC)
         )
         OIL_WELL_FEATURE = Registry.register(
-            Registries.FEATURE, BuildCraftAddon.id("oil_well"),
-            OilWellFeature(DefaultFeatureConfig.CODEC)
+            BuiltInRegistries.FEATURE, BuildCraftAddon.id("oil_well"),
+            OilWellFeature(NoneFeatureConfiguration.CODEC)
         )
         BuildCraftAddon.LOGGER.info("BuildCraft worldgen registered")
     }
@@ -55,9 +55,9 @@ object ModWorldgen {
 
 // ========== Water Spring ==========
 
-class WaterSpringFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatureConfig>(codec) {
+class WaterSpringFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatureConfiguration>(codec) {
 
-    override fun generate(context: FeatureContext<DefaultFeatureConfig>): Boolean {
+    override fun generate(context: FeaturePlaceContext<NoneFeatureConfiguration>): Boolean {
         val world = context.world
         val origin = context.origin
         val random = context.random
@@ -74,7 +74,7 @@ class WaterSpringFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFe
             val pos = BlockPos(x, y, z)
             if (world.getBlockState(pos).isOf(Blocks.BEDROCK)) {
                 val springPos = pos.up()
-                val springBlock = Registries.BLOCK.get(BuildCraftAddon.id("spring"))
+                val springBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("spring"))
                 world.setBlockState(springPos,
                     springBlock.defaultState.with(SpringBlock.SPRING_TYPE, SpringType.WATER),
                     Block.NOTIFY_ALL)
@@ -93,7 +93,7 @@ class WaterSpringFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFe
 
 // ========== Oil Well - 1:1 BC 原版 ==========
 
-class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatureConfig>(codec) {
+class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatureConfiguration>(codec) {
 
     companion object {
         private val MAGIC_GEN_NUMBER = 0xD046B4E40C7D07CFuL.toLong()
@@ -128,7 +128,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
 
     private enum class GenType { LARGE, MEDIUM, LAKE, NONE }
 
-    override fun generate(context: FeatureContext<DefaultFeatureConfig>): Boolean {
+    override fun generate(context: FeaturePlaceContext<NoneFeatureConfiguration>): Boolean {
         val world = context.world
         val origin = context.origin
 
@@ -136,7 +136,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
         val chunkZ = origin.z shr 4
 
         // BC: 排除维度
-        if (world is net.minecraft.world.World) {
+        if (world is net.minecraft.world.level.Level) {
             val dimId = world.registryKey.value
             if (dimId.toString().contains("the_nether") || dimId.toString().contains("the_end")) return false
         }
@@ -154,19 +154,19 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
         return true
     }
 
-    private fun generateAt(world: StructureWorldAccess, cx: Int, cz: Int, genMin: BlockPos, genMax: BlockPos, isCenter: Boolean = false) {
+    private fun generateAt(world: WorldGenLevel, cx: Int, cz: Int, genMin: BlockPos, genMax: BlockPos, isCenter: Boolean = false) {
         // BC: 确定性随机（同种子同坐标必出相同结构）
-        // StructureWorldAccess 运行时为 ServerWorld，可安全访问种子
-        val wSeed = if (world is net.minecraft.world.World) world.seed else 0L
+        // WorldGenLevel 运行时为 ServerLevel，可安全访问种子
+        val wSeed = if (world is net.minecraft.world.level.Level) world.seed else 0L
         val chunkSeed = cx.toLong() * 341873128712L + cz.toLong() * 132897987541L
-        val rand = Random.create(wSeed xor chunkSeed xor MAGIC_GEN_NUMBER)
+        val rand = RandomSource.create(wSeed xor chunkSeed xor MAGIC_GEN_NUMBER)
 
         val x = cx * 16 + 8 + rand.nextInt(16)
         val z = cz * 16 + 8 + rand.nextInt(16)
 
         // BC: 排除末地中心岛
         val dim = world.dimension
-        if (dim == net.minecraft.world.World.END && (Math.abs(x) < 1200 || Math.abs(z) < 1200)) return
+        if (dim == net.minecraft.world.level.Level.END && (Math.abs(x) < 1200 || Math.abs(z) < 1200)) return
 
         // BC: 按生物群系 + 噪声斑块计算概率加成
         val biomeKey = world.getBiome(BlockPos(x, 0, z)).key
@@ -180,7 +180,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
             if (isDesert || isOcean) {
                 // 缓存噪声偏移量（基于世界种子，同种子同偏移，匹配 BC GenLayerBiomeReplacer）
                 if (cachedNoiseSeed != wSeed) {
-                    val randOff = java.util.Random(wSeed)
+                    val randOff = java.util.RandomSource(wSeed)
                     noiseXOff = randOff.nextInt(OFFSET_RANGE) - OFFSET_RANGE / 2
                     noiseZOff = randOff.nextInt(OFFSET_RANGE) - OFFSET_RANGE / 2
                     cachedNoiseSeed = wSeed
@@ -263,7 +263,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
 
     // ========== 触须生成（BC 原版 1:1） ==========
 
-    private fun createTendrilPattern(rand: Random, lakeRadius: Int, radius: Int): Array<BooleanArray> {
+    private fun createTendrilPattern(rand: RandomSource, lakeRadius: Int, radius: Int): Array<BooleanArray> {
         val diameter = radius * 2 + 1
         val pattern = Array(diameter) { BooleanArray(diameter) }
         val cx = radius
@@ -301,7 +301,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
         return pattern
     }
 
-    private fun fillPattern(rand: Random, proba: Float, x: Int, z: Int, pattern: Array<BooleanArray>) {
+    private fun fillPattern(rand: RandomSource, proba: Float, x: Int, z: Int, pattern: Array<BooleanArray>) {
         if (rand.nextFloat() <= proba) {
             pattern[x][z] = isPatternSet(pattern, x, z - 1) ||
                     isPatternSet(pattern, x, z + 1) ||
@@ -317,7 +317,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
     }
 
     private fun generateTendril(
-        world: StructureWorldAccess, pattern: Array<BooleanArray>,
+        world: WorldGenLevel, pattern: Array<BooleanArray>,
         startPos: BlockPos, depth: Int, min: BlockPos, max: BlockPos
     ): Int {
         var count = 0
@@ -351,7 +351,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
 
     // ========== 球体（BC 原版 1:1） ==========
 
-    private fun generateSphere(world: StructureWorldAccess, center: BlockPos, radius: Int, min: BlockPos, max: BlockPos): Int {
+    private fun generateSphere(world: WorldGenLevel, center: BlockPos, radius: Int, min: BlockPos, max: BlockPos): Int {
         var count = 0
         val radiusSq = radius * radius + 0.01
         for (dx in -radius..radius) {
@@ -372,7 +372,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
 
     // ========== 喷口（BC 原版 1:1） ==========
 
-    private fun generateSpout(world: StructureWorldAccess, start: BlockPos, height: Int, radius: Int, min: BlockPos, max: BlockPos): Int {
+    private fun generateSpout(world: WorldGenLevel, start: BlockPos, height: Int, radius: Int, min: BlockPos, max: BlockPos): Int {
         // BC: 使用高度图找到地表（从顶向下，与 BC 原版一致）
         val surfaceY = world.getTopY(Heightmap.Type.WORLD_SURFACE_WG, start.x, start.z) - 1
         if (surfaceY <= start.y) return 0
@@ -392,7 +392,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
 
     // ========== 管道/柱体 ==========
 
-    private fun generateTube(world: StructureWorldAccess, start: BlockPos, length: Int, radius: Int, min: BlockPos, max: BlockPos): Int {
+    private fun generateTube(world: WorldGenLevel, start: BlockPos, length: Int, radius: Int, min: BlockPos, max: BlockPos): Int {
         var count = 0
         val rsq = radius * radius
         for (dy in 0..length) {
@@ -413,8 +413,8 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
 
     // ========== Spring 放置 ==========
 
-    private fun placeOilSpring(world: StructureWorldAccess, pos: BlockPos, totalOilCount: Int) {
-        val springBlock = Registries.BLOCK.get(BuildCraftAddon.id("spring"))
+    private fun placeOilSpring(world: WorldGenLevel, pos: BlockPos, totalOilCount: Int) {
+        val springBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("spring"))
         world.setBlockState(pos, springBlock.defaultState.with(SpringBlock.SPRING_TYPE, SpringType.OIL), Block.NOTIFY_ALL)
 
         // BC: 设置 totalSources 供抽油泵系统使用
@@ -426,7 +426,7 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
 
     // ========== 工具方法 ==========
 
-    private fun canReplaceForOil(world: StructureWorldAccess, pos: BlockPos): Boolean {
+    private fun canReplaceForOil(world: WorldGenLevel, pos: BlockPos): Boolean {
         // BC: ReplaceType.ALWAYS — 无条件替换任何方块（含矿石、tuff、granite、流体等）
         return true
     }

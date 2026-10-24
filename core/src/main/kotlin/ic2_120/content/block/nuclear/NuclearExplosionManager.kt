@@ -1,8 +1,8 @@
 package ic2_120.content.block.nuclear
 
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.core.BlockPos
 import org.slf4j.LoggerFactory
 
 /**
@@ -26,10 +26,10 @@ object NuclearExplosionManager {
      * @param onComplete 爆炸全部完成后在主线程执行的回调，参数为该爆炸实例
      */
     fun startExplosion(
-        world: ServerWorld,
+        world: ServerLevel,
         cx: Double, cy: Double, cz: Double,
         power: Float,
-        damageSource: net.minecraft.entity.damage.DamageSource,
+        damageSource: net.minecraft.world.damagesource.DamageSource,
         ownerUuid: java.util.UUID? = null,
         onComplete: ((NuclearExplosion) -> Unit)? = null
     ) {

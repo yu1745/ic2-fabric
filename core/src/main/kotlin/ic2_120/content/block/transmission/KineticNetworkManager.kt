@@ -1,17 +1,17 @@
 package ic2_120.content.block.transmission
 
-import net.minecraft.block.BlockState
-import net.minecraft.registry.RegistryKey
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 object KineticNetworkManager {
-    private val worldPosToNetwork = mutableMapOf<RegistryKey<World>, MutableMap<Long, KineticNetwork>>()
+    private val worldPosToNetwork = mutableMapOf<ResourceKey<Level>, MutableMap<Long, KineticNetwork>>()
 
-    private fun mapFor(world: World): MutableMap<Long, KineticNetwork> =
+    private fun mapFor(world: Level): MutableMap<Long, KineticNetwork> =
         worldPosToNetwork.getOrPut(world.registryKey) { mutableMapOf() }
 
-    fun tickAt(world: World, pos: BlockPos) {
+    fun tickAt(world: Level, pos: BlockPos) {
         if (world.isClient) return
         val state = world.getBlockState(pos)
         if (!KineticConnectionRules.isTransmissionNode(state)) return
@@ -19,14 +19,14 @@ object KineticNetworkManager {
         network.tickIfNeeded(world)
     }
 
-    fun getNodeKu(world: World, pos: BlockPos): Int {
+    fun getNodeKu(world: Level, pos: BlockPos): Int {
         if (world.isClient) return 0
         val state = world.getBlockState(pos)
         if (!KineticConnectionRules.isTransmissionNode(state)) return 0
         return getOrCreateNetwork(world, pos).getNodeKu(world, pos)
     }
 
-    fun invalidateAt(world: World, pos: BlockPos) {
+    fun invalidateAt(world: Level, pos: BlockPos) {
         val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
         for (node in network.nodes) {
@@ -35,23 +35,23 @@ object KineticNetworkManager {
         }
     }
 
-    fun invalidateConnectionCachesAt(world: World, pos: BlockPos) {
+    fun invalidateConnectionCachesAt(world: Level, pos: BlockPos) {
         val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
         network.invalidateConnectionCaches()
     }
 
-    fun onWorldUnload(world: World) {
+    fun onWorldUnload(world: Level) {
         worldPosToNetwork.remove(world.registryKey)
     }
 
-    private fun getOrCreateNetwork(world: World, start: BlockPos): KineticNetwork {
+    private fun getOrCreateNetwork(world: Level, start: BlockPos): KineticNetwork {
         val posToNetwork = mapFor(world)
         posToNetwork[start.asLong()]?.let { return it }
         return buildNetwork(world, start, posToNetwork)
     }
 
-    private fun buildNetwork(world: World, start: BlockPos, posToNetwork: MutableMap<Long, KineticNetwork>): KineticNetwork {
+    private fun buildNetwork(world: Level, start: BlockPos, posToNetwork: MutableMap<Long, KineticNetwork>): KineticNetwork {
         val network = KineticNetwork()
         val visited = mutableSetOf<Long>()
         val queue = ArrayDeque<BlockPos>()
@@ -96,6 +96,6 @@ object KineticNetworkManager {
         return KineticConnectionRules.isTransmissionNode(state)
     }
 
-    fun canConnectFromDirection(state: BlockState, fromDirection: net.minecraft.util.math.Direction): Boolean =
+    fun canConnectFromDirection(state: BlockState, fromDirection: net.minecraft.core.Direction): Boolean =
         KineticConnectionRules.canConnectFromDirection(state, fromDirection)
 }

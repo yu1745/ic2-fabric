@@ -10,16 +10,16 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.Fluids
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.Items
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.Container
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import java.util.WeakHashMap
 import kotlin.math.min
 import kotlin.math.pow
@@ -31,16 +31,16 @@ object FluidPipeUpgradeComponent {
     private const val NBT_DIRECTIONS = "PipeFluidDirections"
 
     private data class ApplyCache(val stacks: Array<ItemStack>)
-    private val applyCache = WeakHashMap<Inventory, ApplyCache>()
+    private val applyCache = WeakHashMap<Container, ApplyCache>()
 
     /**
-     * 统一入口：机器同时具备 Inventory 与 IFluidPipeUpgradeSupport 时，按升级槽应用流体管道升级。
+     * 统一入口：机器同时具备 Container 与 IFluidPipeUpgradeSupport 时，按升级槽应用流体管道升级。
      */
-    fun <T> apply(machine: T, upgradeSlotIndices: IntArray) where T : Inventory, T : IFluidPipeUpgradeSupport {
-        apply(machine as Inventory, upgradeSlotIndices, machine as Any)
+    fun <T> apply(machine: T, upgradeSlotIndices: IntArray) where T : Container, T : IFluidPipeUpgradeSupport {
+        apply(machine as Container, upgradeSlotIndices, machine as Any)
     }
 
-    fun apply(inventory: Inventory, upgradeSlotIndices: IntArray, machine: Any) {
+    fun apply(inventory: Container, upgradeSlotIndices: IntArray, machine: Any) {
         if (machine !is IFluidPipeUpgradeSupport) return
 
         val cached = applyCache[inventory]
@@ -92,8 +92,8 @@ object FluidPipeUpgradeComponent {
         val nbt = stack.nbt ?: return null
         val raw = nbt.getString(NBT_FILTER)
         if (raw.isNullOrBlank()) return null
-        val id = Identifier.tryParse(raw) ?: return null
-        return if (Registries.FLUID.containsId(id)) Registries.FLUID.get(id) else null
+        val id = ResourceLocation.tryParse(raw) ?: return null
+        return if (BuiltInRegistries.FLUID.containsId(id)) BuiltInRegistries.FLUID.get(id) else null
     }
 
     fun writeFilter(stack: ItemStack, fluid: Fluid?) {
@@ -102,7 +102,7 @@ object FluidPipeUpgradeComponent {
             nbt.remove(NBT_FILTER)
             return
         }
-        val id = Registries.FLUID.getId(fluid)
+        val id = BuiltInRegistries.FLUID.getId(fluid)
         if (id.path != "empty") {
             nbt.putString(NBT_FILTER, id.toString())
         } else {
@@ -112,7 +112,7 @@ object FluidPipeUpgradeComponent {
 
     fun readDirections(stack: ItemStack): Set<Direction> {
         val nbt = stack.nbt ?: return emptySet()
-        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.NbtElement.STRING_TYPE.toInt())
+        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.STRING_TYPE.toInt())
         if (list.isEmpty()) return emptySet()
         return list.mapNotNull { Direction.byName(it.asString()) }.toSet()
     }
@@ -123,7 +123,7 @@ object FluidPipeUpgradeComponent {
             nbt.remove(NBT_DIRECTIONS)
             return
         }
-        val list = net.minecraft.nbt.NbtList()
+        val list = net.minecraft.nbt.ListTag()
         for (side in sides) {
             list.add(net.minecraft.nbt.NbtString.of(side.name.lowercase()))
         }
@@ -137,7 +137,7 @@ object FluidPipeUpgradeComponent {
      * @param upgradeCount 该机器上 fluid_ejector_upgrade 的数量（决定速率）
      */
     fun ejectFluidToNeighbors(
-        world: World,
+        world: Level,
         pos: BlockPos,
         tank: SingleVariantStorage<FluidVariant>,
         filter: Fluid?,
@@ -194,7 +194,7 @@ object FluidPipeUpgradeComponent {
      * @param upgradeCount 该机器上 fluid_pulling_upgrade 的数量（决定速率）
      */
     fun pullFluidFromNeighbors(
-        world: World,
+        world: Level,
         pos: BlockPos,
         tank: Storage<FluidVariant>,
         filter: Fluid?,

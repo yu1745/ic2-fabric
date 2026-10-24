@@ -1,9 +1,9 @@
 package ic2_120.content.item.energy
 
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.world.World
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.Level
 
 /**
  * 无线充电电池基类
@@ -27,14 +27,14 @@ abstract class WirelessBatteryItemBase(
 ) {
     override fun inventoryTick(
         stack: ItemStack,
-        world: World,
+        world: Level,
         entity: Entity,
         slot: Int,
         selected: Boolean
     ) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         autoChargeEquipment(stack, player)
     }
 
@@ -49,7 +49,7 @@ abstract class WirelessBatteryItemBase(
      * @return 实际充入所有目标的电量总和（EU）
      */
     fun chargeEquipment(
-        player: net.minecraft.entity.player.PlayerEntity,
+        player: net.minecraft.world.entity.player.Player,
         amount: Long
     ): Long {
         var remaining = amount
@@ -85,7 +85,7 @@ abstract class WirelessBatteryItemBase(
     /**
      * 自动给背包内符合条件的 [IElectricTool] 充电（每 tick 使用 [nominalEuPerTick] 作为本帧上限）。
      */
-    fun autoChargeEquipment(stack: net.minecraft.item.ItemStack, player: net.minecraft.entity.player.PlayerEntity) {
+    fun autoChargeEquipment(stack: net.minecraft.world.item.ItemStack, player: net.minecraft.world.entity.player.Player) {
         if (!canChargeWireless) return
         // 堆叠的无线电池不能触发充电，避免多耗电（N 倍于堆叠数）
         if (stack.count > 1) return

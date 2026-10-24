@@ -15,12 +15,12 @@ import ic2_120.content.network.SemifluidGeneratorFuelStatePacket
 import ic2_120.client.screen.ScannerScreen
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-import net.minecraft.client.MinecraftClient
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft
+import net.minecraft.resources.ResourceLocation
 
 object NetworkManager {
-    private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
-    private val REACTOR_LAYOUT_LOCK_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_layout_lock")
+    private val REACTOR_HEAT_INFO_PACKET = ResourceLocation(Ic2_120.MOD_ID, "reactor_heat_info")
+    private val REACTOR_LAYOUT_LOCK_PACKET = ResourceLocation(Ic2_120.MOD_ID, "reactor_layout_lock")
     private val WIND_ROTOR_STATE_PACKET = WindRotorStatePacket.ID
     private val WATER_ROTOR_STATE_PACKET = WaterRotorStatePacket.ID
     

@@ -1,11 +1,11 @@
 package ic2_120.content.reactor
 
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.world.World
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.world.level.Level
 
 /**
  * 带耐久/热容的反应堆组件。使用 NBT "use" 存储热量，
@@ -81,9 +81,9 @@ abstract class AbstractDamageableReactorComponent(
         return (13.0 * remaining).toInt().coerceIn(0, 13)
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
         val remaining = maxUse - getUse(stack)
-        tooltip.add(Text.translatable("tooltip.ic2_120.reactor_durability", remaining, maxUse).formatted(Formatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.reactor_durability", remaining, maxUse).formatted(ChatFormatting.GRAY))
     }
 }

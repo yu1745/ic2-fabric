@@ -1,14 +1,14 @@
 package ic2_120.content.recipes.blastfurnace
 
-import net.minecraft.item.ItemStack
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.Recipe
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.RecipeType
-import net.minecraft.recipe.book.CraftingRecipeCategory
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.world.item.crafting.CraftingBookCategory
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.Level
 
 /**
  * 高炉配方：铁质材料 → 钢锭 + 炉渣
@@ -16,21 +16,21 @@ import net.minecraft.world.World
  * 配方处理物品转换，压缩空气在运行时由机器单独消耗（每1000 ticks 1瓶）。
  */
 class BlastFurnaceRecipe(
-    private val id: Identifier,
+    private val id: ResourceLocation,
     val ingredient: Ingredient,
     val steelOutput: ItemStack,
     val slagOutput: ItemStack
 ) : Recipe<BlastFurnaceRecipe.Input> {
 
-    override fun matches(inventory: Input, world: World): Boolean {
+    override fun matches(inventory: Input, world: Level): Boolean {
         return ingredient.test(inventory.getStack(0))
     }
 
-    override fun craft(inventory: Input, registry: net.minecraft.registry.DynamicRegistryManager): ItemStack {
+    override fun craft(inventory: Input, registry: net.minecraft.core.RegistryAccess): ItemStack {
         return steelOutput.copy()
     }
 
-    override fun getId(): Identifier = id
+    override fun getId(): ResourceLocation = id
 
     override fun getSerializer(): RecipeSerializer<*> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(BlastFurnaceRecipe::class)
 
@@ -38,16 +38,16 @@ class BlastFurnaceRecipe(
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getOutput(registry: net.minecraft.registry.DynamicRegistryManager): ItemStack = steelOutput.copy()
+    override fun getOutput(registry: net.minecraft.core.RegistryAccess): ItemStack = steelOutput.copy()
 
-    override fun getRemainder(inventory: Input): net.minecraft.util.collection.DefaultedList<ItemStack> {
-        return net.minecraft.util.collection.DefaultedList.ofSize(1, ItemStack.EMPTY)
+    override fun getRemainder(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
+        return net.minecraft.core.NonNullList.ofSize(1, ItemStack.EMPTY)
     }
 
     /**
      * 简单输入容器，仅包含单个物品栈用于配方匹配
      */
-    class Input(val inputStack: ItemStack) : net.minecraft.inventory.Inventory {
+    class Input(val inputStack: ItemStack) : net.minecraft.world.Container {
         override fun getStack(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
 
         override fun size(): Int = 1
@@ -64,7 +64,7 @@ class BlastFurnaceRecipe(
 
         override fun markDirty() {}
 
-        override fun canPlayerUse(player: net.minecraft.entity.player.PlayerEntity): Boolean = true
+        override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = true
     }
 
     companion object {

@@ -11,27 +11,27 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import ic2_120.content.sync.MatterGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = MatterGeneratorBlock::class)
 class MatterGeneratorScreen(
-    handler: MatterGeneratorScreenHandler, playerInventory: PlayerInventory, title: Text
-) : HandledScreen<MatterGeneratorScreenHandler>(handler, playerInventory, title) {
+    handler: MatterGeneratorScreenHandler, playerInventory: Inventory, title: Component
+) : AbstractContainerScreen<MatterGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -70,20 +70,20 @@ class MatterGeneratorScreen(
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
             val amt = handler.sync.fluidAmount.coerceAtLeast(0)
             val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
-            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
-                        else listOf(Text.literal("空"))
+            val lines = if (amt > 0) listOf(Component.literal("UU物质"), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
+                        else listOf(Component.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
         // uptips悬停
         if (relX in 4 until 20 && relY in 4 until 20) {
             context.drawTooltip(textRenderer, listOf(
-                Text.translatable("gui.ic2_120.matter_generator.uptips"),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+                Component.translatable("gui.ic2_120.matter_generator.uptips"),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_pulling_upgrade"))
             ), mouseX, mouseY)
         }
 
@@ -92,14 +92,14 @@ class MatterGeneratorScreen(
             relY in SCRAP_WARNING_Y until SCRAP_WARNING_Y + 16
         ) {
             context.drawTooltip(textRenderer, listOf(
-                Text.translatable("gui.ic2_120.matter_generator.scrap_boost_disabled")
+                Component.translatable("gui.ic2_120.matter_generator.scrap_boost_disabled")
             ), mouseX, mouseY)
         }
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawFluidTank(context: DrawContext, left: Int, top: Int) {
+    private fun drawFluidTank(context: GuiGraphics, left: Int, top: Int) {
         val amt = handler.sync.fluidAmount.coerceAtLeast(0)
         if (amt <= 0) return
         val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
@@ -127,8 +127,8 @@ class MatterGeneratorScreen(
 
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guimattergenerator.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guimattergenerator.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
 
         private const val TANK_X = 100

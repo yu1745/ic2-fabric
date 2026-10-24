@@ -7,18 +7,18 @@ import ic2_120.content.screen.FluidHeatGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = FluidHeatGeneratorBlock::class)
 class FluidHeatGeneratorScreen(
     handler: FluidHeatGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<FluidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<FluidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
 
     private val fluidSprite by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.BIOFUEL_STILL)
@@ -30,11 +30,11 @@ class FluidHeatGeneratorScreen(
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -62,9 +62,9 @@ class FluidHeatGeneratorScreen(
         if (mouseX in x + 74 until x + 86 && mouseY in y + 24 until y + 70) {
             val fuelLines = if (fuelAmount > 0) {
                 val fuelAmountMb = fuelAmount / DROPLETS_PER_MB
-                listOf(Text.translatable("gui.ic2_120.fluid_heat_generator.fuel_tooltip", "%,d".format(fuelAmountMb), "8,000"))
+                listOf(Component.translatable("gui.ic2_120.fluid_heat_generator.fuel_tooltip", "%,d".format(fuelAmountMb), "8,000"))
             } else {
-                listOf(Text.translatable("ic2.generic.text.empty"))
+                listOf(Component.translatable("ic2.generic.text.empty"))
             }
             context.drawTooltip(textRenderer, fuelLines, mouseX, mouseY)
         }
@@ -72,7 +72,7 @@ class FluidHeatGeneratorScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, fuelAmount: Int) {
+    private fun drawFluidTank(context: GuiGraphics, gx: Int, gy: Int, fuelAmount: Int) {
         val tankW = 12
         val tankH = 46
         val tankCap = FluidConstants.BUCKET * 8
@@ -96,7 +96,7 @@ class FluidHeatGeneratorScreen(
         context.disableScissor()
     }
 
-    private fun drawScaledText(context: DrawContext, text: String, rx: Int, ry: Int, rw: Int, height: Float = 7f) {
+    private fun drawScaledText(context: GuiGraphics, text: String, rx: Int, ry: Int, rw: Int, height: Float = 7f) {
         val scale = height / textRenderer.fontHeight
         val scaledWidth = (textRenderer.getWidth(text) * scale).toInt()
         val scaledHeight = (textRenderer.fontHeight * scale).toInt()
@@ -110,7 +110,7 @@ class FluidHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiliquidheatingmachine.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiliquidheatingmachine.png")
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
     }
 }

@@ -2,12 +2,12 @@ package ic2_120.content.block
 
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 /**
  * 橡胶原木方块实体。仅记录各面提取时间戳供 Jade 显示，不参与恢复逻辑
@@ -41,14 +41,14 @@ class RubberLogBlockEntity(
         return if (i >= 0) extractedAt[i] else 0L
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         for (i in 0..3) {
             extractedAt[i] = nbt.getLong("extracted_$i")
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         for (i in 0..3) {
             nbt.putLong("extracted_$i", extractedAt[i])

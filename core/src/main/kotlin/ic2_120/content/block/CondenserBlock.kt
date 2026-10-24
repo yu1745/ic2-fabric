@@ -10,22 +10,22 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 @ModBlock(name = "condenser", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "machine")
@@ -36,7 +36,7 @@ class CondenserBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         CondenserBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -45,46 +45,46 @@ class CondenserBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
             be.tick(w, p, s)
         }
 
-    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
         super.getPlacementState(ctx)?.with(ACTIVE, false)
 
-    override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
+    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): net.minecraft.world.MenuProvider? {
         val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+        return be as? net.minecraft.world.MenuProvider
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
+    ): InteractionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
             }
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val ironCasing = ic2_120.content.item.IronCasing::class.instance()
             val heatVent = ic2_120.content.item.HeatVentItem::class.instance()
-            val ironIngot = net.minecraft.item.Items.IRON_INGOT
-            if (ironCasing != net.minecraft.item.Items.AIR && heatVent != net.minecraft.item.Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CondenserBlock::class.item(), 1)
+            val ironIngot = net.minecraft.world.item.Items.IRON_INGOT
+            if (ironCasing != net.minecraft.world.item.Items.AIR && heatVent != net.minecraft.world.item.Items.AIR) {
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, CondenserBlock::class.item(), 1)
                     .pattern("CHC")
                     .pattern("CIC")
                     .pattern("CCC")

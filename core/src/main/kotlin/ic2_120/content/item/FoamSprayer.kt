@@ -25,28 +25,28 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.block.Block
-import net.minecraft.block.ScaffoldingBlock
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.item.Items
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.ScaffoldingBlock
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 import java.util.ArrayDeque
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.ActionResult
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
-import net.minecraft.world.event.GameEvent
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.gameevent.GameEvent
 
 /**
  * 建筑泡沫喷枪：仅储存建筑泡沫流体，容量 8 桶；每喷涂一格消耗 0.1 桶（100mb），满罐约 80 格。
@@ -55,11 +55,11 @@ import net.minecraft.world.event.GameEvent
 @ModItem(name = "foam_sprayer", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
 class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant {
 
-    override fun useOnBlock(context: ItemUsageContext): ActionResult {
+    override fun useOnBlock(context: UseOnContext): InteractionResult {
         val world = context.world
-        val player = context.player ?: return ActionResult.PASS
+        val player = context.player ?: return InteractionResult.PASS
         val hand = context.hand
-        if (world.isClient) return ActionResult.SUCCESS
+        if (world.isClient) return InteractionResult.SUCCESS
 
         val hit = BlockHitResult(
             context.hitPos,
@@ -69,14 +69,14 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
         )
         val sided = FluidStorage.SIDED.find(world, hit.blockPos, hit.side)
         if (sided != null && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
-            return ActionResult.SUCCESS
+            return InteractionResult.SUCCESS
         }
 
         val stack = player.getStackInHand(hand)
-        if (stack.item != this) return ActionResult.PASS
+        if (stack.item != this) return InteractionResult.PASS
 
         val placed = tryPlaceFoam(world, player, stack, hit)
-        return if (placed) ActionResult.SUCCESS else ActionResult.PASS
+        return if (placed) InteractionResult.SUCCESS else InteractionResult.PASS
     }
 
     override fun isItemBarVisible(stack: ItemStack): Boolean = true
@@ -130,7 +130,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
             return next
         }
 
-        private fun canPlaceFoamAt(world: World, pos: BlockPos): Boolean {
+        private fun canPlaceFoamAt(world: Level, pos: BlockPos): Boolean {
             @Suppress("DEPRECATION")
             if (!world.isChunkLoaded(pos)) return false
             if (!world.worldBorder.contains(pos)) return false
@@ -141,7 +141,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
         /**
          * 喷涂空间锚点：点在脚手架上时以该格为目标；否则为点击面外侧邻格。
          */
-        private fun foamSprayAnchorPos(world: World, hit: BlockHitResult): BlockPos =
+        private fun foamSprayAnchorPos(world: Level, hit: BlockHitResult): BlockPos =
             if (isAnyScaffold(world.getBlockState(hit.blockPos).block)) hit.blockPos
             else hit.blockPos.offset(hit.side)
 
@@ -160,7 +160,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
         private fun isReinforcedIronScaffold(block: Block): Boolean =
             block is ReinforcedIronScaffoldBlock
 
-    private fun tryPlaceFoam(world: World, player: PlayerEntity, stack: ItemStack, hit: BlockHitResult): Boolean {
+    private fun tryPlaceFoam(world: Level, player: Player, stack: ItemStack, hit: BlockHitResult): Boolean {
             val foamState = FoamBlock::class.instance().defaultState
             val reinforcedFoamState = ReinforcedFoamBlock::class.instance().defaultState
             val cfPackStack = player.getEquippedStack(EquipmentSlot.CHEST)
@@ -230,7 +230,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
                     }
                 }
                 val soundPos = hit.blockPos.offset(hit.side)
-                world.playSound(null, soundPos, SoundEvents.BLOCK_WOOL_PLACE, SoundCategory.BLOCKS, 0.55f, 0.95f + world.random.nextFloat() * 0.1f)
+                world.playSound(null, soundPos, SoundEvents.BLOCK_WOOL_PLACE, SoundSource.BLOCKS, 0.55f, 0.95f + world.random.nextFloat() * 0.1f)
                 world.emitGameEvent(player, GameEvent.BLOCK_PLACE, soundPos)
             }
             return placedAny
@@ -241,7 +241,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
          * 这样喷涂结果会保留脚手架的实际结构，不再生成随机球形区域。
          */
         private fun buildScaffoldMultiSprayPositions(
-            world: World,
+            world: Level,
             start: BlockPos,
             maxBlocks: Int,
         ): List<BlockPos> {
@@ -258,7 +258,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
                 if (!isAnyScaffold(world.getBlockState(pos).block)) continue
 
                 result.add(pos)
-                for (direction in net.minecraft.util.math.Direction.values()) {
+                for (direction in net.minecraft.core.Direction.values()) {
                     val next = pos.offset(direction)
                     if (!visited.contains(next) && isAnyScaffold(world.getBlockState(next).block)) {
                         queue.addLast(next)
@@ -271,7 +271,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
         /**
          * 以点击面的外法向为轴，在半径 1–3 的球与半球交集内取候选格，并做随机镂空形成不规则边缘。
          */
-        private fun buildMultiSprayPositions(world: World, hit: BlockHitResult): List<BlockPos> {
+        private fun buildMultiSprayPositions(world: Level, hit: BlockHitResult): List<BlockPos> {
             val side = hit.side
             val normal = side.vector
             val center = foamSprayAnchorPos(world, hit)
@@ -303,11 +303,11 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
         private const val SCAFFOLD_MULTI_MAX_BLOCKS = 256
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val iron = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             if (iron != Items.AIR && emptyCell != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, FoamSprayerItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, FoamSprayerItem::class.instance(), 1)
                     .pattern("I  ")
                     .pattern(" I ")
                     .pattern(" FI")
@@ -378,5 +378,5 @@ internal class FoamSprayerFluidStorage(
     }
 }
 
-private fun isConstructionFoamFluid(fluid: net.minecraft.fluid.Fluid): Boolean =
+private fun isConstructionFoamFluid(fluid: net.minecraft.world.level.material.Fluid): Boolean =
     fluid == ModFluids.CONSTRUCTION_FOAM_STILL || fluid == ModFluids.CONSTRUCTION_FOAM_FLOWING

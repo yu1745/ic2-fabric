@@ -8,23 +8,23 @@ import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 /**
  * RF 转换引擎
@@ -51,7 +51,7 @@ class RFEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory, Inventory, IKineticMachinePort {
+) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory, Container, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         RFEngineBlockEntity::class.type(), pos, state
@@ -77,7 +77,7 @@ class RFEngineBlockEntity(
     var currentRF: Int = 0
 
     // === Screen 同步 ===
-    private val propertyDelegate = object : PropertyDelegate {
+    private val propertyDelegate = object : ContainerData {
         override fun get(index: Int): Int = when (index) {
             0 -> currentRF
             1 -> heat.toInt()
@@ -87,19 +87,19 @@ class RFEngineBlockEntity(
         override fun size(): Int = 2
     }
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
-        return RFEngineScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), propertyDelegate)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+        return RFEngineScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(2)
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.buildcraft_addon.rf_engine")
+    override fun getDisplayName(): Component = Component.translatable("block.buildcraft_addon.rf_engine")
 
     // === 升级栏位 ===
-    private val upgradeInventory = DefaultedList.ofSize(4, ItemStack.EMPTY)
+    private val upgradeInventory = NonNullList.ofSize(4, ItemStack.EMPTY)
 
     override fun size(): Int = 4
     override fun getStack(slot: Int): ItemStack = upgradeInventory[slot]
@@ -112,7 +112,7 @@ class RFEngineBlockEntity(
     }
     override fun isEmpty(): Boolean = upgradeInventory.all { it.isEmpty }
     override fun clear() { upgradeInventory.fill(ItemStack.EMPTY) }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = true
+    override fun canPlayerUse(player: Player): Boolean = true
 
     // === 热量 ===
     var heat: Double = MIN_HEAT
@@ -189,7 +189,7 @@ class RFEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlockState(pos, cachedState.with(Properties.FACING, next))
+        world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, next))
         markDirty()
     }
 
@@ -207,7 +207,7 @@ class RFEngineBlockEntity(
     fun serverTick() {
         val world = world ?: return
         if (world.isClient) return
-        currentDirection = cachedState.get(Properties.FACING)
+        currentDirection = cachedState.get(BlockStateProperties.FACING)
         pendingOutputKu = 0
 
         isBurning = false
@@ -237,7 +237,7 @@ class RFEngineBlockEntity(
         if (heat >= MAX_HEAT_RF) {
             if (!ClaimProtection.allAllowedUuid(world, listOf(pos), null, ClaimProtection.EDIT_BLOCK) ||
                 !ClaimProtection.explosionCubeAllowed(world, pos, 4.0f, null)) return
-            world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.World.ExplosionSourceType.BLOCK)
+            world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.level.Level.ExplosionSourceType.BLOCK)
             world.breakBlock(pos, false)
         }
 
@@ -250,7 +250,7 @@ class RFEngineBlockEntity(
     fun clientTick() {
         val world = world ?: return
         if (!world.isClient) return
-        currentDirection = cachedState.get(Properties.FACING)
+        currentDirection = cachedState.get(BlockStateProperties.FACING)
 
         val powered = world.isReceivingRedstonePower(pos)
         isRedstonePowered = powered
@@ -285,7 +285,7 @@ class RFEngineBlockEntity(
     }
 
     // === NBT ===
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
@@ -296,9 +296,9 @@ class RFEngineBlockEntity(
         nbt.putInt("powerStage", currentStage.ordinal)
         nbt.putInt("pendingOutputKu", pendingOutputKu)
         nbt.putInt("currentRF", currentRF)
-        val invNbt = NbtCompound()
+        val invNbt = CompoundTag()
         for (i in 0..3) {
-            val slotNbt = NbtCompound()
+            val slotNbt = CompoundTag()
             if (!upgradeInventory[i].isEmpty) {
                 upgradeInventory[i].writeNbt(slotNbt)
             }
@@ -307,7 +307,7 @@ class RFEngineBlockEntity(
         nbt.put("upgradeInventory", invNbt)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")

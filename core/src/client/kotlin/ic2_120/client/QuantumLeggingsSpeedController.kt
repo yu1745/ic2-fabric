@@ -7,9 +7,9 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.phys.Vec3
 
 /**
  * 在客户端复刻原版 IC2 量子护腿的定向推进。
@@ -39,13 +39,13 @@ object QuantumLeggingsSpeedController {
             }
             if (boost <= 0.0) return@register
 
-            player.updateVelocity(boost.toFloat(), Vec3d(0.0, 0.0, 1.0))
+            player.updateVelocity(boost.toFloat(), Vec3(0.0, 0.0, 1.0))
             if (inWater && player.input.jumping) {
                 player.velocity = player.velocity.add(0.0, boost, 0.0)
             }
             ClientPlayNetworking.send(
                 NetworkManager.QUANTUM_LEGGINGS_SPEED_TICK_PACKET,
-                PacketByteBuf(Unpooled.buffer())
+                FriendlyByteBuf(Unpooled.buffer())
             )
         }
     }

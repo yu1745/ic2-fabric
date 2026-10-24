@@ -2,17 +2,17 @@ package ic2_120.content.worldgen
 
 import com.mojang.serialization.Codec
 import ic2_120.config.Ic2Config
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.Heightmap
-import net.minecraft.world.biome.Biome
-import net.minecraft.world.gen.feature.FeaturePlacementContext
-import net.minecraft.world.gen.placementmodifier.AbstractConditionalPlacementModifier
-import net.minecraft.world.gen.placementmodifier.PlacementModifier
-import net.minecraft.world.gen.placementmodifier.PlacementModifierType
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.TagKey
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.levelgen.Heightmap
+import net.minecraft.world.level.biome.Biome
+import net.minecraft.world.level.levelgen.placement.PlacementContext
+import net.minecraft.world.level.levelgen.placement.PlacementFilter
+import net.minecraft.world.level.levelgen.placement.PlacementModifier
+import net.minecraft.world.level.levelgen.placement.PlacementModifierType
 import java.util.stream.Stream
 
 /**
@@ -28,15 +28,15 @@ import java.util.stream.Stream
 object RubberTreeBiomeTags {
     /** 入口层：所有允许生成橡胶树的群系（= forest ∪ swamp）。 */
     val GENERATES_RUBBER_TREES: TagKey<Biome> =
-        TagKey.of(RegistryKeys.BIOME, Identifier.of("ic2_120", "generates_rubber_trees"))
+        TagKey.of(Registries.BIOME, ResourceLocation.of("ic2_120", "generates_rubber_trees"))
 
     /** 概率层：森林/丛林类（Forge FOREST + JUNGLE）。 */
     val FOREST: TagKey<Biome> =
-        TagKey.of(RegistryKeys.BIOME, Identifier.of("ic2_120", "rubber_tree_forest"))
+        TagKey.of(Registries.BIOME, ResourceLocation.of("ic2_120", "rubber_tree_forest"))
 
     /** 概率层：沼泽类（Forge SWAMP）。 */
     val SWAMP: TagKey<Biome> =
-        TagKey.of(RegistryKeys.BIOME, Identifier.of("ic2_120", "rubber_tree_swamp"))
+        TagKey.of(Registries.BIOME, ResourceLocation.of("ic2_120", "rubber_tree_swamp"))
 }
 
 /**
@@ -53,8 +53,8 @@ object RubberTreeBiomeTags {
 class RubberTreeConfigPlacementModifier : PlacementModifier() {
 
     override fun getPositions(
-        context: FeaturePlacementContext,
-        random: Random,
+        context: PlacementContext,
+        random: RandomSource,
         pos: BlockPos
     ): Stream<BlockPos> {
         val config = Ic2Config.current.worldgen.rubberTree.normalized()
@@ -111,11 +111,11 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
 /**
  * 用配置文件控制橡胶树允许生成时的地表水深，避免 placed_feature JSON 写死后无法调整。
  */
-class RubberTreeConfigWaterDepthFilterPlacementModifier : AbstractConditionalPlacementModifier() {
+class RubberTreeConfigWaterDepthFilterPlacementModifier : PlacementFilter() {
 
     override fun shouldPlace(
-        context: FeaturePlacementContext,
-        random: Random,
+        context: PlacementContext,
+        random: RandomSource,
         pos: BlockPos
     ): Boolean {
         val config = Ic2Config.current.worldgen.rubberTree.normalized()

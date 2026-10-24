@@ -1,7 +1,7 @@
 package ic2_120.content.upgrade
 
 import ic2_120.content.item.*
-import net.minecraft.item.Item
+import net.minecraft.world.item.Item
 import kotlin.reflect.KClass
 
 /**

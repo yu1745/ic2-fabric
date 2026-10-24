@@ -10,21 +10,21 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerChunkManager
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.text.Text
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.world.World
-import net.minecraft.server.world.ChunkTicketType
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.level.ServerChunkCache
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.network.chat.Component
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.Level
+import net.minecraft.server.level.TicketType
 
 /**
  * 区块加载器的强制加载票据有意仅在本 BlockEntity tick 时创建，不做服务器重启后的持久化恢复。
@@ -38,8 +38,8 @@ class ChunkLoaderBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = ChunkLoaderBlock.ACTIVE
-    override fun getInventory(): net.minecraft.inventory.Inventory? = null
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = ChunkLoaderBlock.ACTIVE
+    override fun getInventory(): net.minecraft.world.Container? = null
     override val tier: Int = 1
 
     val syncedData = SyncedData()
@@ -54,17 +54,17 @@ class ChunkLoaderBlockEntity(
         ChunkLoaderBlockEntity::class.type(), pos, state
     )
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.chunk_loader")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.chunk_loader")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        ChunkLoaderScreenHandler(syncId, playerInventory, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        ChunkLoaderScreenHandler(syncId, playerInventory, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ChunkLoaderSync.NBT_ENERGY_STORED)
@@ -117,7 +117,7 @@ class ChunkLoaderBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         syncedData.writeNbt(nbt)
         nbt.putLong(ChunkLoaderSync.NBT_ENERGY_STORED, sync.amount)
@@ -133,17 +133,17 @@ class ChunkLoaderBlockEntity(
 
     fun releaseChunks() {
         if (activeChunkPositions.isEmpty()) return
-        val sw = world as? ServerWorld ?: return
+        val sw = world as? ServerLevel ?: return
         val cm = sw.chunkManager ?: return
         for (chunkPos in activeChunkPositions) {
-            // ServerChunkManager.addTicket 的 radius=2 对应 ENTITY_TICKING 等级，
+            // ServerChunkCache.addTicket 的 radius=2 对应 ENTITY_TICKING 等级，
             // 确保区块内的方块实体和实体逻辑在玩家离开后仍继续 tick。
-            cm.removeTicket(ChunkTicketType.FORCED, chunkPos, 2, chunkPos)
+            cm.removeTicket(TicketType.FORCED, chunkPos, 2, chunkPos)
         }
         activeChunkPositions = emptySet()
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
@@ -166,15 +166,15 @@ class ChunkLoaderBlockEntity(
             val center = ChunkPos(pos)
             val needed = sync.getChunkPositions(center).toSet()
 
-            val sw = world as? ServerWorld
+            val sw = world as? ServerLevel
             val cm = sw?.chunkManager
             if (cm != null) {
                 for (cp in needed - activeChunkPositions) {
                     // radius=2 -> ENTITY_TICKING；radius=0 只有 FULL，不会 tick 方块实体。
-                    cm.addTicket(ChunkTicketType.FORCED, cp, 2, cp)
+                    cm.addTicket(TicketType.FORCED, cp, 2, cp)
                 }
                 for (cp in activeChunkPositions - needed) {
-                    cm.removeTicket(ChunkTicketType.FORCED, cp, 2, cp)
+                    cm.removeTicket(TicketType.FORCED, cp, 2, cp)
                 }
                 activeChunkPositions = needed
             }

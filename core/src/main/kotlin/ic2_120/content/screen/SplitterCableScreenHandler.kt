@@ -5,23 +5,23 @@ import ic2_120.content.block.cables.SplitterCableBlock
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.Slot
+import net.minecraft.core.BlockPos
 
 @ModScreenHandler(name = "splitter_cable")
 class SplitterCableScreenHandler(
     syncId: Int,
-    private val playerInventory: PlayerInventory,
+    private val playerInventory: Inventory,
     private val pos: BlockPos,
-    private val propertyDelegate: PropertyDelegate = ArrayPropertyDelegate(PROPERTY_COUNT)
-) : ScreenHandler(SplitterCableScreenHandler::class.type(), syncId) {
+    private val propertyDelegate: ContainerData = SimpleContainerData(PROPERTY_COUNT)
+) : AbstractContainerMenu(SplitterCableScreenHandler::class.type(), syncId) {
 
     companion object {
         private const val PROPERTY_COUNT = 2
@@ -36,7 +36,7 @@ class SplitterCableScreenHandler(
         const val BUTTON_TOGGLE_INVERTED = 2
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SplitterCableScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): SplitterCableScreenHandler {
             val pos = buf.readBlockPos()
             val handler = SplitterCableScreenHandler(syncId, playerInventory, pos)
             handler.threshold = buf.readVarInt()
@@ -68,7 +68,7 @@ class SplitterCableScreenHandler(
         }
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         if (player.world.isClient) return true
         val be = player.world.getBlockEntity(pos) as? CableBlockEntity ?: return false
         if (be.cachedState.block !is SplitterCableBlock) return false
@@ -89,11 +89,11 @@ class SplitterCableScreenHandler(
         return true
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         player.world.getBlockState(pos).block is SplitterCableBlock &&
             player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
 
-    override fun quickMove(player: PlayerEntity, slotIndex: Int): ItemStack {
+    override fun quickMove(player: Player, slotIndex: Int): ItemStack {
         val slot = slots.getOrNull(slotIndex) ?: return ItemStack.EMPTY
         if (!slot.hasStack()) return ItemStack.EMPTY
         val stack = slot.stack

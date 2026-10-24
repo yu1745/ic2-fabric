@@ -18,29 +18,29 @@ import ic2_120.registry.ClassScanner
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.loot.LootPool
-import net.minecraft.loot.LootTable
-import net.minecraft.loot.condition.AnyOfLootCondition
-import net.minecraft.loot.condition.BlockStatePropertyLootCondition
-import net.minecraft.loot.condition.InvertedLootCondition
-import net.minecraft.loot.condition.MatchToolLootCondition
-import net.minecraft.loot.entry.ItemEntry
-import net.minecraft.loot.function.ApplyBonusLootFunction
-import net.minecraft.loot.function.ExplosionDecayLootFunction
-import net.minecraft.loot.provider.number.ConstantLootNumberProvider
-import net.minecraft.predicate.NumberRange
-import net.minecraft.predicate.StatePredicate
-import net.minecraft.predicate.item.EnchantmentPredicate
-import net.minecraft.predicate.item.ItemPredicate
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.storage.loot.LootPool
+import net.minecraft.world.level.storage.loot.LootTable
+import net.minecraft.world.level.storage.loot.predicates.AnyOfCondition
+import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition
+import net.minecraft.world.level.storage.loot.predicates.InvertedLootItemCondition
+import net.minecraft.world.level.storage.loot.predicates.MatchTool
+import net.minecraft.world.level.storage.loot.entries.LootItem
+import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount
+import net.minecraft.world.level.storage.loot.functions.ApplyExplosionDecay
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue
+import net.minecraft.advancements.critereon.MinMaxBounds
+import net.minecraft.advancements.critereon.StatePropertiesPredicate
+import net.minecraft.advancements.critereon.EnchantmentPredicate
+import net.minecraft.advancements.critereon.ItemPredicate
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.HolderLookup
+import net.minecraft.resources.ResourceLocation
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -52,20 +52,20 @@ import java.util.concurrent.CompletableFuture
  */
 class ModBlockLootTableProvider(
     output: FabricDataOutput,
-    registryLookup: CompletableFuture<RegistryWrapper.WrapperLookup>
+    registryLookup: CompletableFuture<HolderLookup.WrapperLookup>
 ) : FabricBlockLootTableProvider(output, registryLookup) {
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
-            Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "wrench")),
-            Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "electric_wrench"))
+            BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "wrench")),
+            BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "electric_wrench"))
         )
 
     override fun generate() {
-        val reinforcedDoorId = Identifier.of(Ic2_120.MOD_ID, "reinforced_door")
+        val reinforcedDoorId = ResourceLocation.of(Ic2_120.MOD_ID, "reinforced_door")
 
-        for (block in Registries.BLOCK) {
-            val id = Registries.BLOCK.getId(block)
+        for (block in BuiltInRegistries.BLOCK) {
+            val id = BuiltInRegistries.BLOCK.getId(block)
             if (id.namespace != Ic2_120.MOD_ID) continue
             if (ClassScanner.shouldSkipGeneratedBlockLootTable(id.path)) continue
 
@@ -89,21 +89,21 @@ class ModBlockLootTableProvider(
         val blockItem = block.asItem()
         val casingItem = block.getCasingDrop()
 
-        val wrenchConditionBuilder = MatchToolLootCondition.builder(wrenchPredicateBuilder)
-        val notWrenchConditionBuilder = InvertedLootCondition.builder(wrenchConditionBuilder)
+        val wrenchConditionBuilder = MatchTool.builder(wrenchPredicateBuilder)
+        val notWrenchConditionBuilder = InvertedLootItemCondition.builder(wrenchConditionBuilder)
 
         return LootTable.builder()
             .pool(
                 LootPool.builder()
-                    .rolls(ConstantLootNumberProvider.create(1f))
+                    .rolls(ConstantValue.create(1f))
                     .conditionally(wrenchConditionBuilder)
-                    .with(ItemEntry.builder(blockItem).apply(ExplosionDecayLootFunction.builder()))
+                    .with(LootItem.builder(blockItem).apply(ApplyExplosionDecay.builder()))
             )
             .pool(
                 LootPool.builder()
-                    .rolls(ConstantLootNumberProvider.create(1f))
+                    .rolls(ConstantValue.create(1f))
                     .conditionally(notWrenchConditionBuilder)
-                    .with(ItemEntry.builder(casingItem).apply(ExplosionDecayLootFunction.builder()))
+                    .with(LootItem.builder(casingItem).apply(ApplyExplosionDecay.builder()))
             )
     }
 
@@ -112,13 +112,13 @@ class ModBlockLootTableProvider(
      * 使用 BinomialWithBonusCount(0.2, extra=0) 实现：
      * count + Binomial(fortune+0, 0.2) → 时运0=1, 时运1≈1.2, 时运2≈1.4, 时运3≈1.6
      */
-    private fun addCustomOreDrop(block: net.minecraft.block.Block, dropItem: net.minecraft.item.Item) {
-        val lookup: RegistryWrapper.WrapperLookup = registryLookup
-        val enchantmentLookup = lookup.getWrapperOrThrow(RegistryKeys.ENCHANTMENT)
+    private fun addCustomOreDrop(block: net.minecraft.world.level.block.Block, dropItem: net.minecraft.world.item.Item) {
+        val lookup: HolderLookup.WrapperLookup = registryLookup
+        val enchantmentLookup = lookup.getWrapperOrThrow(Registries.ENCHANTMENT)
         val fortuneEntry = enchantmentLookup.getOrThrow(Enchantments.FORTUNE)
         addDrop(block, dropsWithSilkTouch(block,
-            applyExplosionDecay(dropItem, ItemEntry.builder(dropItem)
-                .apply(ApplyBonusLootFunction.binomialWithBonusCount(fortuneEntry, 0.2f, 0))
+            applyExplosionDecay(dropItem, LootItem.builder(dropItem)
+                .apply(ApplyBonusCount.binomialWithBonusCount(fortuneEntry, 0.2f, 0))
             )
         ))
     }
@@ -139,32 +139,32 @@ class ModBlockLootTableProvider(
         val leafItem = block.asItem()
         val saplingItem = RubberSaplingBlock::class.instance()
 
-        val silkTouchOrShears = AnyOfLootCondition.builder(
-            MatchToolLootCondition.builder(ItemPredicate.Builder.create().items(Items.SHEARS)),
-            MatchToolLootCondition.builder(
+        val silkTouchOrShears = AnyOfCondition.builder(
+            MatchTool.builder(ItemPredicate.Builder.create().items(Items.SHEARS)),
+            MatchTool.builder(
                 ItemPredicate.Builder.create()
-                    .enchantment(EnchantmentPredicate(Enchantments.SILK_TOUCH, NumberRange.IntRange.atLeast(1)))
+                    .enchantment(EnchantmentPredicate(Enchantments.SILK_TOUCH, MinMaxBounds.IntRange.atLeast(1)))
             )
         )
-        val boundLeaf = BlockStatePropertyLootCondition.builder(block)
-            .properties(StatePredicate.Builder.create().exactMatch(RubberLeavesBlock.RUBBER_SAPLING_DROP, true))
-        val notSilkTouchOrShears = InvertedLootCondition.builder(silkTouchOrShears)
+        val boundLeaf = LootItemBlockStatePropertyCondition.builder(block)
+            .properties(StatePropertiesPredicate.Builder.create().exactMatch(RubberLeavesBlock.RUBBER_SAPLING_DROP, true))
+        val notSilkTouchOrShears = InvertedLootItemCondition.builder(silkTouchOrShears)
 
         return LootTable.builder()
             // 剪刀/精准采集 → 掉树叶本身
             .pool(
                 LootPool.builder()
-                    .rolls(ConstantLootNumberProvider.create(1f))
+                    .rolls(ConstantValue.create(1f))
                     .conditionally(silkTouchOrShears)
-                    .with(addSurvivesExplosionCondition(block, ItemEntry.builder(leafItem)))
+                    .with(addSurvivesExplosionCondition(block, LootItem.builder(leafItem)))
             )
             // 保底绑定叶 → 必掉 1 个树苗（世界生成/树苗生长时由 bindLeaves 写入方块状态，运行时可判定）
             .pool(
                 LootPool.builder()
-                    .rolls(ConstantLootNumberProvider.create(1f))
+                    .rolls(ConstantValue.create(1f))
                     .conditionally(notSilkTouchOrShears)
                     .conditionally(boundLeaf)
-                    .with(ItemEntry.builder(saplingItem))
+                    .with(LootItem.builder(saplingItem))
             )
     }
 }

@@ -30,26 +30,26 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
-import net.minecraft.server.world.ServerWorld
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
+import net.minecraft.server.level.ServerLevel
 import ic2_120.content.network.NetworkManager
 
 @ModBlockEntity(block = SemifluidGeneratorBlock::class)
@@ -57,9 +57,9 @@ class SemifluidGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = SemifluidGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SemifluidGeneratorBlock.ACTIVE
 
     /** 客户端：由网络包更新的燃料颜色 ARGB */
     @Volatile
@@ -68,8 +68,8 @@ class SemifluidGeneratorBlockEntity(
 
     override var fluidPipeProviderEnabled: Boolean = false
     override var fluidPipeReceiverEnabled: Boolean = false
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeProviderFilter: net.minecraft.world.level.material.Fluid? = null
+    override var fluidPipeReceiverFilter: net.minecraft.world.level.material.Fluid? = null
     override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
     override var fluidPipeEjectorCount: Int = 0
@@ -90,7 +90,7 @@ class SemifluidGeneratorBlockEntity(
         const val INVENTORY_SIZE = 7
 
         /** 从 ModFluids 注册的 tint 颜色映射取色；无匹配则返回默认橙 */
-        fun getFuelArgb(fluid: net.minecraft.fluid.Fluid?): Int {
+        fun getFuelArgb(fluid: net.minecraft.world.level.material.Fluid?): Int {
             return when (fluid) {
                 null -> 0xFFCC4400.toInt()
                 else -> ModFluids.getFluidTintOrNull(fluid) ?: 0xFFCC4400.toInt()
@@ -111,7 +111,7 @@ class SemifluidGeneratorBlockEntity(
     }
 
     override val tier: Int = GENERATOR_TIER
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -132,7 +132,7 @@ class SemifluidGeneratorBlockEntity(
     @RegisterEnergy
     val sync = SemifluidGeneratorSync(
         schema = syncedData,
-        getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
 
@@ -156,12 +156,12 @@ class SemifluidGeneratorBlockEntity(
 
         override fun onFinalCommit() {
             sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
+            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getRawId(variant.fluid) else -1
             fuelColorDirty = true
             markDirty()
         }
 
-        fun setStoredFuel(newAmount: Long, fluid: net.minecraft.fluid.Fluid?) {
+        fun setStoredFuel(newAmount: Long, fluid: net.minecraft.world.level.material.Fluid?) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L && fluid != null && FluidFuelRegistry.isSupported(fluid)) {
                 FluidVariant.of(fluid)
@@ -169,11 +169,11 @@ class SemifluidGeneratorBlockEntity(
                 FluidVariant.blank()
             }
             sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
+            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getRawId(variant.fluid) else -1
             fuelColorDirty = true
         }
 
-        fun tryInsertFuel(fluid: net.minecraft.fluid.Fluid, toInsert: Long): Long {
+        fun tryInsertFuel(fluid: net.minecraft.world.level.material.Fluid, toInsert: Long): Long {
             if (toInsert <= 0L || !FluidFuelRegistry.isSupported(fluid)) return 0L
             if (amount > 0L && variant.fluid != fluid) return 0L
             val space = tankCapacity - amount
@@ -185,7 +185,7 @@ class SemifluidGeneratorBlockEntity(
                 if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
                 tx.commit()
                 sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-                sync.fuelFluidRawId = Registries.FLUID.getRawId(variant.fluid)
+                sync.fuelFluidRawId = BuiltInRegistries.FLUID.getRawId(variant.fluid)
                 fuelColorDirty = true
                 actual
             }
@@ -201,7 +201,7 @@ class SemifluidGeneratorBlockEntity(
                 if (amount <= 0L) variant = FluidVariant.blank()
                 tx.commit()
                 sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-                sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
+                sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getRawId(variant.fluid) else -1
                 fuelColorDirty = true
                 actual
             }
@@ -225,14 +225,14 @@ class SemifluidGeneratorBlockEntity(
         state
     )
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == BATTERY_SLOT && stack.count > 1) stack.count = 1
@@ -282,48 +282,48 @@ class SemifluidGeneratorBlockEntity(
         else ItemStack.canCombine(current, emptyStack) && current.count + emptyStack.count <= current.maxCount
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.semifluid_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.semifluid_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         SemifluidGeneratorScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(SemifluidGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, SemifluidGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
         val fluidId = nbt.getString("FuelFluid")
-        val fluid = if (fluidId.isNullOrBlank()) null else Registries.FLUID.get(Identifier(fluidId))
+        val fluid = if (fluidId.isNullOrBlank()) null else BuiltInRegistries.FLUID.get(ResourceLocation(fluidId))
         fuelTankInternal.setStoredFuel(nbt.getLong(NBT_FUEL_AMOUNT), fluid)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(SemifluidGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_FUEL_AMOUNT, fuelTankInternal.amount)
         if (fuelTankInternal.amount > 0L && !fuelTankInternal.variant.isBlank) {
-            nbt.putString("FuelFluid", Registries.FLUID.getId(fuelTankInternal.variant.fluid).toString())
+            nbt.putString("FuelFluid", BuiltInRegistries.FLUID.getId(fuelTankInternal.variant.fluid).toString())
         }
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         adjacentEnergyTransfer.tick()
@@ -341,7 +341,7 @@ class SemifluidGeneratorBlockEntity(
         if (fuelColorDirty) {
             fuelColorDirty = false
             val color = getFuelArgb(if (fuelTankInternal.amount > 0L) fuelTankInternal.variant.fluid else null)
-            NetworkManager.sendSemifluidGeneratorFuelState(world as ServerWorld, pos, color)
+            NetworkManager.sendSemifluidGeneratorFuelState(world as ServerLevel, pos, color)
         }
 
         val fuelStack = getStack(FUEL_SLOT)
@@ -352,9 +352,9 @@ class SemifluidGeneratorBlockEntity(
             val fuelProfile = fuelFluid?.let { FluidFuelRegistry.getProfile(it) }
             if (fuelFluid != null && fuelProfile != null) {
                 val emptyContainer = when (fuelStack.item) {
-                    Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biofuel_cell")),
-                    Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) ->
-                        ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+                    BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "biofuel_cell")),
+                    BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) ->
+                        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")))
                     else -> fuelStack.item.getRecipeRemainder(fuelStack)
                 }
                 if (canInsertEmptyContainer(emptyContainer)) {
@@ -396,5 +396,5 @@ class SemifluidGeneratorBlockEntity(
     }
 
     private fun getFrontFacing(): Direction =
-        world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
+        world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
 }

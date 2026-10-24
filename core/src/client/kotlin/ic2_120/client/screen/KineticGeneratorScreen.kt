@@ -5,29 +5,29 @@ import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.screen.KineticGeneratorScreenHandler
 import ic2_120.content.sync.KineticGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = KineticGeneratorBlock::class)
 class KineticGeneratorScreen(
     handler: KineticGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<KineticGeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<KineticGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -60,7 +60,7 @@ class KineticGeneratorScreen(
         if (mouseX in x + 60 until x + 117 && mouseY in y + 23 until y + 37) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -71,7 +71,7 @@ class KineticGeneratorScreen(
     /**
      * 平铺渲染能量条：纹理区域 (179,3)-(236,17) 从左侧根据 [fraction] 比例填充。
      */
-    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawEnergyGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 57
         val barH = 14
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
@@ -82,6 +82,6 @@ class KineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guielectrickineticgenerator.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guielectrickineticgenerator.png")
     }
 }

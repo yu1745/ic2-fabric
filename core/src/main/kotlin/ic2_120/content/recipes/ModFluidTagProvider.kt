@@ -3,19 +3,19 @@ package ic2_120.content.recipes
 import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
-import net.minecraft.fluid.Fluid
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.HolderLookup
+import net.minecraft.tags.TagKey
+import net.minecraft.resources.ResourceLocation
 import java.util.concurrent.CompletableFuture
 
 class ModFluidTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<RegistryWrapper.WrapperLookup>,
+    registriesFuture: CompletableFuture<HolderLookup.WrapperLookup>,
 ) : FabricTagProvider.FluidTagProvider(output, registriesFuture) {
 
-    override fun configure(registries: RegistryWrapper.WrapperLookup) {
+    override fun configure(registries: HolderLookup.WrapperLookup) {
         registerCommonFluidTags()
         registerBiofuelEquivalent("semifluid_generator/biofuel_equivalent")
         registerCreosoteEquivalent("semifluid_generator/creosote_equivalent")
@@ -53,36 +53,36 @@ class ModFluidTagProvider(
             .setReplace(false)
             .add(ModFluids.BIOFUEL_STILL)
             .add(ModFluids.BIOFUEL_FLOWING)
-            .addOptionalTag(Identifier.of("c", "fuel"))
-            .addOptionalTag(Identifier.of("c", "fuel_oil"))
-            .addOptionalTag(Identifier.of("c", "diesel"))
-            .addOptionalTag(Identifier.of("c", "gasoline"))
-            .addOptionalTag(Identifier.of("c", "refined_fuel"))
-            .addOptionalTag(Identifier.of("c", "biofuels"))
-            .addOptionalTag(Identifier.of("c", "biofuel"))
-            .addOptionalTag(Identifier.of("c", "biodiesel"))
-            .addOptionalTag(Identifier.of("c", "ethanol"))
-            .addOptionalTag(Identifier.of("c", "plant_oil"))
-            .addOptionalTag(Identifier.of("c", "seed_oil"))
+            .addOptionalTag(ResourceLocation.of("c", "fuel"))
+            .addOptionalTag(ResourceLocation.of("c", "fuel_oil"))
+            .addOptionalTag(ResourceLocation.of("c", "diesel"))
+            .addOptionalTag(ResourceLocation.of("c", "gasoline"))
+            .addOptionalTag(ResourceLocation.of("c", "refined_fuel"))
+            .addOptionalTag(ResourceLocation.of("c", "biofuels"))
+            .addOptionalTag(ResourceLocation.of("c", "biofuel"))
+            .addOptionalTag(ResourceLocation.of("c", "biodiesel"))
+            .addOptionalTag(ResourceLocation.of("c", "ethanol"))
+            .addOptionalTag(ResourceLocation.of("c", "plant_oil"))
+            .addOptionalTag(ResourceLocation.of("c", "seed_oil"))
 
         getOrCreateTagBuilder(forgeTag)
             .setReplace(false)
             .add(ModFluids.BIOFUEL_STILL)
             .add(ModFluids.BIOFUEL_FLOWING)
-            .addOptionalTag(Identifier.of("forge", "fuel"))
-            .addOptionalTag(Identifier.of("forge", "fuel_oil"))
-            .addOptionalTag(Identifier.of("forge", "diesel"))
-            .addOptionalTag(Identifier.of("forge", "gasoline"))
-            .addOptionalTag(Identifier.of("forge", "refined_fuel"))
-            .addOptionalTag(Identifier.of("forge", "fuels/biofuel"))
-            .addOptionalTag(Identifier.of("forge", "biofuels"))
-            .addOptionalTag(Identifier.of("forge", "fuels/biodiesel"))
-            .addOptionalTag(Identifier.of("forge", "fuels/ethanol"))
-            .addOptionalTag(Identifier.of("forge", "biofuel"))
-            .addOptionalTag(Identifier.of("forge", "biodiesel"))
-            .addOptionalTag(Identifier.of("forge", "ethanol"))
-            .addOptionalTag(Identifier.of("forge", "plant_oil"))
-            .addOptionalTag(Identifier.of("forge", "seed_oil"))
+            .addOptionalTag(ResourceLocation.of("forge", "fuel"))
+            .addOptionalTag(ResourceLocation.of("forge", "fuel_oil"))
+            .addOptionalTag(ResourceLocation.of("forge", "diesel"))
+            .addOptionalTag(ResourceLocation.of("forge", "gasoline"))
+            .addOptionalTag(ResourceLocation.of("forge", "refined_fuel"))
+            .addOptionalTag(ResourceLocation.of("forge", "fuels/biofuel"))
+            .addOptionalTag(ResourceLocation.of("forge", "biofuels"))
+            .addOptionalTag(ResourceLocation.of("forge", "fuels/biodiesel"))
+            .addOptionalTag(ResourceLocation.of("forge", "fuels/ethanol"))
+            .addOptionalTag(ResourceLocation.of("forge", "biofuel"))
+            .addOptionalTag(ResourceLocation.of("forge", "biodiesel"))
+            .addOptionalTag(ResourceLocation.of("forge", "ethanol"))
+            .addOptionalTag(ResourceLocation.of("forge", "plant_oil"))
+            .addOptionalTag(ResourceLocation.of("forge", "seed_oil"))
 
         getOrCreateTagBuilder(compatFluid(path))
             .setReplace(false)
@@ -98,18 +98,18 @@ class ModFluidTagProvider(
             .setReplace(false)
             .add(ModFluids.CREOSOTE_STILL)
             .add(ModFluids.CREOSOTE_FLOWING)
-            .addOptionalTag(Identifier.of("c", "oil"))
-            .addOptionalTag(Identifier.of("c", "crude_oil"))
-            .addOptionalTag(Identifier.of("c", "creosote"))
+            .addOptionalTag(ResourceLocation.of("c", "oil"))
+            .addOptionalTag(ResourceLocation.of("c", "crude_oil"))
+            .addOptionalTag(ResourceLocation.of("c", "creosote"))
 
         getOrCreateTagBuilder(forgeTag)
             .setReplace(false)
             .add(ModFluids.CREOSOTE_STILL)
             .add(ModFluids.CREOSOTE_FLOWING)
-            .addOptionalTag(Identifier.of("forge", "oil"))
-            .addOptionalTag(Identifier.of("forge", "crude_oil"))
-            .addOptionalTag(Identifier.of("forge", "creosote"))
-            .addOptionalTag(Identifier.of("forge", "creosote_oil"))
+            .addOptionalTag(ResourceLocation.of("forge", "oil"))
+            .addOptionalTag(ResourceLocation.of("forge", "crude_oil"))
+            .addOptionalTag(ResourceLocation.of("forge", "creosote"))
+            .addOptionalTag(ResourceLocation.of("forge", "creosote_oil"))
 
         getOrCreateTagBuilder(compatFluid(path))
             .setReplace(false)
@@ -118,16 +118,16 @@ class ModFluidTagProvider(
     }
 
     private fun ic2Fluid(path: String): TagKey<Fluid> =
-        TagKey.of(RegistryKeys.FLUID, Identifier.of("ic2_120", path))
+        TagKey.of(Registries.FLUID, ResourceLocation.of("ic2_120", path))
 
     private fun cFluid(path: String): TagKey<Fluid> =
-        TagKey.of(RegistryKeys.FLUID, Identifier.of("c", path))
+        TagKey.of(Registries.FLUID, ResourceLocation.of("c", path))
 
     private fun forgeFluid(path: String): TagKey<Fluid> =
-        TagKey.of(RegistryKeys.FLUID, Identifier.of("forge", path))
+        TagKey.of(Registries.FLUID, ResourceLocation.of("forge", path))
 
     private fun compatFluid(path: String): TagKey<Fluid> =
-        TagKey.of(RegistryKeys.FLUID, Identifier.of("ic2_120", "compat/$path"))
+        TagKey.of(Registries.FLUID, ResourceLocation.of("ic2_120", "compat/$path"))
 
     private fun registerFluidPair(path: String, still: Fluid, flowing: Fluid) {
         getOrCreateTagBuilder(cFluid(path))

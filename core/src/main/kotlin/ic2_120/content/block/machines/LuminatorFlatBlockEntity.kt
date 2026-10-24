@@ -9,12 +9,12 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
-import net.minecraft.registry.RegistryWrapper
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
+import net.minecraft.core.HolderLookup
 
 /**
  * 日光灯方块实体。无 GUI，100 EU 缓存，仅消耗 EU 发光。
@@ -22,7 +22,7 @@ import net.minecraft.registry.RegistryWrapper
  */
 @ModBlockEntity(block = LuminatorFlatBlock::class)
 class LuminatorFlatBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
 ) : BlockEntity(type, pos, state), ITieredMachine {
@@ -44,21 +44,21 @@ class LuminatorFlatBlockEntity(
         state
     )
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(LuminatorSync.NBT_ENERGY_STORED))
         cycleTicks = nbt.getInt("CycleTicks")
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(LuminatorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("CycleTicks", cycleTicks)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -80,7 +80,7 @@ class LuminatorFlatBlockEntity(
         }
         sync.syncCurrentTickFlow()
     }
-    private fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
+    private fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         if (state.get(LuminatorFlatBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(LuminatorFlatBlock.ACTIVE, active))
         }

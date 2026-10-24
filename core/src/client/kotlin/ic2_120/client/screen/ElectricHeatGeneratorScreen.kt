@@ -4,29 +4,29 @@ import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.screen.ElectricHeatGeneratorScreenHandler
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = ElectricHeatGeneratorBlock::class)
 class ElectricHeatGeneratorScreen(
     handler: ElectricHeatGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<ElectricHeatGeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<ElectricHeatGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -46,7 +46,7 @@ class ElectricHeatGeneratorScreen(
 
         // 鼠标悬停能量条时显示储能
         if (mouseX in gaugeX until (gaugeX + gaugeSize) && mouseY in gaugeY until (gaugeY + gaugeSize)) {
-            context.drawTooltip(textRenderer, Text.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU"), mouseX, mouseY)
+            context.drawTooltip(textRenderer, Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU"), mouseX, mouseY)
         }
 
         // 输出文本：区域 (29,65)-(149,79)，居中常显，缩放至 7px
@@ -68,7 +68,7 @@ class ElectricHeatGeneratorScreen(
     /**
      * 能量条自底向上填充，纹理区域 (179,3)-(192,16) = 13×13。
      */
-    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawEnergyGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 13
         val barH = 13
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
@@ -79,6 +79,6 @@ class ElectricHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiheatingmachine.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiheatingmachine.png")
     }
 }

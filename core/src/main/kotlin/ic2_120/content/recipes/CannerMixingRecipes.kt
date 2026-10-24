@@ -2,12 +2,12 @@ package ic2_120.content.recipes
 
 import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.Fluids
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 流体/固体装罐机的流体+固体混合配方。
@@ -33,11 +33,11 @@ import net.minecraft.util.Identifier
         val inputFluidBuckets: Int = 1
     )
 
-    private val lapisDust by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "lapis_dust")) }
-    private val bioChaff by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "bio_chaff")) }
-    private val cfPowder by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "cf_powder")) }
-    private val grinPowder by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "grin_powder")) }
-    private val peatOre by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore")) }
+    private val lapisDust by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "lapis_dust")) }
+    private val bioChaff by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "bio_chaff")) }
+    private val cfPowder by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "cf_powder")) }
+    private val grinPowder by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "grin_powder")) }
+    private val peatOre by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "peat_ore")) }
 
     private val recipes: List<Recipe> by lazy {
         listOf(

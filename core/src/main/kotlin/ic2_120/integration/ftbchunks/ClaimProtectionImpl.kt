@@ -5,10 +5,10 @@ import ic2_120.Ic2_120
 import dev.ftb.mods.ftbchunks.api.Protection
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos
 import org.slf4j.LoggerFactory
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.Hand
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.InteractionHand
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import java.util.UUID
 
 /**
@@ -29,7 +29,7 @@ class ClaimProtectionImpl : FTBChunksProtection {
      * 性能说明：claim 是 chunk 粒度的，同一 chunk 内所有方块共享同一个判定，
      * 调用方应按 chunk 缓存结果（见 NuclearExplosion 的 chunkLevelCache）。
      */
-    override fun isExplosionProtected(world: World, pos: BlockPos, ownerUuid: UUID?): Boolean {
+    override fun isExplosionProtected(world: Level, pos: BlockPos, ownerUuid: UUID?): Boolean {
         if (world.isClient) return false
         val api = FTBChunksAPI.api()
         // FTB Chunks is present but its claim manager is not ready yet.  Do not
@@ -52,13 +52,13 @@ class ClaimProtectionImpl : FTBChunksProtection {
         return true
     }
 
-    override fun isProtected(world: World, pos: BlockPos, ownerUuid: UUID?, protectionType: String): Boolean {
+    override fun isProtected(world: Level, pos: BlockPos, ownerUuid: UUID?, protectionType: String): Boolean {
         if (world.isClient) return false
         val protection = parseProtection(protectionType) ?: return false
         return checkProtection(world, pos, ownerUuid, protection)
     }
 
-    override fun isProtected(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protectionType: String): Boolean {
+    override fun isProtected(world: Level, pos: BlockPos, actor: net.minecraft.world.entity.Entity?, protectionType: String): Boolean {
         if (world.isClient) return false
         val protection = parseProtection(protectionType) ?: return false
         return checkProtectionWithActor(world, pos, actor, protection)
@@ -72,43 +72,43 @@ class ClaimProtectionImpl : FTBChunksProtection {
         }
     }
 
-    private fun checkProtection(world: World, pos: BlockPos, ownerUuid: UUID?, protection: Protection): Boolean {
+    private fun checkProtection(world: Level, pos: BlockPos, ownerUuid: UUID?, protection: Protection): Boolean {
         val api = FTBChunksAPI.api()
         if (!api.isManagerLoaded) return true
         val manager = api.manager
 
         val server = world.server ?: return false
-        val ownerPlayer: ServerPlayerEntity? = ownerUuid?.let { server.playerManager.getPlayer(it) }
+        val ownerPlayer: ServerPlayer? = ownerUuid?.let { server.playerManager.getPlayer(it) }
 
         if (ownerPlayer != null) {
             return manager.shouldPreventInteraction(
-                ownerPlayer, Hand.MAIN_HAND, pos,
+                ownerPlayer, InteractionHand.MAIN_HAND, pos,
                 protection, null
             )
         }
         return checkOfflineProtection(manager, world, pos, ownerUuid, protection)
     }
 
-    private fun checkProtectionWithActor(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protection: Protection): Boolean {
+    private fun checkProtectionWithActor(world: Level, pos: BlockPos, actor: net.minecraft.world.entity.Entity?, protection: Protection): Boolean {
         val api = FTBChunksAPI.api()
         if (!api.isManagerLoaded) return true
         val manager = api.manager
 
-        if (actor is ServerPlayerEntity) {
+        if (actor is ServerPlayer) {
             return manager.shouldPreventInteraction(
-                actor, Hand.MAIN_HAND, pos,
+                actor, InteractionHand.MAIN_HAND, pos,
                 protection, null
             )
         }
 
-        val ownerUuid = (actor as? net.minecraft.entity.projectile.ProjectileEntity)?.owner
+        val ownerUuid = (actor as? net.minecraft.world.entity.projectile.Projectile)?.owner
             ?.uuid
         return checkOfflineProtection(manager, world, pos, ownerUuid, protection)
     }
 
     private fun checkOfflineProtection(
         manager: dev.ftb.mods.ftbchunks.api.ClaimedChunkManager,
-        world: World,
+        world: Level,
         pos: BlockPos,
         ownerUuid: UUID?,
         protection: Protection

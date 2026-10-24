@@ -21,7 +21,7 @@ import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.fluid.Fluid
+import net.minecraft.world.level.material.Fluid
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -31,24 +31,24 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 冷凝器：消耗蒸汽 + EU → 产出蒸馏水。
@@ -66,12 +66,12 @@ class CondenserBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = CondenserBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CondenserBlock.ACTIVE
     override val tier: Int = 3
-    override fun getInventory(): net.minecraft.inventory.Inventory? = this
+    override fun getInventory(): net.minecraft.world.Container? = this
 
     // IFluidPipeUpgradeSupport — 默认开启推拉，无需流体升级
     override var fluidPipeProviderEnabled: Boolean = true
@@ -118,7 +118,7 @@ class CondenserBlockEntity(
         private const val WATER_PER_PROGRESS = 8100L
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -140,7 +140,7 @@ class CondenserBlockEntity(
     @RegisterEnergy
     val sync = CondenserSync(
         schema = syncedData,
-        getFacing = { cachedState.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH) },
+        getFacing = { cachedState.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH) },
         currentTickProvider = { world?.time }
     )
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
@@ -198,7 +198,7 @@ class CondenserBlockEntity(
             return true
         }
 
-        fun ejectToNeighbors(world: World, pos: BlockPos) {
+        fun ejectToNeighbors(world: Level, pos: BlockPos) {
             if (amount <= 0L || variant.isBlank) return
             for (side in Direction.entries) {
                 if (amount <= 0L) break
@@ -263,15 +263,15 @@ class CondenserBlockEntity(
 
     constructor(pos: BlockPos, state: BlockState) : this(CondenserBlockEntity::class.type(), pos, state)
 
-    // ==== Inventory ====
+    // ==== Container ====
 
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot !in listOf(SLOT_WATER_INPUT, SLOT_WATER_OUTPUT) && stack.count > 1) stack.count = 1
         inventory[slot] = stack
@@ -292,25 +292,25 @@ class CondenserBlockEntity(
     private fun isFluidCell(stack: ItemStack): Boolean =
         stack.item is ic2_120.content.item.FluidCellItem || stack.item is ic2_120.content.item.EmptyCellItem
     private fun isWaterBucket(stack: ItemStack): Boolean =
-        stack.item == net.minecraft.item.Items.BUCKET || stack.item == net.minecraft.item.Items.WATER_BUCKET
+        stack.item == net.minecraft.world.item.Items.BUCKET || stack.item == net.minecraft.world.item.Items.WATER_BUCKET
 
-    // ==== ScreenHandler ====
+    // ==== AbstractContainerMenu ====
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.condenser")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.condenser")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        CondenserScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        CondenserScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     // ==== NBT ====
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CondenserSync.NBT_ENERGY_STORED).coerceIn(0L, CondenserSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -331,18 +331,18 @@ class CondenserBlockEntity(
         sync.waterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CondenserSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_PROGRESS, progress)
         nbt.putInt(NBT_TIER, machineTier)
-        val st = NbtCompound()
+        val st = CompoundTag()
         st.put("variant", steamTank.variant.toNbt())
         st.putLong("amount", steamTank.amount)
         nbt.put(NBT_STEAM_TANK, st)
-        val wt = NbtCompound()
+        val wt = CompoundTag()
         wt.put("variant", distilledWaterTank.variant.toNbt())
         wt.putLong("amount", distilledWaterTank.amount)
         nbt.put(NBT_WATER_TANK, wt)
@@ -350,7 +350,7 @@ class CondenserBlockEntity(
 
     // ==== Tick ====
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         adjacentEnergyTransfer.tick()
@@ -452,9 +452,9 @@ class CondenserBlockEntity(
         val result: ItemStack = when (val item = inputStack.item) {
             is ic2_120.content.item.EmptyCell ->
                 ic2_120.content.item.fluidToFilledCellStack(ModFluids.DISTILLED_WATER_STILL)
-            is net.minecraft.item.BucketItem -> {
+            is net.minecraft.world.item.BucketItem -> {
                 // 空桶 → 水桶（无蒸馏水桶，退而用水桶）
-                if (item == net.minecraft.item.Items.BUCKET) ItemStack(net.minecraft.item.Items.WATER_BUCKET)
+                if (item == net.minecraft.world.item.Items.BUCKET) ItemStack(net.minecraft.world.item.Items.WATER_BUCKET)
                 else return
             }
             is ic2_120.content.item.ModFluidCell -> {

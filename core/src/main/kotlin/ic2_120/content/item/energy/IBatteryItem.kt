@@ -34,20 +34,20 @@ interface IBatteryItem : ITiered {
    /**
     * 获取当前剩余容量（EU）
     */
-   fun getCurrentCharge(stack: net.minecraft.item.ItemStack): Long
+   fun getCurrentCharge(stack: net.minecraft.world.item.ItemStack): Long
 
     /**
      * 设置当前剩余容量（EU）
      * @param charge 要设置的电量，会自动限制在 [0, maxCapacity] 范围内
      */
-    fun setCurrentCharge(stack: net.minecraft.item.ItemStack, charge: Long)
+    fun setCurrentCharge(stack: net.minecraft.world.item.ItemStack, charge: Long)
 
     /**
      * 充电
      * @param amount 要充入的电量
      * @return 实际充入的电量（可能小于 amount，如果快满了）
      */
-    fun charge(stack: net.minecraft.item.ItemStack, amount: Long): Long {
+    fun charge(stack: net.minecraft.world.item.ItemStack, amount: Long): Long {
         val current = getCurrentCharge(stack)
         val canAccept = maxCapacity - current
         val toCharge = minOf(amount, canAccept)
@@ -60,7 +60,7 @@ interface IBatteryItem : ITiered {
      * @param amount 要放电的电量
      * @return 实际放电的电量（可能小于 amount，如果电量不足）
      */
-    fun discharge(stack: net.minecraft.item.ItemStack, amount: Long): Long {
+    fun discharge(stack: net.minecraft.world.item.ItemStack, amount: Long): Long {
         val current = getCurrentCharge(stack)
         val toDischarge = minOf(amount, current)
         setCurrentCharge(stack, current - toDischarge)
@@ -70,21 +70,21 @@ interface IBatteryItem : ITiered {
     /**
      * 是否已充满
      */
-    fun isFullyCharged(stack: net.minecraft.item.ItemStack): Boolean {
+    fun isFullyCharged(stack: net.minecraft.world.item.ItemStack): Boolean {
         return getCurrentCharge(stack) >= maxCapacity
     }
 
     /**
      * 是否已耗尽
      */
-    fun isEmpty(stack: net.minecraft.item.ItemStack): Boolean {
+    fun isEmpty(stack: net.minecraft.world.item.ItemStack): Boolean {
         return getCurrentCharge(stack) <= 0
     }
 
     /**
      * 获取剩余电量百分比（0.0 - 1.0）
      */
-    fun getChargeRatio(stack: net.minecraft.item.ItemStack): Double {
+    fun getChargeRatio(stack: net.minecraft.world.item.ItemStack): Double {
         return if (maxCapacity > 0) {
             getCurrentCharge(stack).toDouble() / maxCapacity.toDouble()
         } else {
@@ -96,6 +96,6 @@ interface IBatteryItem : ITiered {
 /**
  * 检查物品栈是否可以被充电（可充电电池或电动工具）
  */
-fun net.minecraft.item.ItemStack.canBeCharged(): Boolean {
+fun net.minecraft.world.item.ItemStack.canBeCharged(): Boolean {
     return (item as? IBatteryItem)?.canCharge == true || item is IElectricTool
 }

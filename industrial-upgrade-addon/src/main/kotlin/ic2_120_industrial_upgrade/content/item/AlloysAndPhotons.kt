@@ -8,10 +8,10 @@ import ic2_120_advanced_solar_addon.content.item.EnrichedSunnariumAlloy
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 
 // ===== 富集阳光合金II enriched_sunnarium_alloy2 =====
@@ -20,9 +20,9 @@ import java.util.function.Consumer
 class EnrichedSunnariumAlloy2 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // ABA：2×富集阳光合金 + 1×奇点核心
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy2::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy2::class.instance(), 1)
                 .pattern("ABA")
                 .input('A', EnrichedSunnariumAlloy::class.instance())
                 .input('B', SingularCore::class.instance())
@@ -38,9 +38,9 @@ class EnrichedSunnariumAlloy2 : Item(Item.Settings()) {
 class EnrichedSunnariumAlloy3 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // ABA：2×富集阳光合金II + 1×光子锭
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy3::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy3::class.instance(), 1)
                 .pattern("ABA")
                 .input('A', EnrichedSunnariumAlloy2::class.instance())
                 .input('B', PhotoniyIngot::class.instance())
@@ -56,9 +56,9 @@ class EnrichedSunnariumAlloy3 : Item(Item.Settings()) {
 class EnrichedSunnariumAlloy4 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // ABA：2×富集阳光合金 + 1×光谱核心
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy4::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy4::class.instance(), 1)
                 .pattern("ABA")
                 .input('A', EnrichedSunnariumAlloy::class.instance())
                 .input('B', SpectralCore::class.instance())

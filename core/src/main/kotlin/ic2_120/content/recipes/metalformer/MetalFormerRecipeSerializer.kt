@@ -2,29 +2,29 @@ package ic2_120.content.recipes.metalformer
 
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonObject
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.JsonHelper
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.util.GsonHelper
 
 /**
  * 金属成型机配方序列化器（三种模式共用）
  */
 @ModMachineRecipe(id = "metal_forming", recipeClass = MetalFormerRecipe::class)
 object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
-    override fun read(id: Identifier, json: JsonObject): MetalFormerRecipe {
-        val ingredient = Ingredient.fromJson(JsonHelper.getObject(json, "ingredient"))
+    override fun read(id: ResourceLocation, json: JsonObject): MetalFormerRecipe {
+        val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
 
-        val result = JsonHelper.getObject(json, "result")
-        val itemId = Identifier(JsonHelper.getString(result, "item"))
-        val item = Registries.ITEM.get(itemId)
-        val count = JsonHelper.getInt(result, "count", 1)
+        val result = GsonHelper.getObject(json, "result")
+        val itemId = ResourceLocation(GsonHelper.getString(result, "item"))
+        val item = BuiltInRegistries.ITEM.get(itemId)
+        val count = GsonHelper.getInt(result, "count", 1)
         val output = ItemStack(item, count)
 
-        val mode = JsonHelper.getString(json, "mode", "rolling")
+        val mode = GsonHelper.getString(json, "mode", "rolling")
 
         return when (mode?.lowercase()) {
             "cutting" -> CuttingRecipe(id, ingredient, output)
@@ -33,7 +33,7 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
         }
     }
 
-    override fun read(id: Identifier, buf: PacketByteBuf): MetalFormerRecipe {
+    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): MetalFormerRecipe {
         val ingredient = Ingredient.fromPacket(buf)
         val output = buf.readItemStack()
         val mode = buf.readString()
@@ -45,7 +45,7 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
         }
     }
 
-    override fun write(buf: PacketByteBuf, recipe: MetalFormerRecipe) {
+    override fun write(buf: FriendlyByteBuf, recipe: MetalFormerRecipe) {
         recipe.ingredient.write(buf)
         buf.writeItemStack(recipe.output.copy())
 

@@ -5,25 +5,25 @@ import ic2_120_advanced_solar_addon.content.screen.MolecularTransformerScreenHan
 import ic2_120_advanced_solar_addon.content.recipe.MTRecipes
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.machines.MachineBlockEntity
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -39,7 +39,7 @@ class MolecularTransformerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(MolecularTransformerBlockEntity::class.type(), pos, state),
-    Inventory, ITieredMachine, ExtendedScreenHandlerFactory {
+    Container, ITieredMachine, ExtendedScreenHandlerFactory {
 
     companion object {
         const val TIER = 10
@@ -56,7 +56,7 @@ class MolecularTransformerBlockEntity(
     val sync = MolecularTransformerSync(
         schema = syncedData,
         tier = tier,
-        getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time },
         canAcceptEnergy = { currentRecipe != null },
         getRemainingEnergyNeeded = {
@@ -67,7 +67,7 @@ class MolecularTransformerBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
-    val inventory: DefaultedList<ItemStack> = DefaultedList.ofSize(MolecularTransformerBlock.INVENTORY_SIZE, ItemStack.EMPTY)
+    val inventory: NonNullList<ItemStack> = NonNullList.ofSize(MolecularTransformerBlock.INVENTORY_SIZE, ItemStack.EMPTY)
 
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
@@ -90,27 +90,27 @@ class MolecularTransformerBlockEntity(
     private var noEnergyTicks: Int = 0
     private var isLit: Boolean = false
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
 
-    // Inventory
+    // Container
     override fun size(): Int = inventory.size
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     private fun isValidForSlot(slot: Int, stack: ItemStack): Boolean = when (slot) {
         MolecularTransformerBlock.INPUT_SLOT -> MTRecipes.findRecipe(stack) != null
         else -> false
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         adjacentEnergyTransfer.tick()
@@ -195,7 +195,7 @@ class MolecularTransformerBlockEntity(
         markDirty()
     }
 
-    private fun resetRecipe(world: World, pos: BlockPos, state: BlockState) {
+    private fun resetRecipe(world: Level, pos: BlockPos, state: BlockState) {
         currentRecipe = null
         energyUsed = 0
         consumedInputItem = ItemStack.EMPTY
@@ -217,24 +217,24 @@ class MolecularTransformerBlockEntity(
     }
 
     // ExtendedScreenHandlerFactory
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120_advanced_solar_addon.molecular_transformer")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120_advanced_solar_addon.molecular_transformer")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         MolecularTransformerScreenHandler(
             syncId, playerInventory, this,
-            ScreenHandlerContext.create(world!!, pos),
+            ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         energyUsed = nbt.getLong("energyUsed")
         consumedInputItem = ItemStack.fromNbt(nbt.getCompound("consumedInput"))
         noEnergyTicks = nbt.getInt("noEnergyTicks")
@@ -247,11 +247,11 @@ class MolecularTransformerBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         nbt.putLong("energyUsed", energyUsed)
-        nbt.put("consumedInput", consumedInputItem.writeNbt(NbtCompound()))
+        nbt.put("consumedInput", consumedInputItem.writeNbt(CompoundTag()))
         nbt.putInt("noEnergyTicks", noEnergyTicks)
         nbt.putBoolean("isLit", isLit)
         nbt.putLong(MolecularTransformerSync.NBT_ENERGY, sync.amount)

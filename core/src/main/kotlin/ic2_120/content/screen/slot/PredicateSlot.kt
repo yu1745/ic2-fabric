@@ -1,15 +1,15 @@
 package ic2_120.content.screen.slot
 
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.Slot
 
 /**
  * 基于 [SlotSpec] 的通用槽位实现。
  */
 open class PredicateSlot(
-    inventory: Inventory,
+    inventory: Container,
     index: Int,
     x: Int,
     y: Int,
@@ -22,5 +22,5 @@ open class PredicateSlot(
 
     override fun getMaxItemCount(existingStack: ItemStack): Int = spec.maxItemCount
 
-    override fun canTakeItems(playerEntity: PlayerEntity): Boolean = spec.canTake(playerEntity)
+    override fun canTakeItems(playerEntity: Player): Boolean = spec.canTake(playerEntity)
 }

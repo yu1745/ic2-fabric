@@ -7,9 +7,9 @@ import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
-import net.minecraft.client.MinecraftClient
-import net.minecraft.util.ActionResult
-import net.minecraft.util.TypedActionResult
+import net.minecraft.client.Minecraft
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResultHolder
 
 /**
  * 采矿镭射枪模式切换：
@@ -27,24 +27,24 @@ object MiningLaserModeHandler {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getStackInHand(hand)
             if (!world.isClient || stack.item !is MiningLaserItem || !ModeKeybinds.isAltDown()) {
-                return@register TypedActionResult.pass(stack)
+                return@register InteractionResultHolder.pass(stack)
             }
             sendToggleOnceThisTick()
-            return@register TypedActionResult.success(stack)
+            return@register InteractionResultHolder.success(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
             val stack = player.getStackInHand(hand)
             if (!world.isClient || stack.item !is MiningLaserItem || !ModeKeybinds.isAltDown()) {
-                return@register ActionResult.PASS
+                return@register InteractionResult.PASS
             }
             sendToggleOnceThisTick()
-            return@register ActionResult.SUCCESS
+            return@register InteractionResult.SUCCESS
         }
     }
 
     private fun sendToggleOnceThisTick() {
-        val age = MinecraftClient.getInstance().player?.age ?: return
+        val age = Minecraft.getInstance().player?.age ?: return
         if (age == lastToggleSentOnPlayerAge) return
         lastToggleSentOnPlayerAge = age
         ClientPlayNetworking.send(ToggleMiningLaserModePayload)

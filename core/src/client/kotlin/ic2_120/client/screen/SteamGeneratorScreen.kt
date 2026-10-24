@@ -8,21 +8,21 @@ import ic2_120.content.sync.SteamGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.Sprite
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.Fluids
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.text.Text as McText
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.chat.Component as McText
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 蒸汽发生器 GUI — 1:1 对齐 ic2_origin GuiSteamGenerator (176×220)。
  *
- * Ic2Gui(Ic2Gui, PlayerInventory, Text, 220) 调用:
+ * Ic2Gui(Ic2Gui, Inventory, Component, 220) 调用:
  *   this(container, inv, title, 176, 220)
  *   → backgroundWidth=176, backgroundHeight=220
  *
@@ -32,23 +32,23 @@ import net.minecraft.util.Identifier
 @ModScreen(block = SteamGeneratorBlock::class)
 class SteamGeneratorScreen(
     handler: SteamGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
+    playerInventory: Inventory,
     title: McText
-) : HandledScreen<SteamGeneratorScreenHandler>(handler, playerInventory, title) {
+) : AbstractContainerScreen<SteamGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 220
     }
 
-    private val waterSprite: Sprite? by lazy {
+    private val waterSprite: TextureAtlasSprite? by lazy {
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER) ?: return@lazy null
         handler.getFluidSprites(null, null, Fluids.WATER.defaultState)?.getOrNull(0)
     }
 
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         renderBackground(context)
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
         // 标题居中，颜色 0x404040 — 与 Ic2Gui.drawXCenteredString 一致
@@ -62,8 +62,8 @@ class SteamGeneratorScreen(
 
     // ==== 前景 — 动态填充 + 文字 (ic2_origin: TankGauge/LinkedGauge drawForeground) ====
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // super.render() → HandledScreen.render → drawBackground(背景纹理) + 槽位, 先画
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+        // super.render() → AbstractContainerScreen.render → drawBackground(背景纹理) + 槽位, 先画
         super.render(context, mouseX, mouseY, delta)
 
         val left = x; val top = y
@@ -169,18 +169,18 @@ class SteamGeneratorScreen(
     }
 
     private fun sendClick(id: Int) {
-        MinecraftClient.getInstance().player?.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, id))
+        Minecraft.getInstance().player?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.syncId, id))
     }
 
     // ==== 绘制辅助 ====
 
-    private fun drawCentered(ctx: DrawContext, text: String, ax: Int, ay: Int, aw: Int, ah: Int, color: Int) {
+    private fun drawCentered(ctx: GuiGraphics, text: String, ax: Int, ay: Int, aw: Int, ah: Int, color: Int) {
         val tw = textRenderer.getWidth(text)
         ctx.drawText(textRenderer, text, ax + (aw - tw) / 2, ay + (ah - 8) / 2, color, true)
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisteamgenerator.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guisteamgenerator.png")
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val HEAT_COLOR = 0xFFFF4444.toInt()
         private val CALC_COLOR = 0xFF888888.toInt()

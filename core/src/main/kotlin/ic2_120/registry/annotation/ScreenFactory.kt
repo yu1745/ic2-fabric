@@ -1,10 +1,10 @@
 package ic2_120.registry.annotation
 
 /**
- * 标记 ScreenHandler companion 中用于构造客户端实例的工厂方法。
+ * 标记 AbstractContainerMenu companion 中用于构造客户端实例的工厂方法。
  *
  * 推荐签名：
- * `fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ScreenHandler`
+ * `fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): AbstractContainerMenu`
  *
  * 说明：
  * - 该注解是可选的。

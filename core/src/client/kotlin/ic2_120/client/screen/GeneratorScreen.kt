@@ -6,29 +6,29 @@ import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.screen.GeneratorScreenHandler
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = GeneratorBlock::class)
 class GeneratorScreen(
     handler: GeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<GeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<GeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 161
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -63,7 +63,7 @@ class GeneratorScreen(
         if (mouseX in x + 79 until x + 103 && mouseY in y + 35 until y + 51) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(GeneratorSync.ENERGY_CAPACITY)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(GeneratorSync.ENERGY_CAPACITY)} EU"),
                 mouseX, mouseY
             )
         }
@@ -71,7 +71,7 @@ class GeneratorScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawEnergyGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 24
         val barH = 16
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
@@ -81,7 +81,7 @@ class GeneratorScreen(
         context.disableScissor()
     }
 
-    private fun drawFuelGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawFuelGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 13
         val barH = 13
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
@@ -92,6 +92,6 @@ class GeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guipowergenerator.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guipowergenerator.png")
     }
 }

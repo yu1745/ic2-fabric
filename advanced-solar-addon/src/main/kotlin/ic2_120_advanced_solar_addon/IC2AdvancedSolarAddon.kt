@@ -8,14 +8,14 @@ import ic2_120.registry.ClassScanner
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 
 object IC2AdvancedSolarAddon : ModInitializer {
     const val MOD_ID = "ic2_120_advanced_solar_addon"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
-    fun id(path: String): Identifier = Identifier(MOD_ID, path)
+    fun id(path: String): ResourceLocation = ResourceLocation(MOD_ID, path)
 
     override fun onInitialize() {
         LOGGER.info("Initializing IC2 Advanced Solar Addon...")

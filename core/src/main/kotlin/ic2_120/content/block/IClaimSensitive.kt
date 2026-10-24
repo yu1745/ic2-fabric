@@ -1,8 +1,8 @@
 package ic2_120.content.block
 
-import net.minecraft.block.BlockState
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * 方块实体领地保护诊断接口。
@@ -14,5 +14,5 @@ import net.minecraft.world.World
  * 返回空列表表示无阻断。
  */
 interface IClaimSensitive {
-    fun claimBlockedTargets(world: World, pos: BlockPos, state: BlockState): List<BlockPos>
+    fun claimBlockedTargets(world: Level, pos: BlockPos, state: BlockState): List<BlockPos>
 }

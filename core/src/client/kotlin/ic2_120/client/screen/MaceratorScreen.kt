@@ -6,30 +6,30 @@ import ic2_120.content.block.MaceratorBlock
 import ic2_120.content.screen.MaceratorScreenHandler
 import ic2_120.content.sync.MaceratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = MaceratorBlock::class)
 class MaceratorScreen(
     handler: MaceratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<MaceratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<MaceratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -66,7 +66,7 @@ class MaceratorScreen(
         // 鼠标悬停能量条时显示电量信息
         if (mouseX in (x + 44) until (x + 44 + 14) && mouseY in (y + 36) until (y + 36 + 14)) {
             val energyTooltip = listOf(
-                Text.translatable("gui.ic2_120.energy_tooltip",
+                Component.translatable("gui.ic2_120.energy_tooltip",
                     EnergyFormatUtils.formatRaw(energy),
                     EnergyFormatUtils.formatRaw(cap))
             )
@@ -75,10 +75,10 @@ class MaceratorScreen(
 
         // 鼠标悬停升级提示图标时显示支持的升级组件
         if (mouseX in (x + 4) until (x + 4 + 16) && mouseY in (y + 4) until (y + 4 + 16)) {
-            val upgradeTooltip = mutableListOf<Text>()
-            upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
+            val upgradeTooltip = mutableListOf<Component>()
+            upgradeTooltip.add(Component.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
-                val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
+                val item = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", id))
                 upgradeTooltip.add(item.name)
             }
             context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
@@ -87,7 +87,7 @@ class MaceratorScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawEnergyGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 14
         val barH = 14
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
@@ -97,7 +97,7 @@ class MaceratorScreen(
         context.disableScissor()
     }
 
-    private fun drawProgressGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawProgressGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 21
         val barH = 11
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
@@ -108,8 +108,8 @@ class MaceratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/scrapboxrecipes.png")
-        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/scrapboxrecipes.png")
+        private val UPTIPS = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private val SUPPORTED_UPGRADES = listOf(
             "overclocker_upgrade",
             "transformer_upgrade",

@@ -5,8 +5,8 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 
 /**
  * 建筑泡沫喷枪：容量、剩余喷涂格数、单格/多格模式与 Alt+右键提示。
@@ -21,20 +21,20 @@ object FoamSprayerTooltipHandler {
             val capBuckets = FoamSprayerItem.CAPACITY_DROPLETS / FluidConstants.BUCKET
             val curBuckets = "%.1f".format(amt.toDouble() / FluidConstants.BUCKET.toDouble())
             lines.add(
-                Text.translatable("tooltip.ic2_120.foam_sprayer.fluid", curBuckets, capBuckets)
-                    .formatted(Formatting.GRAY)
+                Component.translatable("tooltip.ic2_120.foam_sprayer.fluid", curBuckets, capBuckets)
+                    .formatted(ChatFormatting.GRAY)
             )
             val spraysLeft = (amt / FoamSprayerItem.DROPLETS_PER_BLOCK).toInt()
             lines.add(
-                Text.translatable("tooltip.ic2_120.foam_sprayer.blocks_left", spraysLeft)
-                    .formatted(Formatting.GRAY)
+                Component.translatable("tooltip.ic2_120.foam_sprayer.blocks_left", spraysLeft)
+                    .formatted(ChatFormatting.GRAY)
             )
-            val keyLine = Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click")
-                .formatted(Formatting.YELLOW)
+            val keyLine = Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click")
+                .formatted(ChatFormatting.YELLOW)
             if (FoamSprayerItem.isMultiMode(stack)) {
-                lines.add(Text.translatable("tooltip.ic2_120.foam_sprayer.mode_multi", keyLine).formatted(Formatting.DARK_AQUA))
+                lines.add(Component.translatable("tooltip.ic2_120.foam_sprayer.mode_multi", keyLine).formatted(ChatFormatting.DARK_AQUA))
             } else {
-                lines.add(Text.translatable("tooltip.ic2_120.foam_sprayer.mode_single", keyLine).formatted(Formatting.DARK_AQUA))
+                lines.add(Component.translatable("tooltip.ic2_120.foam_sprayer.mode_single", keyLine).formatted(ChatFormatting.DARK_AQUA))
             }
         }
     }

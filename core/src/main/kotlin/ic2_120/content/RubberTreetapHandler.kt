@@ -7,16 +7,16 @@ import ic2_120.content.block.RubberLogBlockEntity
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.minecraft.entity.ItemEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.world.World
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.level.Level
 
 /**
  * 木龙头与电动树脂提取器与橡胶树原木的交互：
@@ -25,21 +25,21 @@ import net.minecraft.world.World
  */
 object RubberTreetapHandler {
 
-    private val TREETAP_ID = Identifier(Ic2_120.MOD_ID, "treetap")
-    private val ELECTRIC_TREETAP_ID = Identifier(Ic2_120.MOD_ID, "electric_treetap")
-    private val RESIN_ID = Identifier(Ic2_120.MOD_ID, "resin")
-    private val TREETAP_SOUND = SoundEvent.of(Identifier.of("ic2", "item.treetap.use"))
-    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(Identifier.of("ic2", "item.treetap.electric.use"))
+    private val TREETAP_ID = ResourceLocation(Ic2_120.MOD_ID, "treetap")
+    private val ELECTRIC_TREETAP_ID = ResourceLocation(Ic2_120.MOD_ID, "electric_treetap")
+    private val RESIN_ID = ResourceLocation(Ic2_120.MOD_ID, "resin")
+    private val TREETAP_SOUND = SoundEvent.of(ResourceLocation.of("ic2", "item.treetap.use"))
+    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(ResourceLocation.of("ic2", "item.treetap.electric.use"))
     private const val EU_PER_USE = 50L
 
     fun isTreetap(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        return Registries.ITEM.getId(stack.item) == TREETAP_ID
+        return BuiltInRegistries.ITEM.getId(stack.item) == TREETAP_ID
     }
 
     fun isElectricTreetap(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        return Registries.ITEM.getId(stack.item) == ELECTRIC_TREETAP_ID
+        return BuiltInRegistries.ITEM.getId(stack.item) == ELECTRIC_TREETAP_ID
     }
 
     fun isExtractor(stack: ItemStack): Boolean = isTreetap(stack) || isElectricTreetap(stack)
@@ -47,28 +47,28 @@ object RubberTreetapHandler {
     fun register() {
         UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
             val stack = player.getStackInHand(hand)
-            if (!isExtractor(stack)) return@register ActionResult.PASS
+            if (!isExtractor(stack)) return@register InteractionResult.PASS
 
             val pos = hitResult.blockPos
             val state = world.getBlockState(pos)
             val block = state.block
 
-            if (block !is RubberLogBlock) return@register ActionResult.PASS
+            if (block !is RubberLogBlock) return@register InteractionResult.PASS
 
             val face = hitResult.side
             val faceState = block.getRubberState(state, face)
-            if (faceState == RubberFaceState.NONE) return@register ActionResult.PASS
+            if (faceState == RubberFaceState.NONE) return@register InteractionResult.PASS
 
-            if (world.isClient) return@register ActionResult.SUCCESS
+            if (world.isClient) return@register InteractionResult.SUCCESS
 
             if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK)) {
-                return@register ActionResult.FAIL
+                return@register InteractionResult.FAIL
             }
 
             // 电动树脂提取器：电量不足 50 EU 则不允许提取
             if (isElectricTreetap(stack)) {
                 val tool = stack.item as IElectricTool
-                if (tool.getEnergy(stack) < EU_PER_USE) return@register ActionResult.FAIL
+                if (tool.getEnergy(stack) < EU_PER_USE) return@register InteractionResult.FAIL
             }
 
             // 对齐 JADX ItemTreetap：干孔也会响应树脂提取器。
@@ -82,14 +82,14 @@ object RubberTreetapHandler {
                 }
                 resinCount = if (world.random.nextInt(5) == 0) 1 else null
                 if (resinCount != null) changed = true
-                if (!changed) return@register ActionResult.FAIL
+                if (!changed) return@register InteractionResult.FAIL
             } else {
                 // JADX 湿孔提取：1-3 个树脂，等概率。
                 resinCount = world.random.nextInt(3) + 1
             }
 
             if (resinCount != null) {
-                val resin = Registries.ITEM.get(RESIN_ID)
+                val resin = BuiltInRegistries.ITEM.get(RESIN_ID)
                 val resinStack = ItemStack(resin, resinCount)
                 val spawnX = pos.x + 0.5 + face.offsetX * 0.6
                 val spawnY = pos.y + 0.5 + face.offsetY * 0.35
@@ -126,11 +126,11 @@ object RubberTreetapHandler {
                 null,
                 pos,
                 if (isElectricTreetap(stack)) ELECTRIC_TREETAP_SOUND else TREETAP_SOUND,
-                SoundCategory.BLOCKS,
+                SoundSource.BLOCKS,
                 1.0f,
                 1.0f
             )
-            ActionResult.SUCCESS
+            InteractionResult.SUCCESS
         }
     }
 }

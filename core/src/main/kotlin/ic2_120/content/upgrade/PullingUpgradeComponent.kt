@@ -4,14 +4,14 @@ import ic2_120.content.item.PullingUpgrade
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.item.Item
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.item.Item
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import java.util.WeakHashMap
 
 object PullingUpgradeComponent {
@@ -51,9 +51,9 @@ object PullingUpgradeComponent {
      * 复用 EjectorUpgradeComponent 的 NBT 读写方法（过滤和方向配置格式一致）。
      */
     fun pullIfUpgraded(
-        world: World,
+        world: Level,
         pos: BlockPos,
-        inventory: Inventory,
+        inventory: Container,
         upgradeSlotIndices: IntArray,
         inputSlotIndices: IntArray
     ) {
@@ -78,16 +78,16 @@ object PullingUpgradeComponent {
 
     /** 非 BlockEntity 调用方（不应存在于生产路径，防御保留）：无退避直拉。 */
     private fun pullLegacy(
-        world: World, pos: BlockPos, inventory: Inventory,
+        world: Level, pos: BlockPos, inventory: Container,
         upgradeSlotIndices: IntArray, inputSlotIndices: IntArray
     ) {
         doPull(world, pos, inventory, null, upgradeSlotIndices, inputSlotIndices, 1L, world.time)
     }
 
     private fun doPull(
-        world: World,
+        world: Level,
         pos: BlockPos,
-        inventory: Inventory,
+        inventory: Container,
         machine: BlockEntity?,
         upgradeSlotIndices: IntArray,
         inputSlotIndices: IntArray,

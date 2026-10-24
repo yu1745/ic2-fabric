@@ -8,9 +8,9 @@ import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.ActionResult
-import net.minecraft.util.TypedActionResult
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResultHolder
 
 /** 链锯模式切换：按住 Alt 并右键切换剪刀功能。 */
 @Environment(EnvType.CLIENT)
@@ -21,19 +21,19 @@ object ChainsawModeHandler {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getStackInHand(hand)
             if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
-                return@register TypedActionResult.pass(stack)
+                return@register InteractionResultHolder.pass(stack)
             }
             sendToggleOnceThisTick(player.age)
-            TypedActionResult.success(stack)
+            InteractionResultHolder.success(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
             val stack = player.getStackInHand(hand)
             if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
-                return@register ActionResult.PASS
+                return@register InteractionResult.PASS
             }
             sendToggleOnceThisTick(player.age)
-            ActionResult.SUCCESS
+            InteractionResult.SUCCESS
         }
     }
 
@@ -42,7 +42,7 @@ object ChainsawModeHandler {
         lastToggleSentOnPlayerAge = playerAge
         ClientPlayNetworking.send(
             NetworkManager.TOGGLE_CHAINSAW_SHEAR_PACKET,
-            PacketByteBuf(Unpooled.buffer())
+            FriendlyByteBuf(Unpooled.buffer())
         )
     }
 }

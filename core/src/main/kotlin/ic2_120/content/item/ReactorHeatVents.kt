@@ -13,13 +13,13 @@ import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
 
 /**
  * 散热片基类：热容量 + 自身蒸发 + 吸堆温。
@@ -106,11 +106,11 @@ abstract class ReactorHeatVentBase(
 class HeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 6, 0) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = IronPlate::class.instance()
             val motor = ElectricMotor::class.instance()
             if (plate != Items.AIR && motor != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, HeatVentItem::class.instance(), 1)
                     .pattern("BIB").pattern("IMI").pattern("BIB")
                     .input('B', Items.IRON_BARS).input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)).input('M', motor)
                     .criterion(hasItem(plate), conditionsFromItem(plate))
@@ -124,11 +124,11 @@ class HeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 6, 0) {
 class ReactorHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 5, 5) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = CopperPlate::class.instance()
             val vent = HeatVentItem::class.instance()
             if (plate != Items.AIR && vent != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorHeatVentItem::class.instance(), 1)
                     .pattern("CCC").pattern("CVC").pattern("CCC")
                     .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER)).input('V', vent)
                     .criterion(hasItem(vent), conditionsFromItem(vent))
@@ -142,10 +142,10 @@ class ReactorHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 5, 5) {
 class AdvancedHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 12, 0) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val vent = HeatVentItem::class.instance()
             if (vent != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedHeatVentItem::class.instance(), 1)
                     .pattern("IHI").pattern("IDI").pattern("IHI")
                     .input('I', Items.IRON_BARS).input('H', vent).input('D', Items.DIAMOND)
                     .criterion(hasItem(vent), conditionsFromItem(vent))
@@ -159,11 +159,11 @@ class AdvancedHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 12, 0) {
 class OverclockedHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 20, 36) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val gold = GoldPlate::class.instance()
             val reactorVent = ReactorHeatVentItem::class.instance()
             if (gold != Items.AIR && reactorVent != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, OverclockedHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, OverclockedHeatVentItem::class.instance(), 1)
                     .pattern(" G ").pattern("GRG").pattern(" G ")
                     .input('G', Ingredient.fromTag(ModTags.Compat.Items.PLATES_GOLD)).input('R', reactorVent)
                     .criterion(hasItem(reactorVent), conditionsFromItem(reactorVent))
@@ -213,11 +213,11 @@ class ComponentHeatVentItem(settings: Item.Settings = Item.Settings()) : Abstrac
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinPlate::class.instance()
             val vent = HeatVentItem::class.instance()
             if (tin != Items.AIR && vent != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ComponentHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, ComponentHeatVentItem::class.instance(), 1)
                     .pattern("TBT").pattern("BVB").pattern("TBT")
                     .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN)).input('B', Items.IRON_BARS).input('V', vent)
                     .criterion(hasItem(vent), conditionsFromItem(vent))

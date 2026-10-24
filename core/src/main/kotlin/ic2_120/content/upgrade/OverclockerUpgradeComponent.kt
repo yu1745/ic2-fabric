@@ -1,7 +1,7 @@
 package ic2_120.content.upgrade
 
 import ic2_120.content.item.OverclockerUpgrade
-import net.minecraft.inventory.Inventory
+import net.minecraft.world.Container
 
 /**
  * 加速升级处理组件。
@@ -30,7 +30,7 @@ object OverclockerUpgradeComponent {
      * 从升级槽统计加速升级数量，并应用到机器。
      * 若 [machine] 未实现 [IOverclockerUpgradeSupport]，则不执行。
      */
-    fun apply(inventory: Inventory, upgradeSlotIndices: IntArray, machine: Any) {
+    fun apply(inventory: Container, upgradeSlotIndices: IntArray, machine: Any) {
         if (machine !is IOverclockerUpgradeSupport) return
 
         val count = countOverclockers(inventory, upgradeSlotIndices)
@@ -40,7 +40,7 @@ object OverclockerUpgradeComponent {
     }
 
     /** 统计升级槽中加速升级的数量 */
-    fun countOverclockers(inventory: Inventory, upgradeSlotIndices: IntArray): Int {
+    fun countOverclockers(inventory: Container, upgradeSlotIndices: IntArray): Int {
         var count = 0
         for (idx in upgradeSlotIndices) {
             val stack = inventory.getStack(idx)

@@ -4,7 +4,7 @@ import ic2_120.content.UpgradeableTickLimitedSidedEnergyContainer
 import ic2_120.content.energy.EnergyTier
 import ic2_120.content.syncs.SyncSchema
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 
 /**
  * 中子制造机同步数据。参照 core 的 MatterGeneratorSync。

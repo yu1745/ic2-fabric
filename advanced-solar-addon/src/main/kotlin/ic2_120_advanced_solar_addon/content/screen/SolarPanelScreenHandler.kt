@@ -11,30 +11,30 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.Direction
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.core.Direction
 
 @ModScreenHandler(names = ["advanced_solar_panel", "hybrid_solar_panel", "ultimate_solar_panel", "quantum_solar_panel"])
 class SolarPanelScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
-    private val chargeInventory: Inventory? = null,
+    playerInventory: Inventory,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
+    private val chargeInventory: Container? = null,
     private val chargeSlotCount: Int = 0,
     private val chargeTier: Int = 1,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(SolarPanelScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(SolarPanelScreenHandler::class.type(), syncId) {
 
     val sync = SolarPanelSync(
         schema = SyncedDataView(propertyDelegate),
@@ -73,14 +73,14 @@ class SolarPanelScreenHandler(
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+    private fun addTrackedSlot(inventory: Container, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: chargeSlotSpec(chargeTier)
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
         addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
 
         var stack = ItemStack.EMPTY
@@ -127,7 +127,7 @@ class SolarPanelScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -160,14 +160,14 @@ class SolarPanelScreenHandler(
 
         @ScreenFactory
         @JvmStatic
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SolarPanelScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): SolarPanelScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val chargeSlots = buf.readVarInt()
             val tier = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val propertyDelegate = ArrayPropertyDelegate(propertyCount)
-            val chargeInv = if (chargeSlots > 0) SimpleInventory(chargeSlots) else null
+            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val propertyDelegate = SimpleContainerData(propertyCount)
+            val chargeInv = if (chargeSlots > 0) SimpleContainer(chargeSlots) else null
             return SolarPanelScreenHandler(syncId, playerInventory, context, propertyDelegate, chargeInv, chargeSlots, tier)
         }
     }

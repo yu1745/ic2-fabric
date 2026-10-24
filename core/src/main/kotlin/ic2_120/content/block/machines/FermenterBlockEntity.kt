@@ -35,27 +35,27 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 发酵机：
@@ -70,9 +70,9 @@ class FermenterBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = FermenterBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = FermenterBlock.ACTIVE
     override val tier: Int = 1
 
     override var fluidPipeProviderEnabled: Boolean = false
@@ -94,7 +94,7 @@ class FermenterBlockEntity(
         const val SLOT_UPGRADE_1 = 6
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1)
         // SLOT_INPUT_EMPTY_CONTAINER 虽然名字带 INPUT，但它是消耗满生物质容器后返还的空容器槽
-        // （ScreenHandler 用 OUTPUT_ONLY_SLOT_SPEC，玩家只能取不能放），必须纳入弹出升级扫描范围。
+        // （AbstractContainerMenu 用 OUTPUT_ONLY_SLOT_SPEC，玩家只能取不能放），必须纳入弹出升级扫描范围。
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_FILLED_CONTAINER, SLOT_OUTPUT_FERTILIZER, SLOT_INPUT_EMPTY_CONTAINER)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT_FILLED_CONTAINER)
         const val INVENTORY_SIZE = 7
@@ -116,7 +116,7 @@ class FermenterBlockEntity(
         }
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -138,10 +138,10 @@ class FermenterBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val biomassCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biomass_cell")) }
-    private val fertilizerItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fertilizer")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val biomassCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "biomass_cell")) }
+    private val fertilizerItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fertilizer")) }
 
     private val inputPerCycle = FermenterSync.INPUT_DROPLETS_PER_CYCLE.toLong()
     private val outputPerCycle = FermenterSync.OUTPUT_DROPLETS_PER_CYCLE.toLong()
@@ -327,14 +327,14 @@ class FermenterBlockEntity(
         state
     )
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_FILLED_CONTAINER -> isBiomassFilledContainer(stack)
@@ -356,26 +356,26 @@ class FermenterBlockEntity(
         markDirty()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.fermenter")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.fermenter")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         FermenterScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         inputTankInternal.setStoredFluid(nbt.getLong(NBT_INPUT_TANK))
         outputTankInternal.setStoredFluid(nbt.getLong(NBT_OUTPUT_TANK))
@@ -383,9 +383,9 @@ class FermenterBlockEntity(
         sync.bufferedHeat = heatBuffer.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
@@ -404,7 +404,7 @@ class FermenterBlockEntity(
         return accepted
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
@@ -525,7 +525,7 @@ class FermenterBlockEntity(
     }
 
     private fun getFrontFacing(): Direction =
-        world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
+        world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
 
     private fun isBiomass(fluid: Fluid): Boolean =
         fluid == ModFluids.BIOMASS_STILL || fluid == ModFluids.BIOMASS_FLOWING
@@ -545,7 +545,7 @@ class FermenterBlockEntity(
         if (stack.isEmpty) return false
         return when {
             stack.item == ModFluids.BIOMASS_BUCKET -> true
-            Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "biomass_cell") -> true
+            BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.of("ic2_120", "biomass_cell") -> true
             stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid != null && isBiomass(fluid)
@@ -557,7 +557,7 @@ class FermenterBlockEntity(
     private fun isEmptyContainerForFermenter(stack: ItemStack): Boolean =
         !stack.isEmpty && (
             stack.item == Items.BUCKET ||
-                Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
+                BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.of("ic2_120", "empty_cell") ||
                 (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             )
 }

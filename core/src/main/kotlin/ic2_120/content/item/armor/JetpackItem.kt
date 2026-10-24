@@ -15,13 +15,13 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.ChatFormatting
+import net.minecraft.world.phys.BlockHitResult
 import kotlin.math.min
 
 /**
@@ -82,19 +82,19 @@ open class JetpackItem : ArmorItem(
             stack.orCreateNbt.putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel))
         }
 
-        fun getFuelFluid(stack: ItemStack): net.minecraft.fluid.Fluid? {
+        fun getFuelFluid(stack: ItemStack): net.minecraft.world.level.material.Fluid? {
             val id = stack.nbt?.getString(FUEL_FLUID_KEY)
             if (!id.isNullOrBlank()) {
-                val fluid = net.minecraft.registry.Registries.FLUID.get(net.minecraft.util.Identifier(id))
+                val fluid = net.minecraft.core.registries.BuiltInRegistries.FLUID.get(net.minecraft.resources.ResourceLocation(id))
                 if (FluidFuelRegistry.isSupported(fluid)) return fluid
             }
             // 兼容旧版只有 Fuel 数值的背包：旧燃料就是生物燃料。
             return if (getFuel(stack) > 0L) ModFluids.BIOFUEL_STILL else null
         }
 
-        fun setFuelFluid(stack: ItemStack, fluid: net.minecraft.fluid.Fluid?) {
+        fun setFuelFluid(stack: ItemStack, fluid: net.minecraft.world.level.material.Fluid?) {
             if (fluid == null) stack.orCreateNbt.remove(FUEL_FLUID_KEY)
-            else stack.orCreateNbt.putString(FUEL_FLUID_KEY, net.minecraft.registry.Registries.FLUID.getId(fluid).toString())
+            else stack.orCreateNbt.putString(FUEL_FLUID_KEY, net.minecraft.core.registries.BuiltInRegistries.FLUID.getId(fluid).toString())
         }
 
         /**
@@ -123,8 +123,8 @@ open class JetpackItem : ArmorItem(
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
-        tooltip: MutableList<Text>,
+        world: net.minecraft.world.level.Level?,
+        tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
@@ -148,9 +148,9 @@ open class JetpackItem : ArmorItem(
             "${remainingSeconds.toInt()}秒"
         }
 
-        val fuelName = getFuelFluid(stack)?.let { net.minecraft.registry.Registries.FLUID.getId(it).toString() } ?: "无"
-        tooltip.add(Text.literal("燃料: $fuelName %,d / %,d mB (%.1f%%)".format(fuelMb, maxFuelMb, ratio * 100)))
-        tooltip.add(Text.literal("剩余飞行: $timeText").formatted(Formatting.GRAY))
+        val fuelName = getFuelFluid(stack)?.let { net.minecraft.core.registries.BuiltInRegistries.FLUID.getId(it).toString() } ?: "无"
+        tooltip.add(Component.literal("燃料: $fuelName %,d / %,d mB (%.1f%%)".format(fuelMb, maxFuelMb, ratio * 100)))
+        tooltip.add(Component.literal("剩余飞行: $timeText").formatted(ChatFormatting.GRAY))
     }
 
     /**
@@ -159,15 +159,15 @@ open class JetpackItem : ArmorItem(
      */
     override fun isDamageable(): Boolean = false
 
-    override fun useOnBlock(context: ItemUsageContext): ActionResult {
+    override fun useOnBlock(context: UseOnContext): InteractionResult {
         val world = context.world
-        val player = context.player ?: return ActionResult.PASS
-        if (world.isClient) return ActionResult.SUCCESS
+        val player = context.player ?: return InteractionResult.PASS
+        if (world.isClient) return InteractionResult.SUCCESS
         val hit = BlockHitResult(context.hitPos, context.side, context.blockPos, context.hitsInsideBlock())
         val storage = FluidStorage.SIDED.find(world, hit.blockPos, hit.side)
         return if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, context.hand)) {
-            ActionResult.SUCCESS
-        } else ActionResult.PASS
+            InteractionResult.SUCCESS
+        } else InteractionResult.PASS
     }
 
     override fun isItemBarVisible(stack: ItemStack): Boolean = true

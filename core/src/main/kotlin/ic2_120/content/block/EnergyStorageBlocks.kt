@@ -26,22 +26,22 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.tags.ItemTags
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 // ============== Block Definitions ==============
 
@@ -49,17 +49,17 @@ import net.minecraft.world.World
 class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.BatBoxBlockEntity(pos, state)
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, EnergyStorageBlockEntity.BatBoxBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tinCable = InsulatedTinCableBlock::class.item()
             val battery = ReBatteryItem::class.instance()
             if (tinCable != Items.AIR && battery != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BatBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, BatBoxBlock::class.item(), 1)
                     .pattern("WTW")
                     .pattern("BBB")
                     .pattern("WWW")
@@ -82,18 +82,18 @@ class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
 class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.CesuBlockEntity(pos, state)
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, EnergyStorageBlockEntity.CesuBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val copperCable = InsulatedCopperCableBlock::class.item()
             val battery = AdvancedReBatteryItem::class.instance()
             val plate = BronzePlate::class.instance()
             if (copperCable != Items.AIR && battery != Items.AIR && plate != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CesuBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, CesuBlock::class.item(), 1)
                     .pattern("WTW")
                     .pattern("BBB")
                     .pattern("WWW")
@@ -116,18 +116,18 @@ class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
 class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfeBlockEntity(pos, state)
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, EnergyStorageBlockEntity.MfeBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val goldCable = DoubleInsulatedGoldCableBlock::class.item()
             val crystal = EnergyCrystalItem::class.instance()
             val machine = MachineCasingBlock::class.item()
             if (goldCable != Items.AIR && crystal != Items.AIR && machine != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MfeBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, MfeBlock::class.item(), 1)
                     .pattern("GEG")
                     .pattern("EME")
                     .pattern("GEG")
@@ -151,19 +151,19 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
     override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfsuBlockEntity(pos, state)
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, EnergyStorageBlockEntity.MfsuBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val lapotron = LapotronCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             val mfe = MfeBlock::class.item()
             val advCasing = AdvancedMachineCasingBlock::class.item()
             if (lapotron != Items.AIR && advCircuit != Items.AIR && mfe != Items.AIR && advCasing != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MfsuBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, MfsuBlock::class.item(), 1)
                     .pattern("LAL")
                     .pattern("LFL")
                     .pattern("LCL")
@@ -189,11 +189,11 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
 abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(defaultMachineSettings().nonOpaque()) { // 3D 模型：关闭相邻面剔除
     init {
         defaultState = stateManager.defaultState
-            .with(Properties.HORIZONTAL_FACING, net.minecraft.util.math.Direction.NORTH)
+            .with(BlockStateProperties.HORIZONTAL_FACING, net.minecraft.core.Direction.NORTH)
             .with(EnergyStorageBlock.ACTIVE, false)
     }
 
-    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
         super.appendProperties(builder)
         // ACTIVE 已在 EnergyStorageBlock.appendProperties 中添加
     }
@@ -204,9 +204,9 @@ abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(de
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getWeakRedstonePower(
         state: BlockState,
-        world: net.minecraft.world.BlockView,
+        world: net.minecraft.world.level.BlockGetter,
         pos: BlockPos,
-        direction: net.minecraft.util.math.Direction
+        direction: net.minecraft.core.Direction
     ): Int {
         val be = world.getBlockEntity(pos) as? EnergyStorageBlockEntity ?: return 0
         return if (be.emitsRedstoneNow) 15 else 0
@@ -214,49 +214,49 @@ abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(de
 
     override fun createScreenHandlerFactory(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos
-    ): net.minecraft.screen.NamedScreenHandlerFactory? {
+    ): net.minecraft.world.MenuProvider? {
         val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+        return be as? net.minecraft.world.MenuProvider
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: net.minecraft.entity.player.PlayerEntity,
-        hand: net.minecraft.util.Hand,
-        hit: net.minecraft.util.hit.BlockHitResult
-    ): net.minecraft.util.ActionResult {
+        player: net.minecraft.world.entity.player.Player,
+        hand: net.minecraft.world.InteractionHand,
+        hit: net.minecraft.world.phys.BlockHitResult
+    ): net.minecraft.world.InteractionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
             }
         }
-        return net.minecraft.util.ActionResult.SUCCESS
+        return net.minecraft.world.InteractionResult.SUCCESS
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getOutlineShape(
         state: BlockState,
-        world: net.minecraft.world.BlockView,
-        pos: net.minecraft.util.math.BlockPos,
-        context: net.minecraft.block.ShapeContext
-    ): net.minecraft.util.shape.VoxelShape = FULL_MINUS_TOP
+        world: net.minecraft.world.level.BlockGetter,
+        pos: net.minecraft.core.BlockPos,
+        context: net.minecraft.world.phys.shapes.CollisionContext
+    ): net.minecraft.world.phys.shapes.VoxelShape = FULL_MINUS_TOP
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getCollisionShape(
         state: BlockState,
-        world: net.minecraft.world.BlockView,
-        pos: net.minecraft.util.math.BlockPos,
-        context: net.minecraft.block.ShapeContext
-    ): net.minecraft.util.shape.VoxelShape = FULL_MINUS_TOP
+        world: net.minecraft.world.level.BlockGetter,
+        pos: net.minecraft.core.BlockPos,
+        context: net.minecraft.world.phys.shapes.CollisionContext
+    ): net.minecraft.world.phys.shapes.VoxelShape = FULL_MINUS_TOP
 
     companion object {
         /** 去掉顶部的 1/16，与模型视觉对齐 */
-        private val FULL_MINUS_TOP = net.minecraft.util.shape.VoxelShapes.cuboid(0.0, 0.0, 0.0, 1.0, 15.0 / 16.0, 1.0)
+        private val FULL_MINUS_TOP = net.minecraft.world.phys.shapes.Shapes.cuboid(0.0, 0.0, 0.0, 1.0, 15.0 / 16.0, 1.0)
     }
 }
 
@@ -264,18 +264,18 @@ abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(de
 class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD) {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.BatBoxChargepadBlockEntity(pos, state)
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, EnergyStorageBlockEntity.BatBoxChargepadBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val circuit = Circuit::class.instance()
             val rubber = RubberItem::class.instance()
             val base = BatBoxBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BatBoxChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, BatBoxChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
                     .input('C', circuit)
@@ -298,18 +298,18 @@ class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD
 class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.CesuChargepadBlockEntity(pos, state)
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, EnergyStorageBlockEntity.CesuChargepadBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val circuit = Circuit::class.instance()
             val rubber = RubberItem::class.instance()
             val base = CesuBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CesuChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, CesuChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
                     .input('C', circuit)
@@ -332,18 +332,18 @@ class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
 class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfeChargepadBlockEntity(pos, state)
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, EnergyStorageBlockEntity.MfeChargepadBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val circuit = Circuit::class.instance()
             val rubber = RubberItem::class.instance()
             val base = MfeBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MfeChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, MfeChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
                     .input('C', circuit)
@@ -367,18 +367,18 @@ class MfsuChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFSU_CHARGEPAD) {
     override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfsuChargepadBlockEntity(pos, state)
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, EnergyStorageBlockEntity.MfsuChargepadBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val circuit = Circuit::class.instance()
             val rubber = RubberItem::class.instance()
             val base = MfsuBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MfsuChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, MfsuChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
                     .input('C', circuit)

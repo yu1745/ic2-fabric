@@ -28,25 +28,25 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.fluid.Fluid
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluids
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 蒸汽动能发电机（蒸汽轮机）：消耗蒸汽 → 产出动能 (KU)。
@@ -65,12 +65,12 @@ class SteamKineticGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), IKineticMachinePort, Inventory, IRoutedSidedInventory,
+) : MachineBlockEntity(type, pos, state), IKineticMachinePort, Container, IRoutedSidedInventory,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = SteamKineticGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SteamKineticGeneratorBlock.ACTIVE
     override val tier: Int = 3
-    override fun getInventory(): net.minecraft.inventory.Inventory? = this
+    override fun getInventory(): net.minecraft.world.Container? = this
 
     // IFluidPipeUpgradeSupport — 默认开启推拉，无需流体升级
     override var fluidPipeProviderEnabled: Boolean = true
@@ -109,7 +109,7 @@ class SteamKineticGeneratorBlockEntity(
         fun dropletsToMb(droplets: Long): Long = droplets * 1000 / FluidConstants.BUCKET
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -211,7 +211,7 @@ class SteamKineticGeneratorBlockEntity(
             }
         }
 
-        fun ejectToNeighbors(world: World, pos: BlockPos) {
+        fun ejectToNeighbors(world: Level, pos: BlockPos) {
             if (amount <= 0L || variant.isBlank) return
             for (side in Direction.entries) {
                 if (amount <= 0L) break
@@ -281,15 +281,15 @@ class SteamKineticGeneratorBlockEntity(
         state
     )
 
-    // ==== Inventory ====
+    // ==== Container ====
 
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_TURBINE && stack.count > 1) stack.count = 1
@@ -325,30 +325,30 @@ class SteamKineticGeneratorBlockEntity(
 
     override fun insertKu(side: Direction, amount: Int, simulate: Boolean): Int = 0
 
-    // ==== ScreenHandler ====
+    // ==== AbstractContainerMenu ====
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.steam_kinetic_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.steam_kinetic_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         SteamKineticGeneratorScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
     // ==== NBT ====
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         kuBuffer = nbt.getInt(NBT_KU_BUFFER)
         condensationProgress = nbt.getInt(NBT_CONDENSATION)
@@ -367,19 +367,19 @@ class SteamKineticGeneratorBlockEntity(
         sync.distilledWaterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_KU_BUFFER, kuBuffer)
         nbt.putInt(NBT_CONDENSATION, condensationProgress)
 
-        val steamTankNbt = NbtCompound()
+        val steamTankNbt = CompoundTag()
         steamTankNbt.put("variant", steamTank.variant.toNbt())
         steamTankNbt.putLong("amount", steamTank.amount)
         nbt.put(NBT_STEAM_TANK, steamTankNbt)
 
-        val waterTankNbt = NbtCompound()
+        val waterTankNbt = CompoundTag()
         waterTankNbt.put("variant", distilledWaterTank.variant.toNbt())
         waterTankNbt.putLong("amount", distilledWaterTank.amount)
         nbt.put(NBT_WATER_TANK, waterTankNbt)
@@ -387,7 +387,7 @@ class SteamKineticGeneratorBlockEntity(
 
     // ==== Tick ====
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         // 流体管道输入蒸汽
@@ -515,7 +515,7 @@ class SteamKineticGeneratorBlockEntity(
      * 推给任意支持插入的 FluidStorage 邻居。
      * 找不到接收方时 vent（10% 爆炸/tick）。
      */
-    private fun outputSteam(world: World, pos: BlockPos, droplets: Long) {
+    private fun outputSteam(world: Level, pos: BlockPos, droplets: Long) {
         if (droplets <= 0L) return
         var remaining = droplets
         val steamVariant = FluidVariant.of(ModFluids.STEAM_STILL)
@@ -539,7 +539,7 @@ class SteamKineticGeneratorBlockEntity(
             if (world.random.nextInt(10) == 0) {
                 if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
                     world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                        1f, World.ExplosionSourceType.NONE)
+                        1f, Level.ExplosionSourceType.NONE)
                 }
             }
         } else {
@@ -552,7 +552,7 @@ class SteamKineticGeneratorBlockEntity(
      * 只推给 CondenserBlockEntity，不推给其他方块。
      * 找不到接收方时 vent（10% 爆炸/tick）。
      */
-    private fun outputCondenserSteam(world: World, pos: BlockPos, droplets: Long) {
+    private fun outputCondenserSteam(world: Level, pos: BlockPos, droplets: Long) {
         if (droplets <= 0L) return
         var remaining = droplets
         val steamVariant = FluidVariant.of(ModFluids.STEAM_STILL)
@@ -578,7 +578,7 @@ class SteamKineticGeneratorBlockEntity(
             if (world.random.nextInt(10) == 0) {
                 if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
                     world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                        1f, World.ExplosionSourceType.NONE)
+                        1f, Level.ExplosionSourceType.NONE)
                 }
             }
         } else {

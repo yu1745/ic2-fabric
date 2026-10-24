@@ -5,12 +5,12 @@ import ic2_120.client.t
 import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.screen.EnergyStorageScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(
     handlers = [
@@ -20,9 +20,9 @@ import net.minecraft.util.Identifier
 )
 class EnergyStorageScreen(
     handler: EnergyStorageScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<EnergyStorageScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<EnergyStorageScreenHandler>(handler, playerInventory, title) {
 
    private val capacity: Long = resolveCapacity()
    private val useEquipmentSlots: Boolean = resolveUseEquipmentSlots()
@@ -30,7 +30,7 @@ class EnergyStorageScreen(
     private fun resolveCapacity(): Long {
         return handler.context.get({ world, pos ->
             val block = world.getBlockState(pos).block
-            val id = Registries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getId(block)
             EnergyStorageConfig.fromBlockPath(id.path)?.capacity ?: EnergyStorageConfig.BATBOX.capacity
         }, EnergyStorageConfig.BATBOX.capacity)
     }
@@ -38,7 +38,7 @@ class EnergyStorageScreen(
     private fun resolveUseEquipmentSlots(): Boolean {
         return handler.context.get({ world, pos ->
             val block = world.getBlockState(pos).block
-            val id = Registries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getId(block)
             EnergyStorageConfig.fromBlockPath(id.path)?.useEquipmentSlots ?: false
         }, false)
     }
@@ -52,9 +52,9 @@ class EnergyStorageScreen(
        super.init()
        if (handler.supportsRedstoneMode) {
            addDrawableChild(
-               net.minecraft.client.gui.widget.ButtonWidget.builder(Text.empty()) {
+               net.minecraft.client.gui.components.Button.builder(Component.empty()) {
                    client?.player?.networkHandler?.sendPacket(
-                       net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket(
+                       net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket(
                            handler.syncId, EnergyStorageScreenHandler.BUTTON_REDSTONE_MODE
                        )
                    )
@@ -64,24 +64,24 @@ class EnergyStorageScreen(
    }
 
    /** 服务端切换后聊天栏提示模式名；GUI 内鼠标悬停也显示当前模式。 */
-   override fun drawMouseoverTooltip(context: DrawContext, mouseX: Int, mouseY: Int) {
+   override fun drawMouseoverTooltip(context: GuiGraphics, mouseX: Int, mouseY: Int) {
        super.drawMouseoverTooltip(context, mouseX, mouseY)
        val btnX = x + backgroundWidth - 24
        val btnY = y + 4
        if (handler.supportsRedstoneMode && mouseX in btnX until btnX + 18 && mouseY in btnY until btnY + 14) {
            context.drawTooltip(
                textRenderer,
-               Text.translatable("gui.ic2_120.eu_storage.redstone_mode${handler.currentRedstoneMode}"),
+               Component.translatable("gui.ic2_120.eu_storage.redstone_mode${handler.currentRedstoneMode}"),
                mouseX, mouseY
            )
        }
    }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-   override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+   override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
        renderBackground(context)
        super.render(context, mouseX, mouseY, delta)
 
@@ -121,7 +121,7 @@ class EnergyStorageScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -129,7 +129,7 @@ class EnergyStorageScreen(
         // 红石模式按钮：原版红石粉图标（居中于 18x14 按钮）
         if (handler.supportsRedstoneMode) {
             context.drawItem(
-                net.minecraft.item.ItemStack(net.minecraft.item.Items.REDSTONE),
+                net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.REDSTONE),
                 x + backgroundWidth - 24 + (18 - 16) / 2,
                 y + 4 + (14 - 16) / 2
             )
@@ -155,7 +155,7 @@ class EnergyStorageScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guielectricblock.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guielectricblock.png")
         private const val TEXTURE_SIZE = 256
         private const val ENERGY_BAR_U = 180
         private const val ENERGY_BAR_V = 4

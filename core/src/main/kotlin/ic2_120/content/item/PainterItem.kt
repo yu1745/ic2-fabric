@@ -23,25 +23,25 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.Block
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.DyeItem
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.DyeColor
-import net.minecraft.util.Formatting
-import net.minecraft.util.TypedActionResult
-import net.minecraft.util.Hand
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.DyeItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.item.DyeColor
+import net.minecraft.ChatFormatting
+import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 /**
@@ -53,81 +53,81 @@ import java.util.function.Consumer
 @ModItem(name = "painter", tab = CreativeTab.IC2_TOOLS, group = "tools")
 class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
 
-    override fun getName(stack: ItemStack): Text {
+    override fun getName(stack: ItemStack): Component {
         val color = getColor(stack)
-        return Text.translatable(
+        return Component.translatable(
             if (color == null) "item.ic2_120.painter" else "item.ic2_120.painter.${color.getName()}"
         )
     }
 
-    override fun useOnBlock(context: ItemUsageContext): ActionResult {
-        val player = context.player ?: return ActionResult.PASS
+    override fun useOnBlock(context: UseOnContext): InteractionResult {
+        val player = context.player ?: return InteractionResult.PASS
         val stack = context.stack
-        val dye = player.getStackInHand(Hand.OFF_HAND).item as? DyeItem
+        val dye = player.getStackInHand(InteractionHand.OFF_HAND).item as? DyeItem
         if (dye != null) {
-            if (setColor(stack, dye.color, player, Hand.OFF_HAND)) {
-                return if (context.world.isClient) ActionResult.SUCCESS else ActionResult.CONSUME
+            if (setColor(stack, dye.color, player, InteractionHand.OFF_HAND)) {
+                return if (context.world.isClient) InteractionResult.SUCCESS else InteractionResult.CONSUME
             }
         }
 
-        val color = getColor(stack) ?: return ActionResult.PASS
+        val color = getColor(stack) ?: return InteractionResult.PASS
         val oldBlock = context.world.getBlockState(context.blockPos).block
         val target = wallFor(color)
-        if (target == null || oldBlock === target) return ActionResult.PASS
+        if (target == null || oldBlock === target) return InteractionResult.PASS
         if (wallColor(oldBlock) != null) {
             if (!context.world.isClient && ClaimProtection.isProtected(context.world, context.blockPos, player, ClaimProtection.EDIT_BLOCK)) {
-                return ActionResult.FAIL
+                return InteractionResult.FAIL
             }
             context.world.setBlockState(context.blockPos, target.defaultState)
             if (!context.world.isClient) damagePainter(stack, player, context.hand)
-            return ActionResult.CONSUME
+            return InteractionResult.CONSUME
         }
-        return ActionResult.PASS
+        return InteractionResult.PASS
     }
 
-    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = user.getStackInHand(hand)
-        val dyeHand = if (hand == Hand.MAIN_HAND) Hand.OFF_HAND else Hand.MAIN_HAND
+        val dyeHand = if (hand == InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
         val dye = user.getStackInHand(dyeHand).item as? DyeItem
         if (dye != null && setColor(stack, dye.color, user, dyeHand)) {
-            return TypedActionResult.success(stack, world.isClient)
+            return InteractionResultHolder.success(stack, world.isClient)
         }
-        return TypedActionResult.pass(stack)
+        return InteractionResultHolder.pass(stack)
     }
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
-        tooltip: MutableList<Text>,
+        world: Level?,
+        tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext,
     ) {
         super.appendTooltip(stack, world, tooltip, context)
         val color = getColor(stack)
         tooltip.add(
-            Text.translatable(
+            Component.translatable(
                 if (color == null) "tooltip.ic2_120.painter.uncolored" else "tooltip.ic2_120.painter.color",
                 color?.getName() ?: "",
-            ).formatted(Formatting.GRAY)
+            ).formatted(ChatFormatting.GRAY)
         )
         tooltip.add(
-            Text.translatable(
+            Component.translatable(
                 "tooltip.ic2_120.painter.durability",
                 (stack.maxDamage - stack.damage).coerceAtLeast(0),
                 stack.maxDamage,
-            ).formatted(Formatting.GRAY)
+            ).formatted(ChatFormatting.GRAY)
         )
     }
 
     override fun isItemBarVisible(stack: ItemStack): Boolean = true
 
-    private fun setColor(stack: ItemStack, color: DyeColor, player: PlayerEntity, dyeHand: Hand): Boolean {
+    private fun setColor(stack: ItemStack, color: DyeColor, player: Player, dyeHand: InteractionHand): Boolean {
         if (getColor(stack) == color) return false
         stack.orCreateNbt.putInt(COLOR_KEY, color.id)
         if (!player.abilities.creativeMode) player.getStackInHand(dyeHand).decrement(1)
         return true
     }
 
-    private fun damagePainter(stack: ItemStack, player: PlayerEntity, hand: Hand) {
+    private fun damagePainter(stack: ItemStack, player: Player, hand: InteractionHand) {
         val nextDamage = stack.damage + 1
         if (nextDamage >= stack.maxDamage) {
             // 原版 IC2 涂刷器耗尽后不会消失，而是恢复成未着色的初始刷子。
@@ -178,8 +178,8 @@ class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
         private fun wallColor(block: Block): DyeColor? = DyeColor.entries.firstOrNull { wallFor(it) === block }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, PainterItem::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, PainterItem::class.instance(), 1)
                 .pattern("II ")
                 .pattern(" IS")
                 .pattern("  I")

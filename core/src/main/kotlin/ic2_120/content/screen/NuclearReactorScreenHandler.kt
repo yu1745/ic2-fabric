@@ -13,25 +13,25 @@ import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.Identifier
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.resources.ResourceLocation
 import ic2_120.registry.annotation.ScreenFactory
 
 /**
- * 核反应堆 ScreenHandler。
+ * 核反应堆 AbstractContainerMenu。
  * 槽位数量根据打开时的容量动态确定（27–81），竖排：3 列→9 列，每列 9 行。
  * 若在打开界面时添加/移除反应仓，需关闭重开以刷新槽位数量。
  *
@@ -42,10 +42,10 @@ import ic2_120.registry.annotation.ScreenFactory
 @ModScreenHandler(block = NuclearReactorBlock::class)
 class NuclearReactorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
     /** 打开时的反应堆槽位数量（27–81） */
     val reactorSlotCount: Int,
     /** 核反应堆方块实体 */
@@ -53,11 +53,11 @@ class NuclearReactorScreenHandler(
     /** 是否为热模式（热模式时显示 4 个流体槽） */
     val isThermalMode: Boolean = false,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(NuclearReactorScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(NuclearReactorScreenHandler::class.type(), syncId) {
 
     val sync = NuclearReactorSync(
         SyncedDataView(propertyDelegate),
-        getFacing = { net.minecraft.util.math.Direction.NORTH },
+        getFacing = { net.minecraft.core.Direction.NORTH },
         currentTickProvider = { null }
     )
 
@@ -116,14 +116,14 @@ class NuclearReactorScreenHandler(
 
     private val playerInvStart: Int get() = playerInventorySlotStart
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Container, beSlotIndex: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
         addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -155,21 +155,21 @@ class NuclearReactorScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is NuclearReactorBlock && player.squaredDistanceTo(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         if (id != BUTTON_ID_TOGGLE_LOCK) return false
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? NuclearReactorBlockEntity ?: return@get
             be.toggleLayoutLock()
             // 发送锁数据同步包到客户端
             val packet = ReactorLayoutLockPacket(pos, be.lockedSlots.toMap())
-            NetworkManager.sendToClient(player as ServerPlayerEntity, packet)
+            NetworkManager.sendToClient(player as ServerPlayer, packet)
         })
         return true
     }
@@ -207,7 +207,7 @@ class NuclearReactorScreenHandler(
         )
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): NuclearReactorScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): NuclearReactorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val capacity = buf.readVarInt().coerceIn(NuclearReactorSync.BASE_SLOTS, NuclearReactorBlockEntity.MAX_SLOTS)
@@ -217,11 +217,11 @@ class NuclearReactorScreenHandler(
             val lockedSlots = mutableMapOf<Int, Item>()
             for (i in 0 until lockSize) {
                 val slot = buf.readVarInt()
-                val item = Registries.ITEM.get(buf.readIdentifier())
+                val item = BuiltInRegistries.ITEM.get(buf.readIdentifier())
                 lockedSlots[slot] = item
             }
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(NuclearReactorBlockEntity.INVENTORY_SIZE)
+            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val blockInv = SimpleContainer(NuclearReactorBlockEntity.INVENTORY_SIZE)
             val reactor = playerInventory.player.world.getBlockEntity(pos) as? NuclearReactorBlockEntity
             // 将锁数据写入 client BE，供槽位 canInsert 和 Screen 虚影渲染使用
             reactor?.let {
@@ -229,7 +229,7 @@ class NuclearReactorScreenHandler(
                 it.lockedSlots.clear()
                 it.lockedSlots.putAll(lockedSlots)
             }
-            return NuclearReactorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), capacity, reactor, isThermal)
+            return NuclearReactorScreenHandler(syncId, playerInventory, blockInv, context, SimpleContainerData(propertyCount), capacity, reactor, isThermal)
         }
     }
 }

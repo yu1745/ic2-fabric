@@ -5,19 +5,19 @@ import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.slot.Slot
-import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.util.Hand
-import net.minecraft.util.math.Direction
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.InteractionHand
+import net.minecraft.core.Direction
 
 /**
  * 物品升级配置 GUI。
@@ -29,18 +29,18 @@ import net.minecraft.util.math.Direction
  * - BUTTON_CLEAR_FILTER (1)：清除过滤
  * - BUTTON_TOGGLE_DIR (10~15)：开关各方向
  *
- * PropertyDelegate：
+ * ContainerData：
  * - Index 0~5：6 个方向是否激活（0/1）
  * - Index 6：物品原始注册 ID（0=无过滤）
  */
 @ModScreenHandler(name = "item_upgrade", mode = ScreenHandlerMode.HANDHELD)
 class ItemUpgradeScreenHandler(
     syncId: Int,
-    private val playerInventory: PlayerInventory,
-    private val hand: Hand,
-    private val filterInventory: SimpleInventory = SimpleInventory(1),
-    private val propertyDelegate: PropertyDelegate = ArrayPropertyDelegate(PROPERTY_COUNT)
-) : ScreenHandler(ItemUpgradeScreenHandler::class.type(), syncId) {
+    private val playerInventory: Inventory,
+    private val hand: InteractionHand,
+    private val filterInventory: SimpleContainer = SimpleContainer(1),
+    private val propertyDelegate: ContainerData = SimpleContainerData(PROPERTY_COUNT)
+) : AbstractContainerMenu(ItemUpgradeScreenHandler::class.type(), syncId) {
 
     fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
     val itemRawId: Int get() = propertyDelegate.get(PROP_ITEM)
@@ -65,7 +65,7 @@ class ItemUpgradeScreenHandler(
 
         addSlot(object : Slot(filterInventory, FILTER_SLOT, 8, 35) {
             override fun canInsert(stack: ItemStack): Boolean = false
-            override fun canTakeItems(playerEntity: PlayerEntity): Boolean = false
+            override fun canTakeItems(playerEntity: Player): Boolean = false
         })
 
         for (row in 0 until 3) {
@@ -80,7 +80,7 @@ class ItemUpgradeScreenHandler(
         refreshProperties()
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         val upgradeStack = player.getStackInHand(hand)
         if (upgradeStack.item !is ItemFilterUpgradeItem) return true
 
@@ -116,8 +116,8 @@ class ItemUpgradeScreenHandler(
         return true
     }
 
-    override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
-        if (slotIndex == FILTER_SLOT && actionType == SlotActionType.PICKUP) {
+    override fun onSlotClick(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
+        if (slotIndex == FILTER_SLOT && actionType == ClickType.PICKUP) {
             val cursor = cursorStack
             if (cursor.isEmpty || button == 1) {
                 setItemFilter(FILTER_SLOT, ItemStack.EMPTY)
@@ -129,11 +129,11 @@ class ItemUpgradeScreenHandler(
         super.onSlotClick(slotIndex, button, actionType, player)
     }
 
-    override fun quickMove(player: PlayerEntity, slotIndex: Int): ItemStack {
+    override fun quickMove(player: Player, slotIndex: Int): ItemStack {
         return ItemStack.EMPTY
     }
 
-    override fun canUse(player: PlayerEntity): Boolean {
+    override fun canUse(player: Player): Boolean {
         val stack = player.getStackInHand(hand)
         return stack.item is ItemFilterUpgradeItem
     }
@@ -161,6 +161,6 @@ class ItemUpgradeScreenHandler(
 
         val filter = EjectorUpgradeComponent.readFilter(upgradeStack)
         filterInventory.setStack(FILTER_SLOT, filter?.defaultStack ?: ItemStack.EMPTY)
-        propertyDelegate.set(PROP_ITEM, if (filter != null) Registries.ITEM.getRawId(filter) else 0)
+        propertyDelegate.set(PROP_ITEM, if (filter != null) BuiltInRegistries.ITEM.getRawId(filter) else 0)
     }
 }

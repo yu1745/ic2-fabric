@@ -6,16 +6,16 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.Container
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import java.util.WeakHashMap
 import kotlin.math.pow
 
@@ -67,11 +67,11 @@ object EjectorUpgradeComponent {
      * world 非服务端或 inventory 非 BlockEntity 时返回 null，调用方回退到直接 find（等价于旧行为）。
      */
     fun neighborCaches(
-        world: World,
+        world: Level,
         pos: BlockPos,
         machine: BlockEntity
     ): Array<BlockApiCache<Storage<ItemVariant>, Direction?>?>? {
-        val serverWorld = world as? ServerWorld ?: return null
+        val serverWorld = world as? ServerLevel ?: return null
         val caches = neighborCache.getOrPut(machine) {
             arrayOfNulls<BlockApiCache<Storage<ItemVariant>, Direction?>>(Direction.values().size)
         }
@@ -90,13 +90,13 @@ object EjectorUpgradeComponent {
      * 每个候选至多传输 elapsed × itemTransferRate(count) 个物品（配额跨输出槽共享，按实际
      * 流逝 tick 补偿）；每次触发起始方向轮转（BE 内计数器游标），避免低吞吐时第一个候选独占。
      * 开启方向过滤时，轮转只在过滤后的方向集内进行。整个触发共用一个事务（P4）。
-     * 使用 Fabric Transfer API 查找目标容器，兼容 vanilla Inventory 和 modded Storage。
+     * 使用 Fabric Transfer API 查找目标容器，兼容 vanilla Container 和 modded Storage。
      * 空闲退避（P5）：空手 1t/tick 递增至最长 20t 一跳，干活即逐步回到每 tick。
      */
     fun ejectIfUpgraded(
-        world: World,
+        world: Level,
         pos: BlockPos,
-        inventory: Inventory,
+        inventory: Container,
         upgradeSlotIndices: IntArray,
         outputSlotIndices: IntArray
     ) {
@@ -126,9 +126,9 @@ object EjectorUpgradeComponent {
     }
 
     private fun doEject(
-        world: World,
+        world: Level,
         pos: BlockPos,
-        inventory: Inventory,
+        inventory: Container,
         machine: BlockEntity?,
         upgradeSlotIndices: IntArray,
         outputSlotIndices: IntArray,
@@ -222,8 +222,8 @@ object EjectorUpgradeComponent {
         val nbt = stack.nbt ?: return null
         val raw = nbt.getString(NBT_ITEM_FILTER)
         if (raw.isNullOrBlank()) return null
-        val id = Identifier.tryParse(raw) ?: return null
-        return if (Registries.ITEM.containsId(id)) Registries.ITEM.get(id) else null
+        val id = ResourceLocation.tryParse(raw) ?: return null
+        return if (BuiltInRegistries.ITEM.containsId(id)) BuiltInRegistries.ITEM.get(id) else null
     }
 
     fun writeFilter(stack: ItemStack, item: Item?) {
@@ -232,7 +232,7 @@ object EjectorUpgradeComponent {
             nbt.remove(NBT_ITEM_FILTER)
             return
         }
-        val id = Registries.ITEM.getId(item)
+        val id = BuiltInRegistries.ITEM.getId(item)
         if (id.path != "air") nbt.putString(NBT_ITEM_FILTER, id.toString())
         else nbt.remove(NBT_ITEM_FILTER)
     }
@@ -248,7 +248,7 @@ object EjectorUpgradeComponent {
     /** 空集合表示任意方向；同时兼容旧版本的单方向 NBT。 */
     fun readDirections(stack: ItemStack): Set<Direction> {
         val nbt = stack.nbt ?: return emptySet()
-        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.NbtElement.STRING_TYPE.toInt())
+        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.STRING_TYPE.toInt())
         if (!list.isEmpty()) {
             return list.mapNotNull { Direction.byName(it.asString()) }.toSet()
         }
@@ -266,7 +266,7 @@ object EjectorUpgradeComponent {
             nbt.remove(NBT_DIRECTION)
             return
         }
-        val list = net.minecraft.nbt.NbtList()
+        val list = net.minecraft.nbt.ListTag()
         for (side in sides) {
             list.add(net.minecraft.nbt.NbtString.of(side.name.lowercase()))
         }

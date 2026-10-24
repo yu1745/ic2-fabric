@@ -4,11 +4,11 @@ import ic2_120.content.item.NanoSaber
 import ic2_120.content.item.RecallScrollItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.Ic2_120
-import net.minecraft.client.item.ModelPredicateProviderRegistry
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.client.renderer.item.ItemProperties
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 电池模型 Predicate 注册
@@ -18,18 +18,18 @@ import net.minecraft.util.Identifier
 object BatteryModelPredicates {
 
     private const val NBT_HAS_BIND = "HasBind"
-    private val CHARGE_ID = Identifier.of("ic2", "charge")
-    private val NANO_SABER_ACTIVE_ID = Identifier(Ic2_120.MOD_ID, "nano_saber_active")
-    private val SCROLL_BOUND_ID = Identifier(Ic2_120.MOD_ID, "bound")
+    private val CHARGE_ID = ResourceLocation.of("ic2", "charge")
+    private val NANO_SABER_ACTIVE_ID = ResourceLocation(Ic2_120.MOD_ID, "nano_saber_active")
+    private val SCROLL_BOUND_ID = ResourceLocation(Ic2_120.MOD_ID, "bound")
 
     /**
      * 注册所有电池物品的模型 predicate
      */
     fun register() {
         // 遍历所有已注册的物品，找到电池物品并注册 predicate
-        Registries.ITEM.ids.forEach { id ->
+        BuiltInRegistries.ITEM.ids.forEach { id ->
             if (id.namespace == "ic2_120") {
-                val item = Registries.ITEM.get(id)
+                val item = BuiltInRegistries.ITEM.get(id)
                 if (item is IBatteryItem) {
                     registerChargePredicate(item, id)
                 }
@@ -40,8 +40,8 @@ object BatteryModelPredicates {
     }
 
     private fun registerNanoSaberPredicate() {
-        val saber = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "nano_saber"))
-        ModelPredicateProviderRegistry.register(
+        val saber = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "nano_saber"))
+        ItemProperties.register(
             saber,
             NANO_SABER_ACTIVE_ID
         ) { _, _, _, _ ->
@@ -55,8 +55,8 @@ object BatteryModelPredicates {
      * @param item 已注册的电池物品
      * @param itemId 物品ID
      */
-    private fun registerChargePredicate(item: Item, itemId: Identifier) {
-        ModelPredicateProviderRegistry.register(
+    private fun registerChargePredicate(item: Item, itemId: ResourceLocation) {
+        ItemProperties.register(
             item,
             CHARGE_ID
         ) { stack: ItemStack, _, _, _ ->
@@ -72,9 +72,9 @@ object BatteryModelPredicates {
     }
 
     private fun registerRecallScrollPredicate() {
-        val scroll = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "recall_scroll"))
+        val scroll = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "recall_scroll"))
         if (scroll !is RecallScrollItem) return
-        ModelPredicateProviderRegistry.register(
+        ItemProperties.register(
             scroll,
             SCROLL_BOUND_ID
         ) { stack: ItemStack, _, _, _ ->

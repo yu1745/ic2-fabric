@@ -14,8 +14,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.lang.reflect.Modifier
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 
 @Target(AnnotationTarget.FIELD)
@@ -579,9 +579,9 @@ object Ic2Config {
         // 1. 白名单优先（手工定价，硬约束）
         current.uuReplication.replicationWhitelist[normalized]?.takeIf { it > 0 }?.let { return it }
         // 2. 动态计算补全（服务器启动后可用）
-        val id = Identifier.tryParse(normalized) ?: return null
-        val item = Registries.ITEM.get(id)
-        if (item === net.minecraft.item.Items.AIR) return null
+        val id = ResourceLocation.tryParse(normalized) ?: return null
+        val item = BuiltInRegistries.ITEM.get(id)
+        if (item === net.minecraft.world.item.Items.AIR) return null
         return ic2_120.content.uu.UuCostIndex.dynamicCostUb(item)?.toInt()?.takeIf { it > 0 }
     }
 

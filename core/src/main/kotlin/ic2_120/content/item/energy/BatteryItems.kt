@@ -25,10 +25,10 @@ import ic2_120.registry.recipeId
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 
 // ========== 普通充电电池 ==========
 
@@ -45,14 +45,14 @@ class ReBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tinCable = InsulatedTinCableBlock::class.item()
             val copperCable = InsulatedCopperCableBlock::class.item()
             val tinCasing = TinCasing::class.instance()
             val tinIngot = TinIngot::class.instance()
             val redstone = Items.REDSTONE
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
                 .pattern(" W ")
                 .pattern("CRC")
                 .pattern("CRC")
@@ -62,7 +62,7 @@ class ReBatteryItem : BatteryItemBase(
                 .criterion(hasItem(tinCable), conditionsFromItem(tinCable))
                 .offerTo(exporter, ReBatteryItem::class.recipeId("from_tin_casing"))
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
                 .pattern(" W ")
                 .pattern("IRI")
                 .pattern("IRI")
@@ -86,9 +86,9 @@ class AdvancedReBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val copperCable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedReBatteryItem::class.instance(), 1)
                 .pattern("WBW")
                 .pattern("BSB")
                 .pattern("BLB")
@@ -113,15 +113,15 @@ class AdvancedReBatteryItem : BatteryItemBase(
 class EnergyCrystalItem : BatteryItemBase(
     name = "energy_crystal", tier = 3, maxCapacity = 1_000_000, canChargeWireless = false
 ) {
-    override fun use(world: net.minecraft.world.World, user: net.minecraft.entity.player.PlayerEntity, hand: net.minecraft.util.Hand): net.minecraft.util.TypedActionResult<net.minecraft.item.ItemStack> {
+    override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
         val crystal = user.getStackInHand(hand)
-        if (world.isClient) return net.minecraft.util.TypedActionResult.success(crystal)
+        if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
 
         // 获取水晶当前电量
         val availableEnergy = getCurrentCharge(crystal)
         if (availableEnergy <= 0) {
-            user.sendMessage(net.minecraft.text.Text.literal("§c能量水晶电量不足！"), true)
-            return net.minecraft.util.TypedActionResult.fail(crystal)
+            user.sendMessage(net.minecraft.network.chat.Component.literal("§c能量水晶电量不足！"), true)
+            return net.minecraft.world.InteractionResultHolder.fail(crystal)
         }
 
         var totalCharged = 0L
@@ -215,14 +215,14 @@ class EnergyCrystalItem : BatteryItemBase(
             val formattedEnergy = "%,d".format(usedEnergy)
             val percentUsed = (usedEnergy * 100 / maxCapacity).toInt()
             user.sendMessage(
-                net.minecraft.text.Text.literal("§a已充能 $itemsCharged 件物品，消耗 §e$formattedEnergy EU§a (${percentUsed}%)"),
+                net.minecraft.network.chat.Component.literal("§a已充能 $itemsCharged 件物品，消耗 §e$formattedEnergy EU§a (${percentUsed}%)"),
                 true
             )
         } else {
-            user.sendMessage(net.minecraft.text.Text.literal("§c没有物品需要充电！"), true)
+            user.sendMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！"), true)
         }
 
-        return net.minecraft.util.TypedActionResult.success(crystal)
+        return net.minecraft.world.InteractionResultHolder.success(crystal)
     }
 }
 
@@ -239,7 +239,7 @@ class LapotronCrystalItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 含能量水晶：使用 battery_energy_shaped 继承输入水晶电量
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -255,15 +255,15 @@ class LapotronCrystalItem : BatteryItemBase(
         }
     }
 
-    override fun use(world: net.minecraft.world.World, user: net.minecraft.entity.player.PlayerEntity, hand: net.minecraft.util.Hand): net.minecraft.util.TypedActionResult<net.minecraft.item.ItemStack> {
+    override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
         val crystal = user.getStackInHand(hand)
-        if (world.isClient) return net.minecraft.util.TypedActionResult.success(crystal)
+        if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
 
         // 获取水晶当前电量
         val availableEnergy = getCurrentCharge(crystal)
         if (availableEnergy <= 0) {
-            user.sendMessage(net.minecraft.text.Text.literal("§c蓝波顿水晶电量不足！"), true)
-            return net.minecraft.util.TypedActionResult.fail(crystal)
+            user.sendMessage(net.minecraft.network.chat.Component.literal("§c蓝波顿水晶电量不足！"), true)
+            return net.minecraft.world.InteractionResultHolder.fail(crystal)
         }
 
         var totalCharged = 0L
@@ -357,14 +357,14 @@ class LapotronCrystalItem : BatteryItemBase(
             val formattedEnergy = "%,d".format(usedEnergy)
             val percentUsed = (usedEnergy * 100 / maxCapacity).toInt()
             user.sendMessage(
-                net.minecraft.text.Text.literal("§a已充能 $itemsCharged 件物品，消耗 §e$formattedEnergy EU§a (${percentUsed}%)"),
+                net.minecraft.network.chat.Component.literal("§a已充能 $itemsCharged 件物品，消耗 §e$formattedEnergy EU§a (${percentUsed}%)"),
                 true
             )
         } else {
-            user.sendMessage(net.minecraft.text.Text.literal("§c没有物品需要充电！"), true)
+            user.sendMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！"), true)
         }
 
-        return net.minecraft.util.TypedActionResult.success(crystal)
+        return net.minecraft.world.InteractionResultHolder.success(crystal)
     }
 }
 
@@ -381,7 +381,7 @@ class ReBatteryWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 四角电路板，四边充电电池，中心空
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -408,7 +408,7 @@ class AdvancedReBatteryWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 四角热交换器，四边高级充电电池，中心无线充电电池（等级1）
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -436,7 +436,7 @@ class EnergyCrystalWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 四角元件热交换器，四边能量水晶，中心高级无线充电电池
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -464,7 +464,7 @@ class LapotronCrystalWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 四角高级热交换器，四边兰波顿水晶，中心无线能量水晶
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -496,9 +496,9 @@ class SingleUseBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val copperCable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SingleUseBatteryItem::class.instance(), 8)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SingleUseBatteryItem::class.instance(), 8)
                 .pattern(" W ")
                 .pattern(" R ")
                 .pattern(" F ")
@@ -516,12 +516,12 @@ class SingleUseBatteryItem : BatteryItemBase(
     * 一次性电池不可充电，制作时即为满电。
     * 无 NBT 时返回满电量，有 NBT 时返回实际剩余电量。
     */
-   override fun getCurrentCharge(stack: net.minecraft.item.ItemStack): Long {
+   override fun getCurrentCharge(stack: net.minecraft.world.item.ItemStack): Long {
        if (!stack.hasNbt() || !stack.nbt!!.contains(BatteryItemBase.ENERGY_KEY)) return maxCapacity
        return super.getCurrentCharge(stack)
    }
 
-   override fun discharge(stack: net.minecraft.item.ItemStack, amount: Long): Long {
+   override fun discharge(stack: net.minecraft.world.item.ItemStack, amount: Long): Long {
         val discharged = super.discharge(stack, amount)
 
         // 电量耗尽后销毁物品
@@ -532,7 +532,7 @@ class SingleUseBatteryItem : BatteryItemBase(
         return discharged
     }
 
-    override fun charge(stack: net.minecraft.item.ItemStack, amount: Long): Long {
+    override fun charge(stack: net.minecraft.world.item.ItemStack, amount: Long): Long {
         // 一次性电池不能充电
         return 0
     }

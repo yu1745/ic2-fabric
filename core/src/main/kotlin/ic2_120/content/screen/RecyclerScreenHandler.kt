@@ -10,24 +10,24 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(block = RecyclerBlock::class, inventorySize = RecyclerBlockEntity.INVENTORY_SIZE)
 class RecyclerScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(RecyclerScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(RecyclerScreenHandler::class.type(), syncId) {
 
     val sync = RecyclerSync(SyncedDataView(propertyDelegate))
 
@@ -54,14 +54,14 @@ class RecyclerScreenHandler(
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int, fallbackSpec: SlotSpec? = null) {
+    private fun addTrackedSlot(inventory: Container, beSlotIndex: Int, x: Int, y: Int, fallbackSpec: SlotSpec? = null) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
         addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -96,7 +96,7 @@ class RecyclerScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is RecyclerBlock && player.squaredDistanceTo(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5

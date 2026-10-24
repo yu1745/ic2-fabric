@@ -6,10 +6,10 @@ import mezz.jei.api.helpers.IGuiHelper
 import mezz.jei.api.recipe.IFocusGroup
 import mezz.jei.api.recipe.RecipeIngredientRole
 import mezz.jei.api.recipe.category.IRecipeCategory
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 固体装罐机 JEI 分类 — 使用机器纹理 [guisolidcanner.png] 作为背景。
@@ -19,16 +19,16 @@ import net.minecraft.util.Identifier
  */
 class SolidCannerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<SolidCannerJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2", "textures/gui/guisolidcanner.png"),
+        ResourceLocation.of("ic2", "textures/gui/guisolidcanner.png"),
         25, 21, 112, 45
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "solid_canner")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "solid_canner")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.SOLID_CANNER
 
-    override fun getTitle(): Text = Text.translatable("block.ic2_120.solid_canner")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120.solid_canner")
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background

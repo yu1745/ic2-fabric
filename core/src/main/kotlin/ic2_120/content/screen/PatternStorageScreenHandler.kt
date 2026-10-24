@@ -9,26 +9,26 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.core.BlockPos
 
 @ModScreenHandler(block = PatternStorageBlock::class)
 class PatternStorageScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
+    playerInventory: Inventory,
+    blockInventory: Container,
     val blockPos: BlockPos,
-    private val context: ScreenHandlerContext,
+    private val context: ContainerLevelAccess,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(PatternStorageScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(PatternStorageScreenHandler::class.type(), syncId) {
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
@@ -57,10 +57,10 @@ class PatternStorageScreenHandler(
     private fun deriveSpec(beSlot: Int) =
         itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
-    fun getPatternStorage(world: net.minecraft.world.World): PatternStorageBlockEntity? =
+    fun getPatternStorage(world: net.minecraft.world.level.Level): PatternStorageBlockEntity? =
         world.getBlockEntity(blockPos) as? PatternStorageBlockEntity
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return@get false
             when {
@@ -73,7 +73,7 @@ class PatternStorageScreenHandler(
         return true
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -108,7 +108,7 @@ class PatternStorageScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is PatternStorageBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -124,15 +124,15 @@ class PatternStorageScreenHandler(
         const val BUTTON_SELECT_BASE = 1000
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): PatternStorageScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): PatternStorageScreenHandler {
             val pos = buf.readBlockPos()
             buf.readVarInt()
             return PatternStorageScreenHandler(
                 syncId,
                 playerInventory,
-                SimpleInventory(PatternStorageBlockEntity.INVENTORY_SIZE),
+                SimpleContainer(PatternStorageBlockEntity.INVENTORY_SIZE),
                 pos,
-                ScreenHandlerContext.create(playerInventory.player.world, pos)
+                ContainerLevelAccess.create(playerInventory.player.world, pos)
             )
         }
     }

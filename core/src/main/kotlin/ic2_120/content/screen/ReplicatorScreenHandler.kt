@@ -12,28 +12,28 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.core.BlockPos
 
 @ModScreenHandler(block = ReplicatorBlock::class)
 class ReplicatorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
+    playerInventory: Inventory,
+    blockInventory: Container,
     val blockPos: BlockPos,
-    private val context: ScreenHandlerContext,
-    propertyDelegate: net.minecraft.screen.PropertyDelegate,
+    private val context: ContainerLevelAccess,
+    propertyDelegate: net.minecraft.world.inventory.ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(ReplicatorScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(ReplicatorScreenHandler::class.type(), syncId) {
 
     val sync = ReplicatorSync(
         SyncedDataView(propertyDelegate),
@@ -88,7 +88,7 @@ class ReplicatorScreenHandler(
 
     private fun deriveSpec(beSlot: Int) = itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? ReplicatorBlockEntity ?: return@get
             when (id) {
@@ -101,7 +101,7 @@ class ReplicatorScreenHandler(
         return id == BUTTON_CANCEL || id == BUTTON_MODE_SINGLE || id == BUTTON_MODE_REPEAT
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -132,7 +132,7 @@ class ReplicatorScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is ReplicatorBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -153,13 +153,13 @@ class ReplicatorScreenHandler(
         const val BUTTON_MODE_REPEAT = 2
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ReplicatorScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): ReplicatorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             return ReplicatorScreenHandler(
-                syncId, playerInventory, SimpleInventory(ReplicatorBlockEntity.INVENTORY_SIZE),
-                pos, ScreenHandlerContext.create(playerInventory.player.world, pos),
-                ArrayPropertyDelegate(propertyCount)
+                syncId, playerInventory, SimpleContainer(ReplicatorBlockEntity.INVENTORY_SIZE),
+                pos, ContainerLevelAccess.create(playerInventory.player.world, pos),
+                SimpleContainerData(propertyCount)
             )
         }
     }

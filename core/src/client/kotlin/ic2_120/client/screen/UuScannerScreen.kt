@@ -5,29 +5,29 @@ import ic2_120.content.block.UuScannerBlock
 import ic2_120.content.screen.UuScannerScreenHandler
 import ic2_120.content.sync.UuScannerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = UuScannerBlock::class)
 class UuScannerScreen(
-    handler: UuScannerScreenHandler, playerInventory: PlayerInventory, title: Text
-) : HandledScreen<UuScannerScreenHandler>(handler, playerInventory, title) {
+    handler: UuScannerScreenHandler, playerInventory: Inventory, title: Component
+) : AbstractContainerScreen<UuScannerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 175
         backgroundHeight = 165
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -57,14 +57,14 @@ class UuScannerScreen(
             UuScannerSync.STATUS_NO_ENERGY -> "能量不足" to 0x55FF55
             else -> t("gui.ic2_120.uu_scanner.status_idle") to 0x55FF55
         }
-        context.drawText(textRenderer, Text.literal(statusLine), left + 10, top + 68, statusColor, false)
+        context.drawText(textRenderer, Component.literal(statusLine), left + 10, top + 68, statusColor, false)
 
         // 扫描完成后：模板信息 + 删除/存入按钮
         if (isComplete) {
             val cost = handler.sync.currentCostUb
             val rawId = handler.sync.cachedItemRawId
             if (rawId > 0 && cost > 0) {
-                val item = Registries.ITEM.get(rawId)
+                val item = BuiltInRegistries.ITEM.get(rawId)
                 val name = item.name.string
                 val scale = 7f / textRenderer.fontHeight
                 val infoX = left + 102
@@ -98,25 +98,25 @@ class UuScannerScreen(
             val energy = handler.sync.energy.toLong().coerceAtLeast(0)
             val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
             context.drawTooltip(textRenderer,
-                listOf(Text.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
+                listOf(Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
                 mouseX, mouseY)
         }
 
         if (isComplete) {
             if (relX in DEL_X until DEL_X + 12 && relY in DEL_Y until DEL_Y + 12) {
                 context.fill(left + DEL_X, top + DEL_Y, left + DEL_X + 12, top + DEL_Y + 12, 0x80FFFFFF.toInt())
-                context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.uu_scanner.delete_template")), mouseX, mouseY)
+                context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.uu_scanner.delete_template")), mouseX, mouseY)
             }
             if (relX in SAVE_X until SAVE_X + 24 && relY in SAVE_Y until SAVE_Y + 12) {
                 context.fill(left + SAVE_X, top + SAVE_Y, left + SAVE_X + 24, top + SAVE_Y + 12, 0x80FFFFFF.toInt())
-                context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.uu_scanner.save_to_crystal")), mouseX, mouseY)
+                context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.uu_scanner.save_to_crystal")), mouseX, mouseY)
             }
         }
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawEnergyBar(context: DrawContext, left: Int, top: Int) {
+    private fun drawEnergyBar(context: GuiGraphics, left: Int, top: Int) {
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val fraction = (energy.toFloat() / cap).coerceIn(0f, 1f)
@@ -131,7 +131,7 @@ class UuScannerScreen(
         context.disableScissor()
     }
 
-    private fun drawProgressBar(context: DrawContext, left: Int, top: Int, isScanning: Boolean) {
+    private fun drawProgressBar(context: GuiGraphics, left: Int, top: Int, isScanning: Boolean) {
         if (!isScanning) return
         val cycleMs = 1000L
         val fraction = ((System.currentTimeMillis() % cycleMs).toFloat() / cycleMs).coerceIn(0f, 1f)
@@ -151,28 +151,28 @@ class UuScannerScreen(
             val relY = mouseY.toInt() - y
             if (relX in DEL_X until DEL_X + 12 && relY in DEL_Y until DEL_Y + 12) {
                 client?.player?.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(handler.syncId, UuScannerScreenHandler.BUTTON_DELETE_TEMPLATE))
+                    ServerboundContainerButtonClickPacket(handler.syncId, UuScannerScreenHandler.BUTTON_DELETE_TEMPLATE))
                 return true
             }
             if (relX in SAVE_X until SAVE_X + 24 && relY in SAVE_Y until SAVE_Y + 12) {
                 client?.player?.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(handler.syncId, UuScannerScreenHandler.BUTTON_SAVE_TO_CRYSTAL))
+                    ServerboundContainerButtonClickPacket(handler.syncId, UuScannerScreenHandler.BUTTON_SAVE_TO_CRYSTAL))
                 return true
             }
         }
         return super.mouseClicked(mouseX, mouseY, button)
     }
 
-    private fun drawScaledText(context: DrawContext, text: String, tx: Int, ty: Int, scale: Float, color: Int) {
+    private fun drawScaledText(context: GuiGraphics, text: String, tx: Int, ty: Int, scale: Float, color: Int) {
         context.matrices.push()
         context.matrices.translate(tx.toDouble(), ty.toDouble(), 0.0)
         context.matrices.scale(scale, scale, 1f)
-        context.drawText(textRenderer, Text.literal(text), 0, 0, color, false)
+        context.drawText(textRenderer, Component.literal(text), 0, 0, color, false)
         context.matrices.pop()
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiuuscanner.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiuuscanner.png")
         private const val TEX_SIZE = 256
 
         private const val ENERGY_U = 179

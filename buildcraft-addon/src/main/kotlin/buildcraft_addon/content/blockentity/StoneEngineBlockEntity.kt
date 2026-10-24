@@ -6,24 +6,24 @@ import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 /**
  * 斯特林引擎（石引擎）
@@ -49,7 +49,7 @@ class StoneEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory, IKineticMachinePort {
+) : BlockEntity(type, pos, state), Container, ExtendedScreenHandlerFactory, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         StoneEngineBlockEntity::class.type(), pos, state
@@ -64,7 +64,7 @@ class StoneEngineBlockEntity(
     }
 
     // === Screen 同步 ===
-    private val propertyDelegate = object : PropertyDelegate {
+    private val propertyDelegate = object : ContainerData {
         override fun get(index: Int): Int = when (index) {
             0 -> burnTime
             1 -> totalBurnTime
@@ -74,19 +74,19 @@ class StoneEngineBlockEntity(
         override fun size(): Int = 2
     }
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
-        return StoneEngineScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), propertyDelegate)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+        return StoneEngineScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(2)
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.buildcraft_addon.stone_engine")
+    override fun getDisplayName(): Component = Component.translatable("block.buildcraft_addon.stone_engine")
 
     // === 燃料 ===
-    private val inventory = DefaultedList.ofSize(1, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(1, ItemStack.EMPTY)
     var burnTime: Int = 0
     var totalBurnTime: Int = 0
 
@@ -165,7 +165,7 @@ class StoneEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlockState(pos, cachedState.with(Properties.FACING, next))
+        world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, next))
         markDirty()
     }
 
@@ -228,7 +228,7 @@ class StoneEngineBlockEntity(
     fun serverTick() {
         val world = world ?: return
         if (world.isClient) return
-        currentDirection = cachedState.get(Properties.FACING)
+        currentDirection = cachedState.get(BlockStateProperties.FACING)
         pendingOutputKu = 0
 
         // 燃料消耗
@@ -266,7 +266,7 @@ class StoneEngineBlockEntity(
     fun clientTick() {
         val world = world ?: return
         if (!world.isClient) return
-        currentDirection = cachedState.get(Properties.FACING)
+        currentDirection = cachedState.get(BlockStateProperties.FACING)
 
         val powered = world.isReceivingRedstonePower(pos)
         isRedstonePowered = powered
@@ -299,7 +299,7 @@ class StoneEngineBlockEntity(
         }
     }
 
-    // === Inventory ===
+    // === Container ===
     override fun size(): Int = 1
     override fun getStack(slot: Int): ItemStack = inventory[slot]
     override fun setStack(slot: Int, stack: ItemStack) { inventory[slot] = stack }
@@ -311,10 +311,10 @@ class StoneEngineBlockEntity(
     }
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun clear() { inventory.fill(ItemStack.EMPTY) }
-    override fun canPlayerUse(player: net.minecraft.entity.player.PlayerEntity): Boolean = true
+    override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = true
 
     // === NBT ===
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
@@ -327,13 +327,13 @@ class StoneEngineBlockEntity(
         nbt.putInt("pendingOutputKu", pendingOutputKu)
         val fuelStack = inventory[SLOT_FUEL]
         if (!fuelStack.isEmpty) {
-            val fuelNbt = NbtCompound()
+            val fuelNbt = CompoundTag()
             fuelStack.writeNbt(fuelNbt)
             nbt.put("fuel", fuelNbt)
         }
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")

@@ -7,11 +7,11 @@ import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import java.util.function.Consumer
 
 object ExtractorRecipeDatagen {
@@ -59,10 +59,10 @@ object ExtractorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             ExtractorRecipeJsonProvider(
-                recipeId = Identifier.of("ic2_120", "extracting/${entry.name}"),
+                recipeId = ResourceLocation.of("ic2_120", "extracting/${entry.name}"),
                 input = entry.input,
                 outputItem = entry.output,
                 outputCount = entry.count
@@ -71,27 +71,27 @@ object ExtractorRecipeDatagen {
     }
 
     private class ExtractorRecipeJsonProvider(
-        private val recipeId: Identifier,
+        private val recipeId: ResourceLocation,
         private val input: IngredientInput,
         private val outputItem: Item,
         private val outputCount: Int
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(ExtractorRecipe::class)}")
             json.add("ingredient", input.toJson())
 
             val result = JsonObject()
-            result.addProperty("item", Registries.ITEM.getId(outputItem).toString())
+            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
             result.addProperty("count", outputCount)
             json.add("result", result)
         }
 
         override fun getSerializer() = ModMachineRecipes.recipeSerializer(ExtractorRecipe::class)
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

@@ -16,28 +16,28 @@ import ic2_120.content.block.SteelBlock
 import ic2_120.content.block.TinOreBlock
 import ic2_120.content.block.UraniumOreBlock
 import ic2_120.content.block.UraniumBlock
-import net.minecraft.data.server.recipe.CookingRecipeJsonBuilder
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.util.Identifier
+import net.minecraft.data.recipes.SimpleCookingRecipeBuilder
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.ShapelessRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.resources.ResourceLocation
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import ic2_120.registry.annotation.RecipeProvider
 
 private fun offerIngotSmelting(
-    exporter: RecipeExporter,
+    exporter: RecipeOutput,
     input: Item,
     output: Item,
-    recipeId: Identifier,
+    recipeId: ResourceLocation,
     experience: Float = 0.1f,
     cookingTime: Int = 200
 ) {
-    CookingRecipeJsonBuilder.createSmelting(
+    SimpleCookingRecipeBuilder.createSmelting(
         Ingredient.ofItems(input),
         RecipeCategory.MISC,
         output,
@@ -55,9 +55,9 @@ private fun offerIngotSmelting(
 class MixedMetalIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 配方1：铁板 + 青铜板 + 锡板 = 合金锭
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
                 .pattern("III")
                 .pattern("BBB")
                 .pattern("TTT")
@@ -68,7 +68,7 @@ class MixedMetalIngot : Item(Item.Settings()) {
                 .offerTo(exporter, MixedMetalIngot::class.recipeId("from_plates"))
 
             // 配方2：钢锭 + 青铜锭 + 锡锭 = 合金锭
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
                 .pattern("III")
                 .pattern("BBB")
                 .pattern("TTT")
@@ -86,13 +86,13 @@ class MixedMetalIngot : Item(Item.Settings()) {
 class LeadIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, LeadIngot::class.instance(), 9)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, LeadIngot::class.instance(), 9)
                 .input(LeadBlock::class.instance())
                 .criterion(hasItem(LeadBlock::class.instance()), conditionsFromItem(LeadBlock::class.instance()))
                 .offerTo(exporter, LeadIngot::class.recipeId("from_block"))
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LeadBlock::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, LeadBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
@@ -139,13 +139,13 @@ class LeadIngot : Item(Item.Settings()) {
 class SilverIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SilverIngot::class.instance(), 9)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, SilverIngot::class.instance(), 9)
                 .input(SilverBlock::class.instance())
                 .criterion(hasItem(SilverBlock::class.instance()), conditionsFromItem(SilverBlock::class.instance()))
                 .offerTo(exporter, SilverIngot::class.recipeId("from_block"))
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SilverBlock::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SilverBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
@@ -174,13 +174,13 @@ class SilverIngot : Item(Item.Settings()) {
 class SteelIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SteelIngot::class.instance(), 9)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, SteelIngot::class.instance(), 9)
                 .input(SteelBlock::class.instance())
                 .criterion(hasItem(SteelBlock::class.instance()), conditionsFromItem(SteelBlock::class.instance()))
                 .offerTo(exporter, SteelIngot::class.recipeId("from_block"))
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelBlock::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SteelBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
@@ -201,13 +201,13 @@ class RefinedIronIngot : Item(Item.Settings())
 class UraniumIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, UraniumIngot::class.instance(), 9)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, UraniumIngot::class.instance(), 9)
                 .input(UraniumBlock::class.instance())
                 .criterion(hasItem(UraniumBlock::class.instance()), conditionsFromItem(UraniumBlock::class.instance()))
                 .offerTo(exporter, UraniumIngot::class.recipeId("from_block"))
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, UraniumBlock::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, UraniumBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
@@ -269,7 +269,7 @@ class RawUranium : Item(Item.Settings())
 class CrushedCopper : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             offerIngotSmelting(
                 exporter,
                 Items.COPPER_ORE,
@@ -302,7 +302,7 @@ class CrushedCopper : Item(Item.Settings()) {
 class CrushedGold : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             offerIngotSmelting(
                 exporter,
                 Items.GOLD_ORE,
@@ -335,7 +335,7 @@ class CrushedGold : Item(Item.Settings()) {
 class CrushedIron : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             offerIngotSmelting(
                 exporter,
                 Items.IRON_ORE,

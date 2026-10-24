@@ -48,28 +48,28 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.block.BlockState
-import net.minecraft.sound.SoundCategory
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.sounds.SoundSource
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 @ModBlockEntity(block = PumpBlock::class)
 class PumpBlockEntity(
@@ -77,7 +77,7 @@ class PumpBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state),
-    Inventory,
+    Container,
     IRoutedSidedInventory,
     ITieredMachine,
     IOverclockerUpgradeSupport,
@@ -88,13 +88,13 @@ class PumpBlockEntity(
     IClaimSensitive,
     ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = PumpBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = PumpBlock.ACTIVE
 
     override val soundConfig: MachineSoundConfig = MachineSoundConfig.operate(
         soundId = "machine.pump.operate", volume = 0.5f, pitch = 1.0f, intervalTicks = 20
     )
 
-    override fun getInventory(): net.minecraft.inventory.Inventory = this
+    override fun getInventory(): net.minecraft.world.Container = this
 
     override var fluidPipeProviderEnabled: Boolean = false
     override var fluidPipeReceiverEnabled: Boolean = false
@@ -146,7 +146,7 @@ class PumpBlockEntity(
         }
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -197,8 +197,8 @@ class PumpBlockEntity(
         fun setStored(fluidId: String, stored: Long) {
             amount = stored.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) {
-                val id = Identifier.tryParse(fluidId)
-                if (id != null && Registries.FLUID.containsId(id)) FluidVariant.of(Registries.FLUID.get(id)) else FluidVariant.blank()
+                val id = ResourceLocation.tryParse(fluidId)
+                if (id != null && BuiltInRegistries.FLUID.containsId(id)) FluidVariant.of(BuiltInRegistries.FLUID.get(id)) else FluidVariant.blank()
             } else {
                 FluidVariant.blank()
             }
@@ -218,10 +218,10 @@ class PumpBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
     override fun markDirty() = super.markDirty()
 
     override fun setStack(slot: Int, stack: ItemStack) {
@@ -234,7 +234,7 @@ class PumpBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == SLOT_INPUT -> {
-            val emptyCell = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
+            val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "empty_cell"))
             stack.item == emptyCell || stack.item is FluidCellItem
         }
         slot == SLOT_OUTPUT -> false
@@ -243,19 +243,19 @@ class PumpBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.pump")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.pump")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        PumpScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        PumpScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(PumpSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -269,15 +269,15 @@ class PumpBlockEntity(
         tankInternal.setStored(nbt.getString(NBT_TANK_FLUID), nbt.getLong(NBT_TANK_AMOUNT))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(PumpSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
         nbt.putFloat("EnergyDebt", energyDebtF)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.amount)
-        nbt.putString(NBT_TANK_FLUID, if (tankInternal.variant.isBlank) "" else Registries.FLUID.getId(tankInternal.variant.fluid).toString())
+        nbt.putString(NBT_TANK_FLUID, if (tankInternal.variant.isBlank) "" else BuiltInRegistries.FLUID.getId(tankInternal.variant.fluid).toString())
     }
 
     /** 重置全部进度状态（无法抽取/停泵时调用）。 */
@@ -289,7 +289,7 @@ class PumpBlockEntity(
         }
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
         syncTankState()
@@ -344,7 +344,7 @@ class PumpBlockEntity(
         sync.syncCurrentTickFlow()
     }
 
-    private fun tryPumpOneBucket(world: World, pos: BlockPos, state: BlockState): Boolean {
+    private fun tryPumpOneBucket(world: Level, pos: BlockPos, state: BlockState): Boolean {
         // 单桶操作费：整桶成本向上取整（1.6^n 小数部分不再漏收）
         val euNeed = ceil(PumpSync.ENERGY_PER_TICK * PumpSync.PROGRESS_MAX * energyMultiplier).toLong().coerceAtLeast(1L)
         if (sync.amount < euNeed) return false
@@ -354,7 +354,7 @@ class PumpBlockEntity(
 
         if (!hasPumpableFluid(world, pos, state)) return false
 
-        val front = state.get(Properties.FACING)
+        val front = state.get(BlockStateProperties.FACING)
         val positions = (1..3).map { pos.offset(front, it) }
         for (target in positions) {
             val drained = tryDrainFromStorage(world, target, front.opposite)
@@ -375,7 +375,7 @@ class PumpBlockEntity(
         return false
     }
 
-    private fun tryDrainFromStorage(world: World, targetPos: BlockPos, fromSide: Direction): Long {
+    private fun tryDrainFromStorage(world: Level, targetPos: BlockPos, fromSide: Direction): Long {
         if (ClaimProtection.isProtected(world, targetPos, ownerUuid, ClaimProtection.EDIT_FLUID)) return 0L
         val external = FluidStorage.SIDED.find(world, targetPos, fromSide) ?: return 0L
 
@@ -397,7 +397,7 @@ class PumpBlockEntity(
         return 0L
     }
 
-    private fun tryDrainFromWorldSource(world: World, targetPos: BlockPos): Long {
+    private fun tryDrainFromWorldSource(world: Level, targetPos: BlockPos): Long {
         val fluidState = world.getFluidState(targetPos)
         if (fluidState.isEmpty || !fluidState.isStill) return 0L
         val fluid = fluidState.fluid
@@ -412,12 +412,12 @@ class PumpBlockEntity(
             tx.commit()
         }
         val targetState = world.getBlockState(targetPos)
-        if (targetState.contains(Properties.WATERLOGGED) && targetState.get(Properties.WATERLOGGED)) {
+        if (targetState.contains(BlockStateProperties.WATERLOGGED) && targetState.get(BlockStateProperties.WATERLOGGED)) {
             // 抽取含水方块中的水时保留方块本体，只移除含水状态。
-            world.setBlockState(targetPos, targetState.with(Properties.WATERLOGGED, false), 3)
+            world.setBlockState(targetPos, targetState.with(BlockStateProperties.WATERLOGGED, false), 3)
         } else {
             // 普通水源方块没有可保留的方块本体，抽空后清为空气。
-            world.setBlockState(targetPos, net.minecraft.block.Blocks.AIR.defaultState, 3)
+            world.setBlockState(targetPos, net.minecraft.world.level.block.Blocks.AIR.defaultState, 3)
         }
         return FluidConstants.BUCKET
     }
@@ -433,7 +433,7 @@ class PumpBlockEntity(
 
         val output = getStack(SLOT_OUTPUT)
         val filled = when {
-            input.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) ->
+            input.item == BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) ->
                 fluidToFilledCellStack(tankInternal.variant.fluid)
             input.item is FluidCellItem && input.isFluidCellEmpty() ->
                 ItemStack(input.item).apply { setFluidCellVariant(FluidVariant.of(tankInternal.variant.fluid)) }
@@ -456,7 +456,7 @@ class PumpBlockEntity(
         markDirty()
     }
 
-    private fun ejectFluidToNeighbors(world: World, pos: BlockPos, state: BlockState) {
+    private fun ejectFluidToNeighbors(world: Level, pos: BlockPos, state: BlockState) {
         if (tankInternal.amount <= 0L || tankInternal.variant.isBlank) return
         val ejectSides = fluidPipeProviderSides
         for (dir in Direction.values()) {
@@ -492,17 +492,17 @@ class PumpBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        val front = world?.getBlockState(pos)?.get(Properties.FACING) ?: Direction.NORTH
+        val front = world?.getBlockState(pos)?.get(BlockStateProperties.FACING) ?: Direction.NORTH
         return if (side == front) null else tank
     }
 
     private fun syncTankState() {
         sync.fluidAmount = tankInternal.amount.toInt().coerceAtLeast(0)
-        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
+        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(tankInternal.variant.fluid)
     }
 
-    private fun hasPumpableFluid(world: World, pos: BlockPos, state: BlockState): Boolean {
-        val front = state.get(Properties.FACING)
+    private fun hasPumpableFluid(world: Level, pos: BlockPos, state: BlockState): Boolean {
+        val front = state.get(BlockStateProperties.FACING)
         val positions = (1..3).map { pos.offset(front, it) }
         for (target in positions) {
             val fluidState = world.getFluidState(target)
@@ -524,8 +524,8 @@ class PumpBlockEntity(
         return false
     }
 
-    override fun claimBlockedTargets(world: World, pos: BlockPos, state: BlockState): List<BlockPos> {
-        val front = state.get(Properties.FACING)
+    override fun claimBlockedTargets(world: Level, pos: BlockPos, state: BlockState): List<BlockPos> {
+        val front = state.get(BlockStateProperties.FACING)
         val result = mutableListOf<BlockPos>()
         for (offset in 1..3) {
             val target = pos.offset(front, offset)

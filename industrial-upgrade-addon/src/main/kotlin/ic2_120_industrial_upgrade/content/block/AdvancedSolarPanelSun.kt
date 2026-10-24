@@ -10,19 +10,19 @@ import ic2_120.registry.type
 import ic2_120_advanced_solar_addon.content.block.AdvancedSolarPanelBlock
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import ic2_120_industrial_upgrade.content.item.SunLinse
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Component
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.ShapelessRecipeBuilder
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 // i18n: block.ic2_120_industrial_upgrade.advanced_solar_panelsun
@@ -33,7 +33,7 @@ class AdvancedSolarPanelSunBlock : AdvancedSolarPanelBlock() {
         AdvancedSolarPanelSunBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -42,9 +42,9 @@ class AdvancedSolarPanelSunBlock : AdvancedSolarPanelBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // "BA"：高级太阳能发电机（ASA）+ SunLinse
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelSunBlock::class.item(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelSunBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .input('B', AdvancedSolarPanelBlock::class.item())
@@ -52,7 +52,7 @@ class AdvancedSolarPanelSunBlock : AdvancedSolarPanelBlock() {
                 .criterion(hasItem(AdvancedSolarPanelBlock::class.item()), conditionsFromItem(AdvancedSolarPanelBlock::class.item()))
                 .offerTo(exporter, IC2IndustrialUpgrade.id("advanced_solar_panelsun"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
                 .input(AdvancedSolarPanelSunBlock::class.item())
                 .criterion(hasItem(AdvancedSolarPanelSunBlock::class.item()), conditionsFromItem(AdvancedSolarPanelSunBlock::class.item()))
                 .offerTo(exporter, IC2IndustrialUpgrade.id("advanced_solar_panelsun_revert"))
@@ -67,5 +67,5 @@ class AdvancedSolarPanelSunBlockEntity(pos: BlockPos, state: BlockState) : SunPa
     sunPower = 16, activeProperty = AdvancedSolarPanelBlock.ACTIVE
 ) {
     override fun getBlockName(): String = "advanced_solar_panelsun"
-    override fun getDisplayName(): Text = Text.translatable("block.${IC2IndustrialUpgrade.MOD_ID}.${getBlockName()}")
+    override fun getDisplayName(): Component = Component.translatable("block.${IC2IndustrialUpgrade.MOD_ID}.${getBlockName()}")
 }

@@ -5,25 +5,25 @@ import ic2_120.content.sync.KineticGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(block = KineticGeneratorBlock::class)
 class KineticGeneratorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(KineticGeneratorScreenHandler::class.type(), syncId) {
+    playerInventory: Inventory,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData
+) : AbstractContainerMenu(KineticGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = KineticGeneratorSync(
         SyncedDataView(propertyDelegate),
-        getFacing = { net.minecraft.util.math.Direction.NORTH },
+        getFacing = { net.minecraft.core.Direction.NORTH },
         currentTickProvider = { null }
     )
 
@@ -40,9 +40,9 @@ class KineticGeneratorScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack = ItemStack.EMPTY
+    override fun quickMove(player: Player, index: Int): ItemStack = ItemStack.EMPTY
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is KineticGeneratorBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0

@@ -1,8 +1,8 @@
 package ic2_120.content.block.transmission
 
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 从相邻方块的 [IKineticMachinePort] 直接取动能并注入 [receiver]。
@@ -11,7 +11,7 @@ import net.minecraft.world.World
  * @param excludeDirections 不向这些方向上的相邻方块取能。
  */
 fun pullKuFromNeighbors(
-    world: World,
+    world: Level,
     pos: BlockPos,
     receiver: IKineticMachinePort,
     excludeDirections: Set<Direction> = emptySet()

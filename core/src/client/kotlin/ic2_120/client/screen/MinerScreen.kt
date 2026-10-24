@@ -4,31 +4,31 @@ import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.t
 import ic2_120.content.screen.MinerScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handlers = ["miner", "advanced_miner"])
 class MinerScreen(
-    handler: MinerScreenHandler, playerInventory: PlayerInventory, title: Text
-) : HandledScreen<MinerScreenHandler>(handler, playerInventory, title) {
+    handler: MinerScreenHandler, playerInventory: Inventory, title: Component
+) : AbstractContainerScreen<MinerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = if (handler.isAdvanced) 203 else 165
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(
             if (handler.isAdvanced) TEX_ADVANCED else TEX_ORDINARY,
             x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE
         )
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -108,52 +108,52 @@ class MinerScreen(
         if (handler.isAdvanced) {
             // 电量条悬停
             if (relX in ADV_EB_X until ADV_EB_X + ADV_EB_W && relY in ADV_EB_Y until ADV_EB_Y + ADV_EB_H) {
-                context.drawTooltip(textRenderer, Text.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"), mouseX, mouseY)
+                context.drawTooltip(textRenderer, Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"), mouseX, mouseY)
             }
             // 模式切换区域高亮 (123,27)-(141,42)
             if (relX in 123 until 142 && relY in 27 until 43) {
                 context.drawBorder(left + 123, top + 27, 19, 16, 0xFFFFFFFF.toInt())
-                context.drawTooltip(textRenderer, Text.translatable("gui.ic2_120.miner.mode_switch"), mouseX, mouseY)
+                context.drawTooltip(textRenderer, Component.translatable("gui.ic2_120.miner.mode_switch"), mouseX, mouseY)
             }
             // 精准模式区域高亮 (129,45)-(147,60)
             if (relX in 129 until 148 && relY in 45 until 61) {
                 context.drawBorder(left + 129, top + 45, 19, 16, 0xFFFFFFFF.toInt())
                 val silkHoverText = if (handler.sync.silkTouch == 0)
                     t("gui.ic2_120.miner.silk_off") else t("gui.ic2_120.miner.silk_on")
-                context.drawTooltip(textRenderer, Text.literal(silkHoverText), mouseX, mouseY)
+                context.drawTooltip(textRenderer, Component.literal(silkHoverText), mouseX, mouseY)
             }
             // 重置区域高亮 (133,101)-(169,116)
             if (relX in 133 until 170 && relY in 101 until 117) {
                 context.drawBorder(left + 133, top + 101, 37, 16, 0xFFFFFFFF.toInt())
-                context.drawTooltip(textRenderer, Text.translatable("gui.ic2_120.miner.reset_tooltip"), mouseX, mouseY)
+                context.drawTooltip(textRenderer, Component.translatable("gui.ic2_120.miner.reset_tooltip"), mouseX, mouseY)
             }
             // uptips 悬停
             if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
                 context.drawTooltip(textRenderer, listOf(
-                    Text.translatable("gui.ic2_120.miner.uptips_advanced"),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.redstone_inverter_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade"))
+                    Component.translatable("gui.ic2_120.miner.uptips_advanced"),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.redstone_inverter_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_ejector_upgrade"))
                 ), mouseX, mouseY)
             }
         } else {
             // 电量条悬停
             if (relX in ORD_EB_X until ORD_EB_X + ORD_EB_W && relY in ORD_EB_Y until ORD_EB_Y + ORD_EB_H) {
-                context.drawTooltip(textRenderer, Text.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"), mouseX, mouseY)
+                context.drawTooltip(textRenderer, Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"), mouseX, mouseY)
             }
             // uptips 悬停
             if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
                 context.drawTooltip(textRenderer, listOf(
-                    Text.translatable("gui.ic2_120.miner.uptips"),
-                    Text.literal("§7${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+                    Component.translatable("gui.ic2_120.miner.uptips"),
+                    Component.literal("§7${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.pulling_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_ejector_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_pulling_upgrade"))
                 ), mouseX, mouseY)
             }
         }
@@ -164,15 +164,15 @@ class MinerScreen(
             val relX = (mouseX - x).toInt()
             val relY = (mouseY - y).toInt()
             if (relX in 123 until 142 && relY in 27 until 43) {
-                client?.player?.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, MinerScreenHandler.BUTTON_TOGGLE_MODE))
+                client?.player?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.syncId, MinerScreenHandler.BUTTON_TOGGLE_MODE))
                 return true
             }
             if (relX in 129 until 148 && relY in 45 until 61) {
-                client?.player?.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, MinerScreenHandler.BUTTON_TOGGLE_SILK))
+                client?.player?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.syncId, MinerScreenHandler.BUTTON_TOGGLE_SILK))
                 return true
             }
             if (relX in 133 until 170 && relY in 101 until 117) {
-                client?.player?.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, MinerScreenHandler.BUTTON_RESTART))
+                client?.player?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.syncId, MinerScreenHandler.BUTTON_RESTART))
                 return true
             }
         }
@@ -180,9 +180,9 @@ class MinerScreen(
     }
 
     companion object {
-        private val TEX_ORDINARY = Identifier.of("ic2", "textures/gui/guiminer.png")
-        private val TEX_ADVANCED = Identifier.of("ic2", "textures/gui/guiadvminer.png")
-        private val UPTIPS_TEX = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEX_ORDINARY = ResourceLocation.of("ic2", "textures/gui/guiminer.png")
+        private val TEX_ADVANCED = ResourceLocation.of("ic2", "textures/gui/guiadvminer.png")
+        private val UPTIPS_TEX = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4

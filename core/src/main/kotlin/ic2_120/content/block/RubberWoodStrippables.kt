@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.registry.StrippableBlockRegistry
  * - [RubberLogBlock] → [StrippedRubberLogBlock]
  * - [RubberWood]     → [StrippedRubberWoodBlock]
  *
- * StrippableBlockRegistry 要求方块带 `Properties.AXIS`（PillarBlock 默认满足），
+ * StrippableBlockRegistry 要求方块带 `BlockStateProperties.AXIS`（RotatedPillarBlock 默认满足），
  * 剥皮时自动保留 AXIS，行为对齐 vanilla 橡木。
  */
 object RubberWoodStrippables {

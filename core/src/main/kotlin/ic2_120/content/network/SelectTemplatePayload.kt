@@ -1,17 +1,17 @@
 package ic2_120.content.network
 
 import ic2_120.Ic2_120
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.packet.CustomPayload
-import net.minecraft.util.math.BlockPos
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
+import net.minecraft.core.BlockPos
 
-class SelectTemplatePayload(val pos: BlockPos, val index: Int) : CustomPayload {
-    override fun getId(): CustomPayload.Id<*> = ID
+class SelectTemplatePayload(val pos: BlockPos, val index: Int) : CustomPacketPayload {
+    override fun getId(): CustomPacketPayload.Id<*> = ID
 
     companion object {
-        val ID = CustomPayload.Id<SelectTemplatePayload>(Ic2_120.id("select_template"))
-        val CODEC: PacketCodec<PacketByteBuf, SelectTemplatePayload> = PacketCodec.of(
+        val ID = CustomPacketPayload.Id<SelectTemplatePayload>(Ic2_120.id("select_template"))
+        val CODEC: StreamCodec<FriendlyByteBuf, SelectTemplatePayload> = StreamCodec.of(
             { value, buf ->
                 buf.writeBlockPos(value.pos)
                 buf.writeVarInt(value.index)

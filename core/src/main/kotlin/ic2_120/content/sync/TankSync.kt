@@ -1,8 +1,8 @@
 package ic2_120.content.sync
 
 import ic2_120.content.syncs.SyncSchema
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 class TankSync(
     schema: SyncSchema,
@@ -20,11 +20,11 @@ class TankSync(
     var levelChange30s by schema.int("LevelChange30s")
     var levelChange60s by schema.int("LevelChange60s")
 
-    val fluidId: Identifier?
+    val fluidId: ResourceLocation?
         get() {
             if (fluidRawId < 0) return null
-            val fluid = Registries.FLUID.get(fluidRawId)
-            return Registries.FLUID.getId(fluid)
+            val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
+            return BuiltInRegistries.FLUID.getId(fluid)
         }
 
     val hasFluid: Boolean get() = fluidAmount > 0 && fluidRawId >= 0

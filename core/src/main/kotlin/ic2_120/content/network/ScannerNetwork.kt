@@ -1,9 +1,9 @@
 package ic2_120.content.network
 
 import io.netty.buffer.ByteBuf
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.packet.CustomPayload
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
 
 /**
  * 扫描结果条目
@@ -23,17 +23,17 @@ class ScannerResultPacket(
     val usesRemaining: Int,
     val maxUses: Int,
     val results: List<OreScanEntry>
-) : CustomPayload {
-    override fun getId(): CustomPayload.Id<*> = ID
+) : CustomPacketPayload {
+    override fun getId(): CustomPacketPayload.Id<*> = ID
 
     companion object {
-        val ID = CustomPayload.Id<ScannerResultPacket>(net.minecraft.util.Identifier.of("ic2_120", "scanner_result"))
-        val CODEC: PacketCodec<PacketByteBuf, ScannerResultPacket> = PacketCodec.of(
+        val ID = CustomPacketPayload.Id<ScannerResultPacket>(net.minecraft.resources.ResourceLocation.of("ic2_120", "scanner_result"))
+        val CODEC: StreamCodec<FriendlyByteBuf, ScannerResultPacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }
         )
 
-        fun read(buf: PacketByteBuf): ScannerResultPacket {
+        fun read(buf: FriendlyByteBuf): ScannerResultPacket {
             val energy = buf.readInt()
             val energyCapacity = buf.readInt()
             val usesRemaining = buf.readVarInt()
@@ -48,7 +48,7 @@ class ScannerResultPacket(
             return ScannerResultPacket(energy, energyCapacity, usesRemaining, maxUses, results)
         }
 
-        fun write(packet: ScannerResultPacket, buf: PacketByteBuf) {
+        fun write(packet: ScannerResultPacket, buf: FriendlyByteBuf) {
             buf.writeInt(packet.energy)
             buf.writeInt(packet.energyCapacity)
             buf.writeVarInt(packet.usesRemaining)

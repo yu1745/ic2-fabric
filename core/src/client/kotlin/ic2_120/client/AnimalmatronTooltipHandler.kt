@@ -4,54 +4,54 @@ import ic2_120.content.entity.AnimalFoodMapping
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.resources.ResourceLocation
 
 @Environment(EnvType.CLIENT)
 object AnimalmatronTooltipHandler {
 
-    private val ANIMALMATRON_ID = Identifier.of("ic2_120", "animalmatron")
+    private val ANIMALMATRON_ID = ResourceLocation.of("ic2_120", "animalmatron")
 
-    private data class ExtraProductInfo(val entityId: Identifier, val productId: Identifier, val needsShears: Boolean)
+    private data class ExtraProductInfo(val entityId: ResourceLocation, val productId: ResourceLocation, val needsShears: Boolean)
 
     private val EXTRA_PRODUCTS = listOf(
-        ExtraProductInfo(Identifier.of("minecraft", "chicken"), Identifier.of("minecraft", "egg"), false),
-        ExtraProductInfo(Identifier.of("minecraft", "sheep"), Identifier.of("minecraft", "white_wool"), true),
+        ExtraProductInfo(ResourceLocation.of("minecraft", "chicken"), ResourceLocation.of("minecraft", "egg"), false),
+        ExtraProductInfo(ResourceLocation.of("minecraft", "sheep"), ResourceLocation.of("minecraft", "white_wool"), true),
     )
 
     fun register() {
         ItemTooltipCallback.EVENT.register { stack, context, type ->
-            val itemId = Registries.ITEM.getId(stack.item)
+            val itemId = BuiltInRegistries.ITEM.getId(stack.item)
             if (itemId != ANIMALMATRON_ID) return@register
 
             if (Screen.hasShiftDown()) {
-                type.add(Text.translatable("item.ic2_120.animalmatron.tooltip.food_table").formatted(Formatting.GRAY))
+                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.food_table").formatted(ChatFormatting.GRAY))
                 AnimalFoodMapping.getFoodMap().forEach { (id, food) ->
                     val animalKey = "entity.${id.namespace}.${id.path}"
-                    val animalName = Text.translatable(animalKey).string
-                    val foodName = Text.translatable(food.first().translationKey).string
-                    type.add(Text.literal("  ${animalName}: ${foodName}").formatted(Formatting.DARK_GRAY))
+                    val animalName = Component.translatable(animalKey).string
+                    val foodName = Component.translatable(food.first().translationKey).string
+                    type.add(Component.literal("  ${animalName}: ${foodName}").formatted(ChatFormatting.DARK_GRAY))
                 }
-                type.add(Text.translatable("item.ic2_120.animalmatron.tooltip.breeding_limit").formatted(Formatting.DARK_GRAY))
+                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.breeding_limit").formatted(ChatFormatting.DARK_GRAY))
 
-                type.add(Text.translatable("item.ic2_120.animalmatron.tooltip.extra_products").formatted(Formatting.GRAY))
+                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.extra_products").formatted(ChatFormatting.GRAY))
                 EXTRA_PRODUCTS.forEach { (entityId, productId, needsShears) ->
                     val animalKey = "entity.${entityId.namespace}.${entityId.path}"
-                    val animalName = Text.translatable(animalKey).string
-                    val productItem = Registries.ITEM.get(productId)
-                    val productName = Text.translatable(productItem.translationKey).string
+                    val animalName = Component.translatable(animalKey).string
+                    val productItem = BuiltInRegistries.ITEM.get(productId)
+                    val productName = Component.translatable(productItem.translationKey).string
                     val noteKey = if (needsShears)
                         "item.ic2_120.animalmatron.tooltip.extra_product_shears"
                     else
                         "item.ic2_120.animalmatron.tooltip.extra_product_auto"
-                    val note = Text.translatable(noteKey).string
-                    type.add(Text.literal("  ${animalName} → ${productName} ${note}").formatted(Formatting.DARK_GRAY))
+                    val note = Component.translatable(noteKey).string
+                    type.add(Component.literal("  ${animalName} → ${productName} ${note}").formatted(ChatFormatting.DARK_GRAY))
                 }
             } else {
-                type.add(Text.translatable("item.ic2_120.animalmatron.tooltip").formatted(Formatting.GRAY))
+                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip").formatted(ChatFormatting.GRAY))
             }
         }
     }

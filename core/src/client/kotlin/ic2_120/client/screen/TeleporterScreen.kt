@@ -4,20 +4,20 @@ import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.screen.TeleporterScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.text.Text as McText
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.components.Button
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.chat.Component as McText
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = TeleporterBlock::class)
 class TeleporterScreen(
     handler: TeleporterScreenHandler,
-    playerInventory: PlayerInventory,
+    playerInventory: Inventory,
     title: McText
-) : HandledScreen<TeleporterScreenHandler>(handler, playerInventory, title) {
+) : AbstractContainerScreen<TeleporterScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
@@ -25,8 +25,8 @@ class TeleporterScreen(
         titleY = 6
     }
 
-    private lateinit var range1Btn: ButtonWidget
-    private lateinit var range3Btn: ButtonWidget
+    private lateinit var range1Btn: Button
+    private lateinit var range3Btn: Button
 
     override fun init() {
         super.init()
@@ -53,24 +53,24 @@ class TeleporterScreen(
             handler.slots[idx].y = HOTBAR_Y
         }
 
-        range1Btn = addDrawableChild(ButtonWidget.builder(
+        range1Btn = addDrawableChild(Button.builder(
             McText.literal("")
         ) {
             client?.player?.networkHandler?.sendPacket(
-                ButtonClickC2SPacket(handler.syncId, TeleporterScreenHandler.BUTTON_ID_RANGE_1)
+                ServerboundContainerButtonClickPacket(handler.syncId, TeleporterScreenHandler.BUTTON_ID_RANGE_1)
             )
         }.dimensions(x + 26, y + 15, 45, 20).build())
 
-        range3Btn = addDrawableChild(ButtonWidget.builder(
+        range3Btn = addDrawableChild(Button.builder(
             McText.literal("")
         ) {
             client?.player?.networkHandler?.sendPacket(
-                ButtonClickC2SPacket(handler.syncId, TeleporterScreenHandler.BUTTON_ID_RANGE_3)
+                ServerboundContainerButtonClickPacket(handler.syncId, TeleporterScreenHandler.BUTTON_ID_RANGE_3)
             )
         }.dimensions(x + 26, y + 40, 45, 20).build())
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 升级槽背景
@@ -88,7 +88,7 @@ class TeleporterScreen(
         context.drawTexture(UPTIPS, x + UPTIPS_X, y + UPTIPS_Y, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -124,7 +124,7 @@ class TeleporterScreen(
     }
 
     private fun drawButtonText(
-        context: DrawContext,
+        context: GuiGraphics,
         text: String,
         bx: Int,
         by: Int,
@@ -143,9 +143,9 @@ class TeleporterScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
-        private val WRENCH = Identifier.of("ic2_120", "textures/item/tool/wrench.png")
-        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiother.png")
+        private val WRENCH = ResourceLocation.of("ic2_120", "textures/item/tool/wrench.png")
+        private val UPTIPS = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val WRENCH_SIZE = 16
         private const val UPTIPS_SIZE = 16

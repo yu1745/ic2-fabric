@@ -22,7 +22,7 @@ import ic2_120_industrial_upgrade.content.block.UniversalCableBlock
  * 通过 core 的 "ic2_120:cables" entrypoint 被 core 在 onInitialize 期间调用
  *（此时 core 尚未注册 CableBlockEntity，注册表也未冻结）。
  * 本 provider 实例化每档导线方块，调用 [ClassScanner.registerCableBlock] 以本附属 modId
- * 注册进 Registries（BLOCK + 方块物品 + 创造栏 + 渲染层），随后 core 扫描注册表时即可收编。
+ * 注册进 BuiltInRegistries（BLOCK + 方块物品 + 创造栏 + 渲染层），随后 core 扫描注册表时即可收编。
  */
 class IUCableProvider : CableProvider {
     override fun registerCables(): List<BaseCableBlock> {

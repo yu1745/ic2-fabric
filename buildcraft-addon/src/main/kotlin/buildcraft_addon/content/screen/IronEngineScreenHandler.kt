@@ -3,24 +3,24 @@ package buildcraft_addon.content.screen
 import buildcraft_addon.content.block.IronEngineBlock
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 import ic2_120.registry.annotation.ScreenFactory
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 @ModScreenHandler(block = IronEngineBlock::class)
 class IronEngineScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    val context: ScreenHandlerContext,
-    val propertyDelegate: PropertyDelegate,
-) : ScreenHandler(IronEngineScreenHandler::class.type(), syncId) {
+    playerInventory: Inventory,
+    val context: ContainerLevelAccess,
+    val propertyDelegate: ContainerData,
+) : AbstractContainerMenu(IronEngineScreenHandler::class.type(), syncId) {
 
     init {
         checkDataCount(propertyDelegate, 4)
@@ -39,17 +39,17 @@ class IronEngineScreenHandler(
         addProperties(propertyDelegate)
     }
 
-    // PropertyDelegate: [0]=fuelAmount, [1]=coolantAmount, [2]=residueAmount, [3]=heat
+    // ContainerData: [0]=fuelAmount, [1]=coolantAmount, [2]=residueAmount, [3]=heat
     fun getFuelAmount(): Int = propertyDelegate.get(0)
     fun getCoolantAmount(): Int = propertyDelegate.get(1)
     fun getResidueAmount(): Int = propertyDelegate.get(2)
     fun getHeat(): Int = propertyDelegate.get(3)
 
-    override fun quickMove(player: PlayerEntity, slotIndex: Int): net.minecraft.item.ItemStack {
+    override fun quickMove(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
         return ItemStack.EMPTY
     }
 
-    override fun canUse(player: PlayerEntity): Boolean {
+    override fun canUse(player: Player): Boolean {
         return context.get({ world, pos ->
             world.getBlockState(pos).block is IronEngineBlock && player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -57,10 +57,10 @@ class IronEngineScreenHandler(
 
     companion object {
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): IronEngineScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): IronEngineScreenHandler {
             buf.readBlockPos()
             buf.readVarInt()
-            return IronEngineScreenHandler(syncId, playerInventory, ScreenHandlerContext.EMPTY, ArrayPropertyDelegate(4))
+            return IronEngineScreenHandler(syncId, playerInventory, ContainerLevelAccess.EMPTY, SimpleContainerData(4))
         }
     }
 }

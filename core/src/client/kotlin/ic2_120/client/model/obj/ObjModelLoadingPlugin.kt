@@ -2,8 +2,8 @@ package ic2_120.client.model.obj
 
 import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.client.model.loading.v1.PreparableModelLoadingPlugin
-import net.minecraft.resource.ResourceManager
-import net.minecraft.util.Identifier
+import net.minecraft.server.packs.resources.ResourceManager
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
@@ -26,15 +26,15 @@ object ObjModelLoadingPlugin {
         }
     }
 
-    private fun load(manager: ResourceManager, executor: Executor): CompletableFuture<Map<Identifier, ObjModelSpec>> =
+    private fun load(manager: ResourceManager, executor: Executor): CompletableFuture<Map<ResourceLocation, ObjModelSpec>> =
         CompletableFuture.supplyAsync({
-            val read = { id: Identifier -> manager.getResourceOrThrow(id).reader.use { it.readText() } }
-            val out = HashMap<Identifier, ObjModelSpec>()
+            val read = { id: ResourceLocation -> manager.getResourceOrThrow(id).reader.use { it.readText() } }
+            val out = HashMap<ResourceLocation, ObjModelSpec>()
             val found = manager.findResources("models") { it.namespace == Ic2_120.MOD_ID && it.path.endsWith(".json") }
             for ((file, resource) in found) {
                 val text = resource.reader.use { it.readText() }
                 if (!text.contains(ObjParser.LOADER_ID)) continue
-                val modelId = Identifier(file.namespace, file.path.removePrefix("models/").removeSuffix(".json"))
+                val modelId = ResourceLocation(file.namespace, file.path.removePrefix("models/").removeSuffix(".json"))
                 try {
                     val json = ObjParser.parseJson(text)
                     if (json.get("loader")?.asString != ObjParser.LOADER_ID) continue

@@ -6,26 +6,26 @@ import ic2_120.content.screen.PumpAttachmentScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.client.util.math.Rect2i
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.renderer.Rect2i
 
 @ModScreen(handlers = ["bronze_pump_attachment", "carbon_pump_attachment"])
 class PumpAttachmentScreen(
     handler: PumpAttachmentScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<PumpAttachmentScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<PumpAttachmentScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 162
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 主 PNG 背景
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
         // 过滤器槽背景 (179,3)-(197,21) = 18×18，渲染至 (79,30)
@@ -44,7 +44,7 @@ class PumpAttachmentScreen(
         )
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -75,7 +75,7 @@ class PumpAttachmentScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawFilterFluid(context: DrawContext) {
+    private fun drawFilterFluid(context: GuiGraphics) {
         val fluid = handler.filterFluid() ?: return
         context.drawTexture(
             TEXTURE, x + SLOT_BG_X, y + SLOT_BG_Y,
@@ -94,18 +94,18 @@ class PumpAttachmentScreen(
         context.drawSprite(x + SLOT_BG_X + 1, y + SLOT_BG_Y + 1, 0, 16, 16, sprite, r, g, b, 1f)
     }
 
-    private fun drawJeiHint(context: DrawContext, mouseX: Int, mouseY: Int) {
+    private fun drawJeiHint(context: GuiGraphics, mouseX: Int, mouseY: Int) {
         if (!FabricLoader.getInstance().isModLoaded("jei")) return
         context.drawTexture(UPTIPS_TEXTURE, x + HINT_X, y + HINT_Y, 0f, 0f, HINT_SIZE, HINT_SIZE, HINT_SIZE, HINT_SIZE)
         if (mouseX - x in HINT_X until HINT_X + HINT_SIZE && mouseY - y in HINT_Y until HINT_Y + HINT_SIZE) {
-            context.drawTooltip(textRenderer, Text.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
+            context.drawTooltip(textRenderer, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
         }
     }
 
     fun ghostFilterArea(): Rect2i = Rect2i(x + 80, y + 31, 16, 16)
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiother.png")
         private const val TEXTURE_SIZE = 256
 
         // 过滤器槽背景 (179,3)-(197,21) = 18×18
@@ -122,7 +122,7 @@ class PumpAttachmentScreen(
         private const val TEXT_AREA_H = 15
         private const val TEXT_AREA_X = 52
         private const val TEXT_AREA_Y = 55
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val HINT_X = 4
         private const val HINT_Y = 4
         private const val HINT_SIZE = 16

@@ -8,28 +8,28 @@ import ic2_120.content.sync.FluidHeatExchangerSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.text.Text as McText
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.network.chat.Component as McText
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = FluidHeatExchangerBlock::class)
 class FluidHeatExchangerScreen(
-    handler: FluidHeatExchangerScreenHandler, playerInventory: PlayerInventory, title: McText
-) : HandledScreen<FluidHeatExchangerScreenHandler>(handler, playerInventory, title) {
+    handler: FluidHeatExchangerScreenHandler, playerInventory: Inventory, title: McText
+) : AbstractContainerScreen<FluidHeatExchangerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 179
         backgroundHeight = 204
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -120,7 +120,7 @@ class FluidHeatExchangerScreen(
     }
 
     /** 在指定区域自下而上渲染流体纹理填充，使用 FluidUtils 着色 */
-    private fun drawFluidFill(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, fluid: Fluid) {
+    private fun drawFluidFill(context: GuiGraphics, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, fluid: Fluid) {
         val fillH = (fraction.coerceIn(0f, 1f) * h).toInt()
         if (fillH <= 0) return
 
@@ -150,8 +150,8 @@ class FluidHeatExchangerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guifluidheatexchanger.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guifluidheatexchanger.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val TANK_DROPLETS = (FluidConstants.BUCKET * FluidHeatExchangerSync.TANK_CAPACITY_BUCKETS).toInt()

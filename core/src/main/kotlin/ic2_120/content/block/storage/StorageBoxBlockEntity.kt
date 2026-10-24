@@ -8,21 +8,21 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Player
 
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.core.HolderLookup
+import net.minecraft.network.FriendlyByteBuf
 import io.netty.buffer.Unpooled
 
 /**
@@ -49,7 +49,7 @@ import io.netty.buffer.Unpooled
 class StorageBoxBlockEntity(
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(StorageBoxBlockEntity::class.type(), pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : BlockEntity(StorageBoxBlockEntity::class.type(), pos, state), Container, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     companion object {
         /** 木质储物箱容量 */
@@ -68,18 +68,18 @@ class StorageBoxBlockEntity(
         private const val IRIDIUM_CAPACITY = 126
 
         /** NBT 键 */
-        private const val INVENTORY_KEY = "Inventory"
+        private const val INVENTORY_KEY = "Container"
         private const val ITEMS_KEY = "Items"
     }
 
     /** 物品栏内容 */
-    private var inventory: DefaultedList<ItemStack> = createInventory()
+    private var inventory: NonNullList<ItemStack> = createInventory()
 
     /**
      * 对外暴露的 Fabric ItemStorage。
      *
-     * 仅用 `implements Inventory` 时，物品栏会被 FFFAPI（ForgifiedFabricAPI）的
-     * `ItemStorage.SIDED` fallback（vanilla Inventory 兜底）处理；但该 fallback 在
+     * 仅用 `implements Container` 时，物品栏会被 FFFAPI（ForgifiedFabricAPI）的
+     * `ItemStorage.SIDED` fallback（vanilla Container 兜底）处理；但该 fallback 在
      * `TransferApiForgeCompat` 的 capability 桥（`getCapability(ITEM_HANDLER)` 反查
      * `ItemStorage.SIDED.find()`）置 `COMPUTING_CAPABILITY_LOCK` 时会被显式跳过，导致
      * AE2 总线 / Create 溜槽等走 Forge 能力的物流拿不到储物箱能力。
@@ -106,12 +106,12 @@ class StorageBoxBlockEntity(
     }
 
     /** 创建物品栏 */
-    private fun createInventory(): DefaultedList<ItemStack> {
-        return DefaultedList.ofSize(getCapacity(), ItemStack.EMPTY)
+    private fun createInventory(): NonNullList<ItemStack> {
+        return NonNullList.ofSize(getCapacity(), ItemStack.EMPTY)
     }
 
     /** 获取物品栏（只读） - 外部访问用 */
-    fun getInventory(): DefaultedList<ItemStack> = inventory
+    fun getInventory(): NonNullList<ItemStack> = inventory
 
     /** 创造模式破坏时由方块临时关闭掉落。 */
     var shouldDropOnBreak = true
@@ -175,7 +175,7 @@ class StorageBoxBlockEntity(
     }
 
     /** 检查玩家是否可以使用此物品栏 */
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     /** 清空物品栏 */
     override fun clear() {
@@ -183,35 +183,35 @@ class StorageBoxBlockEntity(
         markDirty()
     }
 
-    // ========== ExtendedScreenHandlerFactory<PacketByteBuf> 实现 ==========
+    // ========== ExtendedScreenHandlerFactory<FriendlyByteBuf> 实现 ==========
 
     /** 创建菜单标题 */
-    override fun getDisplayName(): Text {
+    override fun getDisplayName(): Component {
         val block = cachedState.block
-        return Text.translatable(block.translationKey)
+        return Component.translatable(block.translationKey)
     }
 
-    /** 创建 ScreenHandler */
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
+    /** 创建 AbstractContainerMenu */
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
         return StorageBoxScreenHandler.create(syncId, playerInventory, this)
     }
 
-    /** 写入数据到 PacketByteBuf（客户端 GUI 打开时使用） */
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    /** 写入数据到 FriendlyByteBuf（客户端 GUI 打开时使用） */
+    override fun getScreenOpeningData(player: net.minecraft.server.level.ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         return buf
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         // 保存物品栏到 NBT
-        val inventoryNbt = NbtCompound()
-        Inventories.writeNbt(inventoryNbt, inventory, lookup)
+        val inventoryNbt = CompoundTag()
+        ContainerHelper.writeNbt(inventoryNbt, inventory, lookup)
         nbt.put(INVENTORY_KEY, inventoryNbt)
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         // 从 NBT 读取物品栏
         val inventoryNbt = nbt.getCompound(INVENTORY_KEY)
@@ -220,11 +220,11 @@ class StorageBoxBlockEntity(
             val itemsNbt = nbt.getList(ITEMS_KEY, 10)
             if (itemsNbt.size != 0) {
                 inventory = createInventory()
-                Inventories.readNbt(inventoryNbt, inventory, lookup)
+                ContainerHelper.readNbt(inventoryNbt, inventory, lookup)
             }
         } else {
             inventory = createInventory()
-            Inventories.readNbt(inventoryNbt, inventory, lookup)
+            ContainerHelper.readNbt(inventoryNbt, inventory, lookup)
         }
     }
 }

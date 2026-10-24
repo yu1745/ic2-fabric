@@ -3,25 +3,25 @@ package ic2_120.client.renderers
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import ic2_120.Ic2_120
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.model.BakedModel
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.WorldRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.registry.Registries
-import net.minecraft.resource.ResourceManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.RotationAxis
-import net.minecraft.util.math.random.Random
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.resources.model.BakedModel
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.LevelRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.packs.resources.ResourceManager
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.Direction
+import com.mojang.math.Axis
+import net.minecraft.util.RandomSource
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import java.util.WeakHashMap
@@ -38,14 +38,14 @@ import kotlin.math.cos
  * 机器以方块的 `active` 属性决定是否运动；停机时保持最后相位，避免跳回初始位置。
  */
 class Machine3dBlockEntityRenderer<T : BlockEntity>(
-    @Suppress("UNUSED_PARAMETER") context: BlockEntityRendererFactory.Context
+    @Suppress("UNUSED_PARAMETER") context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<T> {
 
     class Part(val index: Int, val rotate: Boolean, val axis: Vector3f, val pivot: Vector3f, val speed: Float, val amplitude: Float, val period: Float)
 
     companion object {
         private val FACES = arrayOf(*Direction.values(), null)
-        private val ANIMATIONS_ID = Identifier(Ic2_120.MOD_ID, "machine3d/animations.json")
+        private val ANIMATIONS_ID = ResourceLocation(Ic2_120.MOD_ID, "machine3d/animations.json")
 
         @Volatile
         private var animations: Map<String, List<Part>> = emptyMap()
@@ -74,7 +74,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
     }
 
     private val frozenTime = WeakHashMap<BlockEntity, Float>()
-    private val random = Random.create()
+    private val random = RandomSource.create()
     private val lights = IntArray(4)
     private val brightness = FloatArray(4)
     private val normal = Vector3f()
@@ -83,7 +83,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
      * 原版 BlockModelRenderer 的矩阵渲染路径不做面朝向明暗，运动件会整体发白；
      * 这里按"变换后的法线"套用 MC 固定面亮度（上 1.0 / 南北 0.8 / 东西 0.6 / 下 0.5）。
      */
-    private fun emitShaded(entry: MatrixStack.Entry, consumer: VertexConsumer, model: BakedModel, light: Int) {
+    private fun emitShaded(entry: PoseStack.Entry, consumer: VertexConsumer, model: BakedModel, light: Int) {
         lights.fill(light)
         for (face in FACES) {
             for (quad in model.getQuads(null, face, random)) {
@@ -97,27 +97,27 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
         }
     }
 
-    override fun render(entity: T, tickDelta: Float, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int, overlay: Int) {
+    override fun render(entity: T, tickDelta: Float, matrices: PoseStack, vertexConsumers: MultiBufferSource, light: Int, overlay: Int) {
         val world = entity.world ?: return
         val state = entity.cachedState
-        val machine = Registries.BLOCK.getId(state.block).path
+        val machine = BuiltInRegistries.BLOCK.getId(state.block).path
         val parts = animations[machine] ?: return
         val activeProp = state.block.stateManager.getProperty("active") as? BooleanProperty
         val active = activeProp?.let { state.get(it) } ?: false
-        val facing = state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
         // 动画时间：运行时随世界时间推进，停机时冻结
         val t = if (active) ((world.time % 72000L) + tickDelta).also { frozenTime[entity] = it } else frozenTime[entity] ?: 0f
 
-        val client = MinecraftClient.getInstance()
+        val client = Minecraft.getInstance()
         val manager = client.bakedModelManager
-        val consumer = vertexConsumers.getBuffer(RenderLayer.getSolid())
+        val consumer = vertexConsumers.getBuffer(RenderType.getSolid())
         // 运动件从正面露出：取正前方方块的光照（机器自身格子光照会低一级）
-        val frontLight = WorldRenderer.getLightmapCoordinates(world, entity.pos.offset(facing))
+        val frontLight = LevelRenderer.getLightmapCoordinates(world, entity.pos.offset(facing))
 
         matrices.push()
         // 与 blockstate 的 y 旋转一致：北为 0°，顺时针
         matrices.translate(0.5, 0.0, 0.5)
-        matrices.multiply(RotationAxis.NEGATIVE_Y.rotationDegrees(facing.asRotation() - 180f))
+        matrices.multiply(Axis.NEGATIVE_Y.rotationDegrees(facing.asRotation() - 180f))
         matrices.translate(-0.5, 0.0, -0.5)
         for (part in parts) {
             matrices.push()
@@ -130,7 +130,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
                 val k = part.amplitude * (0.5f - 0.5f * cos((2.0 * Math.PI * t / part.period).toFloat()))
                 matrices.translate(part.axis.x * k, part.axis.y * k, part.axis.z * k)
             }
-            val id = Identifier(Ic2_120.MOD_ID, "block/machine3d/${machine}_rotor_${part.index}" + if (active) "_active" else "")
+            val id = ResourceLocation(Ic2_120.MOD_ID, "block/machine3d/${machine}_rotor_${part.index}" + if (active) "_active" else "")
             manager.getModel(id)?.let { emitShaded(matrices.peek(), consumer, it, frontLight) }
             matrices.pop()
         }

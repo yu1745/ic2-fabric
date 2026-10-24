@@ -4,7 +4,7 @@ import ic2_120.content.TickLimitedSidedEnergyContainer
 import ic2_120.content.block.GeoGeneratorBlock
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
 import ic2_120.content.syncs.SyncSchema
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 
 /**
  * 地热发电机同步属性与能量容器。

@@ -1,7 +1,7 @@
 package ic2_120.mixin;
 
 import ic2_120.content.block.AnimalmatronBlock;
-import net.minecraft.entity.passive.ChickenEntity;
+import net.minecraft.world.entity.animal.Chicken;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * 实现：
  * 1. 阻止牲畜监管机范围内的鸡自然下蛋（蛋由监管机统一收集）
  */
-@Mixin(ChickenEntity.class)
+@Mixin(Chicken.class)
 public abstract class ChickenEntityMixin {
 
 	/**
@@ -28,7 +28,7 @@ public abstract class ChickenEntityMixin {
 		at = @At("HEAD")
 	)
 	private void ic2_120$preventEggLay(CallbackInfo ci) {
-		ChickenEntity chicken = (ChickenEntity) (Object) this;
+		Chicken chicken = (Chicken) (Object) this;
 		// 统一走 AnimalmatronBlock.isManaged：与 BE 扫描同几何 + 要求 ACTIVE（P1/P4）。
 		if (chicken.eggLayTime <= 1 && AnimalmatronBlock.isManaged(chicken)) {
 			chicken.eggLayTime = ThreadLocalRandom.current().nextInt(6000) + 6000;

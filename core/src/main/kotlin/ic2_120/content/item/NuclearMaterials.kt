@@ -6,15 +6,15 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.recipeId
-import net.minecraft.item.Item
+import net.minecraft.world.item.Item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.util.Identifier
+import net.minecraft.data.recipes.ShapelessRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.resources.ResourceLocation
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 核能相关材料 ==========
@@ -24,8 +24,8 @@ import ic2_120.registry.annotation.RecipeProvider
 class Uranium : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Uranium::class.instance(), 1)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, Uranium::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
@@ -33,7 +33,7 @@ class Uranium : Item(Item.Settings()) {
                 .input('O', SmallUranium235::class.instance())
                 .criterion(hasItem(UraniumIngot::class.instance()), conditionsFromItem(UraniumIngot::class.instance()))
                 .offerTo(exporter, Uranium::class.recipeId("1"))
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Uranium::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, Uranium::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
@@ -62,8 +62,8 @@ class Plutonium : Item(Item.Settings())
 class Mox : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Mox::class.instance(), 1)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, Mox::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
@@ -71,7 +71,7 @@ class Mox : Item(Item.Settings()) {
                 .input('O', Plutonium::class.instance())
                 .criterion(hasItem(UraniumIngot::class.instance()), conditionsFromItem(UraniumIngot::class.instance()))
                 .offerTo(exporter, Mox::class.recipeId("1"))
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Mox::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, Mox::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
@@ -88,21 +88,21 @@ class Mox : Item(Item.Settings()) {
 class SmallUranium235 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 9 小撮 -> 1 铀-235
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Uranium235::class.instance(), 1)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, Uranium235::class.instance(), 1)
                 .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
                 .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
                 .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
                 .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
                 .input(SmallUranium235::class.instance()).criterion(
                     hasItem(SmallUranium235::class.instance()), conditionsFromItem(SmallUranium235::class.instance())
-                ).offerTo(exporter, Identifier.of("ic2_120", "small_uranium_235_to_uranium_235"))
+                ).offerTo(exporter, ResourceLocation.of("ic2_120", "small_uranium_235_to_uranium_235"))
             // 1 铀-235 -> 9 小撮
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallUranium235::class.instance(), 9)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallUranium235::class.instance(), 9)
                 .input(Uranium235::class.instance())
                 .criterion(hasItem(Uranium235::class.instance()), conditionsFromItem(Uranium235::class.instance()))
-                .offerTo(exporter, Identifier.of("ic2_120", "uranium_235_to_small_uranium_235"))
+                .offerTo(exporter, ResourceLocation.of("ic2_120", "uranium_235_to_small_uranium_235"))
         }
     }
 }
@@ -112,21 +112,21 @@ class SmallUranium235 : Item(Item.Settings()) {
 class SmallUranium238 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 9 小撮 -> 1 铀-238
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Uranium238::class.instance(), 1)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, Uranium238::class.instance(), 1)
                 .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
                 .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
                 .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
                 .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
                 .input(SmallUranium238::class.instance()).criterion(
                     hasItem(SmallUranium238::class.instance()), conditionsFromItem(SmallUranium238::class.instance())
-                ).offerTo(exporter, Identifier.of("ic2_120", "small_uranium_238_to_uranium_238"))
+                ).offerTo(exporter, ResourceLocation.of("ic2_120", "small_uranium_238_to_uranium_238"))
             // 1 铀-238 -> 9 小撮
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallUranium238::class.instance(), 9)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallUranium238::class.instance(), 9)
                 .input(Uranium238::class.instance())
                 .criterion(hasItem(Uranium238::class.instance()), conditionsFromItem(Uranium238::class.instance()))
-                .offerTo(exporter, Identifier.of("ic2_120", "uranium_238_to_small_uranium_238"))
+                .offerTo(exporter, ResourceLocation.of("ic2_120", "uranium_238_to_small_uranium_238"))
         }
     }
 }
@@ -136,21 +136,21 @@ class SmallUranium238 : Item(Item.Settings()) {
 class SmallPlutonium : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 9 小撮 -> 1 钚
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Plutonium::class.instance(), 1)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, Plutonium::class.instance(), 1)
                 .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
                 .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
                 .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
                 .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
                 .input(SmallPlutonium::class.instance()).criterion(
                     hasItem(SmallPlutonium::class.instance()), conditionsFromItem(SmallPlutonium::class.instance())
-                ).offerTo(exporter, Identifier.of("ic2_120", "small_plutonium_to_plutonium"))
+                ).offerTo(exporter, ResourceLocation.of("ic2_120", "small_plutonium_to_plutonium"))
             // 1 钚 -> 9 小撮
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallPlutonium::class.instance(), 9)
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallPlutonium::class.instance(), 9)
                 .input(Plutonium::class.instance())
                 .criterion(hasItem(Plutonium::class.instance()), conditionsFromItem(Plutonium::class.instance()))
-                .offerTo(exporter, Identifier.of("ic2_120", "plutonium_to_small_plutonium"))
+                .offerTo(exporter, ResourceLocation.of("ic2_120", "plutonium_to_small_plutonium"))
         }
     }
 }
@@ -170,8 +170,8 @@ class SmallPlutonium : Item(Item.Settings()) {
 class RtgPellet : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RtgPellet::class.instance(), 1)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, RtgPellet::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")

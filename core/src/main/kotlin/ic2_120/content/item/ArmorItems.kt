@@ -25,26 +25,26 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ArmorMaterial
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.registry.Registries
-import net.minecraft.sound.SoundEvent
-import net.minecraft.sound.SoundEvents
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.Formatting
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ArmorMaterial
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.ChatFormatting
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import net.minecraft.client.item.TooltipContext
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -56,9 +56,9 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 import ic2_120.content.item.armor.ElectricArmorItem
 import ic2_120.content.item.armor.JetpackItem
@@ -119,11 +119,11 @@ private fun createArmorMaterial(
 
 // ========== 修复原料 ==========
 // 各护甲材料对应的修复物品（通过模组 ID 加载）
-private val bronzeIngot = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "bronze_ingot")))
-private val rubber = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "rubber")))
-private val carbonFibre = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "carbon_fibre")))
-private val advancedAlloy = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "alloy")))
-private val iridium = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "iridium")))
+private val bronzeIngot = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "bronze_ingot")))
+private val rubber = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "rubber")))
+private val carbonFibre = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "carbon_fibre")))
+private val advancedAlloy = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "alloy")))
+private val iridium = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "iridium")))
 
 // ========== 护甲材料定义 ==========
 
@@ -421,10 +421,10 @@ private val NIGHT_VISION_ARMOR = createArmorMaterial(
 class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val bronze = BronzeIngot::class.instance()
             if (bronze != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeHelmet::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.COMBAT, BronzeHelmet::class.instance(), 1)
                     .pattern("BBB")
                     .pattern("B B")
                     .input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
@@ -439,10 +439,10 @@ class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, Item.Setting
 class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val bronze = BronzeIngot::class.instance()
             if (bronze != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeChestplate::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.COMBAT, BronzeChestplate::class.instance(), 1)
                     .pattern("B B")
                     .pattern("BBB")
                     .pattern("BBB")
@@ -458,10 +458,10 @@ class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, Item
 class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val bronze = BronzeIngot::class.instance()
             if (bronze != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeLeggings::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.COMBAT, BronzeLeggings::class.instance(), 1)
                     .pattern("BBB")
                     .pattern("B B")
                     .pattern("B B")
@@ -477,10 +477,10 @@ class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, Item.Set
 class BronzeBoots : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val bronze = BronzeIngot::class.instance()
             if (bronze != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeBoots::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.COMBAT, BronzeBoots::class.instance(), 1)
                     .pattern("B B")
                     .pattern("B B")
                     .input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
@@ -505,10 +505,10 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         private const val LAST_Z_KEY = "Ic2RubberBootsLastZ"
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val rubber = RubberItem::class.instance()
             if (rubber == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, RubberBoots::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.COMBAT, RubberBoots::class.instance(), 1)
                 .pattern("R R")
                 .pattern("R R")
                 .pattern("RWR")
@@ -519,11 +519,11 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
 
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         if (player.getEquippedStack(EquipmentSlot.FEET) !== stack) return
 
         val nbt = stack.orCreateNbt
@@ -563,8 +563,8 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         nbt.putDouble(WALK_ACC_KEY, acc.coerceAtLeast(0.0))
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-        tooltip.add(Text.literal("§7行走时为背包内可充电物品充电"))
+    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
+        tooltip.add(Component.literal("§7行走时为背包内可充电物品充电"))
         super.appendTooltip(stack, world, tooltip, context)
     }
 }
@@ -587,10 +587,10 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
         private const val AIR_THRESHOLD = 60  // 当气泡值 <= 60 时触发（约 3 秒，20%）
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val rubber = RubberItem::class.instance()
             if (rubber == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, HazmatHelmet::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.COMBAT, HazmatHelmet::class.instance(), 1)
                 .pattern(" D ")
                 .pattern("RGR")
                 .pattern("RIR")
@@ -603,11 +603,11 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
 
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
 
         // 只在玩家接触水时检测
@@ -623,8 +623,8 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
 
         // 当气泡值低于阈值时（<= 60，约 3 秒）
         if (player.air <= AIR_THRESHOLD) {
-            val airCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "air_cell"))
-            val emptyCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+            val airCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "air_cell"))
+            val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
 
             // 查找背包中的压缩空气单元
             val airCellSlot = player.inventory.main.find { slot ->
@@ -657,10 +657,10 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
 class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val rubber = RubberItem::class.instance()
             if (rubber == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, HazmatChestplate::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.COMBAT, HazmatChestplate::class.instance(), 1)
                 .pattern("R R")
                 .pattern("RDR")
                 .pattern("RDR")
@@ -676,10 +676,10 @@ class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Item
 class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val rubber = RubberItem::class.instance()
             if (rubber == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, HazmatLeggings::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.COMBAT, HazmatLeggings::class.instance(), 1)
                 .pattern("RDR")
                 .pattern("R R")
                 .pattern("R R")
@@ -703,11 +703,11 @@ class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings(
         private const val EU_PER_TICK = 1L
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val solar = SolarGeneratorBlock::class.item()
             val cable = InsulatedCopperCableBlock::class.item()
             if (solar == Items.AIR || cable == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SolarHelmet::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SolarHelmet::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("CCC")
@@ -719,11 +719,11 @@ class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings(
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
 
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) {
             player.removeStatusEffect(ModStatusEffects.SOLAR_GENERATING)
             return
@@ -737,7 +737,7 @@ class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings(
 
         chargePlayerInventory(player, EU_PER_TICK)
         player.addStatusEffect(
-            StatusEffectInstance(
+            MobEffectInstance(
                 ModStatusEffects.SOLAR_GENERATING,
                 40,
                 0,
@@ -748,7 +748,7 @@ class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings(
         )
     }
 
-    private fun canGenerate(world: World, player: PlayerEntity): Boolean {
+    private fun canGenerate(world: Level, player: Player): Boolean {
         if (!world.isDay) return false
         val startY = player.blockY + 1
         val topY = world.topY
@@ -773,10 +773,10 @@ class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings(
 class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val alloy = Alloy::class.instance()
             if (alloy != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AlloyChestplate::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, AlloyChestplate::class.instance(), 1)
                     .pattern("A A")
                     .pattern("AIA")
                     .pattern("ALA")
@@ -806,25 +806,25 @@ class CfPack : ArmorItem(
 ), ICreativeFullVariant {
     override fun isDamageable(): Boolean = false
 
-    override fun useOnBlock(context: ItemUsageContext): net.minecraft.util.ActionResult {
+    override fun useOnBlock(context: UseOnContext): net.minecraft.world.InteractionResult {
         val world = context.world
-        val player = context.player ?: return net.minecraft.util.ActionResult.PASS
-        if (world.isClient) return net.minecraft.util.ActionResult.SUCCESS
+        val player = context.player ?: return net.minecraft.world.InteractionResult.PASS
+        if (world.isClient) return net.minecraft.world.InteractionResult.SUCCESS
         val storage = net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage.SIDED.find(world, context.blockPos, context.side)
         return if (storage != null && net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil.interactWithFluidStorage(storage, player, context.hand)) {
-            net.minecraft.util.ActionResult.SUCCESS
-        } else net.minecraft.util.ActionResult.PASS
+            net.minecraft.world.InteractionResult.SUCCESS
+        } else net.minecraft.world.InteractionResult.PASS
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         if (player.getEquippedStack(EquipmentSlot.CHEST) !== stack) return
         autoRefillSprayer(player, stack)
     }
 
-    private fun autoRefillSprayer(player: PlayerEntity, cfPackStack: ItemStack) {
+    private fun autoRefillSprayer(player: Player, cfPackStack: ItemStack) {
         var available = getFluidAmount(cfPackStack)
         if (available <= 0L) return
 
@@ -845,8 +845,8 @@ class CfPack : ArmorItem(
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
-        tooltip: MutableList<Text>,
+        world: Level?,
+        tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
@@ -854,12 +854,12 @@ class CfPack : ArmorItem(
         val buckets = amt * 1000L / FluidConstants.BUCKET
         val maxBuckets = CAPACITY_DROPLETS * 1000L / FluidConstants.BUCKET
         tooltip.add(
-            Text.literal("建筑泡沫: ${buckets / 1000}.${(buckets % 1000) / 100}桶 / ${maxBuckets / 1000}桶")
-                .formatted(Formatting.GRAY)
+            Component.literal("建筑泡沫: ${buckets / 1000}.${(buckets % 1000) / 100}桶 / ${maxBuckets / 1000}桶")
+                .formatted(ChatFormatting.GRAY)
         )
         tooltip.add(
-            Text.literal("装备时自动为建筑泡沫喷枪补充泡沫")
-                .formatted(Formatting.DARK_AQUA)
+            Component.literal("装备时自动为建筑泡沫喷枪补充泡沫")
+                .formatted(ChatFormatting.DARK_AQUA)
         )
     }
 
@@ -898,13 +898,13 @@ class CfPack : ArmorItem(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: java.util.function.Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: java.util.function.Consumer<RecipeOutput>) {
             val sprayer = FoamSprayerItem::class.instance()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()
             val casing = IronCasing::class.instance()
             if (sprayer != Items.AIR && circuit != Items.AIR && emptyCell != Items.AIR && casing != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CfPack::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, CfPack::class.instance(), 1)
                     .pattern("xox")
                     .pattern("yzy")
                     .pattern("y y")
@@ -929,12 +929,12 @@ class CfPack : ArmorItem(
 class Jetpack : JetpackItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val casing = IronCasing::class.instance()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()
             if (casing != Items.AIR && circuit != Items.AIR && emptyCell != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Jetpack::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, Jetpack::class.instance(), 1)
                     .pattern("CEC")
                     .pattern("CUC")
                     .pattern("R R")
@@ -973,12 +973,12 @@ class ElectricJetpack : ElectricArmorItem(
             get() = Ic2Config.current.armor.electricJetpack.flightDurationSeconds
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val casing = IronCasing::class.instance()
             val advanced = AdvancedCircuit::class.instance()
             val batbox = BatBoxBlock::class.item()
             if (casing != Items.AIR && advanced != Items.AIR && batbox != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ElectricJetpack::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, ElectricJetpack::class.instance(), 1)
                     .pattern("CAC")
                     .pattern("CBC")
                     .pattern("G G")
@@ -1018,8 +1018,8 @@ class ElectricJetpack : ElectricArmorItem(
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
-        tooltip: MutableList<Text>,
+        world: Level?,
+        tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
@@ -1039,7 +1039,7 @@ class ElectricJetpack : ElectricArmorItem(
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.literal("剩余飞行: $timeText").formatted(Formatting.GRAY))
+        tooltip.add(Component.literal("剩余飞行: $timeText").formatted(ChatFormatting.GRAY))
     }
 }
 
@@ -1075,7 +1075,7 @@ class NightVisionGoggles : ArmorItem(
             get() = Ic2Config.current.armor.nightVision.nightVisionGogglesDurationSeconds
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val heatEx = AdvancedHeatExchangerItem::class.instance()
             val battery = AdvancedReBatteryItem::class.instance()
             val luminator = LuminatorFlatBlock::class.item()
@@ -1086,7 +1086,7 @@ class NightVisionGoggles : ArmorItem(
                 heatEx != Items.AIR && battery != Items.AIR && luminator != Items.AIR &&
                 glass != Items.AIR && rubber != Items.AIR && circuit != Items.AIR
             ) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, NightVisionGoggles::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, NightVisionGoggles::class.instance(), 1)
                     .pattern("HBH")
                     .pattern("LGL")
                     .pattern("RCR")
@@ -1123,17 +1123,17 @@ class NightVisionGoggles : ArmorItem(
      */
     override fun isDamageable(): Boolean = false
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
         if (!isEnabled(stack)) return
 
         val energy = getCurrentCharge(stack)
         if (energy <= 0) {
             setCurrentCharge(stack, 0)
-            player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+            player.removeStatusEffect(MobEffects.NIGHT_VISION)
             return
         }
 
@@ -1145,7 +1145,7 @@ class NightVisionGoggles : ArmorItem(
         if (toConsume > 0) {
             if (energy < toConsume) {
                 setCurrentCharge(stack, 0)
-                player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+                player.removeStatusEffect(MobEffects.NIGHT_VISION)
                 return
             }
             setCurrentCharge(stack, energy - toConsume)
@@ -1153,24 +1153,24 @@ class NightVisionGoggles : ArmorItem(
         nbt.putDouble(NV_REMAINDER_KEY, remainder - toConsume)
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
-            player.removeStatusEffect(StatusEffects.NIGHT_VISION)
-            val blind = player.getStatusEffect(StatusEffects.BLINDNESS)
+            player.removeStatusEffect(MobEffects.NIGHT_VISION)
+            val blind = player.getStatusEffect(MobEffects.BLINDNESS)
             if (blind == null || blind.duration <= 0) {
                 player.addStatusEffect(
-                    StatusEffectInstance(StatusEffects.BLINDNESS, BLINDNESS_DURATION_TICKS, 0, true, false, true)
+                    MobEffectInstance(MobEffects.BLINDNESS, BLINDNESS_DURATION_TICKS, 0, true, false, true)
                 )
             }
         } else {
             player.addStatusEffect(
-                StatusEffectInstance(StatusEffects.NIGHT_VISION, NIGHT_VISION_DURATION_TICKS, 0, true, false, true)
+                MobEffectInstance(MobEffects.NIGHT_VISION, NIGHT_VISION_DURATION_TICKS, 0, true, false, true)
             )
         }
     }
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
-        tooltip: MutableList<Text>,
+        world: Level?,
+        tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
@@ -1187,10 +1187,10 @@ class NightVisionGoggles : ArmorItem(
         } else {
             "${remainingSeconds.toInt()}秒"
         }
-        tooltip.add(Text.literal("⚡ %,d / %,d EU (%.1f%%)".format(energy, maxCapacity, ratio * 100)))
-        tooltip.add(Text.literal("夜视: ").append(
-            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
-        ).append(Text.literal(" | 等级: $tier | 剩余: $timeText")).formatted(Formatting.GRAY))
+        tooltip.add(Component.literal("⚡ %,d / %,d EU (%.1f%%)".format(energy, maxCapacity, ratio * 100)))
+        tooltip.add(Component.literal("夜视: ").append(
+            Component.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
+        ).append(Component.literal(" | 等级: $tier | 剩余: $timeText")).formatted(ChatFormatting.GRAY))
     }
 
     override fun isItemBarVisible(stack: ItemStack): Boolean = true
@@ -1233,7 +1233,7 @@ abstract class BatteryPackArmorItem(
     /**
      * 电池背包不走原版耐久系统，完全由 EU 能量驱动。
      *
-     * 若不禁用，原版 [net.minecraft.entity.LivingEntity.damageArmor]
+     * 若不禁用，原版 [net.minecraft.world.entity.LivingEntity.damageArmor]
      * 会在每次受击时消耗原版耐久度，导致背包耐久条下降。
      */
     override fun isDamageable(): Boolean = false
@@ -1250,15 +1250,15 @@ abstract class BatteryPackArmorItem(
      * 所有 [IElectricTool] 一次补满，前提是 `工具.tier <= 本背包.tier`。
      * 不充 [IBatteryItem]（含其他电池/电池背包），避免互充循环。
      */
-    override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         if (player.getEquippedStack(EquipmentSlot.CHEST) !== stack) return
         autoFillElectricToolsInInventory(player, stack)
     }
 
-    private fun autoFillElectricToolsInInventory(player: PlayerEntity, batpackStack: ItemStack) {
+    private fun autoFillElectricToolsInInventory(player: Player, batpackStack: ItemStack) {
         var available = getCurrentCharge(batpackStack)
         if (available <= 0L) return
 
@@ -1302,25 +1302,25 @@ abstract class BatteryPackArmorItem(
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
-        tooltip: MutableList<Text>,
+        world: Level?,
+        tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
         val energy = getCurrentCharge(stack)
         val ratio = getChargeRatio(stack)
         tooltip.add(
-            Text.literal(
+            Component.literal(
                 "⚡ ${BatteryItemBase.formatEnergy(energy, maxCapacity)} (${BatteryItemBase.formatPercentage(ratio)})"
             )
         )
         tooltip.add(
-            Text.literal("等级: $tier | 速度: ${nominalEuPerTick()} EU/t")
-                .formatted(Formatting.GRAY)
+            Component.literal("等级: $tier | 速度: ${nominalEuPerTick()} EU/t")
+                .formatted(ChatFormatting.GRAY)
         )
         tooltip.add(
-            Text.literal("穿戴时自动为物品栏中电动工具（等级≤背包）补满 EU")
-                .formatted(Formatting.DARK_AQUA)
+            Component.literal("穿戴时自动为物品栏中电动工具（等级≤背包）补满 EU")
+                .formatted(ChatFormatting.DARK_AQUA)
         )
     }
 
@@ -1348,7 +1348,7 @@ abstract class BatteryPackArmorItem(
 class BatPack : BatteryPackArmorItem(BACKPACK_ARMOR, tier = 1, maxCapacity = 60_000L) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val re = ReBatteryItem::class.instance()
             val circuit = Circuit::class.instance()
             if (re != Items.AIR && circuit != Items.AIR) {
@@ -1377,7 +1377,7 @@ class BatPack : BatteryPackArmorItem(BACKPACK_ARMOR, tier = 1, maxCapacity = 60_
 class AdvancedBatPack : BatteryPackArmorItem(ADVANCED_BATPACK_ARMOR, tier = 2, maxCapacity = 600_000L) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val adv = AdvancedReBatteryItem::class.instance()
             val circuit = Circuit::class.instance()
             val copper = CopperCasing::class.instance()
@@ -1407,7 +1407,7 @@ class AdvancedBatPack : BatteryPackArmorItem(ADVANCED_BATPACK_ARMOR, tier = 2, m
 class EnergyPack : BatteryPackArmorItem(ENERGY_PACK_ARMOR, tier = 3, maxCapacity = 2_000_000L) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val advCircuit = AdvancedCircuit::class.instance()
             val iron = IronCasing::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
@@ -1437,7 +1437,7 @@ class EnergyPack : BatteryPackArmorItem(ENERGY_PACK_ARMOR, tier = 3, maxCapacity
 class LapPack : BatteryPackArmorItem(LAPPACK_ARMOR, tier = 4, maxCapacity = 20_000_000L) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val lapotron = LapotronCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             val energyPack = EnergyPack::class.instance()
@@ -1516,5 +1516,5 @@ internal class CfPackFluidStorage(
     }
 }
 
-private fun isConstructionFoamFluid(fluid: net.minecraft.fluid.Fluid): Boolean =
+private fun isConstructionFoamFluid(fluid: net.minecraft.world.level.material.Fluid): Boolean =
     fluid == ic2_120.content.fluid.ModFluids.CONSTRUCTION_FOAM_STILL || fluid == ic2_120.content.fluid.ModFluids.CONSTRUCTION_FOAM_FLOWING

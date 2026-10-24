@@ -2,18 +2,18 @@ package ic2_120_advanced_solar_addon.client.screen
 
 import ic2_120_advanced_solar_addon.content.screen.SolarPanelScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handlers = ["advanced_solar_panel", "hybrid_solar_panel", "ultimate_solar_panel", "quantum_solar_panel"])
 class SolarPanelScreen(
     handler: SolarPanelScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<SolarPanelScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<SolarPanelScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = GUI_WIDTH
@@ -21,11 +21,11 @@ class SolarPanelScreen(
         playerInventoryTitleY = -20000
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -64,17 +64,17 @@ class SolarPanelScreen(
         context.drawText(textRenderer, title, x + (GUI_WIDTH - titleWidth) / 2, y + 6, 0xFFFFFF, false)
 
         // 存储: a/b  (52, 23)
-        val storageLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.storage").string + ": "
+        val storageLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.storage").string + ": "
         val storageValue = "$energy/$capacity"
         context.drawText(textRenderer, storageLabel + storageValue, x + TEXT_X, y + TEXT_Y_STORAGE, 0xFFFFFF, false)
 
         // 最大输出: b EU/t  (52, 33)
-        val maxOutputLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.max_output").string
+        val maxOutputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.max_output").string
         val maxOutputValue = maxOutput.toString() + " EU/t"
         context.drawText(textRenderer, maxOutputLabel + maxOutputValue, x + TEXT_X, y + TEXT_Y_MAX_OUTPUT, 0xFFFFFF, false)
 
         // 产生: c EU/t  (52, 43)
-        val genLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.generating").string
+        val genLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.generating").string
         val currentGen = when (state) {
             GENERATION_STATE_DAY -> dayPower
             GENERATION_STATE_NIGHT -> nightPower
@@ -87,7 +87,7 @@ class SolarPanelScreen(
         if (mouseX in iconX until (iconX + ICON_TEX_W) && mouseY in iconY until (iconY + ICON_TEX_H)) {
             if (currentGen > 0) {
                 context.drawTooltip(textRenderer,
-                    Text.literal(Text.translatable("gui.ic2_120_advanced_solar_addon.generate").string + ": " + currentGen + " EU/t"),
+                    Component.literal(Component.translatable("gui.ic2_120_advanced_solar_addon.generate").string + ": " + currentGen + " EU/t"),
                     mouseX, mouseY)
             }
         }
@@ -95,7 +95,7 @@ class SolarPanelScreen(
         // 能量条悬停提示
         if (mouseX in barX until (barX + BAR_TEX_W) && mouseY in barY until (barY + BAR_TEX_H)) {
             context.drawTooltip(textRenderer,
-                Text.literal(energy.toString() + " / " + capacity.toString() + " EU"),
+                Component.literal(energy.toString() + " / " + capacity.toString() + " EU"),
                 mouseX, mouseY)
         }
 
@@ -103,7 +103,7 @@ class SolarPanelScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2_120_advanced_solar_addon", "textures/gui/advancedsolarpanel.png")
+        private val TEXTURE = ResourceLocation.of("ic2_120_advanced_solar_addon", "textures/gui/advancedsolarpanel.png")
 
         private const val TEX_WIDTH = 256
         private const val TEX_HEIGHT = 256

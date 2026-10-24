@@ -2,7 +2,7 @@ package ic2_120.content.sync
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
 import ic2_120.content.syncs.SyncSchema
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 
 /**
  * 电力加热机能量容器。

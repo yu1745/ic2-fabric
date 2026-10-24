@@ -6,22 +6,22 @@ import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.screen.MetalFormerScreenHandler
 import ic2_120.content.sync.MetalFormerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.components.Button
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = MetalFormerBlock::class)
 class MetalFormerScreen(
     handler: MetalFormerScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<MetalFormerScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<MetalFormerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
@@ -31,19 +31,19 @@ class MetalFormerScreen(
     override fun init() {
         super.init()
         addDrawableChild(
-            ButtonWidget.builder(Text.empty()) {
+            Button.builder(Component.empty()) {
                 client?.player?.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(handler.syncId, MetalFormerScreenHandler.BUTTON_ID_MODE_CYCLE)
+                    ServerboundContainerButtonClickPacket(handler.syncId, MetalFormerScreenHandler.BUTTON_ID_MODE_CYCLE)
                 )
             }.dimensions(x + MODE_BUTTON_X, y + MODE_BUTTON_Y, MODE_BUTTON_SIZE, MODE_BUTTON_SIZE).build()
         )
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -104,7 +104,7 @@ class MetalFormerScreen(
             MetalFormerSync.Mode.CUTTING -> "cutter"
             MetalFormerSync.Mode.EXTRUDING -> "copper_cable"
         }
-        val modeStack = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", modeItemId)))
+        val modeStack = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", modeItemId)))
         context.drawItem(modeStack, left + MODE_BUTTON_X + 2, top + MODE_BUTTON_Y + 2)
 
         // uptips 纹理
@@ -134,7 +134,7 @@ class MetalFormerScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -146,12 +146,12 @@ class MetalFormerScreen(
             context.drawTooltip(
                 textRenderer,
                 listOf(
-                    Text.translatable("gui.ic2_120.metal_former.uptips"),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade"))
+                    Component.translatable("gui.ic2_120.metal_former.uptips"),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.pulling_upgrade"))
                 ),
                 mouseX, mouseY
             )
@@ -159,8 +159,8 @@ class MetalFormerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guimetalformer.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guimetalformer.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,3)-(193,17) = 14x14

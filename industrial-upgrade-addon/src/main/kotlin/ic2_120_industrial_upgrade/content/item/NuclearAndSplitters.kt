@@ -10,11 +10,11 @@ import ic2_120_advanced_solar_addon.content.item.IrradiantGlassPane
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 
 // ===== 质子碎片 proton_shard =====
@@ -47,9 +47,9 @@ class Neutron : Item(Item.Settings())
 class RedComponent : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // AAA/BBB/AAA：5×防爆玻璃 + 3×红石
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RedComponent::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, RedComponent::class.instance(), 1)
                 .pattern("AAA")
                 .pattern("BBB")
                 .pattern("AAA")
@@ -67,9 +67,9 @@ class RedComponent : Item(Item.Settings()) {
 class BlueComponent : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // AAA/BBB/AAA：5×防爆玻璃 + 3×青金石
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BlueComponent::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, BlueComponent::class.instance(), 1)
                 .pattern("AAA")
                 .pattern("BBB")
                 .pattern("AAA")
@@ -87,9 +87,9 @@ class BlueComponent : Item(Item.Settings()) {
 class GreenComponent : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // A  ：1×光辉玻璃板
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, GreenComponent::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, GreenComponent::class.instance(), 1)
                 .pattern("A  ")
                 .input('A', IrradiantGlassPane::class.instance())
                 .criterion(hasItem(IrradiantGlassPane::class.instance()), conditionsFromItem(IrradiantGlassPane::class.instance()))
@@ -104,9 +104,9 @@ class GreenComponent : Item(Item.Settings()) {
 class SolarSplitter : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // ABC/ABC/ABC：3×红色 + 3×绿色 + 3×蓝色
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SolarSplitter::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SolarSplitter::class.instance(), 1)
                 .pattern("ABC")
                 .pattern("ABC")
                 .pattern("ABC")

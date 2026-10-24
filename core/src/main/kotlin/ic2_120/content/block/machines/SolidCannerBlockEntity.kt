@@ -36,25 +36,25 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * 固体装罐机方块实体。
@@ -66,12 +66,12 @@ class SolidCannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = SolidCannerBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SolidCannerBlock.ACTIVE
 
-    override fun getInventory(): net.minecraft.inventory.Inventory = this
+    override fun getInventory(): net.minecraft.world.Container = this
 
     override val tier: Int = SolidCannerSync.SOLID_CANNER_TIER
 
@@ -102,7 +102,7 @@ class SolidCannerBlockEntity(
         const val INVENTORY_SIZE = 8
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -151,12 +151,12 @@ class SolidCannerBlockEntity(
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_TIN_CAN -> isContainerInput(stack)
@@ -167,19 +167,19 @@ class SolidCannerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.solid_canner")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solid_canner")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        SolidCannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        SolidCannerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(SolidCannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -192,9 +192,9 @@ class SolidCannerBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(SolidCannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -210,7 +210,7 @@ class SolidCannerBlockEntity(
         }
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
@@ -324,18 +324,18 @@ class SolidCannerBlockEntity(
 
     // 配方缓存：匹配查询用 copyWithCount(1)（数量恒 1），结果只依赖两槽物品类型，
     // 按 (can.item, food.item) 缓存（含 null）安全，避免每 tick 重复查询 recipeManager。
-    private var cachedCanItem: net.minecraft.item.Item? = null
-    private var cachedFoodItem: net.minecraft.item.Item? = null
+    private var cachedCanItem: net.minecraft.world.item.Item? = null
+    private var cachedFoodItem: net.minecraft.world.item.Item? = null
     private var cachedSolidCanningMatch: java.util.Optional<ic2_120.content.recipes.solidcanner.SolidCannerRecipe>? = null
     private var cachedMatchEpoch = -1
 
     private fun solidCanningRecipeFor(
-        world: World,
+        world: Level,
         tinCan: ItemStack,
         food: ItemStack
     ): java.util.Optional<ic2_120.content.recipes.solidcanner.SolidCannerRecipe> {
         if (RecipeCacheEpoch.current() == cachedMatchEpoch && cachedCanItem === tinCan.item && cachedFoodItem === food.item) return cachedSolidCanningMatch!!
-        val recipeInventory = SimpleInventory(tinCan.copyWithCount(1), food.copyWithCount(1))
+        val recipeInventory = SimpleContainer(tinCan.copyWithCount(1), food.copyWithCount(1))
         val match = world.recipeManager.getFirstMatch(getRecipeType<ic2_120.content.recipes.solidcanner.SolidCannerRecipe>(), recipeInventory, world)
         cachedMatchEpoch = RecipeCacheEpoch.current()
         cachedCanItem = tinCan.item
@@ -346,7 +346,7 @@ class SolidCannerBlockEntity(
 
     private fun isContainerInput(stack: ItemStack): Boolean =
         !stack.isEmpty && (
-            stack.item == Registries.ITEM.get(Identifier.of("ic2_120", "tin_can")) ||
+            stack.item == BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "tin_can")) ||
             stack.item is EmptyFuelRodItem
         )
 

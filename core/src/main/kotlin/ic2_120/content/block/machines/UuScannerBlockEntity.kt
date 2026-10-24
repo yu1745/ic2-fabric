@@ -20,24 +20,24 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import kotlin.math.ceil
 
 @ModBlockEntity(block = UuScannerBlock::class)
@@ -45,11 +45,11 @@ class UuScannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     override val activeProperty = UuScannerBlock.ACTIVE
     override val tier: Int = UuScannerSync.UU_SCANNER_TIER
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
 
     companion object {
         const val SLOT_INPUT = 0
@@ -57,10 +57,10 @@ class UuScannerBlockEntity(
         const val SLOT_CRYSTAL = 2
         const val INVENTORY_SIZE = 3
         private const val NBT_LAST_COMPLETED_ITEM = "LastCompletedItem"
-        private val crystalMemoryId = Identifier(Ic2_120.MOD_ID, "crystal_memory")
+        private val crystalMemoryId = ResourceLocation(Ic2_120.MOD_ID, "crystal_memory")
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -105,11 +105,11 @@ class UuScannerBlockEntity(
 
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
-        val previousId = if (slot == SLOT_INPUT) Registries.ITEM.getId(inventory[slot].item).toString() else ""
+        val previousId = if (slot == SLOT_INPUT) BuiltInRegistries.ITEM.getId(inventory[slot].item).toString() else ""
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         if (slot == SLOT_INPUT) {
-            val newId = if (stack.isEmpty) "" else Registries.ITEM.getId(stack.item).toString()
+            val newId = if (stack.isEmpty) "" else BuiltInRegistries.ITEM.getId(stack.item).toString()
             if (newId != previousId) {
                 lastCompletedItemId = ""
                 sync.progress = 0
@@ -118,11 +118,11 @@ class UuScannerBlockEntity(
         markDirty()
     }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem
@@ -131,19 +131,19 @@ class UuScannerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.uu_scanner")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.uu_scanner")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        UuScannerScreenHandler(syncId, playerInventory, this, pos, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        UuScannerScreenHandler(syncId, playerInventory, this, pos, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(UuScannerSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -151,9 +151,9 @@ class UuScannerBlockEntity(
         cachedTemplate = if (nbt.contains("CachedTemplate")) UuTemplateEntry.fromNbt(nbt.getCompound("CachedTemplate")) else null
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(UuScannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putString(NBT_LAST_COMPLETED_ITEM, lastCompletedItemId)
@@ -189,7 +189,7 @@ class UuScannerBlockEntity(
         markDirty()
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -226,7 +226,7 @@ class UuScannerBlockEntity(
             return
         }
 
-        val itemId = Registries.ITEM.getId(input.item).toString()
+        val itemId = BuiltInRegistries.ITEM.getId(input.item).toString()
         val template = Ic2Config.getReplicationTemplate(itemId)
         if (template == null) {
             sync.progress = 0
@@ -238,7 +238,7 @@ class UuScannerBlockEntity(
         }
 
         sync.currentCostUb = template.uuCostUb
-        sync.cachedItemRawId = Registries.ITEM.getRawId(input.item)
+        sync.cachedItemRawId = BuiltInRegistries.ITEM.getRawId(input.item)
 
         val need = ceil(UuScannerSync.ENERGY_PER_TICK.toDouble()).toLong().coerceAtLeast(1L)
         if (sync.consumeEnergy(need) > 0L) {
@@ -275,5 +275,5 @@ class UuScannerBlockEntity(
     }
 
     private fun isCrystalMemory(stack: ItemStack): Boolean =
-        !stack.isEmpty && Registries.ITEM.getId(stack.item) == crystalMemoryId
+        !stack.isEmpty && BuiltInRegistries.ITEM.getId(stack.item) == crystalMemoryId
 }

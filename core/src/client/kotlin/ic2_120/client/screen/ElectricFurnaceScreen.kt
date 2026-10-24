@@ -6,24 +6,24 @@ import ic2_120.content.block.ElectricFurnaceBlock
 import ic2_120.content.screen.ElectricFurnaceScreenHandler
 import ic2_120.content.sync.ElectricFurnaceSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.components.Button
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = ElectricFurnaceBlock::class)
 class ElectricFurnaceScreen(
     handler: ElectricFurnaceScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<ElectricFurnaceScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<ElectricFurnaceScreenHandler>(handler, playerInventory, title) {
 
-    private lateinit var collectXpBtn: ButtonWidget
+    private lateinit var collectXpBtn: Button
 
     init {
         backgroundWidth = 176
@@ -34,19 +34,19 @@ class ElectricFurnaceScreen(
         super.init()
 
         collectXpBtn = addDrawableChild(
-            ButtonWidget.builder(Text.empty()) { btn ->
+            Button.builder(Component.empty()) { btn ->
                 client?.player?.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(handler.syncId, ElectricFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
+                    ServerboundContainerButtonClickPacket(handler.syncId, ElectricFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
                 )
             }.dimensions(x + XP_BTN_X, y + XP_BTN_Y, XP_BTN_SIZE, XP_BTN_SIZE).build()
         )
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -141,7 +141,7 @@ class ElectricFurnaceScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -155,7 +155,7 @@ class ElectricFurnaceScreen(
             val xpFrac = xpRaw % 10
             context.drawTooltip(
                 textRenderer,
-                Text.literal("XP: $xpWhole.$xpFrac"),
+                Component.literal("XP: $xpWhole.$xpFrac"),
                 mouseX, mouseY
             )
         }
@@ -167,12 +167,12 @@ class ElectricFurnaceScreen(
             context.drawTooltip(
                 textRenderer,
                 listOf(
-                    Text.translatable("gui.ic2_120.electric_furnace.uptips"),
-                    Text.literal(" §7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                    Text.literal(" §7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                    Text.literal(" §7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                    Text.literal(" §7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                    Text.literal(" §7").append(Text.translatable("item.ic2_120.pulling_upgrade"))
+                    Component.translatable("gui.ic2_120.electric_furnace.uptips"),
+                    Component.literal(" §7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                    Component.literal(" §7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                    Component.literal(" §7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Component.literal(" §7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                    Component.literal(" §7").append(Component.translatable("item.ic2_120.pulling_upgrade"))
                 ),
                 mouseX, mouseY
             )
@@ -180,8 +180,8 @@ class ElectricFurnaceScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/scrapboxrecipes.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/scrapboxrecipes.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (178,2)-(191,15) = 13×13

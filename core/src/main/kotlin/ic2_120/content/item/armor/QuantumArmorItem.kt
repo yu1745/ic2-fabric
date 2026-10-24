@@ -1,12 +1,12 @@
 package ic2_120.content.item.armor
 
 import ic2_120.content.item.ModArmorMaterials
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ArmorMaterial
-import net.minecraft.item.Item
-import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ArmorMaterial
+import net.minecraft.world.item.Item
+import net.minecraft.core.Holder
 
 /**
  * 量子护甲基类
@@ -38,7 +38,7 @@ import net.minecraft.registry.entry.RegistryEntry
  * - **靴子**：大跳（Alt+J 超级跳，落地免伤）
  */
 abstract class QuantumArmorItem(
-    material: RegistryEntry<ArmorMaterial>,
+    material: Holder<ArmorMaterial>,
     type: Type,
     settings: Item.Settings
 ) : ElectricArmorItem(material, type, settings) {
@@ -47,7 +47,7 @@ abstract class QuantumArmorItem(
 
     companion object {
         /** 检查玩家是否穿戴全套量子护甲 */
-        fun hasFullQuantumArmor(player: PlayerEntity): Boolean {
+        fun hasFullQuantumArmor(player: Player): Boolean {
             val slots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
             return slots.all { player.getEquippedStack(it).item is QuantumArmorItem }
         }

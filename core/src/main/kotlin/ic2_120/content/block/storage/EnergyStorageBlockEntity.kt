@@ -18,28 +18,28 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Box
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.level.Level
 
 /**
  * 储电盒方块实体基类。四个等级（BatBox/CESU/MFE/MFSU）共用。
@@ -49,7 +49,7 @@ abstract class EnergyStorageBlockEntity(
     pos: BlockPos,
     state: BlockState,
     val config: EnergyStorageConfig
-) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory, ITieredMachine {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory, ITieredMachine {
 
     override val tier: Int get() = config.tier
 
@@ -58,7 +58,7 @@ abstract class EnergyStorageBlockEntity(
         const val DISCHARGE_SLOT = 1
     }
 
-    private val inventory = DefaultedList.ofSize(config.slotCount, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(config.slotCount, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -96,8 +96,8 @@ abstract class EnergyStorageBlockEntity(
         syncedData,
         {
             world?.getBlockState(pos)?.let { state ->
-                state.getOrEmpty(Properties.FACING)
-                    .orElse(state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH))
+                state.getOrEmpty(BlockStateProperties.FACING)
+                    .orElse(state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
             } ?: Direction.NORTH
         },
         { world?.time },
@@ -131,12 +131,12 @@ abstract class EnergyStorageBlockEntity(
         inventory[slot] = stack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -150,40 +150,40 @@ abstract class EnergyStorageBlockEntity(
         return (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         buf.writeVarInt(config.slotCount)
         buf.writeBoolean(config.useEquipmentSlots)
     }
 
-    override fun getDisplayName(): Text = Text.translatable(containerTranslationKey)
+    override fun getDisplayName(): Component = Component.translatable(containerTranslationKey)
 
     abstract val containerTranslationKey: String
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
-        val blockId = Registries.BLOCK.getId(world!!.getBlockState(pos).block)
-        val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier(blockId.namespace, blockId.path))
-            ?: error("ScreenHandler type not found for $blockId")
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+        val blockId = BuiltInRegistries.BLOCK.getId(world!!.getBlockState(pos).block)
+        val screenHandlerType = BuiltInRegistries.SCREEN_HANDLER.get(ResourceLocation(blockId.namespace, blockId.path))
+            ?: error("AbstractContainerMenu type not found for $blockId")
         @Suppress("UNCHECKED_CAST")
         return ic2_120.content.screen.EnergyStorageScreenHandler(
-            screenHandlerType as net.minecraft.screen.ScreenHandlerType<net.minecraft.screen.ScreenHandler>,
-            syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage
+            screenHandlerType as net.minecraft.world.inventory.MenuType<net.minecraft.world.inventory.AbstractContainerMenu>,
+            syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage
         )
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyStorageSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyStorageSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -213,9 +213,9 @@ abstract class EnergyStorageBlockEntity(
         world?.updateNeighborsAlways(pos, cachedState.block)
         // 原版行为：切换时聊天栏提示当前模式名
         world?.let { w ->
-            val players = w.getNonSpectatingEntities(PlayerEntity::class.java, net.minecraft.util.math.Box(pos).expand(8.0))
+            val players = w.getNonSpectatingEntities(Player::class.java, net.minecraft.world.phys.AABB(pos).expand(8.0))
             for (p in players) {
-                p.sendMessage(Text.translatable("gui.ic2_120.eu_storage.redstone_mode$redstoneMode"), true)
+                p.sendMessage(Component.translatable("gui.ic2_120.eu_storage.redstone_mode$redstoneMode"), true)
             }
         }
     }
@@ -237,7 +237,7 @@ abstract class EnergyStorageBlockEntity(
     /** 红石输出翻转时通知邻居，让红石线/比较器即时响应充放电状态变化。 */
     private var lastRedstoneEmit = false
 
-    open fun tick(world: World, pos: BlockPos, state: BlockState) {
+    open fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         consumeFuel()
@@ -280,8 +280,8 @@ abstract class EnergyStorageBlockEntity(
         markDirty()
     }
 
-    private fun chargePlayersAbove(world: World, pos: BlockPos): Long {
-        val area = Box(
+    private fun chargePlayersAbove(world: Level, pos: BlockPos): Long {
+        val area = AABB(
             pos.x.toDouble(),
             pos.y.toDouble() + 1.0,
             pos.z.toDouble(),
@@ -289,7 +289,7 @@ abstract class EnergyStorageBlockEntity(
             pos.y.toDouble() + 2.9,
             pos.z.toDouble() + 1.0
         )
-        val players = world.getNonSpectatingEntities(PlayerEntity::class.java, area)
+        val players = world.getNonSpectatingEntities(Player::class.java, area)
         var charged = 0L
         for (player in players) {
             charged += chargePlayerInventoryPerItemLimit(
@@ -302,7 +302,7 @@ abstract class EnergyStorageBlockEntity(
         return charged
     }
 
-   private fun updateActiveState(world: World, pos: BlockPos, active: Boolean) {
+   private fun updateActiveState(world: Level, pos: BlockPos, active: Boolean) {
        val current = world.getBlockState(pos)
        if (!current.contains(EnergyStorageBlock.ACTIVE)) return
        if (current.get(EnergyStorageBlock.ACTIVE) == active) return

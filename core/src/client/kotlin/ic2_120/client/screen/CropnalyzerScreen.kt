@@ -8,25 +8,25 @@ import ic2_120.content.item.CropSeedData
 import ic2_120.content.screen.CropnalyzerScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.sound.PositionedSoundInstance
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.sound.SoundEvents
-import net.minecraft.text.Text as McText
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.network.chat.Component as McText
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "cropnalyzer")
 class CropnalyzerScreen(
     handler: CropnalyzerScreenHandler,
-    playerInventory: PlayerInventory,
+    playerInventory: Inventory,
     title: McText
-) : HandledScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
+) : AbstractContainerScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicropnalyzer.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guicropnalyzer.png")
         private const val TEXTURE_SIZE = 256
         private const val GUI_WIDTH = 176
         private const val GUI_HEIGHT = 223
@@ -54,11 +54,11 @@ class CropnalyzerScreen(
         titleY = 6
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -111,12 +111,12 @@ class CropnalyzerScreen(
         }
     }
 
-    private fun drawTitle(context: DrawContext, left: Int, top: Int) {
+    private fun drawTitle(context: GuiGraphics, left: Int, top: Int) {
         val tx = left + (backgroundWidth - textRenderer.getWidth(title)) / 2
         context.drawText(textRenderer, title, tx, top + 6, 0x404040, false)
     }
 
-    private fun drawButton(context: DrawContext, left: Int, top: Int, mouseX: Int, mouseY: Int) {
+    private fun drawButton(context: GuiGraphics, left: Int, top: Int, mouseX: Int, mouseY: Int) {
         val bx = left + BTN_X
         val by = top + BTN_Y
         val hovered = mouseX in bx until (bx + BTN_W) && mouseY in by until (by + BTN_H)
@@ -143,7 +143,7 @@ class CropnalyzerScreen(
         context.drawTextWithShadow(textRenderer, text, tx, ty, 0xFFE0E0E0.toInt())
     }
 
-    private fun drawResultText(context: DrawContext, left: Int, top: Int) {
+    private fun drawResultText(context: GuiGraphics, left: Int, top: Int) {
         val outputSeed = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].stack
         if (outputSeed.item !is CropSeedBagItem) return
         val type = CropSeedData.readType(outputSeed) ?: return
@@ -185,7 +185,7 @@ class CropnalyzerScreen(
         drawSplitLine(context, t("gui.ic2_120.cropnalyzer.resistance"), stats.resistance.toString(), x0, x1, y7, WHITE, BLUE)
     }
 
-    private fun drawSplitLine(context: DrawContext, leftText: String, rightText: String, x0: Int, x1: Int, y: Int, leftColor: Int, rightColor: Int) {
+    private fun drawSplitLine(context: GuiGraphics, leftText: String, rightText: String, x0: Int, x1: Int, y: Int, leftColor: Int, rightColor: Int) {
         context.drawText(textRenderer, leftText, x0, y, leftColor, false)
         val rw = textRenderer.getWidth(rightText)
         context.drawText(textRenderer, rightText, x1 - rw, y, rightColor, false)
@@ -196,11 +196,11 @@ class CropnalyzerScreen(
             val bx = x + BTN_X
             val by = y + BTN_Y
            if (mouseX in bx.toDouble()..(bx + BTN_W).toDouble() && mouseY in by.toDouble()..(by + BTN_H).toDouble()) {
-                MinecraftClient.getInstance().soundManager.play(
-                    PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+                Minecraft.getInstance().soundManager.play(
+                    SimpleSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
                 )
                 client?.player?.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
+                    ServerboundContainerButtonClickPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
                 )
                 return true
             }

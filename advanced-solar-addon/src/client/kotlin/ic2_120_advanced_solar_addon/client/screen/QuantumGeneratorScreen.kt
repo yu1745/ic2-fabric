@@ -3,19 +3,19 @@ package ic2_120_advanced_solar_addon.client.screen
 import ic2_120_advanced_solar_addon.content.block.QuantumGeneratorBlock
 import ic2_120_advanced_solar_addon.content.screen.QuantumGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = QuantumGeneratorBlock::class)
 class QuantumGeneratorScreen(
     handler: QuantumGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<QuantumGeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<QuantumGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = GUI_WIDTH
@@ -23,11 +23,11 @@ class QuantumGeneratorScreen(
         playerInventoryTitleY = -20000
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -40,12 +40,12 @@ class QuantumGeneratorScreen(
         context.drawText(textRenderer, title, x + (GUI_WIDTH - titleWidth) / 2, y + 6, 0xFFFFFF, false)
 
         // 输出: energyMac at (70,24) / (92,24)
-        val outputLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.output").string
+        val outputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.output").string
         context.drawText(textRenderer, outputLabel, x + 68, y + 24, 0xFFFFFF, false)
         context.drawText(textRenderer, "$energyMac EU/t", x + 94, y + 24, 0xFFFFFF, false)
 
         // 输入: variable at (70,68) / (92,68)
-        val inputLabel = Text.translatable("gui.ic2_120_advanced_solar_addon.input").string
+        val inputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.input").string
         context.drawText(textRenderer, inputLabel, x + 68, y + 68, 0xFFFFFF, false)
         context.drawText(textRenderer, "$variable", x + 94, y + 68, 0xFFFFFF, false)
 
@@ -62,7 +62,7 @@ class QuantumGeneratorScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawButton(context: DrawContext, btn: ButtonDef, mouseX: Int, mouseY: Int) {
+    private fun drawButton(context: GuiGraphics, btn: ButtonDef, mouseX: Int, mouseY: Int) {
         val bx = x + btn.x
         val by = y + btn.y
         val hovered = mouseX in bx until (bx + btn.w) && mouseY in by until (by + btn.h)
@@ -85,7 +85,7 @@ class QuantumGeneratorScreen(
                 val bx = x + btn.x
                 val by = y + btn.y
                 if (mouseX.toInt() in bx until (bx + btn.w) && mouseY.toInt() in by until (by + btn.h)) {
-                    client?.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, btn.id))
+                    client?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.syncId, btn.id))
                     return true
                 }
             }
@@ -94,7 +94,7 @@ class QuantumGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2_120_advanced_solar_addon", "textures/gui/quantumgenerator.png")
+        private val TEXTURE = ResourceLocation.of("ic2_120_advanced_solar_addon", "textures/gui/quantumgenerator.png")
 
         private const val TEX_WIDTH = 256
         private const val TEX_HEIGHT = 256

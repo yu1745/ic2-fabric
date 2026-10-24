@@ -8,18 +8,18 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Blocks
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 
 /**
@@ -27,13 +27,13 @@ import java.util.function.Consumer
  * 提供红石控制功能
  */
 @ModBlock(name = "reactor_redstone_port", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor", renderLayer = "translucent")
-class ReactorRedstonePortBlock(settings: AbstractBlock.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
+class ReactorRedstonePortBlock(settings: BlockBehaviour.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         ReactorRedstonePortBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -44,10 +44,10 @@ class ReactorRedstonePortBlock(settings: AbstractBlock.Settings = ReactorShellBl
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorRedstonePortBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorRedstonePortBlock::class.item(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
                     .input('A', vessel)
                     .input('B', Items.REDSTONE)

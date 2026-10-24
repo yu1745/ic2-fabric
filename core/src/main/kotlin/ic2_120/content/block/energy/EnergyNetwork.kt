@@ -10,19 +10,19 @@ import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.damage.DamageSource
-import net.minecraft.inventory.Inventory
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.particle.ParticleTypes
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.Container
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import org.apache.commons.logging.LogFactory
 import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
@@ -79,7 +79,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     private var boundaryEndpointCache: List<CachedEndpointLookup>? = null
 
     /** 端点强制重查相位（0..INTERVAL-1），把不同电网的全量重查分散到不同 tick。 */
-    private val endpointVerifyPhase: Int = kotlin.random.Random.nextInt(ENDPOINT_VERIFY_INTERVAL)
+    private val endpointVerifyPhase: Int = kotlin.random.RandomSource.nextInt(ENDPOINT_VERIFY_INTERVAL)
 
     /** provider 候选路径缓存（key = consumer entries + providers 签名），避免每 tick 重建+排序。 */
     private val providerCandidatesCacheByConsumer = mutableMapOf<String, List<ProviderPath>>()
@@ -115,7 +115,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     /** 每 tick 第一次访问时重置容量跟踪。 */
-    private fun ensureCapacityTracking(world: World, cableRates: Map<Long, Long>) {
+    private fun ensureCapacityTracking(world: Level, cableRates: Map<Long, Long>) {
         if (lastResetTime == world.time && cableTransferRemaining.isNotEmpty()) return
         lastResetTime = world.time
         cableTransferRemaining.clear()
@@ -130,7 +130,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
      * 注入速率受该导线的 [cableTransferRemaining] 限制。
      */
     fun insertAndDeliver(
-        cablePos: Long, maxAmount: Long, world: World, transaction: TransactionContext
+        cablePos: Long, maxAmount: Long, world: Level, transaction: TransactionContext
     ): Long {
         if (maxAmount <= 0 || cables.isEmpty()) return 0
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
@@ -193,7 +193,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
      * 提取速率受该导线的 [cableTransferRemaining] 限制。
      */
     fun extractFromCable(
-        cablePos: Long, maxAmount: Long, world: World, transaction: TransactionContext
+        cablePos: Long, maxAmount: Long, world: Level, transaction: TransactionContext
     ): Long {
         if (maxAmount <= 0 || cables.isEmpty()) return 0
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
@@ -250,7 +250,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     /** 由任一成员导线的 tick 触发；同一 game tick 仅执行一次。 */
-    fun tickIfNeeded(world: World) {
+    fun tickIfNeeded(world: Level) {
         val time = world.time
         if (lastTickTime == time) return
         lastTickTime = time
@@ -265,9 +265,9 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         }
     }
 
-    private fun tryUninsulatedCableDamage(world: World) {
+    private fun tryUninsulatedCableDamage(world: Level) {
         if (world.isClient) return
-        val serverWorld = world as? ServerWorld ?: return
+        val serverWorld = world as? ServerLevel ?: return
         if ((world.time + damageTickOffset) % damageIntervalTicks != 0L) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
@@ -302,7 +302,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             if (z > maxZ) maxZ = z
         }
 
-        val scanBox = Box(
+        val scanBox = AABB(
             minX - range, minY - range, minZ - range,
             maxX + range + 1.0, maxY + range + 1.0, maxZ + range + 1.0
         )
@@ -336,18 +336,18 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         return false
     }
 
-    private fun createCableShockDamageSource(world: ServerWorld): DamageSource {
-        val registry = world.registryManager.get(RegistryKeys.DAMAGE_TYPE)
-        val key = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("ic2_120", "cable_shock"))
+    private fun createCableShockDamageSource(world: ServerLevel): DamageSource {
+        val registry = world.registryManager.get(Registries.DAMAGE_TYPE)
+        val key = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.of("ic2_120", "cable_shock"))
         val entry = registry.getEntry(key).orElse(null)
-            ?: registry.getEntry(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("minecraft", "lightning")))
+            ?: registry.getEntry(ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.of("minecraft", "lightning")))
                 .orElseThrow()
         return DamageSource(entry)
     }
 
-    private fun tryUnderTierCableBurn(world: World) {
+    private fun tryUnderTierCableBurn(world: Level) {
         if (world.isClient) return
-        val serverWorld = world as? ServerWorld ?: return
+        val serverWorld = world as? ServerLevel ?: return
         if ((world.time + damageTickOffset) % damageIntervalTicks != 0L) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
@@ -433,7 +433,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         }
     }
 
-    private fun tryMachineOvervoltageExplosion(world: World) {
+    private fun tryMachineOvervoltageExplosion(world: Level) {
         if (world.isClient) return
         if ((world.time + damageTickOffset) % damageIntervalTicks != 0L) return
         if (!ic2_120.config.Ic2Config.current.general.enableOvervoltageExplosion) return
@@ -529,12 +529,12 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             if (ENABLE_OVERVOLTAGE_LOG) {
                 log.debug("[超压检测]   → 触发爆炸！电网等级 $outputLevel > 机器耐压 $effectiveTier")
             }
-            if (be is Inventory) be.clear()
+            if (be is Container) be.clear()
             world.breakBlock(neighborPos, false)
             val x = neighborPos.x + 0.5
             val y = neighborPos.y + 0.5
             val z = neighborPos.z + 0.5
-            world.createExplosion(null, x, y, z, candidatePower, false, World.ExplosionSourceType.BLOCK)
+            world.createExplosion(null, x, y, z, candidatePower, false, Level.ExplosionSourceType.BLOCK)
             explodedCount++
         }
 
@@ -552,7 +552,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
      * 获取（并按需重建）边界端点缓存。缓存构建遍历拓扑边界逐个 [EnergyStorage.SIDED.find]，
      * 结果在拓扑/端点不变时跨 tick 复用，避免每 tick 全量重查世界。
      */
-    private fun getBoundaryEndpoints(world: World, topology: TopologyCache): List<CachedEndpointLookup> {
+    private fun getBoundaryEndpoints(world: Level, topology: TopologyCache): List<CachedEndpointLookup> {
         val cached = boundaryEndpointCache
         if (cached != null) {
             val dueVerify = Math.floorMod(world.time + endpointVerifyPhase, ENDPOINT_VERIFY_INTERVAL.toLong()) == 0L
@@ -579,7 +579,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         return rebuildBoundaryEndpoints(world, topology).also { boundaryEndpointCache = it }
     }
 
-    private fun rebuildBoundaryEndpoints(world: World, topology: TopologyCache): List<CachedEndpointLookup> {
+    private fun rebuildBoundaryEndpoints(world: Level, topology: TopologyCache): List<CachedEndpointLookup> {
         // 端点缓存重建 = storage 引用整体刷新；provider 候选缓存依赖 storage 引用，一并失效。
         providerCandidatesCacheByConsumer.clear()
         return topology.boundaries.map { boundary ->
@@ -594,7 +594,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     /** 扫描拓扑边界，返回消费者（supportsInsertion）。 */
-    private fun findConsumers(world: World, topology: TopologyCache): Map<Long, Endpoint> {
+    private fun findConsumers(world: Level, topology: TopologyCache): Map<Long, Endpoint> {
         val consumers = mutableMapOf<Long, Endpoint>()
         for (entry in getBoundaryEndpoints(world, topology)) {
             val storage = entry.storage ?: continue
@@ -608,7 +608,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     /** 扫描拓扑边界，返回 providers（supportsExtraction）。 */
-    private fun findProviders(world: World, topology: TopologyCache): Map<Long, Endpoint> {
+    private fun findProviders(world: Level, topology: TopologyCache): Map<Long, Endpoint> {
         val providers = mutableMapOf<Long, Endpoint>()
         for (entry in getBoundaryEndpoints(world, topology)) {
             val storage = entry.storage ?: continue
@@ -621,7 +621,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         return providers
     }
 
-    private fun pushToConsumers(world: World) {
+    private fun pushToConsumers(world: Level) {
         if (cables.isEmpty()) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
@@ -689,11 +689,11 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     /** cableLoad 定期同步判定（相位与端点 verify 一致，各网络错开）。 */
-    private fun isCableLoadSyncDue(world: World): Boolean =
+    private fun isCableLoadSyncDue(world: Level): Boolean =
         Math.floorMod(world.time + endpointVerifyPhase, ENDPOINT_VERIFY_INTERVAL.toLong()) == 0L
 
     private fun pullFromBufferedEnergyByPath(
-        world: World,
+        world: Level,
         consumer: Endpoint,
         neighbors: Map<Long, List<Long>>
     ): Boolean {
@@ -755,7 +755,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     private fun pullFromProvidersByPath(
-        world: World,
+        world: Level,
         consumer: Endpoint,
         providers: Map<Long, Endpoint>,
         neighbors: Map<Long, List<Long>>,
@@ -833,7 +833,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     private fun syncCableLoadToLocalStorage(
-        world: World,
+        world: Level,
         cableRates: Map<Long, Long>
     ) {
         if (world.isClient) return
@@ -949,7 +949,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         bufferedCandidatesCacheByEntries.clear()
     }
 
-    private fun buildTopology(world: World): TopologyCache {
+    private fun buildTopology(world: Level): TopologyCache {
         val cableRates = mutableMapOf<Long, Long>()
         val neighbors = mutableMapOf<Long, MutableList<Long>>()
         val boundaries = mutableListOf<BoundaryEdge>()

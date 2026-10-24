@@ -1,7 +1,7 @@
 package ic2_120.content.screen.slot
 
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
 
 /**
  * 槽位规则声明：
@@ -12,5 +12,5 @@ import net.minecraft.item.ItemStack
 data class SlotSpec(
     val maxItemCount: Int = 64,
     val canInsert: (ItemStack) -> Boolean = { true },
-    val canTake: (PlayerEntity) -> Boolean = { true }
+    val canTake: (Player) -> Boolean = { true }
 )

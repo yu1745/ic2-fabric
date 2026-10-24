@@ -1,8 +1,8 @@
 package ic2_120.content.block.transmission
 
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import java.util.PriorityQueue
 
 /**
@@ -37,7 +37,7 @@ class KineticNetwork {
         lastTickTime = time
     }
 
-    fun tickIfNeeded(world: World) {
+    fun tickIfNeeded(world: Level) {
         if (world.isClient) return
         if (lastTickTime == world.time) return
         lastTickTime = world.time
@@ -84,7 +84,7 @@ class KineticNetwork {
         syncRenderedKuToEntitiesIfDirty(world, totalTransferredKu.coerceAtLeast(0))
     }
 
-    fun getNodeKu(world: World, pos: BlockPos): Int {
+    fun getNodeKu(world: Level, pos: BlockPos): Int {
         tickIfNeeded(world)
         return lastRenderedKu
     }
@@ -210,7 +210,7 @@ class KineticNetwork {
     private fun entriesKey(entries: Set<Long>): String =
         entries.sorted().joinToString(",")
 
-    private fun buildTopology(world: World): TopologyCache {
+    private fun buildTopology(world: Level): TopologyCache {
         val nodeRates = mutableMapOf<Long, Int>()
         val nodeLossKu = mutableMapOf<Long, Int>()
         val neighbors = mutableMapOf<Long, MutableList<Long>>()
@@ -254,7 +254,7 @@ class KineticNetwork {
      * 因此 currentKu 仍然同步到每个传动节点，但只在整网渲染 KU 发生变化时批量更新一次。
      * 稳态不再逐 tick 先清零再写回，网络包量会从持续 O(N) 降到“仅变化时 O(N)”。
      */
-    private fun syncRenderedKuToEntitiesIfDirty(world: World, renderedKu: Int) {
+    private fun syncRenderedKuToEntitiesIfDirty(world: Level, renderedKu: Int) {
         val clamped = renderedKu.coerceAtLeast(0)
         if (lastRenderedKu == clamped) return
         lastRenderedKu = clamped
@@ -321,7 +321,7 @@ class KineticNetwork {
     private fun lastKnownNodeLoss(nodePosLong: Long): Int =
         topologyCache?.nodeLossKu?.get(nodePosLong) ?: 0
 
-    private fun nodeCapacity(state: net.minecraft.block.BlockState): Int = when (state.block) {
+    private fun nodeCapacity(state: net.minecraft.world.level.block.state.BlockState): Int = when (state.block) {
         is WoodTransmissionShaftBlock -> 128
         is IronTransmissionShaftBlock -> 512
         is SteelTransmissionShaftBlock -> 2048
@@ -331,7 +331,7 @@ class KineticNetwork {
         else -> 0
     }
 
-    private fun nodeLoss(state: net.minecraft.block.BlockState): Int = when (state.block) {
+    private fun nodeLoss(state: net.minecraft.world.level.block.state.BlockState): Int = when (state.block) {
         is WoodTransmissionShaftBlock -> 0
         is IronTransmissionShaftBlock -> 2
         is SteelTransmissionShaftBlock -> 1

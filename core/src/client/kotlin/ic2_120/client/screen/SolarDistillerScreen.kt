@@ -7,23 +7,23 @@ import ic2_120.content.screen.SolarDistillerScreenHandler
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.Sprite
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluids
-import net.minecraft.text.Text
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.network.chat.Component
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = SolarDistillerBlock::class)
 class SolarDistillerScreen(
     handler: SolarDistillerScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<SolarDistillerScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<SolarDistillerScreenHandler>(handler, playerInventory, title) {
 
-    private val waterFlowSprite: Sprite? by lazy {
+    private val waterFlowSprite: TextureAtlasSprite? by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER)
             ?.getFluidSprites(null, null, Fluids.WATER.defaultState)
             ?.getOrNull(1)
@@ -31,7 +31,7 @@ class SolarDistillerScreen(
 
     private val waterColor: Int by lazy { FluidUtils.getFluidColor(Fluids.WATER) }
 
-    private val distilledFlowSprite: Sprite? by lazy {
+    private val distilledFlowSprite: TextureAtlasSprite? by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.DISTILLED_WATER_STILL)
             ?.getFluidSprites(null, null, ModFluids.DISTILLED_WATER_STILL.defaultState)
             ?.getOrNull(1)
@@ -44,11 +44,11 @@ class SolarDistillerScreen(
         backgroundHeight = 184
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -98,9 +98,9 @@ class SolarDistillerScreen(
         val relY = mouseY - top
         if (relX in WATER_X until WATER_X + WATER_W && relY in WATER_Y until WATER_Y + WATER_H) {
             val waterLines = if (waterMb > 0) {
-                listOf(Text.translatable("gui.ic2_120.solar_distiller.water_tooltip", "%,d".format(waterMb / DROPLETS_PER_MB), "%,d".format(TANK_CAPACITY_MB)))
+                listOf(Component.translatable("gui.ic2_120.solar_distiller.water_tooltip", "%,d".format(waterMb / DROPLETS_PER_MB), "%,d".format(TANK_CAPACITY_MB)))
             } else {
-                listOf(Text.translatable("ic2.generic.text.empty"))
+                listOf(Component.translatable("ic2.generic.text.empty"))
             }
             context.drawTooltip(textRenderer, waterLines, mouseX, mouseY)
         }
@@ -108,9 +108,9 @@ class SolarDistillerScreen(
         // 蒸馏水槽悬停提示
         if (relX in DISTILLED_X until DISTILLED_X + DISTILLED_W && relY in DISTILLED_Y until DISTILLED_Y + DISTILLED_H) {
             val distilledLines = if (distilledMb > 0) {
-                listOf(Text.translatable("gui.ic2_120.solar_distiller.distilled_tooltip", "%,d".format(distilledMb / DROPLETS_PER_MB), "%,d".format(TANK_CAPACITY_MB)))
+                listOf(Component.translatable("gui.ic2_120.solar_distiller.distilled_tooltip", "%,d".format(distilledMb / DROPLETS_PER_MB), "%,d".format(TANK_CAPACITY_MB)))
             } else {
-                listOf(Text.translatable("ic2.generic.text.empty"))
+                listOf(Component.translatable("ic2.generic.text.empty"))
             }
             context.drawTooltip(textRenderer, distilledLines, mouseX, mouseY)
         }
@@ -120,9 +120,9 @@ class SolarDistillerScreen(
             context.drawTooltip(
                 textRenderer,
                 listOf(
-                    Text.translatable("gui.ic2_120.solar_distiller.uptips"),
-                    Text.literal(" §7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
-                    Text.literal(" §7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+                    Component.translatable("gui.ic2_120.solar_distiller.uptips"),
+                    Component.literal(" §7").append(Component.translatable("item.ic2_120.fluid_ejector_upgrade")),
+                    Component.literal(" §7").append(Component.translatable("item.ic2_120.fluid_pulling_upgrade"))
                 ),
                 mouseX, mouseY
             )
@@ -132,7 +132,7 @@ class SolarDistillerScreen(
     }
 
     /** 自下而上平铺流体 flowing 纹理 + 颜色着色 */
-    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fillH: Int, sprite: Sprite?, color: Int) {
+    private fun drawFluidTank(context: GuiGraphics, gx: Int, gy: Int, w: Int, h: Int, fillH: Int, sprite: TextureAtlasSprite?, color: Int) {
         if (sprite == null || color == -1) return
         val r = ((color shr 16) and 0xFF) / 255f
         val g = ((color shr 8) and 0xFF) / 255f
@@ -150,8 +150,8 @@ class SolarDistillerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisolardistiller.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guisolardistiller.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

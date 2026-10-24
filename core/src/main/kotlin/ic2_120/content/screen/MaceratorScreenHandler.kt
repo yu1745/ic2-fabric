@@ -10,29 +10,29 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(block = MaceratorBlock::class, inventorySize = MaceratorBlockEntity.INVENTORY_SIZE)
 class MaceratorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(MaceratorScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(MaceratorScreenHandler::class.type(), syncId) {
 
     val sync = MaceratorSync(SyncedDataView(propertyDelegate))
 
     /**
-     * BlockEntity slot index → ScreenHandler slot index 的映射。
+     * BlockEntity slot index → AbstractContainerMenu slot index 的映射。
      * 在 init 块中 addSlot 时构建。
      */
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
@@ -64,14 +64,14 @@ class MaceratorScreenHandler(
      * 添加一个 PredicateSlot 并同时记录 BE slot index → handler slot index 映射。
      * SlotSpec 从 [itemStorage] 派生（单一数据源）；客户端无 itemStorage 时使用 [fallbackSpecs]。
      */
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int = 0, y: Int = 0, fallbackSpec: SlotSpec? = null) {
+    private fun addTrackedSlot(inventory: Container, beSlotIndex: Int, x: Int = 0, y: Int = 0, fallbackSpec: SlotSpec? = null) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
         addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -117,7 +117,7 @@ class MaceratorScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is MaceratorBlock && player.squaredDistanceTo(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5

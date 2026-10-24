@@ -7,29 +7,29 @@ import ic2_120.content.screen.CropmatronScreenHandler
 import ic2_120.content.sync.CropmatronSync
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.SpriteAtlasTexture
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.texture.TextureAtlas
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = CropmatronBlock::class)
 class CropmatronScreen(
     handler: CropmatronScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<CropmatronScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<CropmatronScreenHandler>(handler, playerInventory, title) {
 
     private val waterSprite by lazy {
-        MinecraftClient.getInstance()
-            .getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png"))
+        Minecraft.getInstance()
+            .getSpriteAtlas(ResourceLocation.of("minecraft", "textures/atlas/blocks.png"))
             .apply(WATER_STILL_ID)
     }
     private val weedExSprite by lazy {
-        MinecraftClient.getInstance()
-            .getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png"))
+        Minecraft.getInstance()
+            .getSpriteAtlas(ResourceLocation.of("minecraft", "textures/atlas/blocks.png"))
             .apply(WEED_EX_STILL_ID)
     }
 
@@ -38,7 +38,7 @@ class CropmatronScreen(
         backgroundHeight = 191
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 肥料纹理 (181,23)-(193,34) = 12x11，居中渲染至7个肥料槽
@@ -54,7 +54,7 @@ class CropmatronScreen(
         }
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -160,7 +160,7 @@ class CropmatronScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -169,8 +169,8 @@ class CropmatronScreen(
         if (relX in WATER_TANK_X until WATER_TANK_X + WATER_TANK_W &&
             relY in WATER_TANK_Y until WATER_TANK_Y + WATER_TANK_H
         ) {
-            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("${"%,d".format(waterAmount / DROPLETS_PER_MB)} / ${"%,d".format(WATER_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
-                        else listOf(Text.literal("空"))
+            val lines = if (waterAmount > 0) listOf(Component.literal("水"), Component.literal("${"%,d".format(waterAmount / DROPLETS_PER_MB)} / ${"%,d".format(WATER_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
+                        else listOf(Component.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
@@ -178,8 +178,8 @@ class CropmatronScreen(
         if (relX in WEED_EX_TANK_X until WEED_EX_TANK_X + WEED_EX_TANK_W &&
             relY in WEED_EX_TANK_Y until WEED_EX_TANK_Y + WEED_EX_TANK_H
         ) {
-            val lines = if (weedExAmount > 0) listOf(Text.translatable("fluid.ic2_120.weed_ex"), Text.literal("${"%,d".format(weedExAmount / DROPLETS_PER_MB)} / ${"%,d".format(WEED_EX_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
-                        else listOf(Text.literal("空"))
+            val lines = if (weedExAmount > 0) listOf(Component.translatable("fluid.ic2_120.weed_ex"), Component.literal("${"%,d".format(weedExAmount / DROPLETS_PER_MB)} / ${"%,d".format(WEED_EX_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
+                        else listOf(Component.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
@@ -190,12 +190,12 @@ class CropmatronScreen(
             context.drawTooltip(
                 textRenderer,
                 listOf(
-                    Text.translatable("gui.ic2_120.cropmatron.uptips"),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+                    Component.translatable("gui.ic2_120.cropmatron.uptips"),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_ejector_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_pulling_upgrade"))
                 ),
                 mouseX, mouseY
             )
@@ -206,10 +206,10 @@ class CropmatronScreen(
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val WATER_TANK_DROPLETS = (FluidConstants.BUCKET * CropmatronSync.WATER_TANK_CAPACITY_BUCKETS).toInt()
         private val WEED_EX_TANK_DROPLETS = (FluidConstants.BUCKET * CropmatronSync.WEED_EX_TANK_CAPACITY_BUCKETS).toInt()
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiregulation.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
-        private val WATER_STILL_ID = Identifier.of("minecraft", "block/water_still")
-        private val WEED_EX_STILL_ID = Identifier.of("ic2", "block/fluid/weed_ex_still")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiregulation.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
+        private val WATER_STILL_ID = ResourceLocation.of("minecraft", "block/water_still")
+        private val WEED_EX_STILL_ID = ResourceLocation.of("ic2", "block/fluid/weed_ex_still")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (180,3)-(194,16) = 14x13

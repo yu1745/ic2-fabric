@@ -6,10 +6,10 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
- * 将核反应堆的 Inventory 包装为 Fabric Transfer API 的 Storage<ItemVariant>。
+ * 将核反应堆的 Container 包装为 Fabric Transfer API 的 Storage<ItemVariant>。
  * 反应堆中每个物品堆叠上限为 1（组件不可堆叠），通过 isValid() 进行槽位验证。
  */
 object ReactorItemStorageProvider {

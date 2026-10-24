@@ -2,11 +2,11 @@ package ic2_120_industrial_upgrade.content.block
 
 import ic2_120_advanced_solar_addon.content.block.GenerationState
 import ic2_120_advanced_solar_addon.content.block.SolarPanelBlockEntity
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * Sun 变体太阳能发电机抽象基类（日光镜 sunlinse 升级）。
@@ -48,13 +48,13 @@ abstract class SunPanelBlockEntity(
         }
 
         // 末地永远白天、无天气变化，直接按白天发电（与原版 Sun 面板行为一致）
-        if (world.registryKey == World.END) {
+        if (world.registryKey == Level.END) {
             generationState = GenerationState.DAY
             markDirty()
             return
         }
 
-        if (world.registryKey != World.OVERWORLD) {
+        if (world.registryKey != Level.OVERWORLD) {
             generationState = GenerationState.NONE
             markDirty()
             return

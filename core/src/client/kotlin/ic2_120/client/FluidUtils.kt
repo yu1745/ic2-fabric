@@ -2,9 +2,9 @@ package ic2_120.client
 
 import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.SpriteContents
-import net.minecraft.fluid.Fluid
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.client.renderer.texture.SpriteContents
+import net.minecraft.world.level.material.Fluid
 import org.slf4j.LoggerFactory
 
 /**

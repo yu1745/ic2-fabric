@@ -2,18 +2,18 @@ package ic2_120.client.screen
 
 import ic2_120.content.screen.StorageBoxScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "storage_box")
 class StorageBoxScreen(
     handler: StorageBoxScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<StorageBoxScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<StorageBoxScreenHandler>(handler, playerInventory, title) {
 
     private val boxType = BoxType.of(handler.inventory.size())
 
@@ -22,7 +22,7 @@ class StorageBoxScreen(
         backgroundHeight = boxType.guiHeight
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         val type = boxType
         if (type.texture == null) return
 
@@ -42,7 +42,7 @@ class StorageBoxScreen(
         }
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -58,7 +58,7 @@ class StorageBoxScreen(
     }
 
     private enum class BoxType(
-        val texture: Identifier?,
+        val texture: ResourceLocation?,
         val guiWidth: Int,
         val guiHeight: Int,
         val rows: Int,
@@ -69,10 +69,10 @@ class StorageBoxScreen(
         val slotBgV: Int,
         val textureSize: Int
     ) {
-        WOODEN(Identifier.of("ic2", "textures/gui/guiwoodenbox.png"), 224, 162, 3, 9, 31, 18, 227, 3, 256),
-        IRON(Identifier.of("ic2", "textures/gui/guiironbox.png"), 224, 202, 5, 9, 31, 17, 227, 3, 256),
-        STEEL(Identifier.of("ic2", "textures/gui/guisteelbox.png"), 224, 236, 7, 9, 31, 17, 227, 3, 256),
-        IRIDIUM(Identifier.of("ic2", "textures/gui/guiiridiumbox.png"), 262, 275, 9, 14, 5, 18, 265, 3, 300),
+        WOODEN(ResourceLocation.of("ic2", "textures/gui/guiwoodenbox.png"), 224, 162, 3, 9, 31, 18, 227, 3, 256),
+        IRON(ResourceLocation.of("ic2", "textures/gui/guiironbox.png"), 224, 202, 5, 9, 31, 17, 227, 3, 256),
+        STEEL(ResourceLocation.of("ic2", "textures/gui/guisteelbox.png"), 224, 236, 7, 9, 31, 17, 227, 3, 256),
+        IRIDIUM(ResourceLocation.of("ic2", "textures/gui/guiiridiumbox.png"), 262, 275, 9, 14, 5, 18, 265, 3, 300),
         OTHER(null, 176, 166, 0, 0, 0, 0, 0, 0, 256);
 
         companion object {

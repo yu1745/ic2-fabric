@@ -4,43 +4,43 @@ import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.FluidBlock
-import net.minecraft.block.FluidFillable
-import net.minecraft.block.AbstractBlock
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.damage.DamageSource
-import net.minecraft.fluid.FlowableFluid
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.FluidState
-import net.minecraft.fluid.Fluids
-import net.minecraft.item.BucketItem
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundEvents
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.IntProperty
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.BlockView
-import net.minecraft.world.World
-import net.minecraft.world.WorldAccess
-import net.minecraft.world.WorldView
-import net.minecraft.world.event.GameEvent
-import net.minecraft.sound.SoundCategory
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.world.level.block.LiquidBlockContainer
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.level.material.FlowingFluid
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.FluidState
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.item.BucketItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.IntegerProperty
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.LevelAccessor
+import net.minecraft.world.level.LevelReader
+import net.minecraft.world.level.gameevent.GameEvent
+import net.minecraft.sounds.SoundSource
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -50,14 +50,14 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-import net.minecraft.item.ItemStack
-import net.minecraft.util.Hand
-import net.minecraft.util.ActionResult
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 
 /**
  * IC2 模组流体注册。
@@ -71,80 +71,80 @@ object ModFluids {
     private const val TEXTURE_NS = "ic2"
 
     // Coolant - 冷却液（核反应堆）
-    val COOLANT_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "coolant")) as FlowableFluid }
-    val COOLANT_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_coolant")) as FlowableFluid }
+    val COOLANT_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "coolant")) as FlowingFluid }
+    val COOLANT_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_coolant")) as FlowingFluid }
     lateinit var COOLANT_BLOCK: Block
     lateinit var COOLANT_BUCKET: Item
 
     // Hot Coolant - 热冷却液
-    val HOT_COOLANT_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "hot_coolant")) as FlowableFluid }
-    val HOT_COOLANT_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_hot_coolant")) as FlowableFluid }
+    val HOT_COOLANT_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "hot_coolant")) as FlowingFluid }
+    val HOT_COOLANT_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_hot_coolant")) as FlowingFluid }
     lateinit var HOT_COOLANT_BLOCK: Block
     lateinit var HOT_COOLANT_BUCKET: Item
 
     // UU Matter - UU物质
-    val UU_MATTER_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "uu_matter")) as FlowableFluid }
-    val UU_MATTER_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_uu_matter")) as FlowableFluid }
+    val UU_MATTER_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "uu_matter")) as FlowingFluid }
+    val UU_MATTER_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_uu_matter")) as FlowingFluid }
     lateinit var UU_MATTER_BLOCK: Block
     lateinit var UU_MATTER_BUCKET: Item
 
     // Weed-EX - 除草剂
-    val WEED_EX_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "weed_ex")) as FlowableFluid }
-    val WEED_EX_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_weed_ex")) as FlowableFluid }
+    val WEED_EX_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "weed_ex")) as FlowingFluid }
+    val WEED_EX_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_weed_ex")) as FlowingFluid }
     lateinit var WEED_EX_BLOCK: Block
     lateinit var WEED_EX_BUCKET: Item
 
     // Pahoehoe Lava - 熔岩岩浆
-    val PAHOEHOE_LAVA_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "pahoehoe_lava")) as FlowableFluid }
-    val PAHOEHOE_LAVA_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_pahoehoe_lava")) as FlowableFluid }
+    val PAHOEHOE_LAVA_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "pahoehoe_lava")) as FlowingFluid }
+    val PAHOEHOE_LAVA_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_pahoehoe_lava")) as FlowingFluid }
     lateinit var PAHOEHOE_LAVA_BLOCK: Block
     lateinit var PAHOEHOE_LAVA_BUCKET: Item
 
     // Biofuel - 生物燃料
-    val BIOFUEL_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "biofuel")) as FlowableFluid }
-    val BIOFUEL_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_biofuel")) as FlowableFluid }
+    val BIOFUEL_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "biofuel")) as FlowingFluid }
+    val BIOFUEL_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_biofuel")) as FlowingFluid }
     lateinit var BIOFUEL_BLOCK: Block
     lateinit var BIOFUEL_BUCKET: Item
 
     // Biomass - 生物质
-    val BIOMASS_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "biomass")) as FlowableFluid }
-    val BIOMASS_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_biomass")) as FlowableFluid }
+    val BIOMASS_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "biomass")) as FlowingFluid }
+    val BIOMASS_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_biomass")) as FlowingFluid }
     lateinit var BIOMASS_BLOCK: Block
     lateinit var BIOMASS_BUCKET: Item
 
     // Distilled Water - 蒸馏水
-    val DISTILLED_WATER_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "distilled_water")) as FlowableFluid }
-    val DISTILLED_WATER_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_distilled_water")) as FlowableFluid }
+    val DISTILLED_WATER_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "distilled_water")) as FlowingFluid }
+    val DISTILLED_WATER_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_distilled_water")) as FlowingFluid }
     lateinit var DISTILLED_WATER_BLOCK: Block
     lateinit var DISTILLED_WATER_BUCKET: Item
 
     // Construction foam - 建筑泡沫（装罐机水+泡沫粉产出；桶由 registerFluid 注册，勿再 @ModItem 重复注册）
-    val CONSTRUCTION_FOAM_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "construction_foam")) as FlowableFluid }
-    val CONSTRUCTION_FOAM_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_construction_foam")) as FlowableFluid }
+    val CONSTRUCTION_FOAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "construction_foam")) as FlowingFluid }
+    val CONSTRUCTION_FOAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_construction_foam")) as FlowingFluid }
     lateinit var CONSTRUCTION_FOAM_BLOCK: Block
     lateinit var CONSTRUCTION_FOAM_BUCKET: Item
 
     // Creosote - 杂酚油
-    val CREOSOTE_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "creosote")) as FlowableFluid }
-    val CREOSOTE_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_creosote")) as FlowableFluid }
+    val CREOSOTE_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "creosote")) as FlowingFluid }
+    val CREOSOTE_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_creosote")) as FlowingFluid }
     lateinit var CREOSOTE_BLOCK: Block
     lateinit var CREOSOTE_BUCKET: Item
 
     // Compressed Air - 压缩空气（高炉）
-    val COMPRESSED_AIR_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "compressed_air")) as FlowableFluid }
-    val COMPRESSED_AIR_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_compressed_air")) as FlowableFluid }
+    val COMPRESSED_AIR_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "compressed_air")) as FlowingFluid }
+    val COMPRESSED_AIR_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_compressed_air")) as FlowingFluid }
     lateinit var COMPRESSED_AIR_BLOCK: Block
     lateinit var COMPRESSED_AIR_BUCKET: Item
 
     // Steam - 蒸汽
-    val STEAM_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "steam")) as FlowableFluid }
-    val STEAM_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_steam")) as FlowableFluid }
+    val STEAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "steam")) as FlowingFluid }
+    val STEAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_steam")) as FlowingFluid }
     lateinit var STEAM_BLOCK: Block
     lateinit var STEAM_BUCKET: Item
 
     // Superheated Steam - 过热蒸汽
-    val SUPERHEATED_STEAM_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "superheated_steam")) as FlowableFluid }
-    val SUPERHEATED_STEAM_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_superheated_steam")) as FlowableFluid }
+    val SUPERHEATED_STEAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "superheated_steam")) as FlowingFluid }
+    val SUPERHEATED_STEAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_superheated_steam")) as FlowingFluid }
     lateinit var SUPERHEATED_STEAM_BLOCK: Block
     lateinit var SUPERHEATED_STEAM_BUCKET: Item
 
@@ -208,14 +208,14 @@ object ModFluids {
      * 供附属通过 [registerFluidFor] 获取返回值。
      */
     data class RegisteredFluid(
-        val still: FlowableFluid,
-        val flowing: FlowableFluid,
+        val still: FlowingFluid,
+        val flowing: FlowingFluid,
         val block: Block,
         val bucket: Item
     )
 
     /**
-     * 为任意附属 modId 注册一套流体（Still + Flowing + FluidBlock + Bucket）。
+     * 为任意附属 modId 注册一套流体（Still + Flowing + LiquidBlock + Bucket）。
      *
      * 贴图路径约定：`<modId>:block/fluid/<stillTex>`、`<modId>:block/fluid/<flowTex>`
      * （与 core 自身注册一致，modId 替换 core 的 ic2 命名空间）。
@@ -240,17 +240,17 @@ object ModFluids {
     ): RegisteredFluid {
         // 1. 注册 Still 和 Flowing 流体
         val still = Registry.register(
-            Registries.FLUID,
-            Identifier(modId, name),
+            BuiltInRegistries.FLUID,
+            ResourceLocation(modId, name),
             Ic2Fluid.Still(name, stillTex, flowTex, rises)
         )
         val flowing = Registry.register(
-            Registries.FLUID,
-            Identifier(modId, "flowing_$name"),
+            BuiltInRegistries.FLUID,
+            ResourceLocation(modId, "flowing_$name"),
             Ic2Fluid.Flowing(name, stillTex, flowTex, rises)
         )
 
-        // ★ 必须在 FluidBlock 创建前填充查找表，因为 FluidBlock 构造函数会调用 getStillFluid()
+        // ★ 必须在 LiquidBlock 创建前填充查找表，因为 LiquidBlock 构造函数会调用 getStillFluid()
         Ic2Fluid.stillFluidMap[name] = still
         Ic2Fluid.flowingFluidMap[name] = flowing
 
@@ -259,14 +259,14 @@ object ModFluids {
             fluidTintColors[flowing] = tintArgb
         }
 
-        // 2. 注册 FluidBlock
+        // 2. 注册 LiquidBlock
         val block = Registry.register(
-            Registries.BLOCK,
-            Identifier(modId, name),
+            BuiltInRegistries.BLOCK,
+            ResourceLocation(modId, name),
             if (rises) {
-                SteamFluidBlock(still as FlowableFluid, AbstractBlock.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
+                SteamFluidBlock(still as FlowingFluid, BlockBehaviour.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
             } else {
-                FluidBlock(still as FlowableFluid, AbstractBlock.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
+                LiquidBlock(still as FlowingFluid, BlockBehaviour.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
             }
         )
 
@@ -280,8 +280,8 @@ object ModFluids {
                 Item.Settings().recipeRemainder(Items.BUCKET).maxCount(1)
             )
             val b = Registry.register(
-                Registries.ITEM,
-                Identifier(modId, "${name}_bucket"),
+                BuiltInRegistries.ITEM,
+                ResourceLocation(modId, "${name}_bucket"),
                 bucketItem
             )
             b
@@ -304,7 +304,7 @@ object ModFluids {
 
         // core 专属：把流体桶加入 IC2 材料创造栏
         if (withBucket && bucket !== Items.AIR) {
-            val ic2MaterialsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(modId, CreativeTab.IC2_MATERIALS.id))
+            val ic2MaterialsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation(modId, CreativeTab.IC2_MATERIALS.id))
             ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
                 entries.add(bucket)
             }
@@ -370,20 +370,20 @@ object ModFluids {
     }
 
     /** 蒸汽世界方块：流体 tick 负责扩散，方块 tick 负责独立、可持久化的生命周期。 */
-    class SteamFluidBlock(fluid: FlowableFluid, settings: AbstractBlock.Settings) : FluidBlock(fluid, settings) {
+    class SteamFluidBlock(fluid: FlowingFluid, settings: BlockBehaviour.Settings) : LiquidBlock(fluid, settings) {
         companion object {
             /** 5 tick/阶段，共 40 阶段，即 10 秒。 */
-            val AGE: IntProperty = IntProperty.of("age", 0, 39)
+            val AGE: IntegerProperty = IntegerProperty.of("age", 0, 39)
             private const val LIFECYCLE_TICK_RATE = 5
             private const val MAX_AGE = 39
         }
 
-        override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
             super.appendProperties(builder)
             builder.add(AGE)
         }
 
-        override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+        override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
             super.onBlockAdded(state, world, pos, oldState, notify)
             if (!world.isClient) {
                 world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
@@ -391,7 +391,7 @@ object ModFluids {
         }
 
         @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
-        override fun neighborUpdate(state: BlockState, world: World, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
+        override fun neighborUpdate(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
             @Suppress("DEPRECATION")
             super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
             if (!world.isClient) {
@@ -401,7 +401,7 @@ object ModFluids {
 
         override fun hasRandomTicks(state: BlockState): Boolean = true
 
-        override fun randomTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
+        override fun randomTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
             // 兼容升级前已经留在存档中的无调度蒸汽块。
             world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
             val currentFluid = state.fluidState.fluid
@@ -409,7 +409,7 @@ object ModFluids {
         }
 
         @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
-        override fun scheduledTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
+        override fun scheduledTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
             val nextAge = state.get(AGE) + 1
             if (nextAge <= MAX_AGE) {
                 // AGE 只在服务端用于生命周期，不需要每 5 tick 向客户端广播。
@@ -431,7 +431,7 @@ object ModFluids {
     }
 
     /**
-     * 普通液体沿用原版 FlowableFluid；rises 流体使用有限距离的向上/水平扩散。
+     * 普通液体沿用原版 FlowingFluid；rises 流体使用有限距离的向上/水平扩散。
      * 蒸汽生命周期由 SteamFluidBlock 的方块状态管理。
      */
     abstract class Ic2Fluid(
@@ -439,7 +439,7 @@ object ModFluids {
         private val stillTex: String,
         private val flowTex: String,
         protected val rises: Boolean = false
-    ) : FlowableFluid() {
+    ) : FlowingFluid() {
 
         companion object {
             /** 注册名 → Still/Flowing/Block/Bucket 查找表。由 registerFluid()/registerFluidFor() 自动填充，替代 getStill/getFlowing/getBlock/getIc2Bucket 中的 when。 */
@@ -453,7 +453,7 @@ object ModFluids {
         override fun getFlowing(): Fluid = getFlowingFluid()
         override fun getBucketItem(): Item = getIc2Bucket()
         override fun toBlockState(state: FluidState): BlockState =
-            getBlock().defaultState.with(FluidBlock.LEVEL, getBlockStateLevel(state))
+            getBlock().defaultState.with(LiquidBlock.LEVEL, getBlockStateLevel(state))
 
         protected abstract fun getStillFluid(): Fluid
         protected abstract fun getFlowingFluid(): Fluid
@@ -461,35 +461,35 @@ object ModFluids {
         protected abstract fun getIc2Bucket(): Item
 
         override fun matchesType(fluid: Fluid): Boolean = fluid == getStillFluid() || fluid == getFlowingFluid()
-        override fun isInfinite(world: World): Boolean = false
-        override fun beforeBreakingBlock(world: net.minecraft.world.WorldAccess, pos: net.minecraft.util.math.BlockPos, state: BlockState) {
+        override fun isInfinite(world: Level): Boolean = false
+        override fun beforeBreakingBlock(world: net.minecraft.world.level.LevelAccessor, pos: net.minecraft.core.BlockPos, state: BlockState) {
             val entity = if (state.hasBlockEntity()) world.getBlockEntity(pos) else null
             Block.dropStacks(state, world, pos, entity)
         }
         override fun canBeReplacedWith(
             state: FluidState,
-            world: BlockView,
+            world: BlockGetter,
             pos: BlockPos,
             fluid: Fluid,
             direction: Direction
         ): Boolean = false
-        override fun getFlowSpeed(world: WorldView): Int = 4
-        override fun getLevelDecreasePerBlock(world: WorldView): Int = 1
-        override fun getTickRate(world: WorldView): Int = 5
+        override fun getFlowSpeed(world: LevelReader): Int = 4
+        override fun getLevelDecreasePerBlock(world: LevelReader): Int = 1
+        override fun getTickRate(world: LevelReader): Int = 5
         override fun getBlastResistance(): Float = 100f
 
-        override fun getVelocity(world: BlockView, pos: BlockPos, state: FluidState): Vec3d =
-            if (rises) Vec3d(0.0, 0.08, 0.0) else super.getVelocity(world, pos, state)
+        override fun getVelocity(world: BlockGetter, pos: BlockPos, state: FluidState): Vec3 =
+            if (rises) Vec3(0.0, 0.08, 0.0) else super.getVelocity(world, pos, state)
 
         override fun getHeight(state: FluidState): Float =
             if (rises) 1.0f else super.getHeight(state)
 
-        override fun getHeight(state: FluidState, world: BlockView, pos: BlockPos): Float =
+        override fun getHeight(state: FluidState, world: BlockGetter, pos: BlockPos): Float =
             if (rises) 1.0f else super.getHeight(state, world, pos)
 
         // ========== 上升流体（蒸汽）行为 ==========
 
-        override fun getUpdatedState(world: World, pos: BlockPos, state: BlockState): FluidState {
+        override fun getUpdatedState(world: Level, pos: BlockPos, state: BlockState): FluidState {
             if (!rises) return super.getUpdatedState(world, pos, state)
 
             // 源块由生命周期管理；流动块从下方和水平邻居获取强度。
@@ -506,13 +506,13 @@ object ModFluids {
             return if (strongestLevel > 0) getFlowing(strongestLevel, false) else Fluids.EMPTY.defaultState
         }
 
-        private fun propagatedLevel(state: FluidState, world: WorldView): Int {
+        private fun propagatedLevel(state: FluidState, world: LevelReader): Int {
             if (state.isEmpty || !state.fluid.matchesType(this)) return 0
             val level = if (state.isStill) 8 else state.level
             return (level - getLevelDecreasePerBlock(world)).coerceAtLeast(0)
         }
 
-        override fun tryFlow(world: World, pos: BlockPos, state: FluidState) {
+        override fun tryFlow(world: Level, pos: BlockPos, state: FluidState) {
             if (state.isEmpty || !rises) {
                 super.tryFlow(world, pos, state)
                 return
@@ -543,7 +543,7 @@ object ModFluids {
             }
         }
 
-        override fun onScheduledTick(world: World, pos: BlockPos, state: FluidState) {
+        override fun onScheduledTick(world: Level, pos: BlockPos, state: FluidState) {
             if (!rises) {
                 super.onScheduledTick(world, pos, state)
                 return
@@ -585,13 +585,13 @@ object ModFluids {
         }
 
         /** 蒸汽伤害：每 20 tick（1 秒）对格内生物造成 2 点伤害 */
-        private fun applySteamDamage(world: World, pos: BlockPos) {
+        private fun applySteamDamage(world: Level, pos: BlockPos) {
             if (world.isClient) return
             if (world.time % 20L >= 5L) return
-            val entities = world.getEntitiesByClass(LivingEntity::class.java, Box(pos)) { !it.isSpectator }
+            val entities = world.getEntitiesByClass(LivingEntity::class.java, AABB(pos)) { !it.isSpectator }
             if (entities.isEmpty()) return
-            val damageKey = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier(Ic2_120.MOD_ID, "steam"))
-            val source = DamageSource(world.registryManager.get(RegistryKeys.DAMAGE_TYPE).entryOf(damageKey))
+            val damageKey = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation(Ic2_120.MOD_ID, "steam"))
+            val source = DamageSource(world.registryManager.get(Registries.DAMAGE_TYPE).entryOf(damageKey))
             for (entity in entities) {
                 entity.damage(source, 2.0f)
             }
@@ -607,7 +607,7 @@ object ModFluids {
         }
 
         class Flowing(name: String, stillTex: String, flowTex: String, rises: Boolean = false) : Ic2Fluid(name, stillTex, flowTex, rises) {
-            override fun appendProperties(builder: StateManager.Builder<Fluid, FluidState>) {
+            override fun appendProperties(builder: StateDefinition.Builder<Fluid, FluidState>) {
                 super.appendProperties(builder)
                 builder.add(LEVEL)
             }
@@ -630,31 +630,31 @@ object ModFluids {
      * - 解决方案：直接使用 Fabric Transfer API 进行流体传输，绕过可能有问题的高级 API
      */
     open class Ic2BucketItem(
-        internal val bucketFluid: FlowableFluid, // 改名为 bucketFluid 避免与父类冲突
-        private val placeFluidOverride: FlowableFluid? = null,
+        internal val bucketFluid: FlowingFluid, // 改名为 bucketFluid 避免与父类冲突
+        private val placeFluidOverride: FlowingFluid? = null,
         settings: FabricItemSettings
     ) : BucketItem(bucketFluid, settings.recipeRemainder(Items.BUCKET).maxCount(1)) {
 
         /** 实际放置到世界的流体（用于蒸馏水等特殊情况） */
-        private val fluidToPlace: FlowableFluid
+        private val fluidToPlace: FlowingFluid
             get() = placeFluidOverride ?: bucketFluid
 
         @Environment(EnvType.CLIENT)
         override fun appendTooltip(
             stack: ItemStack,
-            world: World?,
-            tooltip: MutableList<Text>,
+            world: Level?,
+            tooltip: MutableList<Component>,
             context: TooltipContext
         ) {
             super.appendTooltip(stack, world, tooltip, context)
             if (placeFluidOverride != null) {
-                tooltip.add(Text.translatable("tooltip.ic2_120.distilled_water_places_water").formatted(Formatting.GRAY))
+                tooltip.add(Component.translatable("tooltip.ic2_120.distilled_water_places_water").formatted(ChatFormatting.GRAY))
             }
         }
 
         override fun placeFluid(
-            player: net.minecraft.entity.player.PlayerEntity?,
-            world: World,
+            player: net.minecraft.world.entity.player.Player?,
+            world: Level,
             pos: BlockPos,
             hitResult: BlockHitResult?
         ): Boolean {
@@ -662,11 +662,11 @@ object ModFluids {
             val state = world.getBlockState(pos)
             val block = state.block
 
-            // FluidFillable：如炼药锅等可注入液体的方块
-            if (block is FluidFillable) {
+            // LiquidBlockContainer：如炼药锅等可注入液体的方块
+            if (block is LiquidBlockContainer) {
                 if (block.canFillWithFluid(world, pos, state, actualFluid)) {
                     block.tryFillWithFluid(world, pos, state, actualFluid.defaultState)
-                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
+                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundSource.BLOCKS, 1f, 1f) }
                     world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
                     return true
                 }
@@ -675,7 +675,7 @@ object ModFluids {
             // 普通方块：在点击位置放置流体（需可替换，如空气、流体本身）
             if (state.isReplaceable || state.fluidState.isStill) {
                 if (world.setBlockState(pos, actualFluid.defaultState.blockState)) {
-                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
+                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundSource.BLOCKS, 1f, 1f) }
                     world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
                     return true
                 }
@@ -686,7 +686,7 @@ object ModFluids {
             val adjacentState = world.getBlockState(adjacentPos)
             if (adjacentState.isReplaceable || adjacentState.fluidState.isStill) {
                 if (world.setBlockState(adjacentPos, actualFluid.defaultState.blockState)) {
-                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, adjacentPos, it, SoundCategory.BLOCKS, 1f, 1f) }
+                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, adjacentPos, it, SoundSource.BLOCKS, 1f, 1f) }
                     world.emitGameEvent(player, GameEvent.FLUID_PLACE, adjacentPos)
                     return true
                 }
@@ -703,7 +703,7 @@ object ModFluids {
      */
     private class BucketFluidStorage(
         private val ctx: ContainerItemContext,
-        private val bucketFluid: FlowableFluid
+        private val bucketFluid: FlowingFluid
     ) : SingleVariantStorage<FluidVariant>() {
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
@@ -762,7 +762,7 @@ object ModFluids {
      * 从 [Ic2BucketItem] 中提取流体。
      * 作为 [FluidStorage.ITEM] 的硬编码后备方案，用于升级 GUI 中检测容器流体。
      */
-    fun getFluidFromModBucket(item: Item): FlowableFluid? {
+    fun getFluidFromModBucket(item: Item): FlowingFluid? {
         return (item as? Ic2BucketItem)?.bucketFluid
     }
 

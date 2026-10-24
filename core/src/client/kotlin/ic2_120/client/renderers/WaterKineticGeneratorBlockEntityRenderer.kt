@@ -1,31 +1,31 @@
 package ic2_120.client.renderers
 
 import ic2_120.content.block.machines.WaterKineticGeneratorBlockEntity
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.RotationAxis
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.Direction
+import com.mojang.math.Axis
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 
 class WaterKineticGeneratorBlockEntityRenderer(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<WaterKineticGeneratorBlockEntity> {
     companion object {
-        private val WOOD_ROTOR_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/wood_rotor_model.png")
-        private val BRONZE_ROTOR_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/bronze_rotor_model.png")
-        private val IRON_ROTOR_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/iron_rotor_model.png")
-        private val STEEL_ROTOR_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/steel_rotor_model.png")
-        private val CARBON_ROTOR_TEXTURE = Identifier.of("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
+        private val WOOD_ROTOR_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/wood_rotor_model.png")
+        private val BRONZE_ROTOR_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/bronze_rotor_model.png")
+        private val IRON_ROTOR_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/iron_rotor_model.png")
+        private val STEEL_ROTOR_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/steel_rotor_model.png")
+        private val CARBON_ROTOR_TEXTURE = ResourceLocation.of("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
 
         private const val PIXEL = 1.0f / 16.0f
         private const val BLADE_HALF_WIDTH = 6.0f * PIXEL
@@ -44,7 +44,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
     }
 
     private fun getRotorRadius(stack: ItemStack): Float {
-        return when (Registries.ITEM.getId(stack.item).path) {
+        return when (BuiltInRegistries.ITEM.getId(stack.item).path) {
             "wooden_rotor" -> 1.0f
             "bronze_rotor" -> 1.5f
             "iron_rotor" -> 1.5f
@@ -57,8 +57,8 @@ class WaterKineticGeneratorBlockEntityRenderer(
     override fun render(
         entity: WaterKineticGeneratorBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -68,7 +68,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
 
         val world = entity.world ?: return
         val state = entity.cachedState
-        val facing = state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         val angle = if (entity.isStuck) {
             entity.stuckAngle
@@ -78,16 +78,16 @@ class WaterKineticGeneratorBlockEntityRenderer(
 
         matrices.push()
         matrices.translate(0.5, 0.5, 0.5)
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(yawFromFacing(facing)))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(yawFromFacing(facing)))
         matrices.translate(0.0, 0.0, -FRONT_OFFSET_FROM_CENTER)
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle))
+        matrices.multiply(Axis.POSITIVE_Z.rotationDegrees(angle))
 
-        val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(rotorTexture))
+        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(rotorTexture))
 
         repeat(4) { i ->
             matrices.push()
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees((i * 90).toFloat()))
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(BLADE_PITCH_DEGREES))
+            matrices.multiply(Axis.POSITIVE_Z.rotationDegrees((i * 90).toFloat()))
+            matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(BLADE_PITCH_DEGREES))
             drawCuboid(
                 matrices,
                 vc,
@@ -123,8 +123,8 @@ class WaterKineticGeneratorBlockEntityRenderer(
         matrices.pop()
     }
 
-    private fun textureForRotor(stack: ItemStack): Identifier? =
-        when (Registries.ITEM.getId(stack.item).path) {
+    private fun textureForRotor(stack: ItemStack): ResourceLocation? =
+        when (BuiltInRegistries.ITEM.getId(stack.item).path) {
             "wooden_rotor" -> WOOD_ROTOR_TEXTURE
             "bronze_rotor" -> BRONZE_ROTOR_TEXTURE
             "iron_rotor" -> IRON_ROTOR_TEXTURE
@@ -143,7 +143,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
         }
 
     private fun drawCuboid(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,

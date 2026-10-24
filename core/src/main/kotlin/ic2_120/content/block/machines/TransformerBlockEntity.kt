@@ -14,23 +14,23 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.nbt.CompoundTag
 
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.core.HolderLookup
+import net.minecraft.network.FriendlyByteBuf
 import io.netty.buffer.Unpooled
 
 /**
@@ -55,11 +55,11 @@ import io.netty.buffer.Unpooled
  * tick 方法中的转换逻辑用于清理/调整内部存储，确保能量状态同步。
  */
 open class TransformerBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState,
     private val transformerTier: Int
-) : BlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : BlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(TransformerBlockEntity::class.java)
@@ -71,7 +71,7 @@ open class TransformerBlockEntity(
     @RegisterEnergy
     val sync = TransformerSync(
         syncedData,
-        { world?.getBlockState(pos)?.get(Properties.FACING) ?: Direction.NORTH },
+        { world?.getBlockState(pos)?.get(BlockStateProperties.FACING) ?: Direction.NORTH },
         { world?.time },
         transformerTier
     )
@@ -91,7 +91,7 @@ open class TransformerBlockEntity(
     override fun getVoltageTierForSide(side: Direction?): Int {
         if (side == null) return tier
 
-        val facing = world?.getBlockState(pos)?.get(Properties.FACING) ?: return tier
+        val facing = world?.getBlockState(pos)?.get(BlockStateProperties.FACING) ?: return tier
         val isFront = (side == facing)
 
         // 正面是高级，其他面都是低级
@@ -100,15 +100,15 @@ open class TransformerBlockEntity(
 
     // 注意：默认构造函数由具体子类提供，需要指定 BlockEntityType
 
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun getScreenOpeningData(player: net.minecraft.server.level.ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         buf.writeVarInt(transformerTier)  // 传递变压器等级到客户端
         return buf
     }
 
-    override fun getDisplayName(): Text {
+    override fun getDisplayName(): Component {
         val key = when (transformerTier) {
             1 -> "block.ic2_120.lv_transformer"
             2 -> "block.ic2_120.mv_transformer"
@@ -116,21 +116,21 @@ open class TransformerBlockEntity(
             4 -> "block.ic2_120.ev_transformer"
             else -> "block.ic2_120.lv_transformer"
         }
-        return Text.translatable(key)
+        return Component.translatable(key)
     }
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
         // 变压器使用通用的 TransformerScreenHandler
         return ic2_120.content.screen.TransformerScreenHandler(
             syncId,
             playerInventory,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             transformerTier  // 传递变压器等级
         )
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(TransformerSync.NBT_ENERGY_STORED).coerceIn(0L, sync.capacity)
@@ -139,7 +139,7 @@ open class TransformerBlockEntity(
         sync.setMode(TransformerSync.Mode.fromId(nbt.getInt(TransformerSync.NBT_MODE)))
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(TransformerSync.NBT_ENERGY_STORED, sync.amount)
@@ -164,7 +164,7 @@ open class TransformerBlockEntity(
      */
     fun getSyncedMode(): TransformerSync.Mode = sync.getMode()
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         // 更新同步能量值

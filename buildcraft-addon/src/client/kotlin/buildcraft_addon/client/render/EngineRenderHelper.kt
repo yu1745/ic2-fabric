@@ -1,20 +1,20 @@
 package buildcraft_addon.client.render
 
 import buildcraft_addon.content.blockentity.PowerStage
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.WorldRenderer
-import net.minecraft.client.texture.Sprite
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.LevelRenderer
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 import org.joml.Quaternionf
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 object EngineRenderHelper {
 
-    fun applyDirectionRotation(matrices: MatrixStack, direction: Direction) {
+    fun applyDirectionRotation(matrices: PoseStack, direction: Direction) {
         if (direction == Direction.UP) return
         matrices.translate(0.5, 0.5, 0.5)
         when (direction) {
@@ -29,19 +29,19 @@ object EngineRenderHelper {
     }
 
     fun renderEngine(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         buffer: VertexConsumer,
         light: Int,
         overlay: Int,
         progress: Float,
         stage: PowerStage,
         facing: Direction,
-        world: World?,
+        world: Level?,
         pos: BlockPos,
-        backSprite: Sprite,
-        sideSprite: Sprite,
-        trunkSprite: Sprite,
-        chamberSprite: Sprite
+        backSprite: TextureAtlasSprite,
+        sideSprite: TextureAtlasSprite,
+        trunkSprite: TextureAtlasSprite,
+        chamberSprite: TextureAtlasSprite
     ) {
         val progressSize = if (progress > 0.5f) {
             (1f - progress) * 15.98f
@@ -54,12 +54,12 @@ object EngineRenderHelper {
         applyDirectionRotation(matrices, facing)
 
         val baseLight = if (world != null) {
-            WorldRenderer.getLightmapCoordinates(world, pos)
+            LevelRenderer.getLightmapCoordinates(world, pos)
         } else {
             light
         }
         val topLight = if (world != null) {
-            WorldRenderer.getLightmapCoordinates(world, pos.up())
+            LevelRenderer.getLightmapCoordinates(world, pos.up())
         } else {
             light
         }
@@ -87,9 +87,9 @@ object EngineRenderHelper {
     }
 
     fun renderTrunkBox(
-        matrices: MatrixStack, buffer: VertexConsumer, light: Int, overlay: Int,
+        matrices: PoseStack, buffer: VertexConsumer, light: Int, overlay: Int,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
-        sprite: Sprite
+        sprite: TextureAtlasSprite
     ) {
         val ctx = matrices.peek()
         val posMat = ctx.positionMatrix
@@ -116,9 +116,9 @@ object EngineRenderHelper {
     }
 
     fun renderChamberBox(
-        matrices: MatrixStack, buffer: VertexConsumer, light: Int, overlay: Int, progressSize: Float,
+        matrices: PoseStack, buffer: VertexConsumer, light: Int, overlay: Int, progressSize: Float,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
-        sprite: Sprite
+        sprite: TextureAtlasSprite
     ) {
         val ctx = matrices.peek()
         val posMat = ctx.positionMatrix
@@ -141,9 +141,9 @@ object EngineRenderHelper {
     }
 
     fun renderBox(
-        matrices: MatrixStack, buffer: VertexConsumer, light: Int, overlay: Int,
+        matrices: PoseStack, buffer: VertexConsumer, light: Int, overlay: Int,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
-        topBottomSprite: Sprite, sideSprite: Sprite, allFaces: Boolean
+        topBottomSprite: TextureAtlasSprite, sideSprite: TextureAtlasSprite, allFaces: Boolean
     ) {
         val ctx = matrices.peek()
         val posMat = ctx.positionMatrix
@@ -177,7 +177,7 @@ object EngineRenderHelper {
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
-        nx: Float, ny: Float, nz: Float, sprite: Sprite
+        nx: Float, ny: Float, nz: Float, sprite: TextureAtlasSprite
     ) {
         emitQuad(buffer, posMat, normMat, light, overlay,
             x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
@@ -195,7 +195,7 @@ object EngineRenderHelper {
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
-        nx: Float, ny: Float, nz: Float, sprite: Sprite
+        nx: Float, ny: Float, nz: Float, sprite: TextureAtlasSprite
     ) {
         val su0 = u0 / 16f; val sv0 = v0 / 16f
         val su1 = u1 / 16f; val sv1 = v1 / 16f
@@ -214,7 +214,7 @@ object EngineRenderHelper {
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
-        nx: Float, ny: Float, nz: Float, sprite: Sprite
+        nx: Float, ny: Float, nz: Float, sprite: TextureAtlasSprite
     ) {
         val minU = sprite.minU; val maxU = sprite.maxU
         val minV = sprite.minV; val maxV = sprite.maxV

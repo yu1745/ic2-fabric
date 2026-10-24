@@ -1,11 +1,11 @@
 package ic2_120.integration.jade
 
 import ic2_120.content.block.IClaimSensitive
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.resources.ResourceLocation
 import snownee.jade.api.BlockAccessor
 import snownee.jade.api.IBlockComponentProvider
 import snownee.jade.api.IServerDataProvider
@@ -21,9 +21,9 @@ import snownee.jade.api.config.IPluginConfig
  */
 object MachineClaimJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val CLAIM_BLOCKED = Identifier.of("ic2_120", "claim_blocked")
+    private val CLAIM_BLOCKED = ResourceLocation.of("ic2_120", "claim_blocked")
 
-    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+    override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val be = accessor.blockEntity as? IClaimSensitive ?: return
         val world = accessor.level
         val pos = accessor.position
@@ -48,10 +48,10 @@ object MachineClaimJadeProvider : IBlockComponentProvider, IServerDataProvider<B
         val dy = accessor.serverData.getInt("by")
         val dz = accessor.serverData.getInt("bz")
         tooltip.add(
-            Text.translatable("ic2_120.jade.claim_blocked", count, dx, dy, dz)
-                .setStyle(Style.EMPTY.withColor(Formatting.RED))
+            Component.translatable("ic2_120.jade.claim_blocked", count, dx, dy, dz)
+                .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))
         )
     }
 
-    override fun getUid(): Identifier = CLAIM_BLOCKED
+    override fun getUid(): ResourceLocation = CLAIM_BLOCKED
 }

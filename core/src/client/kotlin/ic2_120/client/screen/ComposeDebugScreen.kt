@@ -6,10 +6,10 @@ import ic2_120.content.block.ComposeDebugBlock
 import ic2_120.content.screen.ComposeDebugScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
 
 /**
  * Compose UI 调试屏幕。
@@ -23,9 +23,9 @@ import net.minecraft.text.Text
 @ModScreen(block = ComposeDebugBlock::class)
 class ComposeDebugScreen(
     handler: ComposeDebugScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<ComposeDebugScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<ComposeDebugScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
 
@@ -34,11 +34,11 @@ class ComposeDebugScreen(
         backgroundHeight = GuiSize.DEBUG.height
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x
         val top = y
         val gui = GuiSize.DEBUG
@@ -117,8 +117,8 @@ class ComposeDebugScreen(
         ) {
             // 标题栏（固定高度 22）
             Column(spacing = 6) {
-                Text("Compose UI 调试面板", color = 0xFFFFFF)
-                Text("ScrollView 演示 — 滚轮/track/thumb", color = 0xAAAAAA, shadow = false)
+                Component("Compose UI 调试面板", color = 0xFFFFFF)
+                Component("ScrollView 演示 — 滚轮/track/thumb", color = 0xAAAAAA, shadow = false)
             }
 
             // 顶部按钮行（固定高度 18）
@@ -133,10 +133,10 @@ class ComposeDebugScreen(
                     modifier = Modifier.EMPTY.width(60),
                     onClick = { /* demo */ }
                 )
-                Text(
+                Component(
                     "Hover 我看 Tooltip！",
                     modifier = Modifier.EMPTY.width(gui.contentWidth - 140).padding(4, 0, 0, 0),
-                    tooltip = listOf(Text.translatable("gui.ic2_120.compose_debug.tooltip_hover"))
+                    tooltip = listOf(Component.translatable("gui.ic2_120.compose_debug.tooltip_hover"))
                 )
             }
 
@@ -147,7 +147,7 @@ class ComposeDebugScreen(
             }
 
             // 标签说明（固定高度 14）
-            Text(
+            Component(
                 "扫描结果（${results.size} 种矿物）:",
                 color = 0xCCCCCC,
                 shadow = false
@@ -161,7 +161,7 @@ class ComposeDebugScreen(
             ) {
                 Column(spacing = 2) {
                     for (entry in results) {
-                        Text(
+                        Component(
                             "${entry.name} × ${entry.count}",
                             color = 0xFFAA33,
                             shadow = false,
@@ -173,9 +173,9 @@ class ComposeDebugScreen(
 
             // 底部状态栏（固定高度 14）
             Row(spacing = 4) {
-                Text("行数: $itemCount", color = 0x666666, shadow = false)
-                Text(" | ", color = 0x444444, shadow = false)
-                Text("右键关闭", color = 0x666666, shadow = false)
+                Component("行数: $itemCount", color = 0x666666, shadow = false)
+                Component(" | ", color = 0x444444, shadow = false)
+                Component("右键关闭", color = 0x666666, shadow = false)
             }
         }
     }

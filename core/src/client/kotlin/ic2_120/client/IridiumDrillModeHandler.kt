@@ -8,9 +8,9 @@ import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.ActionResult
-import net.minecraft.util.TypedActionResult
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResultHolder
 
 /**
  * 铱钻头模式切换：
@@ -24,19 +24,19 @@ object IridiumDrillModeHandler {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getStackInHand(hand)
             if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
-                return@register TypedActionResult.pass(stack)
+                return@register InteractionResultHolder.pass(stack)
             }
             sendToggleOnceThisTick(player.age)
-            TypedActionResult.success(stack)
+            InteractionResultHolder.success(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
             val stack = player.getStackInHand(hand)
             if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
-                return@register ActionResult.PASS
+                return@register InteractionResult.PASS
             }
             sendToggleOnceThisTick(player.age)
-            ActionResult.SUCCESS
+            InteractionResult.SUCCESS
         }
     }
 
@@ -45,7 +45,7 @@ object IridiumDrillModeHandler {
         lastToggleSentOnPlayerAge = playerAge
         ClientPlayNetworking.send(
             NetworkManager.TOGGLE_IRIDIUM_SILK_TOUCH_PACKET,
-            PacketByteBuf(Unpooled.buffer())
+            FriendlyByteBuf(Unpooled.buffer())
         )
     }
 }

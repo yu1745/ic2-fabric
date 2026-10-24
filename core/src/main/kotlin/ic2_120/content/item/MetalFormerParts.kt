@@ -15,18 +15,18 @@ import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.component.type.FoodComponent
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.food.FoodProperties
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.Level
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 金属成型机制品 ==========
@@ -35,16 +35,16 @@ import ic2_120.registry.annotation.RecipeProvider
 class EmptyTinCanItem : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tinIngot = TinIngot::class.instance()
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
                 .pattern("TTT").pattern("T T").pattern("TTT")
                 .input('T', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
                 .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
                 .offerTo(exporter, EmptyTinCanItem::class.recipeId("from_ingots_8"))
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 4)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 4)
                 .pattern(" T ").pattern("T T").pattern("TTT")
                 .input('T', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
                 .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
@@ -62,7 +62,7 @@ class EmptyTinCanItem : Item(Item.Settings()) {
 class FilledTinCanItem : Item(
     Item.Settings()
         .food(
-            FoodComponent.Builder()
+            FoodProperties.Builder()
                 .nutrition(2)
                 .saturationModifier(0.2f)
                 .snack()
@@ -72,13 +72,13 @@ class FilledTinCanItem : Item(
 ) {
 
     private val emptyTinCanItem: Item
-        get() = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "tin_can"))
+        get() = BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "tin_can"))
 
     /** 10 tick ≈ 1秒吃2个） */
     override fun getMaxUseTime(stack: ItemStack, user: LivingEntity): Int = 10
 
-    override fun finishUsing(stack: ItemStack, world: World, user: LivingEntity): ItemStack {
-        if (!world.isClient && user is PlayerEntity) {
+    override fun finishUsing(stack: ItemStack, world: Level, user: LivingEntity): ItemStack {
+        if (!world.isClient && user is Player) {
             val player = user
             if (player.health < player.maxHealth) {
                 player.heal(2f)
@@ -90,7 +90,7 @@ class FilledTinCanItem : Item(
         val remainder = ItemStack(emptyTinCanItem)
         if (stack.count > 1) {
             stack.decrement(1)
-            if (user is PlayerEntity && !user.inventory.insertStack(remainder)) {
+            if (user is Player && !user.inventory.insertStack(remainder)) {
                 user.dropItem(remainder, false)
             }
             return stack
@@ -113,7 +113,7 @@ class SmallPowerUnitItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             //   C F
             // B X M
             //   C F
@@ -147,7 +147,7 @@ class PowerUnitItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // B C F
             // B X M
             // B C F

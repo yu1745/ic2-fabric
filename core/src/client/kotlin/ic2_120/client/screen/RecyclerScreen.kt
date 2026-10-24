@@ -6,29 +6,29 @@ import ic2_120.content.block.RecyclerBlock
 import ic2_120.content.screen.RecyclerScreenHandler
 import ic2_120.content.sync.RecyclerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = RecyclerBlock::class)
 class RecyclerScreen(
     handler: RecyclerScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<RecyclerScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<RecyclerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -109,7 +109,7 @@ class RecyclerScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -121,12 +121,12 @@ class RecyclerScreen(
             context.drawTooltip(
                 textRenderer,
                 listOf(
-                    Text.translatable("gui.ic2_120.recycler.uptips"),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade"))
+                    Component.translatable("gui.ic2_120.recycler.uptips"),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.pulling_upgrade"))
                 ),
                 mouseX, mouseY
             )
@@ -134,8 +134,8 @@ class RecyclerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guirecycler.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guirecycler.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,22)-(193,36) = 14×14

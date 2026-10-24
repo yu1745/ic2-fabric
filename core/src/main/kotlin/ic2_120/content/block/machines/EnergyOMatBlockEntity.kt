@@ -26,25 +26,25 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 能源交易机方块实体。
@@ -64,12 +64,12 @@ class EnergyOMatBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory,
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
     ExtendedScreenHandlerFactory {
 
     override val activeProperty = EnergyOMatBlock.ACTIVE
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
     override val tier: Int = 1
 
     override var capacityBonus: Long = 0L
@@ -86,7 +86,7 @@ class EnergyOMatBlockEntity(
         private const val NBT_PAID_FOR = "PaidFor"
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
 
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
@@ -109,7 +109,7 @@ class EnergyOMatBlockEntity(
     @RegisterEnergy
     val sync = EnergyOMatSync(
         syncedData,
-        { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         { world?.time },
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(1 + voltageTierBonus) }
@@ -139,12 +139,12 @@ class EnergyOMatBlockEntity(
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_DEMAND -> true
@@ -161,42 +161,42 @@ class EnergyOMatBlockEntity(
         return ItemStack.areItemsEqual(demand, stack)
     }
 
-    fun isOwner(player: PlayerEntity): Boolean {
+    fun isOwner(player: Player): Boolean {
         val uuid = ownerUuid ?: return true
         return player.uuid == uuid || player.hasPermissionLevel(2)
     }
 
-    fun getScreenHandlerFactory(player: PlayerEntity): ExtendedScreenHandlerFactory {
+    fun getScreenHandlerFactory(player: Player): ExtendedScreenHandlerFactory {
         val owner = isOwner(player)
         val be = this
         return object : ExtendedScreenHandlerFactory {
-            override fun writeScreenOpeningData(p: ServerPlayerEntity, buf: PacketByteBuf) {
+            override fun writeScreenOpeningData(p: ServerPlayer, buf: FriendlyByteBuf) {
                 buf.writeBlockPos(pos)
                 buf.writeVarInt(syncedData.size())
                 buf.writeBoolean(owner)
             }
-            override fun getDisplayName(): Text = be.getDisplayName()
-            override fun createMenu(syncId: Int, playerInventory: PlayerInventory, p: PlayerEntity?): ScreenHandler =
+            override fun getDisplayName(): Component = be.getDisplayName()
+            override fun createMenu(syncId: Int, playerInventory: Inventory, p: Player?): AbstractContainerMenu =
                 EnergyOMatScreenHandler(syncId, playerInventory, be,
-                    ScreenHandlerContext.create(be.world!!, be.pos), be.syncedData, owner)
+                    ContainerLevelAccess.create(be.world!!, be.pos), be.syncedData, owner)
         }
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.energy_o_mat")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.energy_o_mat")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         EnergyOMatScreenHandler(syncId, playerInventory, this,
-            ScreenHandlerContext.create(world!!, pos), syncedData, player?.let { isOwner(it) } ?: false)
+            ContainerLevelAccess.create(world!!, pos), syncedData, player?.let { isOwner(it) } ?: false)
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         buf.writeBoolean(isOwner(player))
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyOMatSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -206,9 +206,9 @@ class EnergyOMatBlockEntity(
 
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyOMatSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_EU_OFFER, sync.euOffer)
@@ -222,7 +222,7 @@ class EnergyOMatBlockEntity(
 
     private var prevTickAmount: Long = 0L
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -251,7 +251,7 @@ class EnergyOMatBlockEntity(
         setActiveState(world, pos, state, isActive)
     }
 
-    private fun processTrade(world: World, pos: BlockPos) {
+    private fun processTrade(world: Level, pos: BlockPos) {
         val demand = getStack(SLOT_DEMAND)
         val input = getStack(SLOT_INPUT)
         if (demand.isEmpty || input.isEmpty) return
@@ -273,7 +273,7 @@ class EnergyOMatBlockEntity(
         markDirty()
     }
 
-    private fun simulateDistribute(world: World, pos: BlockPos, variant: ItemVariant, amount: Long): Long {
+    private fun simulateDistribute(world: Level, pos: BlockPos, variant: ItemVariant, amount: Long): Long {
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
@@ -285,7 +285,7 @@ class EnergyOMatBlockEntity(
         return amount - remaining
     }
 
-    private fun distributeToAdjacent(world: World, pos: BlockPos, variant: ItemVariant, amount: Long) {
+    private fun distributeToAdjacent(world: Level, pos: BlockPos, variant: ItemVariant, amount: Long) {
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break

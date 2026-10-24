@@ -1,21 +1,21 @@
 package ic2_120_industrial_upgrade.content.recipes
 
 import com.google.gson.JsonObject
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.recipe.Ingredient
-import net.minecraft.util.Identifier
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 产出 ic2-fabric core 压缩机配方 JSON。
  * type 字段固定为 "ic2_120:compressing"（core 的 @ModMachineRecipe(id="compressing")）。
  */
 class CompressorRecipeJsonProvider(
-    private val recipeId: Identifier,
+    private val recipeId: ResourceLocation,
     private val input: Ingredient,
     private val inputCount: Int,
     private val outputIdStr: String,
     private val containerReturnId: String?
-) : RecipeExporter {
+) : RecipeOutput {
 
     override fun serialize(json: JsonObject) {
         json.addProperty("type", "ic2_120:compressing")
@@ -39,9 +39,9 @@ class CompressorRecipeJsonProvider(
         ic2_120.content.recipes.compressor.CompressorRecipe::class
     )
 
-    override fun getRecipeId(): Identifier = recipeId
+    override fun getRecipeId(): ResourceLocation = recipeId
 
     override fun toAdvancementJson(): JsonObject? = null
 
-    override fun getAdvancementId(): Identifier? = null
+    override fun getAdvancementId(): ResourceLocation? = null
 }

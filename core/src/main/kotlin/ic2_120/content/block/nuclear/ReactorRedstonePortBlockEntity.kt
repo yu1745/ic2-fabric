@@ -4,13 +4,13 @@ import ic2_120.content.upgrade.IRedstoneControlSupport
 import ic2_120.content.upgrade.RedstoneControlComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
-import net.minecraft.registry.RegistryWrapper
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
+import net.minecraft.core.HolderLookup
 
 /**
  * 反应堆红石接口方块实体。
@@ -51,7 +51,7 @@ class ReactorRedstonePortBlockEntity(
         return null
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         // 检查红石信号并更新状态
@@ -64,12 +64,12 @@ class ReactorRedstonePortBlockEntity(
         }
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         redstoneInverted = nbt.getBoolean("RedstoneInverted")
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }

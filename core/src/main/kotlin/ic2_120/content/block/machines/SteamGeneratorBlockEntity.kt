@@ -23,20 +23,20 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.Fluids
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 蒸汽发生器（锅炉）：消耗热量 + 水 → 产出蒸汽/过热蒸汽。
@@ -64,9 +64,9 @@ class SteamGeneratorBlockEntity(
 ) : MachineBlockEntity(type, pos, state), IHeatConsumer, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport,
     ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = SteamGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SteamGeneratorBlock.ACTIVE
     override val tier: Int = 2
-    override fun getInventory(): net.minecraft.inventory.Inventory? = null
+    override fun getInventory(): net.minecraft.world.Container? = null
 
     // IFluidPipeUpgradeSupport — 默认开启推拉，无需流体升级
     override var fluidPipeProviderEnabled: Boolean = true
@@ -147,7 +147,7 @@ class SteamGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean =
-            !variant.isBlank && (variant.fluid == net.minecraft.fluid.Fluids.WATER || variant.fluid == ModFluids.DISTILLED_WATER_STILL)
+            !variant.isBlank && (variant.fluid == net.minecraft.world.level.material.Fluids.WATER || variant.fluid == ModFluids.DISTILLED_WATER_STILL)
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 
@@ -176,13 +176,13 @@ class SteamGeneratorBlockEntity(
         }
 
         /** NBT 恢复 */
-        fun readFromNbt(nbt: NbtCompound) {
+        fun readFromNbt(nbt: CompoundTag) {
             variant = FluidVariant.fromNbt(nbt.getCompound("variant"))
             amount = nbt.getLong("amount")
         }
 
         /** NBT 保存 */
-        fun writeToNbt(): NbtCompound = NbtCompound().also {
+        fun writeToNbt(): CompoundTag = CompoundTag().also {
             it.put("variant", variant.toNbt())
             it.putLong("amount", amount)
         }
@@ -237,13 +237,13 @@ class SteamGeneratorBlockEntity(
         }
 
         /** NBT 恢复 */
-        fun readFromNbt(nbt: NbtCompound) {
+        fun readFromNbt(nbt: CompoundTag) {
             variant = FluidVariant.fromNbt(nbt.getCompound("variant"))
             amount = nbt.getLong("amount")
         }
 
         /** NBT 保存 */
-        fun writeToNbt(): NbtCompound = NbtCompound().also {
+        fun writeToNbt(): CompoundTag = CompoundTag().also {
             it.put("variant", variant.toNbt())
             it.putLong("amount", amount)
         }
@@ -299,7 +299,7 @@ class SteamGeneratorBlockEntity(
     // ==== IHeatConsumer — 六面均可输入热量 ====
 
     override fun getHeatTransferFace(): Direction {
-        return cachedState.getOrEmpty(net.minecraft.state.property.Properties.HORIZONTAL_FACING)
+        return cachedState.getOrEmpty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)
             .orElse(Direction.NORTH)
     }
 
@@ -314,27 +314,27 @@ class SteamGeneratorBlockEntity(
         return hu
     }
 
-    // ==== ScreenHandler ====
+    // ==== AbstractContainerMenu ====
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.steam_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.steam_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         SteamGeneratorScreenHandler(
             syncId,
             playerInventory,
-            net.minecraft.inventory.SimpleInventory(0),
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.SimpleContainer(0),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData
         )
 
     // ==== NBT ====
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         syncedData.readNbt(nbt)
         systemHeatMilli = nbt.getLong(NBT_SYSTEM_HEAT_MILLI)
@@ -349,7 +349,7 @@ class SteamGeneratorBlockEntity(
         sync.calcification = calcification.coerceIn(0L, SteamGeneratorSync.MAX_CALCIFICATION).toInt()
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_SYSTEM_HEAT_MILLI, systemHeatMilli)
@@ -363,7 +363,7 @@ class SteamGeneratorBlockEntity(
 
     // ==== Tick ====
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         // 取出跨 tick 累积的热量用于本 tick 处理
@@ -409,13 +409,13 @@ class SteamGeneratorBlockEntity(
                 // debugSteamExplodedDroplets += leftoverSteam
                 if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
                     world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                        1f, World.ExplosionSourceType.NONE)
+                        1f, Level.ExplosionSourceType.NONE)
                 }
             } else {
                 val recoveredDroplets = leftoverSteam / SteamGeneratorSync.STEAM_EXPANSION
                 if (recoveredDroplets > 0L) {
                     val fillFluid = if (consumedWaterIsDistilled) ModFluids.DISTILLED_WATER_STILL
-                        else net.minecraft.fluid.Fluids.WATER
+                        else net.minecraft.world.level.material.Fluids.WATER
                     val space = WATER_TANK_CAPACITY - waterTank.amount
                     val actual = minOf(recoveredDroplets, space)
                     if (actual > 0L) {
@@ -555,7 +555,7 @@ class SteamGeneratorBlockEntity(
         if (systemHeatMilli > SteamGeneratorSync.MAX_SYSTEM_HEAT_MILLI) {
             if (ClaimProtection.explosionCubeAllowed(world, pos, 10f, null)) {
                 world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                    10f, World.ExplosionSourceType.NONE)
+                    10f, Level.ExplosionSourceType.NONE)
             }
         }
 
@@ -583,7 +583,7 @@ class SteamGeneratorBlockEntity(
     }
 
     // TODO: 调试用日志方法 — 暂注释保留，后续视情况删除
-//    private fun logSteamDebug(world: World, pos: BlockPos, pressure: Int, inputMB: Int) {
+//    private fun logSteamDebug(world: Level, pos: BlockPos, pressure: Int, inputMB: Int) {
 //        if (debugWindowStartTick == Long.MIN_VALUE) {
 //            debugWindowStartTick = world.time
 //        }
@@ -613,7 +613,7 @@ class SteamGeneratorBlockEntity(
 //    }
 
     /** 获取群系温度（milli-°C），对齐 ic2_origin BiomeUtil.getBiomeTemperature */
-    private fun getBiomeTemperatureMilli(world: World, pos: BlockPos): Long {
+    private fun getBiomeTemperatureMilli(world: Level, pos: BlockPos): Long {
         val temp = world.getBiome(pos).value().temperature  // temp 是 base biome temperature
         return when {
             temp >= 0.8f -> 45_000L  // 炎热群系 (沙漠/热带)

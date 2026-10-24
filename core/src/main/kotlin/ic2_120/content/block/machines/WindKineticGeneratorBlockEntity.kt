@@ -11,36 +11,36 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.content.network.NetworkManager
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
 
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.HolderLookup
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
 import org.slf4j.LoggerFactory
 import kotlin.math.cos
 import kotlin.math.exp
@@ -48,17 +48,17 @@ import kotlin.math.floor
 import kotlin.math.sin
 import ic2_120.editCustomData
 import ic2_120.getCustomData
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.network.FriendlyByteBuf
 import io.netty.buffer.Unpooled
 @ModBlockEntity(block = WindKineticGeneratorBlock::class)
 class WindKineticGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IKineticMachinePort, IKineticRotorProvider,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : MachineBlockEntity(type, pos, state), Container, IKineticMachinePort, IKineticRotorProvider,
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = WindKineticGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = WindKineticGeneratorBlock.ACTIVE
 
     companion object {
         const val INVENTORY_SIZE = 1
@@ -94,7 +94,7 @@ class WindKineticGeneratorBlockEntity(
 
         private val gustByWorldAndChunk: MutableMap<String, MutableMap<Long, GustState>> = HashMap()
 
-        fun weatherMultiplier(world: World): Double =
+        fun weatherMultiplier(world: Level): Double =
             when {
                 world.isThundering -> 1.5
                 world.isRaining -> 1.2
@@ -107,7 +107,7 @@ class WindKineticGeneratorBlockEntity(
             return WIND_MEAN_FLOOR + (1.0 - WIND_MEAN_FLOOR) * gauss
         }
 
-        fun worldGustFactor(world: World, pos: BlockPos): Double {
+        fun worldGustFactor(world: Level, pos: BlockPos): Double {
             val worldKey = world.registryKey.value.toString()
             val chunkPos = ChunkPos(pos)
             val chunkKey = chunkPos.toLong()
@@ -144,7 +144,7 @@ class WindKineticGeneratorBlockEntity(
     }
 
     override val tier: Int = 1
-    private val inventory = DefaultedList.ofSize(1, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(1, ItemStack.EMPTY)
 
     /** 同步数据（服务端） */
     private val syncedData = SyncedData()
@@ -189,12 +189,12 @@ class WindKineticGeneratorBlockEntity(
         state
     )
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
 
     override fun canOutputKuTo(side: Direction): Boolean {
         val world = world ?: return false
         val state = world.getBlockState(pos)
-        val facing = state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
         // 风轮在前，动能端口在背。
         return side == facing.opposite
     }
@@ -232,27 +232,27 @@ class WindKineticGeneratorBlockEntity(
         return ((rotor.maxDamage - rotor.damage).toDouble() - remainder).coerceAtLeast(0.0) / TICKS_PER_HOUR
     }
 
-    fun onUse(player: PlayerEntity, hand: Hand): ActionResult {
+    fun onUse(player: Player, hand: InteractionHand): InteractionResult {
         val held = player.getStackInHand(hand)
         val rotor = inventory[ROTOR_SLOT]
 
         // 空手右键取出转子
         if (held.isEmpty) {
-            if (rotor.isEmpty) return ActionResult.PASS
+            if (rotor.isEmpty) return InteractionResult.PASS
             val extracted = rotor.copy()
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
             markDirtyAndSync()
             if (!player.giveItemStack(extracted)) {
                 player.dropItem(extracted, false)
             }
-            return ActionResult.SUCCESS
+            return InteractionResult.SUCCESS
         }
 
         // 手持非转子物品：不处理
-        if (!isAllowedRotor(held)) return ActionResult.PASS
+        if (!isAllowedRotor(held)) return InteractionResult.PASS
 
         // 已有转子时不覆盖
-        if (!rotor.isEmpty) return ActionResult.PASS
+        if (!rotor.isEmpty) return InteractionResult.PASS
 
         val inserted = held.copy()
         inserted.count = 1
@@ -261,16 +261,16 @@ class WindKineticGeneratorBlockEntity(
             held.decrement(1)
         }
         markDirtyAndSync()
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     private fun isAllowedRotor(stack: ItemStack): Boolean {
-        val id = Registries.ITEM.getId(stack.item)
+        val id = BuiltInRegistries.ITEM.getId(stack.item)
         return ALLOWED_ROTORS.contains(id.path)
     }
 
     override fun getRotorRadius(stack: ItemStack): Float {
-        return when (Registries.ITEM.getId(stack.item).path) {
+        return when (BuiltInRegistries.ITEM.getId(stack.item).path) {
             "wooden_rotor" -> 2.0f
             "bronze_rotor" -> 3.0f
             "iron_rotor" -> 3.0f
@@ -281,7 +281,7 @@ class WindKineticGeneratorBlockEntity(
     }
 
     private fun getRotorMultiplier(stack: ItemStack): Int {
-        return when (Registries.ITEM.getId(stack.item).path) {
+        return when (BuiltInRegistries.ITEM.getId(stack.item).path) {
             "wooden_rotor" -> 1
             "bronze_rotor" -> 2
             "iron_rotor" -> 2
@@ -301,7 +301,7 @@ class WindKineticGeneratorBlockEntity(
      *   计算并记录当前转子的实际旋转角度。
      * - 卡住后转子停止旋转，渲染器固定显示在 stuckAngle。
      */
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         kineticSync.outputKu = 0
         val rotor = inventory[ROTOR_SLOT]
         if (rotor.isEmpty) {
@@ -324,7 +324,7 @@ class WindKineticGeneratorBlockEntity(
 
         if (world.isClient) return
 
-        val facing = state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         // 碰撞检测仍按连续旋转角度进行；显示角度在卡住后固定为常量，避免再求“精确卡住角度”。
         val currentAngle: Float = if (isStuck) {
@@ -445,7 +445,7 @@ class WindKineticGeneratorBlockEntity(
      * @return 是否有碰撞
      */
     private fun findBladeCollisionWithBlocks(
-        world: World,
+        world: Level,
         pos: BlockPos,
         facing: Direction,
         rotorRadius: Float,
@@ -527,7 +527,7 @@ class WindKineticGeneratorBlockEntity(
      * 这里不再做叶片逐点采样，目的是把“风机打架”控制在常数级几何计算里。
      */
     private fun hasRotorCollision(
-        world: World,
+        world: Level,
         pos: BlockPos,
         facing: Direction,
         rotorRadius: Float
@@ -577,7 +577,7 @@ class WindKineticGeneratorBlockEntity(
                     val otherRotor = other.getRotorStack()
                     if (otherRotor.isEmpty) continue
 
-                    val otherFacing = world.getBlockState(mutablePos).getOrEmpty(Properties.HORIZONTAL_FACING)
+                    val otherFacing = world.getBlockState(mutablePos).getOrEmpty(BlockStateProperties.HORIZONTAL_FACING)
                         .orElse(Direction.NORTH)
                     if (otherFacing.axis != axis) continue
 
@@ -598,21 +598,21 @@ class WindKineticGeneratorBlockEntity(
         return false
     }
 
-    private fun rotorCenter(pos: BlockPos, facing: Direction): Vec3d =
-        Vec3d(
+    private fun rotorCenter(pos: BlockPos, facing: Direction): Vec3 =
+        Vec3(
             pos.x + 0.5 + facing.offsetX.toDouble(),
             pos.y + 0.5,
             pos.z + 0.5 + facing.offsetZ.toDouble()
         )
 
-    private fun planeGap(a: Vec3d, b: Vec3d, axis: Direction.Axis): Double =
+    private fun planeGap(a: Vec3, b: Vec3, axis: Direction.Axis): Double =
         when (axis) {
             Direction.Axis.X -> kotlin.math.abs(a.x - b.x)
             Direction.Axis.Y -> kotlin.math.abs(a.y - b.y)
             Direction.Axis.Z -> kotlin.math.abs(a.z - b.z)
         }
 
-    private fun perpendicularDistanceSq(a: Vec3d, b: Vec3d, axis: Direction.Axis): Double =
+    private fun perpendicularDistanceSq(a: Vec3, b: Vec3, axis: Direction.Axis): Double =
         when (axis) {
             Direction.Axis.X -> {
                 val dy = a.y - b.y
@@ -647,7 +647,7 @@ class WindKineticGeneratorBlockEntity(
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerWorld)?.chunkManager?.markForUpdate(pos)
+            (world as? ServerLevel)?.chunkManager?.markForUpdate(pos)
         }
     }
 
@@ -658,7 +658,7 @@ class WindKineticGeneratorBlockEntity(
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
     override fun removeStack(slot: Int, amount: Int): ItemStack {
-        val result = Inventories.splitStack(inventory, slot, amount)
+        val result = ContainerHelper.splitStack(inventory, slot, amount)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
@@ -666,7 +666,7 @@ class WindKineticGeneratorBlockEntity(
     }
 
     override fun removeStack(slot: Int): ItemStack {
-        val result = Inventories.removeStack(inventory, slot)
+        val result = ContainerHelper.removeStack(inventory, slot)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
@@ -690,41 +690,41 @@ class WindKineticGeneratorBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        // Inventories.readNbt 不会在 nbt 中缺失该槽位时自动清空旧值，先清槽避免客户端残留渲染状态
+        // ContainerHelper.readNbt 不会在 nbt 中缺失该槽位时自动清空旧值，先清槽避免客户端残留渲染状态
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
-        Inventories.readNbt(nbt, inventory, lookup)
+        ContainerHelper.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+        ContainerHelper.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
+    override fun toInitialChunkDataNbt(lookup: HolderLookup.WrapperLookup): CompoundTag = createNbt(lookup)
 
-    override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
+    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         return buf
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.wind_kinetic_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.wind_kinetic_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         WindKineticGeneratorScreenHandler(
             syncId,
             playerInventory,
             this,
-            ScreenHandlerContext.create(world!!, pos),
+            ContainerLevelAccess.create(world!!, pos),
             syncedData
         )
 }

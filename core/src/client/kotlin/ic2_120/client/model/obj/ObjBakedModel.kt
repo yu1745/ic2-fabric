@@ -6,26 +6,26 @@ import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel
 import net.fabricmc.fabric.api.renderer.v1.model.ModelHelper
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext
 import net.fabricmc.fabric.api.util.TriState
-import net.minecraft.block.BlockState
-import net.minecraft.client.render.LightmapTextureManager
-import net.minecraft.client.render.model.BakedModel
-import net.minecraft.client.render.model.BakedQuad
-import net.minecraft.client.render.model.Baker
-import net.minecraft.client.render.model.ModelBakeSettings
-import net.minecraft.client.render.model.UnbakedModel
-import net.minecraft.client.render.model.json.JsonUnbakedModel
-import net.minecraft.client.render.model.json.ModelOverrideList
-import net.minecraft.client.render.model.json.ModelTransformation
-import net.minecraft.client.texture.MissingSprite
-import net.minecraft.client.texture.Sprite
-import net.minecraft.client.util.SpriteIdentifier
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PlayerScreenHandler
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.BlockRenderView
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.client.renderer.LightTexture
+import net.minecraft.client.resources.model.BakedModel
+import net.minecraft.client.renderer.block.model.BakedQuad
+import net.minecraft.client.resources.model.ModelBaker
+import net.minecraft.client.resources.model.ModelState
+import net.minecraft.client.resources.model.UnbakedModel
+import net.minecraft.client.renderer.block.model.BlockModel
+import net.minecraft.client.renderer.block.model.ItemOverrides
+import net.minecraft.client.renderer.block.model.ItemTransforms
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.client.resources.model.Material
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.BlockAndTintGetter
 import org.joml.Vector3f
 import org.joml.Vector4f
 import java.util.function.Function
@@ -33,32 +33,32 @@ import java.util.function.Supplier
 
 class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
 
-    private var transformation: ModelTransformation = ModelTransformation.NONE
+    private var transformation: ItemTransforms = ItemTransforms.NONE
 
-    // 物品 overrides（电量档位、开关状态等）：借原版反序列化器解析，烘焙时交给 ModelOverrideList
-    private val overrideHolder: JsonUnbakedModel? = spec.json.getAsJsonArray("overrides")?.let {
-        JsonUnbakedModel.deserialize("{\"overrides\":$it}")
+    // 物品 overrides（电量档位、开关状态等）：借原版反序列化器解析，烘焙时交给 ItemOverrides
+    private val overrideHolder: BlockModel? = spec.json.getAsJsonArray("overrides")?.let {
+        BlockModel.deserialize("{\"overrides\":$it}")
     }
 
-    override fun getModelDependencies(): Collection<Identifier> =
+    override fun getModelDependencies(): Collection<ResourceLocation> =
         listOfNotNull(spec.parent) + (overrideHolder?.overrides?.map { it.modelId } ?: emptyList())
 
-    override fun setParents(modelLoader: Function<Identifier, UnbakedModel>) {
-        val parent = spec.parent?.let(modelLoader::apply) as? JsonUnbakedModel ?: return
+    override fun setParents(modelLoader: Function<ResourceLocation, UnbakedModel>) {
+        val parent = spec.parent?.let(modelLoader::apply) as? BlockModel ?: return
         parent.setParents(modelLoader)
         transformation = parent.transformations
     }
 
     override fun bake(
-        baker: Baker,
-        textureGetter: Function<SpriteIdentifier, Sprite>,
-        rotationContainer: ModelBakeSettings,
-        modelId: Identifier,
+        baker: ModelBaker,
+        textureGetter: Function<Material, TextureAtlasSprite>,
+        rotationContainer: ModelState,
+        modelId: ResourceLocation,
     ): BakedModel {
-        val atlas = PlayerScreenHandler.BLOCK_ATLAS_TEXTURE
+        val atlas = InventoryMenu.BLOCK_ATLAS_TEXTURE
         val sprite = { slot: String ->
-            spec.textures[slot]?.let { textureGetter.apply(SpriteIdentifier(atlas, it)) }
-                ?: textureGetter.apply(SpriteIdentifier(atlas, MissingSprite.getMissingSpriteId()))
+            spec.textures[slot]?.let { textureGetter.apply(Material(atlas, it)) }
+                ?: textureGetter.apply(Material(atlas, MissingTextureAtlasSprite.getMissingSpriteId()))
         }
         val renderer = RendererAccess.INSTANCE.renderer
             ?: error("ic2_120 OBJ 模型需要 Fabric Renderer API（Indigo 或 Indium）")
@@ -80,7 +80,7 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
 
         val builder = renderer.meshBuilder()
         val emitter = builder.emitter
-        val sprites = HashMap<String, Sprite>()
+        val sprites = HashMap<String, TextureAtlasSprite>()
         for (tri in spec.geometry.triangles) {
             val mat = spec.geometry.materials[tri.material]
             val sp = sprites.getOrPut(mat?.texture ?: "missing") { sprite(mat?.texture ?: "missing") }
@@ -95,7 +95,7 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
                 val n = tri.normal?.let { rotateDir(it[k]) } ?: faceNormal
                 emitter.normal(i, n)
                 emitter.color(i, mat?.color ?: -1)
-                if (mat?.emissive == true) emitter.lightmap(i, LightmapTextureManager.MAX_LIGHT_COORDINATE)
+                if (mat?.emissive == true) emitter.lightmap(i, LightTexture.MAX_LIGHT_COORDINATE)
             }
             emitter.colorIndex(mat?.tintIndex ?: -1)
             emitter.nominalFace(Direction.getFacing(faceNormal.x, faceNormal.y, faceNormal.z))
@@ -103,7 +103,7 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
             emitter.emit()
         }
         val particle = sprite("particle")
-        val overrides = overrideHolder?.let { ModelOverrideList(baker, it, it.overrides) } ?: ModelOverrideList.EMPTY
+        val overrides = overrideHolder?.let { ItemOverrides(baker, it, it.overrides) } ?: ItemOverrides.EMPTY
         return ObjBakedModel(builder.build(), particle, transformation, overrides)
     }
 }
@@ -111,9 +111,9 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
 @Suppress("OVERRIDE_DEPRECATION")
 class ObjBakedModel(
     private val mesh: Mesh,
-    private val particle: Sprite,
-    private val transformation: ModelTransformation,
-    private val overrides: ModelOverrideList,
+    private val particle: TextureAtlasSprite,
+    private val transformation: ItemTransforms,
+    private val overrides: ItemOverrides,
 ) : BakedModel, FabricBakedModel {
 
     // 供原版路径（方块实体渲染器里的 BlockModelRenderer、物品渲染回退）使用
@@ -122,17 +122,17 @@ class ObjBakedModel(
     override fun isVanillaAdapter() = false
 
     override fun emitBlockQuads(
-        blockView: BlockRenderView,
+        blockView: BlockAndTintGetter,
         state: BlockState,
         pos: BlockPos,
-        randomSupplier: Supplier<Random>,
+        randomSupplier: Supplier<RandomSource>,
         context: RenderContext,
     ) = mesh.outputTo(context.emitter)
 
-    override fun emitItemQuads(stack: ItemStack, randomSupplier: Supplier<Random>, context: RenderContext) =
+    override fun emitItemQuads(stack: ItemStack, randomSupplier: Supplier<RandomSource>, context: RenderContext) =
         mesh.outputTo(context.emitter)
 
-    override fun getQuads(state: BlockState?, face: Direction?, random: Random): List<BakedQuad> =
+    override fun getQuads(state: BlockState?, face: Direction?, random: RandomSource): List<BakedQuad> =
         quadLists[ModelHelper.toFaceIndex(face)]
 
     override fun useAmbientOcclusion() = true
@@ -141,5 +141,5 @@ class ObjBakedModel(
     override fun isBuiltin() = false
     override fun getParticleSprite() = particle
     override fun getTransformation() = transformation
-    override fun getOverrides(): ModelOverrideList = overrides
+    override fun getOverrides(): ItemOverrides = overrides
 }

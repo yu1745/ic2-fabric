@@ -1,9 +1,9 @@
 package ic2_120.mixin;
 
 import ic2_120.content.item.IridiumDrill;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.GrindstoneScreenHandler;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.GrindstoneMenu;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,16 +24,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 经验结算（onTake/removed）随之不会触发。铱钻头本无法通过砂轮持久去附魔
  * （虚拟附魔会自动恢复），禁止处理无正当用途损失。
  */
-@Mixin(GrindstoneScreenHandler.class)
+@Mixin(GrindstoneMenu.class)
 public abstract class GrindstoneScreenHandlerMixin {
 
     @Shadow
     @Final
-    protected Inventory input;
+    protected Container input;
 
     @Shadow
     @Final
-    protected Inventory result;
+    protected Container result;
 
     @Inject(method = "updateResult", at = @At("HEAD"), cancellable = true)
     private void ic2BlockIridiumDrillGrinding(CallbackInfo ci) {

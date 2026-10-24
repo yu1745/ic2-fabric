@@ -1,9 +1,9 @@
 package ic2_120.content.recipes
 
 import ic2_120.config.Ic2Config
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
 import java.util.IdentityHashMap
 
 /**
@@ -47,7 +47,7 @@ object RecyclerRecipes {
 
     /** 内置黑名单（配置为空时兜底） */
     private val FALLBACK_BLOCKED_ITEMS: Set<Item> = setOf(
-        Registries.ITEM.get(net.minecraft.util.Identifier.of("minecraft", "stick"))
+        BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.of("minecraft", "stick"))
     )
 
     /*
@@ -83,8 +83,8 @@ object RecyclerRecipes {
                         FALLBACK_BLOCKED_ITEMS
                     } else {
                         configured.mapNotNull { id ->
-                            val identifier = net.minecraft.util.Identifier.tryParse(id) ?: return@mapNotNull null
-                            Registries.ITEM.getOrEmpty(identifier).orElse(null)
+                            val identifier = net.minecraft.resources.ResourceLocation.tryParse(id) ?: return@mapNotNull null
+                            BuiltInRegistries.ITEM.getOrEmpty(identifier).orElse(null)
                         }.toSet()
                     }
                     cachedResults.clear()

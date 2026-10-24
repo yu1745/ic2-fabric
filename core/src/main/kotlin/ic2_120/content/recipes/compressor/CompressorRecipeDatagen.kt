@@ -9,12 +9,12 @@ import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import java.util.function.Consumer
 
 object CompressorRecipeDatagen {
@@ -132,10 +132,10 @@ object CompressorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             CompressorRecipeJsonProvider(
-                recipeId = Identifier.of("ic2_120", "compressing/${entry.name}"),
+                recipeId = ResourceLocation.of("ic2_120", "compressing/${entry.name}"),
                 input = entry.input,
                 inputCount = entry.inputCount,
                 outputItem = entry.output,
@@ -146,26 +146,26 @@ object CompressorRecipeDatagen {
     }
 
     private class CompressorRecipeJsonProvider(
-        private val recipeId: Identifier,
+        private val recipeId: ResourceLocation,
         private val input: IngredientInput,
         private val inputCount: Int,
         private val outputItem: Item,
         private val outputCount: Int,
         private val containerReturn: ItemStack = ItemStack.EMPTY
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(CompressorRecipe::class)}")
             json.add("ingredient", input.toJson())
             json.addProperty("input_count", inputCount)
 
             val result = JsonObject()
-            result.addProperty("item", Registries.ITEM.getId(outputItem).toString())
+            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
             result.addProperty("count", outputCount)
             json.add("result", result)
 
             if (!containerReturn.isEmpty) {
                 val container = JsonObject()
-                container.addProperty("item", Registries.ITEM.getId(containerReturn.item).toString())
+                container.addProperty("item", BuiltInRegistries.ITEM.getId(containerReturn.item).toString())
                 container.addProperty("count", containerReturn.count)
                 json.add("container_return", container)
             }
@@ -173,10 +173,10 @@ object CompressorRecipeDatagen {
 
         override fun getSerializer() = ModMachineRecipes.recipeSerializer(CompressorRecipe::class)
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

@@ -8,20 +8,20 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
@@ -40,7 +40,7 @@ class TeslaCoilBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         TeslaCoilBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -49,28 +49,28 @@ class TeslaCoilBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
             be.tick(w, p, s)
         }
 
-    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
         super.appendProperties(builder)
-        builder.add(ACTIVE, Properties.POWERED)
+        builder.add(ACTIVE, BlockStateProperties.POWERED)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(Properties.POWERED, false)
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
+        super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(BlockStateProperties.POWERED, false)
 
-    // AbstractBlock.neighborUpdate 在 1.20.1 标记为 @Deprecated（Mojang 设计：override 是预期用法，详见其 javadoc）。
+    // BlockBehaviour.neighborUpdate 在 1.20.1 标记为 @Deprecated（Mojang 设计：override 是预期用法，详见其 javadoc）。
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun neighborUpdate(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        sourceBlock: net.minecraft.block.Block,
+        sourceBlock: net.minecraft.world.level.block.Block,
         sourcePos: BlockPos,
         notify: Boolean
     ) {
         if (!world.isClient) {
             val powered = world.isReceivingRedstonePower(pos)
-            if (state.get(Properties.POWERED) != powered) {
-                world.setBlockState(pos, state.with(Properties.POWERED, powered))
+            if (state.get(BlockStateProperties.POWERED) != powered) {
+                world.setBlockState(pos, state.with(BlockStateProperties.POWERED, powered))
             }
         }
         super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
@@ -80,12 +80,12 @@ class TeslaCoilBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val mv = MvTransformerBlock::class.item()
             val ironCasing = IronCasing::class.instance()
             val circuit = Circuit::class.instance()
             if (mv != Items.AIR && ironCasing != Items.AIR && circuit != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, TeslaCoilBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, TeslaCoilBlock::class.item(), 1)
                     .pattern("RRR")
                     .pattern("RMR")
                     .pattern("ICI")

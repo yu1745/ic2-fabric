@@ -1,7 +1,7 @@
 package ic2_120.content.fluid
 
 import ic2_120.content.recipes.ModTags
-import net.minecraft.fluid.Fluid
+import net.minecraft.world.level.material.Fluid
 
 /**
  * Shared fluid-fuel definitions. Machines and fuel-powered items use this

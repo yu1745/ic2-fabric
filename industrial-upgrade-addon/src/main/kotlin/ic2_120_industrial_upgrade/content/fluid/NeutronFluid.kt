@@ -2,9 +2,9 @@ package ic2_120_industrial_upgrade.content.fluid
 
 import ic2_120.content.fluid.ModFluids
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
-import net.minecraft.block.Block
-import net.minecraft.fluid.FlowableFluid
-import net.minecraft.item.Item
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.material.FlowingFluid
+import net.minecraft.world.item.Item
 
 /**
  * 中子流体（Neutron）：由中子制造机产出，桶装后经压缩机合成中子碎片。
@@ -16,14 +16,14 @@ import net.minecraft.item.Item
 object NeutronFluid {
 
     /** 中子流体（Still） */
-    val NEUTRON_STILL: FlowableFluid by lazy {
-        ModFluids.Ic2Fluid.stillFluidMap["neutron"] as? FlowableFluid
+    val NEUTRON_STILL: FlowingFluid by lazy {
+        ModFluids.Ic2Fluid.stillFluidMap["neutron"] as? FlowingFluid
             ?: error("Neutron fluid not registered yet")
     }
 
     /** 中子流体（Flowing） */
-    val NEUTRON_FLOWING: FlowableFluid by lazy {
-        ModFluids.Ic2Fluid.flowingFluidMap["neutron"] as? FlowableFluid
+    val NEUTRON_FLOWING: FlowingFluid by lazy {
+        ModFluids.Ic2Fluid.flowingFluidMap["neutron"] as? FlowingFluid
             ?: error("Flowing neutron fluid not registered yet")
     }
 

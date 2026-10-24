@@ -4,11 +4,11 @@ import ic2_120.content.block.machines.ElectricHeatGeneratorBlockEntity
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.content.upgrade.IRedstoneControlSupport
 import ic2_120.content.upgrade.RedstoneControlComponent
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.resources.ResourceLocation
 import snownee.jade.api.BlockAccessor
 import snownee.jade.api.IBlockComponentProvider
 import snownee.jade.api.IServerDataProvider
@@ -26,9 +26,9 @@ import snownee.jade.api.config.IPluginConfig
  */
 object ElectricHeatGeneratorJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val ELECTRIC_HEAT = Identifier.of("ic2_120", "electric_heat_generator")
+    private val ELECTRIC_HEAT = ResourceLocation.of("ic2_120", "electric_heat_generator")
 
-    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+    override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val be = accessor.blockEntity as? ElectricHeatGeneratorBlockEntity ?: return
         val world = accessor.level
         val pos = accessor.position
@@ -55,9 +55,9 @@ object ElectricHeatGeneratorJadeProvider : IBlockComponentProvider, IServerDataP
         val redstonePowered = data.getBoolean("redstonePowered")
         val redstoneAllowsRun = data.getBoolean("redstoneAllowsRun")
 
-        tooltip.add(Text.translatable("ic2_120.jade.electric_heat.buffer", eu, euCap))
-        tooltip.add(Text.translatable("ic2_120.jade.electric_heat.generating", generatedHeat))
-        tooltip.add(Text.translatable("ic2_120.jade.electric_heat.coils", coilCount))
+        tooltip.add(Component.translatable("ic2_120.jade.electric_heat.buffer", eu, euCap))
+        tooltip.add(Component.translatable("ic2_120.jade.electric_heat.generating", generatedHeat))
+        tooltip.add(Component.translatable("ic2_120.jade.electric_heat.coils", coilCount))
 
         if (!redstoneAllowsRun) {
             // 机器因红石逻辑停机：根据模式给出对应原因
@@ -69,16 +69,16 @@ object ElectricHeatGeneratorJadeProvider : IBlockComponentProvider, IServerDataP
                 "ic2_120.jade.electric_heat.stopped_no_signal"
             }
             tooltip.add(
-                Text.translatable(reasonKey)
-                    .setStyle(Style.EMPTY.withColor(Formatting.RED))
+                Component.translatable(reasonKey)
+                    .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))
             )
         } else {
             tooltip.add(
-                Text.translatable("ic2_120.jade.electric_heat.running")
-                    .setStyle(Style.EMPTY.withColor(Formatting.GREEN))
+                Component.translatable("ic2_120.jade.electric_heat.running")
+                    .setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN))
             )
         }
     }
 
-    override fun getUid(): Identifier = ELECTRIC_HEAT
+    override fun getUid(): ResourceLocation = ELECTRIC_HEAT
 }

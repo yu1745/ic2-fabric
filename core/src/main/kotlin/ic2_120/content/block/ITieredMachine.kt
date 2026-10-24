@@ -3,7 +3,7 @@ package ic2_120.content.block
 import ic2_120.content.energy.EnergyTier
 import ic2_120.content.item.energy.ITiered
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 
 /**
  * 能量机器接口

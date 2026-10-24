@@ -7,13 +7,13 @@ import ic2_120.content.screen.CondenserScreenHandler
 import ic2_120.content.sync.CondenserSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.text.Text as McText
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.network.chat.Component as McText
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 冷凝器 GUI — 对齐 ic2_origin GuiCondenser (176×184)。
@@ -30,9 +30,9 @@ import net.minecraft.util.Identifier
 @ModScreen(block = CondenserBlock::class)
 class CondenserScreen(
     handler: CondenserScreenHandler,
-    playerInventory: PlayerInventory,
+    playerInventory: Inventory,
     title: McText
-) : HandledScreen<CondenserScreenHandler>(handler, playerInventory, title) {
+) : AbstractContainerScreen<CondenserScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
@@ -41,7 +41,7 @@ class CondenserScreen(
 
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         renderBackground(context)
         // 背景: guicondenser.png (0,0) 到 (176,184)
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
@@ -56,7 +56,7 @@ class CondenserScreen(
 
     // ==== 前景 — 能量条(纹理) + 液位(色块) + 进度条(纹理) + 槽位 tooltip ====
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -155,7 +155,7 @@ class CondenserScreen(
     }
 
     /** 自下而上渲染流体纹理填充，使用 FluidUtils 着色 */
-    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, fluid: Fluid) {
+    private fun drawFluidTank(context: GuiGraphics, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, fluid: Fluid) {
         val fillH = (fraction.coerceIn(0f, 1f) * h).toInt()
         if (fillH <= 0) return
 
@@ -185,7 +185,7 @@ class CondenserScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicondenser.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guicondenser.png")
         private const val PROGRESS_WIDTH = 82
 
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

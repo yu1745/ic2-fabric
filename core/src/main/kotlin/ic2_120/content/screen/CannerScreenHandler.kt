@@ -11,25 +11,25 @@ import ic2_120.content.sync.CannerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.text.Text
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.network.chat.Component
 
 @ModScreenHandler(block = CannerBlock::class, inventorySize = CannerBlockEntity.INVENTORY_SIZE)
 class CannerScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    private val blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(CannerScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(CannerScreenHandler::class.type(), syncId) {
 
     val sync = CannerSync(SyncedDataView(propertyDelegate))
 
@@ -93,7 +93,7 @@ class CannerScreenHandler(
         }
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos)
             if (be !== blockInventory) return@get
@@ -107,7 +107,7 @@ class CannerScreenHandler(
                         val leftAfter = be.getLeftFluidAmount()
                         val rightAfter = be.getRightFluidAmount()
                         player.sendMessage(
-                            Text.translatable(
+                            Component.translatable(
                                 if (changed) "gui.ic2_120.canner.tanks_swapped"
                                 else "gui.ic2_120.canner.tanks_swap_unchanged",
                                 *if (changed) arrayOf(leftBefore, leftAfter, rightBefore, rightAfter)
@@ -122,7 +122,7 @@ class CannerScreenHandler(
         return id == BUTTON_ID_MODE_CYCLE || id == BUTTON_ID_SWAP_TANKS
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -161,7 +161,7 @@ class CannerScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is CannerBlock &&
                 (world.isClient || world.getBlockEntity(pos) === blockInventory) &&

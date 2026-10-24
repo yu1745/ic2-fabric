@@ -3,34 +3,34 @@ package buildcraft_addon.client.render
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.PumpBlockEntity
 import buildcraft_addon.client.render.EngineRenderHelper.emitQuadBothSides
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.WorldRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.texture.Sprite
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.screen.PlayerScreenHandler
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.LevelRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 
-class PumpRenderer(ctx: BlockEntityRendererFactory.Context) :
+class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
     BlockEntityRenderer<PumpBlockEntity> {
 
     private var spritesLoaded = false
-    private lateinit var tubeSprite: Sprite
-    private lateinit var ledGreen: Sprite
-    private lateinit var ledRed: Sprite
+    private lateinit var tubeSprite: TextureAtlasSprite
+    private lateinit var ledGreen: TextureAtlasSprite
+    private lateinit var ledRed: TextureAtlasSprite
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = MinecraftClient.getInstance().bakedModelManager.getAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE)
-        fun sprite(path: String) = atlas.getSprite(Identifier(BuildCraftAddon.MOD_ID, path))
+        val atlas = Minecraft.getInstance().bakedModelManager.getAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE)
+        fun sprite(path: String) = atlas.getSprite(ResourceLocation(BuildCraftAddon.MOD_ID, path))
         tubeSprite = sprite("block/pump/tube")
         ledGreen = sprite("block/pump/led_green")
         ledRed = sprite("block/pump/led_red")
@@ -40,18 +40,18 @@ class PumpRenderer(ctx: BlockEntityRendererFactory.Context) :
     override fun render(
         entity: PumpBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
         ensureSprites()
         val world = entity.world ?: return
         val pos = entity.pos
-        val buffer = vertexConsumers.getBuffer(RenderLayer.getCutout())
+        val buffer = vertexConsumers.getBuffer(RenderType.getCutout())
 
         // ========== 管道渲染 ==========
-        // MatrixStack 已平移到方块位置，使用局部坐标
+        // PoseStack 已平移到方块位置，使用局部坐标
         val depth = entity.getRenderTubeDepth(tickDelta).toFloat()
         if (depth > 0.01f) {
             matrices.push()
@@ -66,7 +66,7 @@ class PumpRenderer(ctx: BlockEntityRendererFactory.Context) :
         }
 
         // ========== LED 指示灯 ==========
-        val pumpLight = WorldRenderer.getLightmapCoordinates(world, pos)
+        val pumpLight = LevelRenderer.getLightmapCoordinates(world, pos)
         val active = entity.isActive
         val tankFill = if (entity.tank.capacity > 0)
             entity.tank.amount.toFloat() / entity.tank.capacity.toFloat() else 0f
@@ -96,8 +96,8 @@ class PumpRenderer(ctx: BlockEntityRendererFactory.Context) :
     }
 
     private fun renderTubeColumn(
-        matrices: MatrixStack, buffer: VertexConsumer,
-        world: net.minecraft.world.World, pos: BlockPos, overlay: Int,
+        matrices: PoseStack, buffer: VertexConsumer,
+        world: net.minecraft.world.level.Level, pos: BlockPos, overlay: Int,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float
     ) {
         val ctx = matrices.peek()
@@ -114,7 +114,7 @@ class PumpRenderer(ctx: BlockEntityRendererFactory.Context) :
             val segTop = y1 + frac
             // 取该格的世界坐标算光照
             val worldY = pos.y + kotlin.math.floor(segBot.toDouble()).toInt()
-            val segLight = WorldRenderer.getLightmapCoordinates(world, BlockPos(pos.x, worldY, pos.z))
+            val segLight = LevelRenderer.getLightmapCoordinates(world, BlockPos(pos.x, worldY, pos.z))
             renderTubeSegment(pm, nm, buffer, segLight, overlay, x1, segBot, z1, x2, segTop, z2, frac)
         }
 
@@ -123,7 +123,7 @@ class PumpRenderer(ctx: BlockEntityRendererFactory.Context) :
             val segBot = y1 + frac + i
             val segTop = segBot + 1f
             val worldY = pos.y + kotlin.math.floor(segBot.toDouble()).toInt()
-            val segLight = WorldRenderer.getLightmapCoordinates(world, BlockPos(pos.x, worldY, pos.z))
+            val segLight = LevelRenderer.getLightmapCoordinates(world, BlockPos(pos.x, worldY, pos.z))
             renderTubeSegment(pm, nm, buffer, segLight, overlay, x1, segBot, z1, x2, segTop, z2, 1f)
         }
     }
@@ -156,9 +156,9 @@ class PumpRenderer(ctx: BlockEntityRendererFactory.Context) :
     }
 
     private fun renderLedSide(
-        matrices: MatrixStack, buffer: VertexConsumer, light: Int, overlay: Int,
+        matrices: PoseStack, buffer: VertexConsumer, light: Int, overlay: Int,
         x: Float, y: Float, z: Float,
-        side: Direction, sprite: Sprite, brightness: Float
+        side: Direction, sprite: TextureAtlasSprite, brightness: Float
     ) {
         val ctx = matrices.peek()
         val pm = ctx.positionMatrix

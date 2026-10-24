@@ -1,10 +1,10 @@
 package ic2_120.content.network
 
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.packet.CustomPayload
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
 
 /**
  * 槽位热能与发电信息
@@ -15,17 +15,17 @@ data class SlotHeatEnergyInfo(
     val energyOutput: Float
 )
 
-class ReactorHeatInfoPacket(val pos: BlockPos, val slotHeatInfo: Map<Int, SlotHeatEnergyInfo>) : CustomPayload {
-    override fun getId(): CustomPayload.Id<*> = ID
+class ReactorHeatInfoPacket(val pos: BlockPos, val slotHeatInfo: Map<Int, SlotHeatEnergyInfo>) : CustomPacketPayload {
+    override fun getId(): CustomPacketPayload.Id<*> = ID
 
     companion object {
-        val ID = CustomPayload.Id<ReactorHeatInfoPacket>(Identifier.of("ic2_120", "reactor_heat_info"))
-        val CODEC: PacketCodec<PacketByteBuf, ReactorHeatInfoPacket> = PacketCodec.of(
+        val ID = CustomPacketPayload.Id<ReactorHeatInfoPacket>(ResourceLocation.of("ic2_120", "reactor_heat_info"))
+        val CODEC: StreamCodec<FriendlyByteBuf, ReactorHeatInfoPacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }
         )
 
-        fun read(buf: PacketByteBuf): ReactorHeatInfoPacket {
+        fun read(buf: FriendlyByteBuf): ReactorHeatInfoPacket {
             val pos = buf.readBlockPos()
             val size = buf.readVarInt()
             val slotHeatInfo = mutableMapOf<Int, SlotHeatEnergyInfo>()
@@ -39,7 +39,7 @@ class ReactorHeatInfoPacket(val pos: BlockPos, val slotHeatInfo: Map<Int, SlotHe
             return ReactorHeatInfoPacket(pos, slotHeatInfo)
         }
 
-        fun write(packet: ReactorHeatInfoPacket, buf: PacketByteBuf) {
+        fun write(packet: ReactorHeatInfoPacket, buf: FriendlyByteBuf) {
             buf.writeBlockPos(packet.pos)
             buf.writeVarInt(packet.slotHeatInfo.size)
             for ((slot, info) in packet.slotHeatInfo) {

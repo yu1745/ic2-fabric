@@ -4,9 +4,9 @@ import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.energy.IElectricTool
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
 import net.minecraft.server.MinecraftServer
 import java.util.UUID
 
@@ -17,10 +17,10 @@ import java.util.UUID
  *
  * - 服务端只负责根据玩家装备的胸甲是否可飞行，授予/剥夺 [net.minecraft.entity.player.PlayerAbilities.allowFlying]。
  * - 玩家按下/松开空格、Shift 时的起降/悬停、双击空格切换飞行等行为，全部由
- *   [net.minecraft.client.network.ClientPlayerEntity.tickMovement] 内部的 `abilityResyncCountdown`
- *   双击检测与 [net.minecraft.entity.LivingEntity.travel] 内的飞行分支处理。
+ *   [net.minecraft.client.player.LocalPlayer.tickMovement] 内部的 `abilityResyncCountdown`
+ *   双击检测与 [net.minecraft.world.entity.LivingEntity.travel] 内的飞行分支处理。
  * - 玩家通过双击空格或落地在客户端切换 `flying` 后，vanilla 客户端会发出
- *   [net.minecraft.network.packet.c2s.play.UpdatePlayerAbilitiesC2SPacket]，服务器照单接受即可。
+ *   [net.minecraft.network.protocol.game.ServerboundPlayerAbilitiesPacket]，服务器照单接受即可。
  *   本管理器不主动把 `flying` 拉到 `true`，从而保留原版创造飞行的起停行为。
  *
  * 因此本类没有任何手写的「按键按下/抬起」检测或额外状态机：玩家穿上一件可飞行的胸甲，就相当于
@@ -30,7 +30,7 @@ object FlightManager {
     private val abilitySnapshots = mutableMapOf<UUID, FlightAbilitySnapshot>()
 
     /**
-     * 维度切换后客户端的 ClientPlayerEntity 会被销毁重建，新实例的 allowFlying 会被 vanilla 的
+     * 维度切换后客户端的 LocalPlayer 会被销毁重建，新实例的 allowFlying 会被 vanilla 的
      * GameMode.setAbilities(SURVIVAL) 抹成 false（见 onPlayerRespawn 里的 copyAbilities + setGameModes）。
      * 此处登记需要在下次 tick 强制重发一次 abilities 包的玩家，使客户端 allowFlying 重新与服务端对齐。
      * 放到 tick 里发（而非维度切换事件回调里直接发）是为了保证它是维度切换流程中「最后一个」abilities 包，
@@ -46,7 +46,7 @@ object FlightManager {
         }
     }
 
-    private fun tickPlayer(player: PlayerEntity) {
+    private fun tickPlayer(player: Player) {
         // 创造/旁观模式的飞行由游戏模式自己处理，不要插手
         if (player.isCreative || player.isSpectator) {
             abilitySnapshots.remove(player.uuid)
@@ -82,11 +82,11 @@ object FlightManager {
      * 玩家维度切换后调用（由 ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD 触发）。
      * 这里只做登记，真正的 abilities 重发放到 [tickPlayer] 里执行，保证是维度切换流程中最后的包。
      */
-    fun onWorldChanged(player: net.minecraft.server.network.ServerPlayerEntity) {
+    fun onWorldChanged(player: net.minecraft.server.level.ServerPlayer) {
         pendingResync.add(player.uuid)
     }
 
-    private fun grantFlightPermission(player: PlayerEntity) {
+    private fun grantFlightPermission(player: Player) {
         abilitySnapshots.getOrPut(player.uuid) {
             FlightAbilitySnapshot(
                 allowFlying = player.abilities.allowFlying,
@@ -100,7 +100,7 @@ object FlightManager {
         player.sendAbilitiesUpdate()
     }
 
-    private fun restorePreviousFlightState(player: PlayerEntity) {
+    private fun restorePreviousFlightState(player: Player) {
         val snapshot = abilitySnapshots.remove(player.uuid) ?: return
 
         var changed = false

@@ -1,7 +1,7 @@
 package ic2_120.integration.jei
 
-import net.minecraft.fluid.Fluid
-import net.minecraft.item.ItemStack
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.item.ItemStack
 
 /**
  * 流体/固体装罐机（ENRICH_LIQUID 模式）JEI 展示配方。

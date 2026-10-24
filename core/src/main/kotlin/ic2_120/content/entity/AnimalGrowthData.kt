@@ -1,6 +1,6 @@
 package ic2_120.content.entity
 
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.CompoundTag
 
 /**
  * 追踪动物的喂食进度和状态
@@ -29,8 +29,8 @@ data class AnimalGrowthData(
     /**
      * 将数据序列化为 NBT
      */
-    fun toNbt(): NbtCompound {
-        val nbt = NbtCompound()
+    fun toNbt(): CompoundTag {
+        val nbt = CompoundTag()
         nbt.putUuid("UUID", uuid)
         nbt.putInt("FoodConsumed", foodConsumed)
         nbt.putBoolean("BreedUnlocked", breedUnlocked)
@@ -46,7 +46,7 @@ data class AnimalGrowthData(
         /**
          * 从 NBT 反序列化数据
          */
-        fun fromNbt(nbt: NbtCompound): AnimalGrowthData {
+        fun fromNbt(nbt: CompoundTag): AnimalGrowthData {
             return AnimalGrowthData(
                 uuid = nbt.getUuid("UUID"),
                 foodConsumed = nbt.getInt("FoodConsumed"),

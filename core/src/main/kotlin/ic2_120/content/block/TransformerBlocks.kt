@@ -16,27 +16,27 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.Properties
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.tags.ItemTags
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
@@ -72,7 +72,7 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
         createTransformerBlockEntity(pos, state)
 
     // 添加 ACTIVE 状态属性（六面朝向由 DirectionalMachineBlock 提供）
-    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
         super.appendProperties(builder)  // 保留 FACING
         builder.add(ACTIVE)  // 添加激活状态
     }
@@ -82,15 +82,15 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
         defaultState = stateManager.defaultState.with(ACTIVE, false)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? {
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? {
         // 根据玩家面向的方向决定变压器正面朝向（水平方向）
         // 变压器通常放置在地面，正面应该朝向玩家面对的方向
         val facing = ctx.horizontalPlayerFacing.opposite
-        return super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(Properties.FACING, facing)
+        return super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(BlockStateProperties.FACING, facing)
     }
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -108,26 +108,26 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
             }
         }
 
-    override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
+    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): net.minecraft.world.MenuProvider? {
         val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+        return be as? net.minecraft.world.MenuProvider
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
+    ): InteractionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
             }
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     companion object {
@@ -142,11 +142,11 @@ class LvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val insulatedTinCable = InsulatedTinCableBlock::class.item()
             val coil = ic2_120.content.item.Coil::class.instance()
             if (coil != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, LvTransformerBlock::class.item(), 1)
                     .pattern("PWP").pattern("PCP").pattern("PWP")
                     .input('P', ItemTags.PLANKS).input('W', insulatedTinCable).input('C', coil)
                     .criterion(hasItem(coil), conditionsFromItem(coil))
@@ -163,11 +163,11 @@ class MvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val machine = MachineCasingBlock::class.item()
             if (machine != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, MvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern(" M ").pattern(" W ")
                     .input('W', insulatedCopperCable).input('M', machine)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
@@ -184,12 +184,12 @@ class HvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val insulatedGoldCable = InsulatedGoldCableBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val advancedReBattery = ic2_120.content.item.energy.AdvancedReBatteryItem::class.instance()
             if (MvTransformerBlock::class.item() != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, HvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern("CTB").pattern(" W ")
                     .input('W', insulatedGoldCable).input('C', circuit).input('T', MvTransformerBlock::class.item()).input('B', advancedReBattery)
                     .criterion(hasItem(MvTransformerBlock::class.item()), conditionsFromItem(MvTransformerBlock::class.item()))
@@ -206,12 +206,12 @@ class EvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val insulatedIronCable = TripleInsulatedIronCableBlock::class.item()
             val advancedCircuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val lapotronCrystal = ic2_120.content.item.energy.LapotronCrystalItem::class.instance()
             if (HvTransformerBlock::class.item() != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, EvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern("CTL").pattern(" W ")
                     .input('W', insulatedIronCable).input('C', advancedCircuit).input('T', HvTransformerBlock::class.item()).input('L', lapotronCrystal)
                     .criterion(hasItem(HvTransformerBlock::class.item()), conditionsFromItem(HvTransformerBlock::class.item()))

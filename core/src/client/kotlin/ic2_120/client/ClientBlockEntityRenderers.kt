@@ -49,73 +49,73 @@ import ic2_120.content.block.machines.WaterKineticGeneratorBlockEntity
 import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactories
-import net.minecraft.util.math.BlockPos
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers
+import net.minecraft.core.BlockPos
 
 object ClientBlockEntityRenderers {
     fun register() {
         // 3D 机器运动件（动画参数见 assets/ic2_120/machine3d/animations.json）
-        BlockEntityRendererFactories.register(MaceratorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(CompressorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(ExtractorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(RecyclerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(CannerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(SolidCannerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(BlockCutterBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(CentrifugeBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(MetalFormerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(OreWashingPlantBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(StirlingGeneratorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(WaterGeneratorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(PumpBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(FluidCannerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(CondenserBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(CropHarvesterBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(CropmatronBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(AnimalSlaughtererBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(ChunkLoaderBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(MaceratorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(CompressorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(ExtractorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(RecyclerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(CannerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(SolidCannerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(BlockCutterBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(CentrifugeBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(MetalFormerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(OreWashingPlantBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(StirlingGeneratorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(WaterGeneratorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(PumpBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(FluidCannerBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(CondenserBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(CropHarvesterBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(CropmatronBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(AnimalSlaughtererBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(ChunkLoaderBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
+        BlockEntityRenderers.register(
             WindGeneratorBlockEntity::class.type(),
             ::WindGeneratorBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             WindKineticGeneratorBlockEntity::class.type(),
             ::WindKineticGeneratorBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             WaterKineticGeneratorBlockEntity::class.type(),
             ::WaterKineticGeneratorBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             ManualKineticGeneratorBlockEntity::class.type(),
             ::ManualKineticGeneratorBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             LeashKineticGeneratorBlockEntity::class.type(),
             ::LeashKineticGeneratorBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             TransmissionBlockEntity::class.type(),
             ::TransmissionBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             ComposeDebugBlockEntity::class.type(),
             ::ComposeDebugBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             TeleporterBlockEntity::class.type(),
             ::TeleporterBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             PipeBlockEntity::class.type(),
             ::PipeBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             MinerBlockEntity::class.type(),
             ::MinerBlockEntityRenderer
         )
-        BlockEntityRendererFactories.register(
+        BlockEntityRenderers.register(
             AdvancedMinerBlockEntity::class.type(),
             ::MinerBlockEntityRenderer
         )
@@ -131,7 +131,7 @@ object ClientBlockEntityRenderers {
         for (block in shaftBlocks) {
             val dummyEntity = TransmissionBlockEntity(BlockPos.ORIGIN, block.defaultState)
             BuiltinItemRendererRegistry.INSTANCE.register(block.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-                MinecraftClient.getInstance().blockEntityRenderDispatcher.renderEntity(
+                Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(
                     dummyEntity,
                     matrices,
                     vertexConsumers,

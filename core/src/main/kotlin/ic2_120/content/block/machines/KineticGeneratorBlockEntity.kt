@@ -12,22 +12,22 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.nbt.CompoundTag
 
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
+import net.minecraft.core.HolderLookup
+import net.minecraft.network.FriendlyByteBuf
 import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = KineticGeneratorBlock::class)
@@ -36,7 +36,7 @@ class KineticGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), ITieredMachine, IGenerator, IKineticMachinePort,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     companion object {
         private const val START_THRESHOLD_KU = 64
@@ -44,7 +44,7 @@ class KineticGeneratorBlockEntity(
     }
 
     override val tier: Int = 3
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = KineticGeneratorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = KineticGeneratorBlock.ACTIVE
 
     private val syncedData = SyncedData()
     private var lastKuInputTick: Long = Long.MIN_VALUE
@@ -55,7 +55,7 @@ class KineticGeneratorBlockEntity(
     @RegisterEnergy
     val sync = KineticGeneratorSync(
         schema = syncedData,
-        getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
 
@@ -67,11 +67,11 @@ class KineticGeneratorBlockEntity(
         state
     )
 
-    override fun getInventory(): Inventory? = null
+    override fun getInventory(): Container? = null
 
     override fun canInputKuFrom(side: Direction): Boolean {
         val world = world ?: return false
-        val facing = world.getBlockState(pos).getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = world.getBlockState(pos).getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
         // 正面为输入口。
         return side == facing
     }
@@ -132,7 +132,7 @@ class KineticGeneratorBlockEntity(
         return acceptedKu
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         val transferredEu = adjacentEnergyTransfer.tick()
         val pulledKu = pullKuFromNeighbors(world, pos, this)
@@ -153,24 +153,24 @@ class KineticGeneratorBlockEntity(
         markDirtyThrottled()
     }
 
-    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         return buf
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.kinetic_generator")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.kinetic_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         KineticGeneratorScreenHandler(
             syncId,
             playerInventory,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(KineticGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, KineticGeneratorSync.ENERGY_CAPACITY)
@@ -179,7 +179,7 @@ class KineticGeneratorBlockEntity(
         kuRemainder = nbt.getInt("KuRemainder").coerceIn(0, KineticGeneratorSync.KU_PER_EU - 1)
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(KineticGeneratorSync.NBT_ENERGY_STORED, sync.amount)

@@ -8,19 +8,19 @@ import ic2_120.content.sync.CannerSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = CannerBlock::class)
 class CannerScreen(
-    handler: CannerScreenHandler, playerInventory: PlayerInventory, title: Text
-) : HandledScreen<CannerScreenHandler>(handler, playerInventory, title) {
+    handler: CannerScreenHandler, playerInventory: Inventory, title: Component
+) : AbstractContainerScreen<CannerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
@@ -29,11 +29,11 @@ class CannerScreen(
         playerInventoryTitleY = -1000
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -42,7 +42,7 @@ class CannerScreen(
         val mode = handler.sync.getMode()
 
         // 居中置顶标题
-        val title = Text.translatable("block.ic2_120.canner")
+        val title = Component.translatable("block.ic2_120.canner")
         context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // 能量条
@@ -82,7 +82,7 @@ class CannerScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawEnergyBar(context: DrawContext, left: Int, top: Int) {
+    private fun drawEnergyBar(context: GuiGraphics, left: Int, top: Int) {
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val fraction = (energy.toFloat() / cap).coerceIn(0f, 1f)
@@ -100,7 +100,7 @@ class CannerScreen(
         context.disableScissor()
     }
 
-    private fun drawProgressBar(context: DrawContext, left: Int, top: Int) {
+    private fun drawProgressBar(context: GuiGraphics, left: Int, top: Int) {
         val progress = handler.sync.progress.coerceIn(0, CannerSync.PROGRESS_MAX)
         val fraction = progress.toFloat() / CannerSync.PROGRESS_MAX
         if (fraction <= 0f) return
@@ -118,12 +118,12 @@ class CannerScreen(
     }
 
     private fun drawFluidTank(
-        context: DrawContext, left: Int, top: Int,
+        context: GuiGraphics, left: Int, top: Int,
         tankX: Int, tankY: Int, tankW: Int, tankH: Int,
         fluidRawId: Int, amountMb: Int, capacityMb: Int
     ) {
         if (fluidRawId <= 0 || amountMb <= 0) return
-        val fluid = Registries.FLUID.get(fluidRawId)
+        val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
         val sprite = getFluidStillSprite(fluid) ?: return
         val color = FluidUtils.getFluidColor(fluid)
         if (color == -1) return
@@ -146,7 +146,7 @@ class CannerScreen(
         context.disableScissor()
     }
 
-    private fun drawModeTexture(context: DrawContext, left: Int, top: Int, mode: CannerSync.Mode) {
+    private fun drawModeTexture(context: GuiGraphics, left: Int, top: Int, mode: CannerSync.Mode) {
         val (u, v, w, h) = when (mode) {
             CannerSync.Mode.BOTTLE_SOLID -> MODE_SOLID
             CannerSync.Mode.EMPTY_LIQUID -> MODE_EMPTY
@@ -171,24 +171,24 @@ class CannerScreen(
         }
     }
 
-    private fun drawHoverHighlights(context: DrawContext, mouseX: Int, mouseY: Int, left: Int, top: Int, mode: CannerSync.Mode) {
+    private fun drawHoverHighlights(context: GuiGraphics, mouseX: Int, mouseY: Int, left: Int, top: Int, mode: CannerSync.Mode) {
         val relX = mouseX - left
         val relY = mouseY - top
 
         // 流体交换区域
         if (relX in SWAP_X1..SWAP_X2 && relY in SWAP_Y1..SWAP_Y2) {
             context.fill(left + SWAP_X1, top + SWAP_Y1, left + SWAP_X2 + 1, top + SWAP_Y2 + 1, 0x80FFFFFF.toInt())
-            context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.canner.swap_tanks")), mouseX, mouseY)
+            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.canner.swap_tanks")), mouseX, mouseY)
         }
 
         // 模式切换区域
         if (relX in MODE_CLICK_X1..MODE_CLICK_X2 && relY in MODE_CLICK_Y1..MODE_CLICK_Y2) {
             context.fill(left + MODE_CLICK_X1, top + MODE_CLICK_Y1, left + MODE_CLICK_X2 + 1, top + MODE_CLICK_Y2 + 1, 0x80FFFFFF.toInt())
             val modeText = when (mode) {
-                CannerSync.Mode.BOTTLE_SOLID -> Text.translatable("gui.ic2_120.canner.mode_bottle_solid")
-                CannerSync.Mode.EMPTY_LIQUID -> Text.translatable("gui.ic2_120.canner.mode_empty_liquid")
-                CannerSync.Mode.BOTTLE_LIQUID -> Text.translatable("gui.ic2_120.canner.mode_bottle_liquid")
-                CannerSync.Mode.ENRICH_LIQUID -> Text.translatable("gui.ic2_120.canner.mode_enrich_liquid")
+                CannerSync.Mode.BOTTLE_SOLID -> Component.translatable("gui.ic2_120.canner.mode_bottle_solid")
+                CannerSync.Mode.EMPTY_LIQUID -> Component.translatable("gui.ic2_120.canner.mode_empty_liquid")
+                CannerSync.Mode.BOTTLE_LIQUID -> Component.translatable("gui.ic2_120.canner.mode_bottle_liquid")
+                CannerSync.Mode.ENRICH_LIQUID -> Component.translatable("gui.ic2_120.canner.mode_enrich_liquid")
             }
             context.drawTooltip(textRenderer, listOf(modeText), mouseX, mouseY)
         }
@@ -200,7 +200,7 @@ class CannerScreen(
             val energy = handler.sync.energy.toLong().coerceAtLeast(0)
             val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
             context.drawTooltip(textRenderer,
-                listOf(Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU")),
+                listOf(Component.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU")),
                 mouseX, mouseY)
         }
 
@@ -209,10 +209,10 @@ class CannerScreen(
             val amt = handler.sync.leftFluidAmount.coerceAtLeast(0)
             val cap = handler.sync.leftFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = Registries.FLUID.get(handler.sync.leftFluidRawId).defaultState.blockState.block.name.string
-                listOf(Text.literal(name), Text.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
+                val name = BuiltInRegistries.FLUID.get(handler.sync.leftFluidRawId).defaultState.blockState.block.name.string
+                listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
-                listOf(Text.literal("空"))
+                listOf(Component.literal("空"))
             }
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -222,10 +222,10 @@ class CannerScreen(
             val amt = handler.sync.rightFluidAmount.coerceAtLeast(0)
             val cap = handler.sync.rightFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = Registries.FLUID.get(handler.sync.rightFluidRawId).defaultState.blockState.block.name.string
-                listOf(Text.literal(name), Text.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
+                val name = BuiltInRegistries.FLUID.get(handler.sync.rightFluidRawId).defaultState.blockState.block.name.string
+                listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
-                listOf(Text.literal("空"))
+                listOf(Component.literal("空"))
             }
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -233,13 +233,13 @@ class CannerScreen(
         // uptips悬停
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
             context.drawTooltip(textRenderer, listOf(
-                Text.translatable("gui.ic2_120.canner.uptips"),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
-                Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+                Component.translatable("gui.ic2_120.canner.uptips"),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_ejector_upgrade")),
+                Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_pulling_upgrade"))
             ), mouseX, mouseY)
         }
     }
@@ -250,12 +250,12 @@ class CannerScreen(
             val relY = mouseY.toInt() - y
             if (relX in SWAP_X1..SWAP_X2 && relY in SWAP_Y1..SWAP_Y2) {
                 client?.player?.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(handler.syncId, CannerScreenHandler.BUTTON_ID_SWAP_TANKS))
+                    ServerboundContainerButtonClickPacket(handler.syncId, CannerScreenHandler.BUTTON_ID_SWAP_TANKS))
                 return true
             }
             if (relX in MODE_CLICK_X1..MODE_CLICK_X2 && relY in MODE_CLICK_Y1..MODE_CLICK_Y2) {
                 client?.player?.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(handler.syncId, CannerScreenHandler.BUTTON_ID_MODE_CYCLE))
+                    ServerboundContainerButtonClickPacket(handler.syncId, CannerScreenHandler.BUTTON_ID_MODE_CYCLE))
                 return true
             }
         }
@@ -263,8 +263,8 @@ class CannerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicanner.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guicanner.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
 
@@ -337,7 +337,7 @@ class CannerScreen(
     }
 }
 
-private fun getFluidStillSprite(fluid: Fluid): net.minecraft.client.texture.Sprite? {
+private fun getFluidStillSprite(fluid: Fluid): net.minecraft.client.renderer.texture.TextureAtlasSprite? {
     val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
     return handler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0)
 }

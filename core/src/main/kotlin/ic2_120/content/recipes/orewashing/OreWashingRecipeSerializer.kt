@@ -3,13 +3,13 @@ package ic2_120.content.recipes.orewashing
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.JsonHelper
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.util.GsonHelper
 
 /**
  * 洗矿机配方序列化器
@@ -28,26 +28,26 @@ import net.minecraft.util.JsonHelper
  */
 @ModMachineRecipe(id = "ore_washing", recipeClass = OreWashingRecipe::class)
 object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
-    override fun read(id: Identifier, json: JsonObject): OreWashingRecipe {
-        val ingredient = Ingredient.fromJson(JsonHelper.getObject(json, "ingredient"))
+    override fun read(id: ResourceLocation, json: JsonObject): OreWashingRecipe {
+        val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
 
-        val outputsArray = JsonHelper.getArray(json, "outputs")
+        val outputsArray = GsonHelper.getArray(json, "outputs")
         val outputs = outputsArray.map { element ->
             val outputObj = element.asJsonObject
-            val itemId = Identifier(JsonHelper.getString(outputObj, "item"))
-            val item = Registries.ITEM.get(itemId)
-            val count = JsonHelper.getInt(outputObj, "count", 1)
+            val itemId = ResourceLocation(GsonHelper.getString(outputObj, "item"))
+            val item = BuiltInRegistries.ITEM.get(itemId)
+            val count = GsonHelper.getInt(outputObj, "count", 1)
             ItemStack(item, count)
         }
 
         // 读取旧 mB 键并转为 droplets（兼容旧 JSON）
-        val waterMb = JsonHelper.getLong(json, "water_consumption_mb", 1000L)
+        val waterMb = GsonHelper.getLong(json, "water_consumption_mb", 1000L)
         val waterConsumption = waterMb * net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET / 1000L
 
         return OreWashingRecipe(id, ingredient, outputs, waterConsumption)
     }
 
-    override fun read(id: Identifier, buf: PacketByteBuf): OreWashingRecipe {
+    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): OreWashingRecipe {
         val ingredient = Ingredient.fromPacket(buf)
 
         val outputCount = buf.readVarInt()
@@ -60,7 +60,7 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
         return OreWashingRecipe(id, ingredient, outputs, waterConsumption)
     }
 
-    override fun write(buf: PacketByteBuf, recipe: OreWashingRecipe) {
+    override fun write(buf: FriendlyByteBuf, recipe: OreWashingRecipe) {
         recipe.ingredient.write(buf)
 
         buf.writeVarInt(recipe.outputItems.size)

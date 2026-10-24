@@ -2,7 +2,7 @@ package ic2_120.client.model.obj
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 import org.joml.Vector2f
 import org.joml.Vector3f
 
@@ -41,8 +41,8 @@ class ObjMaterial(val texture: String, val color: Int, val emissive: Boolean, va
  */
 class ObjModelSpec(
     val geometry: ObjGeometry,
-    val textures: Map<String, Identifier>,
-    val parent: Identifier?,
+    val textures: Map<String, ResourceLocation>,
+    val parent: ResourceLocation?,
     val json: JsonObject,
     val flipV: Boolean,
 )
@@ -51,18 +51,18 @@ object ObjParser {
 
     const val LOADER_ID = "ic2_120:obj"
 
-    fun parseSpec(json: JsonObject, readText: (Identifier) -> String): ObjModelSpec {
-        val objId = Identifier(json.get("model").asString)
+    fun parseSpec(json: JsonObject, readText: (ResourceLocation) -> String): ObjModelSpec {
+        val objId = ResourceLocation(json.get("model").asString)
         val geometry = parseObj(readText(objId), objId, readText)
         val textures = buildMap {
-            json.getAsJsonObject("textures")?.entrySet()?.forEach { (k, v) -> put(k, Identifier(v.asString)) }
+            json.getAsJsonObject("textures")?.entrySet()?.forEach { (k, v) -> put(k, ResourceLocation(v.asString)) }
         }
-        val parent = json.get("parent")?.asString?.let(::Identifier)
+        val parent = json.get("parent")?.asString?.let(::ResourceLocation)
         val flipV = json.get("flip_v")?.asBoolean ?: false
         return ObjModelSpec(geometry, textures, parent, json, flipV)
     }
 
-    fun parseObj(text: String, objId: Identifier, readText: (Identifier) -> String): ObjGeometry {
+    fun parseObj(text: String, objId: ResourceLocation, readText: (ResourceLocation) -> String): ObjGeometry {
         val positions = ArrayList<Vector3f>()
         val uvs = ArrayList<Vector2f>()
         val normals = ArrayList<Vector3f>()
@@ -81,7 +81,7 @@ object ObjParser {
                 "usemtl" -> current = p[1]
                 "mtllib" -> {
                     val dir = objId.path.substringBeforeLast('/', "")
-                    val mtlId = Identifier(objId.namespace, if (dir.isEmpty()) p[1] else "$dir/${p[1]}")
+                    val mtlId = ResourceLocation(objId.namespace, if (dir.isEmpty()) p[1] else "$dir/${p[1]}")
                     materials += parseMtl(readText(mtlId))
                 }
                 "f" -> {

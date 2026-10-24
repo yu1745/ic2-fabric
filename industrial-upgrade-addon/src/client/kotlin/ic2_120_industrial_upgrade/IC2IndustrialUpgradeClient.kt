@@ -8,8 +8,8 @@ import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.util.Identifier
+import net.minecraft.client.renderer.RenderType
+import net.minecraft.resources.ResourceLocation
 
 object IC2IndustrialUpgradeClient : ClientModInitializer {
     override fun onInitializeClient() {
@@ -28,13 +28,13 @@ object IC2IndustrialUpgradeClient : ClientModInitializer {
             NeutronFluid.NEUTRON_STILL,
             NeutronFluid.NEUTRON_FLOWING,
             SimpleFluidRenderHandler(
-                Identifier.of("ic2", "block/fluid/fluid_still"),
-                Identifier.of("ic2", "block/fluid/fluid_flow"),
+                ResourceLocation.of("ic2", "block/fluid/fluid_still"),
+                ResourceLocation.of("ic2", "block/fluid/fluid_flow"),
                 tint
             )
         )
         BlockRenderLayerMap.INSTANCE.putFluids(
-            RenderLayer.getTranslucent(),
+            RenderType.getTranslucent(),
             NeutronFluid.NEUTRON_STILL,
             NeutronFluid.NEUTRON_FLOWING
         )

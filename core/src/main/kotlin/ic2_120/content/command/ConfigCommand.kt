@@ -5,8 +5,8 @@ import ic2_120.config.Ic2Config
 import ic2_120.content.network.ConfigSyncHelper
 import ic2_120.content.network.ConfigSyncPacket
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
-import net.minecraft.server.command.CommandManager.literal
-import net.minecraft.text.Text
+import net.minecraft.commands.Commands.literal
+import net.minecraft.network.chat.Component
 
 object ConfigCommand {
     fun register() {
@@ -32,13 +32,13 @@ object ConfigCommand {
                                     }
                                     source.sendFeedback(
                                         {
-                                            Text.literal("ic2_120 config reloaded and synced to all players")
+                                            Component.literal("ic2_120 config reloaded and synced to all players")
                                         },
                                         true
                                     )
                                     Command.SINGLE_SUCCESS
                                 } catch (e: Exception) {
-                                    source.sendError(Text.literal("Failed to reload ic2_120 config: ${e.message}"))
+                                    source.sendError(Component.literal("Failed to reload ic2_120 config: ${e.message}"))
                                     0
                                 }
                             }

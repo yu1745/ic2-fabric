@@ -10,23 +10,23 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 交易机方块实体基类。
@@ -44,9 +44,9 @@ abstract class TradeOMatBlockEntityBase(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Container, ExtendedScreenHandlerFactory {
 
-    override fun getInventory(): Inventory = this
+    override fun getInventory(): Container = this
     override val tier: Int = 1
 
     companion object {
@@ -59,7 +59,7 @@ abstract class TradeOMatBlockEntityBase(
         private const val NBT_TOTAL_TRADES = "TotalTrades"
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     val syncedData = SyncedData()
 
     var totalTrades: Int = 0
@@ -71,12 +71,12 @@ abstract class TradeOMatBlockEntityBase(
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_DEMAND, SLOT_OFFER -> true
@@ -91,60 +91,60 @@ abstract class TradeOMatBlockEntityBase(
         return ItemStack.areItemsEqual(demand, stack)
     }
 
-    fun isOwner(player: PlayerEntity): Boolean {
+    fun isOwner(player: Player): Boolean {
         val uuid = ownerUuid ?: return true
         return player.uuid == uuid || player.hasPermissionLevel(2)
     }
 
     /** 返回一个 ScreenHandlerFactory，携带 isOwner 标志。 */
-    fun getScreenHandlerFactory(player: PlayerEntity): ExtendedScreenHandlerFactory {
+    fun getScreenHandlerFactory(player: Player): ExtendedScreenHandlerFactory {
         val owner = isOwner(player)
         val be = this
         return object : ExtendedScreenHandlerFactory {
-            override fun writeScreenOpeningData(p: ServerPlayerEntity, buf: PacketByteBuf) {
+            override fun writeScreenOpeningData(p: ServerPlayer, buf: FriendlyByteBuf) {
                 buf.writeBlockPos(pos)
                 buf.writeBoolean(owner)
             }
 
-            override fun getDisplayName(): Text = be.getDisplayName()
+            override fun getDisplayName(): Component = be.getDisplayName()
 
-            override fun createMenu(syncId: Int, playerInventory: PlayerInventory, p: PlayerEntity?): ScreenHandler =
+            override fun createMenu(syncId: Int, playerInventory: Inventory, p: Player?): AbstractContainerMenu =
                 TradeOMatScreenHandler(syncId, playerInventory, be,
-                    ScreenHandlerContext.create(be.world!!, be.pos), owner)
+                    ContainerLevelAccess.create(be.world!!, be.pos), owner)
         }
     }
 
-    abstract override fun getDisplayName(): Text
+    abstract override fun getDisplayName(): Component
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         TradeOMatScreenHandler(syncId, playerInventory, this,
-            ScreenHandlerContext.create(world!!, pos), player?.let { isOwner(it) } ?: false)
+            ContainerLevelAccess.create(world!!, pos), player?.let { isOwner(it) } ?: false)
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeBoolean(isOwner(player))
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         totalTrades = nbt.getInt(NBT_TOTAL_TRADES)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_TOTAL_TRADES, totalTrades)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         tryTrade(world, pos)
     }
 
-    private fun tryTrade(world: World, pos: BlockPos) {
+    private fun tryTrade(world: Level, pos: BlockPos) {
         val demand = getStack(SLOT_DEMAND)
         val offer = getStack(SLOT_OFFER)
         val input = getStack(SLOT_INPUT)
@@ -189,7 +189,7 @@ abstract class TradeOMatBlockEntityBase(
         setActiveState(world, pos, world.getBlockState(pos), true)
     }
 
-    private fun fetchFromAdjacent(world: World, pos: BlockPos, variant: ItemVariant, amount: Long): Long {
+    private fun fetchFromAdjacent(world: Level, pos: BlockPos, variant: ItemVariant, amount: Long): Long {
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
@@ -205,7 +205,7 @@ abstract class TradeOMatBlockEntityBase(
         return amount - remaining
     }
 
-    private fun distributeToAdjacent(world: World, pos: BlockPos, variant: ItemVariant, amount: Long) {
+    private fun distributeToAdjacent(world: Level, pos: BlockPos, variant: ItemVariant, amount: Long) {
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
@@ -236,7 +236,7 @@ class TradeOMatBlockEntity(
         state
     )
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.trade_o_mat")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.trade_o_mat")
 }
 
 // TODO: 无线交易机 BlockEntity 待 TradingMarket 系统实现后启用
@@ -255,5 +255,5 @@ class WirelessTradeOMatBlockEntity(
         state
     )
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.wireless_trade_o_mat")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.wireless_trade_o_mat")
 }

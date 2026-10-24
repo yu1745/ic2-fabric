@@ -10,30 +10,30 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.mob.MobEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.screen.NamedScreenHandlerFactory
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.Mob
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.world.MenuProvider
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 @ModBlock(name = "leash_kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
@@ -43,9 +43,9 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val casing = MachineCasingBlock::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LeashKineticGeneratorBlock::class.item(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, LeashKineticGeneratorBlock::class.item(), 1)
                 .pattern(" L ")
                 .pattern(" C ")
                 .input('L', Items.LEAD)
@@ -58,20 +58,20 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         }
     }
 
-    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: net.minecraft.item.ItemPlacementContext): BlockState? {
-        return defaultState.with(Properties.FACING, ctx.horizontalPlayerFacing).with(ACTIVE, false)
+    override fun getPlacementState(ctx: net.minecraft.world.item.context.BlockPlaceContext): BlockState? {
+        return defaultState.with(BlockStateProperties.FACING, ctx.horizontalPlayerFacing).with(ACTIVE, false)
     }
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         LeashKineticGeneratorBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -83,18 +83,18 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
+        player: Player,
+        hand: InteractionHand,
         hit: BlockHitResult
-    ): ActionResult {
-        val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity ?: return ActionResult.PASS
+    ): InteractionResult {
+        val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity ?: return InteractionResult.PASS
 
         val heldStack = player.getStackInHand(hand)
 
         if (heldStack.item === Items.LEAD) {
-            if (world.isClient) return ActionResult.SUCCESS
+            if (world.isClient) return InteractionResult.SUCCESS
 
             if (be.hasLeashedMob()) {
                 // Unleash: detach mob, kill anchor, return lead
@@ -107,14 +107,14 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 if (!player.isCreative) {
                     player.giveItemStack(Items.LEAD.defaultStack)
                 }
-                player.sendMessage(Text.translatable("message.ic2_120.leash_kinetic.detached"), true)
-                return ActionResult.SUCCESS
+                player.sendMessage(Component.translatable("message.ic2_120.leash_kinetic.detached"), true)
+                return InteractionResult.SUCCESS
             }
 
             // Find mobs leashed to the player
             val nearbyMobs = world.getEntitiesByClass(
-                MobEntity::class.java,
-                Box(pos).expand(10.0)
+                Mob::class.java,
+                AABB(pos).expand(10.0)
             ) { mob ->
                 mob.isAlive && mob.holdingEntity === player
             }
@@ -122,7 +122,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
             val mob = nearbyMobs.firstOrNull()
             if (mob != null) {
                 mob.detachLeash(true, false)
-                val serverWorld = world as? ServerWorld
+                val serverWorld = world as? ServerLevel
                 if (serverWorld != null) {
                     val anchor = EntityType.ARMOR_STAND.create(serverWorld)
                     if (anchor != null) {
@@ -138,28 +138,28 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 }
                 heldStack.decrement(1)
                 player.sendMessage(
-                    Text.translatable("message.ic2_120.leash_kinetic.attached", mob.name),
+                    Component.translatable("message.ic2_120.leash_kinetic.attached", mob.name),
                     true
                 )
             } else {
-                player.sendMessage(Text.translatable("message.ic2_120.leash_kinetic.no_mob"), true)
+                player.sendMessage(Component.translatable("message.ic2_120.leash_kinetic.no_mob"), true)
             }
-            return ActionResult.SUCCESS
+            return InteractionResult.SUCCESS
         }
 
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     override fun createScreenHandlerFactory(
         state: BlockState,
-        world: World,
+        world: Level,
         pos: BlockPos
-    ): NamedScreenHandlerFactory? {
+    ): MenuProvider? {
         val be = world.getBlockEntity(pos)
-        return be as? NamedScreenHandlerFactory
+        return be as? MenuProvider
     }
 
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
+    override fun onBreak(world: Level, pos: BlockPos, state: BlockState, player: Player) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity
             be?.let {

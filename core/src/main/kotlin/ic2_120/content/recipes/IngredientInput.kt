@@ -1,11 +1,11 @@
 package ic2_120.content.recipes
 
 import com.google.gson.JsonObject
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.recipe.Ingredient
-import net.minecraft.registry.Registries
-import net.minecraft.registry.tag.TagKey
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.TagKey
 
 /**
  * 机器/合成表输入的统一表达：单 Item 或 Tag 任选其一。
@@ -36,7 +36,7 @@ sealed class IngredientInput {
 
     data class ItemInput(val item: Item) : IngredientInput() {
         override fun toJson(): JsonObject = JsonObject().apply {
-            addProperty("item", Registries.ITEM.getId(item).toString())
+            addProperty("item", BuiltInRegistries.ITEM.getId(item).toString())
         }
         override fun toIngredient(): Ingredient = Ingredient.ofItems(item)
         override fun toItemStack(count: Int): ItemStack = ItemStack(item, count)

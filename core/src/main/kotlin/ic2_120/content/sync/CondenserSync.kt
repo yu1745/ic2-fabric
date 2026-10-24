@@ -12,7 +12,7 @@ import ic2_120.content.syncs.SyncSchema
  */
 class CondenserSync(
     schema: SyncSchema,
-    private val getFacing: () -> net.minecraft.util.math.Direction,
+    private val getFacing: () -> net.minecraft.core.Direction,
     currentTickProvider: () -> Long? = { null }
 ) : TickLimitedSidedEnergyContainer(
     baseCapacity = ENERGY_CAPACITY,

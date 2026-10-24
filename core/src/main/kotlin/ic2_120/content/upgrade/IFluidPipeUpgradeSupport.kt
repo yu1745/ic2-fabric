@@ -1,7 +1,7 @@
 package ic2_120.content.upgrade
 
-import net.minecraft.fluid.Fluid
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.core.Direction
 
 /**
  * 机器参与管道流体网络分配的能力接口。

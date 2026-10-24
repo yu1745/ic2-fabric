@@ -4,18 +4,18 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.registry.annotation.ModMachineRecipe
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.inventory.RecipeInputInventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.ShapelessRecipe
-import net.minecraft.registry.DynamicRegistryManager
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.world.World
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.inventory.CraftingContainer
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.ShapelessRecipe
+import net.minecraft.core.RegistryAccess
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 /**
@@ -26,12 +26,12 @@ class EmptyFluidCellToEmptyCellRecipe(delegate: ShapelessRecipe) : ShapelessReci
     delegate.id,
     delegate.group,
     delegate.category,
-    delegate.getOutput(DynamicRegistryManager.EMPTY),
+    delegate.getOutput(RegistryAccess.EMPTY),
     delegate.ingredients
 ) {
     private val fluidCellItem = delegate.ingredients.firstOrNull()?.matchingStacks?.firstOrNull()?.item
 
-    override fun matches(inventory: RecipeInputInventory, world: World): Boolean {
+    override fun matches(inventory: CraftingContainer, world: Level): Boolean {
         if (!super.matches(inventory, world)) return false
 
         var found = false
@@ -46,33 +46,33 @@ class EmptyFluidCellToEmptyCellRecipe(delegate: ShapelessRecipe) : ShapelessReci
         return found
     }
 
-    override fun getRemainder(inventory: RecipeInputInventory): DefaultedList<ItemStack> =
-        DefaultedList.ofSize(inventory.size(), ItemStack.EMPTY)
+    override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> =
+        NonNullList.ofSize(inventory.size(), ItemStack.EMPTY)
 
     override fun getSerializer(): RecipeSerializer<*> = EmptyFluidCellToEmptyCellRecipeSerializer
 }
 
 @ModMachineRecipe(id = "empty_fluid_cell_to_empty_cell", recipeClass = EmptyFluidCellToEmptyCellRecipe::class)
 object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCellToEmptyCellRecipe> {
-    override fun read(id: Identifier, json: JsonObject): EmptyFluidCellToEmptyCellRecipe {
+    override fun read(id: ResourceLocation, json: JsonObject): EmptyFluidCellToEmptyCellRecipe {
         val shapeless = RecipeSerializer.SHAPELESS.read(id, json)
         return EmptyFluidCellToEmptyCellRecipe(shapeless)
     }
 
-    override fun read(id: Identifier, buf: PacketByteBuf): EmptyFluidCellToEmptyCellRecipe {
+    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): EmptyFluidCellToEmptyCellRecipe {
         val shapeless = RecipeSerializer.SHAPELESS.read(id, buf)
         return EmptyFluidCellToEmptyCellRecipe(shapeless)
     }
 
-    override fun write(buf: PacketByteBuf, recipe: EmptyFluidCellToEmptyCellRecipe) {
+    override fun write(buf: FriendlyByteBuf, recipe: EmptyFluidCellToEmptyCellRecipe) {
         RecipeSerializer.SHAPELESS.write(buf, recipe)
     }
 }
 
 object EmptyFluidCellToEmptyCellRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeExporter>,
-        recipeId: Identifier,
+        exporter: Consumer<RecipeOutput>,
+        recipeId: ResourceLocation,
         input: Item,
         result: Item,
         count: Int = 1,
@@ -90,34 +90,34 @@ object EmptyFluidCellToEmptyCellRecipeDatagen {
     }
 
     private class Provider(
-        private val recipeId: Identifier,
+        private val recipeId: ResourceLocation,
         private val input: Item,
         private val result: Item,
         private val count: Int,
         private val category: String
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:empty_fluid_cell_to_empty_cell")
             json.addProperty("category", category)
 
             val ingredients = JsonArray()
             val ing = JsonObject()
-            ing.addProperty("item", Registries.ITEM.getId(input).toString())
+            ing.addProperty("item", BuiltInRegistries.ITEM.getId(input).toString())
             ingredients.add(ing)
             json.add("ingredients", ingredients)
 
             val resultObj = JsonObject()
-            resultObj.addProperty("item", Registries.ITEM.getId(result).toString())
+            resultObj.addProperty("item", BuiltInRegistries.ITEM.getId(result).toString())
             if (count > 1) resultObj.addProperty("count", count)
             json.add("result", resultObj)
         }
 
         override fun getSerializer(): RecipeSerializer<*> = EmptyFluidCellToEmptyCellRecipeSerializer
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

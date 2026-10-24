@@ -1,11 +1,11 @@
 package ic2_120.content.block.machines
 
 import ic2_120.content.heat.IHeatConsumer
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.state.property.Properties
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
 
 /**
  * 耗热机基类：默认只允许从背面接收热量。
@@ -17,7 +17,7 @@ abstract class HeatConsumerBlockEntityBase(
 ) : MachineBlockEntity(type, pos, state), IHeatConsumer {
 
     override fun getHeatTransferFace(): Direction {
-        return cachedState.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        return cachedState.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
     }
 
     final override fun receiveHeat(hu: Long, fromSide: Direction): Long {

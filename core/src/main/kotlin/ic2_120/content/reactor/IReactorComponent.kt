@@ -1,6 +1,6 @@
 package ic2_120.content.reactor
 
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * 反应堆组件接口。实现 processChamber、热量相关方法等。

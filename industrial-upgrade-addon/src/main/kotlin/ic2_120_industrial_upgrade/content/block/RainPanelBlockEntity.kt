@@ -2,11 +2,11 @@ package ic2_120_industrial_upgrade.content.block
 
 import ic2_120_advanced_solar_addon.content.block.GenerationState
 import ic2_120_advanced_solar_addon.content.block.SolarPanelBlockEntity
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * Rain 变体太阳能发电机抽象基类（雨镜 rainlinse 升级）。
@@ -46,7 +46,7 @@ abstract class RainPanelBlockEntity(
         }
 
         // Rain 变体仅在主世界生效（末地下雨面板不发电）
-        if (world.registryKey != World.OVERWORLD) {
+        if (world.registryKey != Level.OVERWORLD) {
             generationState = GenerationState.NONE
             markDirty()
             return

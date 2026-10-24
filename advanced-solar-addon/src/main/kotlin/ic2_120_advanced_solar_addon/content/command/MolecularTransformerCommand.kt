@@ -5,13 +5,13 @@ import com.mojang.brigadier.arguments.LongArgumentType
 import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import ic2_120_advanced_solar_addon.config.MolecularTransformerRecipeConfig
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.resources.ResourceLocation
 
 object MolecularTransformerCommand {
     fun register() {
@@ -28,7 +28,7 @@ object MolecularTransformerCommand {
                                         val source = context.source
                                         val player = source.player
                                             ?: return@executes run {
-                                                source.sendError(Text.literal("此命令只能由玩家执行"))
+                                                source.sendError(Component.literal("此命令只能由玩家执行"))
                                                 0
                                             }
 
@@ -36,11 +36,11 @@ object MolecularTransformerCommand {
                                         val mainHandStack = player.mainHandStack
 
                                         if (mainHandStack.isEmpty) {
-                                            source.sendError(Text.literal("主手必须持有物品"))
+                                            source.sendError(Component.literal("主手必须持有物品"))
                                             return@executes 0
                                         }
 
-                                        val itemId = Registries.ITEM.getId(mainHandStack.item).toString()
+                                        val itemId = BuiltInRegistries.ITEM.getId(mainHandStack.item).toString()
 
                                         // 添加或更新配方配置并保存
                                         val success = Ic2AdvancedSolarAddonConfig.addOrUpdateRecipeEnergy(itemId, energy)
@@ -48,18 +48,18 @@ object MolecularTransformerCommand {
                                         if (success) {
                                             source.sendFeedback(
                                                 {
-                                                    Text.literal("")
-                                                        .append(Text.literal("成功设置 ").formatted(Formatting.GREEN))
-                                                        .append(Text.literal(itemId).formatted(Formatting.YELLOW))
-                                                        .append(Text.literal(" 的分子重组仪所需电量为 ").formatted(Formatting.GREEN))
-                                                        .append(Text.literal("$energy EU").formatted(Formatting.AQUA))
-                                                        .append(Text.literal("（已写入配置文件）").formatted(Formatting.GRAY))
+                                                    Component.literal("")
+                                                        .append(Component.literal("成功设置 ").formatted(ChatFormatting.GREEN))
+                                                        .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
+                                                        .append(Component.literal(" 的分子重组仪所需电量为 ").formatted(ChatFormatting.GREEN))
+                                                        .append(Component.literal("$energy EU").formatted(ChatFormatting.AQUA))
+                                                        .append(Component.literal("（已写入配置文件）").formatted(ChatFormatting.GRAY))
                                                 },
                                                 true
                                             )
                                             Command.SINGLE_SUCCESS
                                         } else {
-                                            source.sendError(Text.literal("保存配置失败，请查看服务器日志"))
+                                            source.sendError(Component.literal("保存配置失败，请查看服务器日志"))
                                             0
                                         }
                                     }
@@ -72,18 +72,18 @@ object MolecularTransformerCommand {
                                 val source = context.source
                                 val player = source.player
                                     ?: return@executes run {
-                                        source.sendError(Text.literal("此命令只能由玩家执行"))
+                                        source.sendError(Component.literal("此命令只能由玩家执行"))
                                         0
                                     }
 
                                 val mainHandStack = player.mainHandStack
 
                                 if (mainHandStack.isEmpty) {
-                                    source.sendError(Text.literal("主手必须持有物品"))
+                                    source.sendError(Component.literal("主手必须持有物品"))
                                     return@executes 0
                                 }
 
-                                val itemId = Registries.ITEM.getId(mainHandStack.item).toString()
+                                val itemId = BuiltInRegistries.ITEM.getId(mainHandStack.item).toString()
 
                                 // 从配置中移除并保存
                                 val success = Ic2AdvancedSolarAddonConfig.removeRecipe(itemId)
@@ -91,16 +91,16 @@ object MolecularTransformerCommand {
                                 if (success) {
                                     source.sendFeedback(
                                         {
-                                            Text.literal("")
-                                                .append(Text.literal("成功移除 ").formatted(Formatting.GREEN))
-                                                .append(Text.literal(itemId).formatted(Formatting.YELLOW))
-                                                .append(Text.literal(" 的分子重组仪配置").formatted(Formatting.GREEN))
+                                            Component.literal("")
+                                                .append(Component.literal("成功移除 ").formatted(ChatFormatting.GREEN))
+                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 的分子重组仪配置").formatted(ChatFormatting.GREEN))
                                         },
                                         true
                                     )
                                     Command.SINGLE_SUCCESS
                                 } else {
-                                    source.sendError(Text.literal("该物品未配置分子重组仪配方或移除失败"))
+                                    source.sendError(Component.literal("该物品未配置分子重组仪配方或移除失败"))
                                     0
                                 }
                             }
@@ -112,41 +112,41 @@ object MolecularTransformerCommand {
                                 val source = context.source
                                 val player = source.player
                                     ?: return@executes run {
-                                        source.sendError(Text.literal("此命令只能由玩家执行"))
+                                        source.sendError(Component.literal("此命令只能由玩家执行"))
                                         0
                                     }
 
                                 val mainHandStack = player.mainHandStack
 
                                 if (mainHandStack.isEmpty) {
-                                    source.sendError(Text.literal("主手必须持有物品"))
+                                    source.sendError(Component.literal("主手必须持有物品"))
                                     return@executes 0
                                 }
 
-                                val itemId = Registries.ITEM.getId(mainHandStack.item).toString()
+                                val itemId = BuiltInRegistries.ITEM.getId(mainHandStack.item).toString()
                                 val currentRecipe = Ic2AdvancedSolarAddonConfig.getRecipeByInput(itemId)
 
                                 if (currentRecipe != null) {
                                     source.sendFeedback(
                                         {
-                                            Text.literal("")
-                                                .append(Text.literal("物品 ").formatted(Formatting.WHITE))
-                                                .append(Text.literal(itemId).formatted(Formatting.YELLOW))
-                                                .append(Text.literal(" 的分子重组仪配置:").formatted(Formatting.WHITE))
-                                                .append(Text.literal("\n  - 所需电量: ").formatted(Formatting.GREEN))
-                                                .append(Text.literal("${currentRecipe.energy} EU").formatted(Formatting.AQUA))
-                                                .append(Text.literal("\n  - 输出物品: ").formatted(Formatting.GREEN))
-                                                .append(Text.literal(currentRecipe.output).formatted(Formatting.YELLOW))
+                                            Component.literal("")
+                                                .append(Component.literal("物品 ").formatted(ChatFormatting.WHITE))
+                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 的分子重组仪配置:").formatted(ChatFormatting.WHITE))
+                                                .append(Component.literal("\n  - 所需电量: ").formatted(ChatFormatting.GREEN))
+                                                .append(Component.literal("${currentRecipe.energy} EU").formatted(ChatFormatting.AQUA))
+                                                .append(Component.literal("\n  - 输出物品: ").formatted(ChatFormatting.GREEN))
+                                                .append(Component.literal(currentRecipe.output).formatted(ChatFormatting.YELLOW))
                                         },
                                         false
                                     )
                                 } else {
                                     source.sendFeedback(
                                         {
-                                            Text.literal("")
-                                                .append(Text.literal("物品 ").formatted(Formatting.WHITE))
-                                                .append(Text.literal(itemId).formatted(Formatting.YELLOW))
-                                                .append(Text.literal(" 未配置分子重组仪配方").formatted(Formatting.RED))
+                                            Component.literal("")
+                                                .append(Component.literal("物品 ").formatted(ChatFormatting.WHITE))
+                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 未配置分子重组仪配方").formatted(ChatFormatting.RED))
                                         },
                                         false
                                     )
@@ -172,12 +172,12 @@ object MolecularTransformerCommand {
         })
     }
 
-    private fun showRecipeList(source: net.minecraft.server.command.ServerCommandSource, page: Int): Int {
+    private fun showRecipeList(source: net.minecraft.commands.CommandSourceStack, page: Int): Int {
         val allRecipes = Ic2AdvancedSolarAddonConfig.getMolecularTransformerRecipes()
             .sortedBy { it.input }
 
         if (allRecipes.isEmpty()) {
-            source.sendFeedback({ Text.literal("分子重组仪配方列表为空").formatted(Formatting.YELLOW) }, false)
+            source.sendFeedback({ Component.literal("分子重组仪配方列表为空").formatted(ChatFormatting.YELLOW) }, false)
             return Command.SINGLE_SUCCESS
         }
 
@@ -188,31 +188,31 @@ object MolecularTransformerCommand {
         val endIndex = minOf(startIndex + itemsPerPage, allRecipes.size)
 
         source.sendFeedback(
-            { Text.literal("=== 分子重组仪配方列表 (第 $actualPage/$totalPages 页) ===").formatted(Formatting.GOLD) },
+            { Component.literal("=== 分子重组仪配方列表 (第 $actualPage/$totalPages 页) ===").formatted(ChatFormatting.GOLD) },
             false
         )
 
         for (i in startIndex until endIndex) {
             val recipe = allRecipes[i]
-            fun itemDisplay(id: String): Text {
-                val item = Identifier.tryParse(id)?.let { Registries.ITEM.get(it) }
+            fun itemDisplay(id: String): Component {
+                val item = ResourceLocation.tryParse(id)?.let { BuiltInRegistries.ITEM.get(it) }
                 return if (item != null && item !== Items.AIR) {
-                    Text.translatable(item.translationKey)
-                        .formatted(Formatting.YELLOW)
-                        .append(Text.literal(" ($id)").formatted(Formatting.DARK_GRAY))
+                    Component.translatable(item.translationKey)
+                        .formatted(ChatFormatting.YELLOW)
+                        .append(Component.literal(" ($id)").formatted(ChatFormatting.DARK_GRAY))
                 } else {
-                    Text.literal(id).formatted(Formatting.WHITE)
+                    Component.literal(id).formatted(ChatFormatting.WHITE)
                 }
             }
             source.sendFeedback(
                 {
-                    Text.literal("")
-                        .append(Text.literal("• ").formatted(Formatting.GRAY))
+                    Component.literal("")
+                        .append(Component.literal("• ").formatted(ChatFormatting.GRAY))
                         .append(itemDisplay(recipe.input))
-                        .append(Text.literal(" -> ").formatted(Formatting.GRAY))
+                        .append(Component.literal(" -> ").formatted(ChatFormatting.GRAY))
                         .append(itemDisplay(recipe.output))
-                        .append(Text.literal(": ").formatted(Formatting.GRAY))
-                        .append(Text.literal("${recipe.energy} EU").formatted(Formatting.AQUA))
+                        .append(Component.literal(": ").formatted(ChatFormatting.GRAY))
+                        .append(Component.literal("${recipe.energy} EU").formatted(ChatFormatting.AQUA))
                 },
                 false
             )
@@ -220,7 +220,7 @@ object MolecularTransformerCommand {
 
         if (actualPage < totalPages) {
             source.sendFeedback(
-                { Text.literal("使用 /ic2mt list ${actualPage + 1} 查看下一页").formatted(Formatting.GRAY) },
+                { Component.literal("使用 /ic2mt list ${actualPage + 1} 查看下一页").formatted(ChatFormatting.GRAY) },
                 false
             )
         }

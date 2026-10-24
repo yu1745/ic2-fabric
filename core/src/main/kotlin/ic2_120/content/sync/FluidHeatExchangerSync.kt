@@ -2,8 +2,8 @@ package ic2_120.content.sync
 
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.syncs.SyncSchema
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.Fluids
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
 
 /**
  * 流体热交换机同步属性。

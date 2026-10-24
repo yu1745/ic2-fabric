@@ -13,22 +13,22 @@ import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.Hand
-import net.minecraft.util.TypedActionResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.ChatFormatting
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResultHolder
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import kotlin.math.floor
 import kotlin.math.pow
@@ -44,13 +44,13 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         private const val NBT_HAS_BIND = "HasBind"
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val teleporter = TeleporterBlock::class.item()
             val paper = Items.PAPER
             val advancedCircuit = AdvancedCircuit::class.instance()
 
             if (teleporter != Items.AIR && advancedCircuit != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, RecallScrollItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, RecallScrollItem::class.instance(), 1)
                     .pattern("PAP")
                     .pattern("ATA")
                     .pattern("PAP")
@@ -65,15 +65,15 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
 
     // ========== 绑定：右击传送机 ==========
 
-    override fun useOnBlock(context: ItemUsageContext): ActionResult {
+    override fun useOnBlock(context: UseOnContext): InteractionResult {
         val world = context.world
         val pos = context.blockPos
         val stack = context.stack
         val player = context.player
         val state = world.getBlockState(pos)
 
-        if (state.block !is TeleporterBlock) return ActionResult.PASS
-        if (player == null) return ActionResult.SUCCESS
+        if (state.block !is TeleporterBlock) return InteractionResult.PASS
+        if (player == null) return InteractionResult.SUCCESS
 
         val nbt = stack.orCreateNbt
         val dim = world.registryKey.value.toString()
@@ -84,35 +84,35 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         nbt.putInt(NBT_BIND_Z, pos.z)
         nbt.putString(NBT_BIND_DIM, dim)
         if (!world.isClient) {
-            player.sendMessage(Text.literal("已绑定传送机: ${pos.x}, ${pos.y}, ${pos.z}"), true)
+            player.sendMessage(Component.literal("已绑定传送机: ${pos.x}, ${pos.y}, ${pos.z}"), true)
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     // ========== 使用：传送 ==========
 
-    override fun use(world: World, player: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = player.getStackInHand(hand)
-        if (world.isClient) return TypedActionResult.success(stack)
+        if (world.isClient) return InteractionResultHolder.success(stack)
 
         val nbt = stack.orCreateNbt
         if (!nbt.getBoolean(NBT_HAS_BIND)) {
-            player.sendMessage(Text.literal("请先绑定传送机。"), true)
-            return TypedActionResult.fail(stack)
+            player.sendMessage(Component.literal("请先绑定传送机。"), true)
+            return InteractionResultHolder.fail(stack)
         }
 
         val dim = world.registryKey.value.toString()
         val bindDim = nbt.getString(NBT_BIND_DIM)
         if (bindDim != dim) {
-            player.sendMessage(Text.literal("维度不一致，无法传送。"), true)
-            return TypedActionResult.fail(stack)
+            player.sendMessage(Component.literal("维度不一致，无法传送。"), true)
+            return InteractionResultHolder.fail(stack)
         }
 
         val bindPos = BlockPos(nbt.getInt(NBT_BIND_X), nbt.getInt(NBT_BIND_Y), nbt.getInt(NBT_BIND_Z))
         @Suppress("DEPRECATION")
         if (!world.isChunkLoaded(bindPos)) {
-            player.sendMessage(Text.literal("目标坐标区块未加载。"), true)
-            return TypedActionResult.fail(stack)
+            player.sendMessage(Component.literal("目标坐标区块未加载。"), true)
+            return InteractionResultHolder.fail(stack)
         }
 
         // 计算距离
@@ -125,10 +125,10 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         val availableEnergy = scanAvailableEnergy(player)
         if (availableEnergy < energyNeed) {
             player.sendMessage(
-                Text.literal("能量不足！需要 ${formatNumber(energyNeed)} EU，当前背包电池/工具共 ${formatNumber(availableEnergy)} EU"),
+                Component.literal("能量不足！需要 ${formatNumber(energyNeed)} EU，当前背包电池/工具共 ${formatNumber(availableEnergy)} EU"),
                 true
             )
-            return TypedActionResult.fail(stack)
+            return InteractionResultHolder.fail(stack)
         }
 
         // 从背包放电
@@ -143,26 +143,26 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         val destY = bindPos.y + 1.02
         val destZ = bindPos.z + 0.5
         player.requestTeleport(destX, destY, destZ)
-        player.velocity = Vec3d.ZERO
+        player.velocity = Vec3.ZERO
         player.velocityModified = true
 
         if (teleporterExists) {
-            player.sendMessage(Text.literal("传送成功！消耗 ${formatNumber(energyNeed)} EU"), true)
+            player.sendMessage(Component.literal("传送成功！消耗 ${formatNumber(energyNeed)} EU"), true)
         } else {
             // 惩罚：传送机已遗失
             applyPenalty(player)
-            player.sendMessage(Text.literal("锚点已遗失！"), true)
+            player.sendMessage(Component.literal("锚点已遗失！"), true)
         }
 
-        return TypedActionResult.success(stack)
+        return InteractionResultHolder.success(stack)
     }
 
     // ========== Tooltip ==========
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
-        tooltip: MutableList<Text>,
+        world: Level?,
+        tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
@@ -172,16 +172,16 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
             val x = nbt.getInt(NBT_BIND_X)
             val y = nbt.getInt(NBT_BIND_Y)
             val z = nbt.getInt(NBT_BIND_Z)
-            tooltip.add(Text.literal("已绑定: ($x, $y, $z)").formatted(Formatting.GRAY))
+            tooltip.add(Component.literal("已绑定: ($x, $y, $z)").formatted(ChatFormatting.GRAY))
         } else {
-            tooltip.add(Text.literal("未绑定").formatted(Formatting.GRAY))
+            tooltip.add(Component.literal("未绑定").formatted(ChatFormatting.GRAY))
         }
-        tooltip.add(Text.literal("不要遗失锚点，否则会发生非常可怕的事").formatted(Formatting.RED))
+        tooltip.add(Component.literal("不要遗失锚点，否则会发生非常可怕的事").formatted(ChatFormatting.RED))
     }
 
     // ========== 辅助方法 ==========
 
-    private fun computeWeight(player: PlayerEntity): Int {
+    private fun computeWeight(player: Player): Int {
         var weight = 1000
         weight += player.inventory.armor.count { !it.isEmpty } * 100
 
@@ -206,7 +206,7 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
     /**
      * 扫描玩家背包中所有 IBatteryItem 和 IElectricTool 的可用总能量。
      */
-    private fun scanAvailableEnergy(player: PlayerEntity): Long {
+    private fun scanAvailableEnergy(player: Player): Long {
         var total = 0L
         // 优先 hotbar（0-8）
         for (slot in 0..8) {
@@ -237,7 +237,7 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
     /**
      * 从玩家背包中消耗指定量的能量。
      */
-    private fun drainEnergyFromInventory(player: PlayerEntity, amount: Long) {
+    private fun drainEnergyFromInventory(player: Player, amount: Long) {
         var remaining = amount
         // 优先 hotbar（0-8）
         for (slot in 0..8) {
@@ -313,7 +313,7 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
      * - 玩家血量降至 1
      * - 电力护甲扣光 EU，耐久护甲消耗 1/2 剩余耐久
      */
-    private fun applyPenalty(player: PlayerEntity) {
+    private fun applyPenalty(player: Player) {
         // 扣血
         player.setHealth(1f)
 

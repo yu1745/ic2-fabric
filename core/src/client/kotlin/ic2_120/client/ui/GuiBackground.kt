@@ -1,6 +1,6 @@
 package ic2_120.client.ui
 
-import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.GuiGraphics
 
 /**
  * 可复用的 GUI 空背景：纯 Compose 绘制，不使用 PNG 纹理。
@@ -9,7 +9,7 @@ import net.minecraft.client.gui.DrawContext
 object GuiBackground {
 
     /**
-     * 槽位程序化绘制时相对 [net.minecraft.screen.slot.Slot] 坐标的内缩（与原版容器一致）。
+     * 槽位程序化绘制时相对 [net.minecraft.world.inventory.Slot] 坐标的内缩（与原版容器一致）。
      * [drawVanillaLikeSlot]、[drawPlayerInventorySlotBorders] 均使用此值。
      */
     const val SLOT_ANCHOR_INSET = 1
@@ -25,11 +25,11 @@ object GuiBackground {
 
     /**
      * 在指定区域绘制空背景：填充 + 单线边框。
-     * 可在 [DrawContext] 的 drawBackground 中直接调用。
+     * 可在 [GuiGraphics] 的 drawBackground 中直接调用。
      */
     @JvmStatic
     fun draw(
-        context: DrawContext,
+        context: GuiGraphics,
         x: Int,
         y: Int,
         width: Int,
@@ -55,7 +55,7 @@ object GuiBackground {
      */
     @JvmStatic
     fun drawVanillaLikePanel(
-        context: DrawContext,
+        context: GuiGraphics,
         x: Int,
         y: Int,
         width: Int,
@@ -89,7 +89,7 @@ object GuiBackground {
      */
     @JvmStatic
     fun drawVanillaLikeSlot(
-        context: DrawContext,
+        context: GuiGraphics,
         x: Int,
         y: Int,
         width: Int,
@@ -120,7 +120,7 @@ object GuiBackground {
      */
     @JvmStatic
     fun drawPlayerInventorySlotBorders(
-        context: DrawContext,
+        context: GuiGraphics,
         screenX: Int,
         screenY: Int,
         playerInvY: Int,

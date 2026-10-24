@@ -88,7 +88,7 @@ enum class LaserMode(
     val scatterSpread: Double
         get() = getConfig().scatterSpread
 
-    /** 对实体伤害（与 [net.minecraft.entity.LivingEntity.damage] 数值一致，2.0 = 1 颗心） */
+    /** 对实体伤害（与 [net.minecraft.world.entity.LivingEntity.damage] 数值一致，2.0 = 1 颗心） */
     val entityDamage: Float
         get() = getConfig().entityDamage
 

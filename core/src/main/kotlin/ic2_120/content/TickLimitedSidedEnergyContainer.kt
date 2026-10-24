@@ -2,7 +2,7 @@ package ic2_120.content
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 import team.reborn.energy.api.EnergyStorage
 
 /**

@@ -7,9 +7,9 @@ import mezz.jei.api.registration.IRecipeCatalystRegistration
 import mezz.jei.api.registration.IRecipeCategoryRegistration
 import mezz.jei.api.registration.IRecipeRegistration
 import mezz.jei.api.runtime.IJeiRuntime
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 @JeiPlugin
 class Ic2AdvancedSolarAddonJeiPlugin : IModPlugin {
@@ -45,8 +45,8 @@ class Ic2AdvancedSolarAddonJeiPlugin : IModPlugin {
         }
     }
 
-    override fun getPluginUid(): Identifier {
-        return Identifier.of("ic2_120_advanced_solar_addon", "jei")
+    override fun getPluginUid(): ResourceLocation {
+        return ResourceLocation.of("ic2_120_advanced_solar_addon", "jei")
     }
 
     override fun onRuntimeAvailable(runtime: IJeiRuntime) {
@@ -72,7 +72,7 @@ class Ic2AdvancedSolarAddonJeiPlugin : IModPlugin {
 
     override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120_advanced_solar_addon", "molecular_transformer"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120_advanced_solar_addon", "molecular_transformer"))),
             Ic2AdvancedSolarAddonJeiRecipeTypes.MOLECULAR_TRANSFORMER
         )
     }

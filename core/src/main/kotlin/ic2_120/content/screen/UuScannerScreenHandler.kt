@@ -11,28 +11,28 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(block = UuScannerBlock::class)
 class UuScannerScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    val blockPos: net.minecraft.util.math.BlockPos,
-    private val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    val blockPos: net.minecraft.core.BlockPos,
+    private val context: ContainerLevelAccess,
+    propertyDelegate: ContainerData,
     private val itemStorage: RoutedItemStorage? = null
-) : ScreenHandler(UuScannerScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(UuScannerScreenHandler::class.type(), syncId) {
 
     val sync = UuScannerSync(
         SyncedDataView(propertyDelegate),
@@ -73,7 +73,7 @@ class UuScannerScreenHandler(
 
     private fun deriveSpec(beSlot: Int) = itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? UuScannerBlockEntity ?: return@get
             when (id) {
@@ -84,7 +84,7 @@ class UuScannerScreenHandler(
         return id == BUTTON_DELETE_TEMPLATE || id == BUTTON_SAVE_TO_CRYSTAL
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -114,7 +114,7 @@ class UuScannerScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is UuScannerBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -131,15 +131,15 @@ class UuScannerScreenHandler(
         const val BUTTON_SAVE_TO_CRYSTAL = 2
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): UuScannerScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): UuScannerScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             return UuScannerScreenHandler(
                 syncId, playerInventory,
-                SimpleInventory(UuScannerBlockEntity.INVENTORY_SIZE),
+                SimpleContainer(UuScannerBlockEntity.INVENTORY_SIZE),
                 pos,
-                ScreenHandlerContext.create(playerInventory.player.world, pos),
-                ArrayPropertyDelegate(propertyCount)
+                ContainerLevelAccess.create(playerInventory.player.world, pos),
+                SimpleContainerData(propertyCount)
             )
         }
     }

@@ -6,13 +6,13 @@ import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.TransformerBlockEntity
 import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.inventory.Inventory
-import net.minecraft.particle.ParticleTypes
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.Container
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import team.reborn.energy.api.EnergyStorage
 import kotlin.math.pow
 
@@ -31,7 +31,7 @@ class AdjacentEnergyTransferComponent(
         private const val NEIGHBOR_VERIFY_INTERVAL = 20
     }
 
-    private val verifyPhase: Int = kotlin.random.Random.nextInt(NEIGHBOR_VERIFY_INTERVAL)
+    private val verifyPhase: Int = kotlin.random.RandomSource.nextInt(NEIGHBOR_VERIFY_INTERVAL)
 
     private data class NeighborStorageCache(
         var state: BlockState? = null,
@@ -88,7 +88,7 @@ class AdjacentEnergyTransferComponent(
     }
 
     private fun transferWithIc2Rules(
-        world: World,
+        world: Level,
         consumerMachine: ITieredMachine,
         consumerStorage: EnergyStorage,
         providerMachine: ITieredMachine,
@@ -177,7 +177,7 @@ class AdjacentEnergyTransferComponent(
         return accepted
     }
 
-    private fun explodeConsumer(world: World, providerVoltage: Int) {
+    private fun explodeConsumer(world: Level, providerVoltage: Int) {
         if (world.isClient) return
         val pos = owner.pos
         val consumer = owner as? ITieredMachine ?: return
@@ -187,10 +187,10 @@ class AdjacentEnergyTransferComponent(
         val power = explosionPowerForOutputLevel(providerVoltage)
         if (ClaimProtection.isProtected(world, pos, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK) ||
             !ClaimProtection.explosionCubeAllowed(world, pos, power, null)) return
-        if (owner is Inventory) (owner as Inventory).clear()
+        if (owner is Container) (owner as Container).clear()
         world.breakBlock(pos, false)
 
-        if (world is ServerWorld) {
+        if (world is ServerLevel) {
             val x = pos.x + 0.5
             val y = pos.y + 0.5
             val z = pos.z + 0.5
@@ -198,7 +198,7 @@ class AdjacentEnergyTransferComponent(
             world.spawnParticles(ParticleTypes.FLAME, x, y, z, 6, 0.15, 0.15, 0.15, 0.01)
         }
 
-        world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, power, false, World.ExplosionSourceType.BLOCK)
+        world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, power, false, Level.ExplosionSourceType.BLOCK)
     }
 
     private fun explosionPowerForOutputLevel(level: Int): Float {

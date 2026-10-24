@@ -6,13 +6,13 @@ import ic2_120.content.item.armor.ElectricArmorItem;
 import ic2_120.content.item.armor.QuantumArmorItem;
 import ic2_120.content.item.armor.QuantumBoots;
 import ic2_120.util.NanoSaberDamageHelper;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,7 +30,7 @@ import java.util.Map;
  * 实现：
  * 1. 纳米/量子护甲减伤逻辑
  */
-@Mixin(PlayerEntity.class)
+@Mixin(Player.class)
 public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
     private static final long DAMAGE_COST_PER_POINT = 20000L;
@@ -54,17 +54,17 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     private ItemStack ic2$superJumpProtectionBoots = ItemStack.EMPTY;
 
     @Unique
-    private World ic2$superJumpProtectionWorld;
+    private Level ic2$superJumpProtectionWorld;
 
     /**
-     * 防止 {@link #onDamage} 在递归调用 {@link PlayerEntity#damage} 时再次套用电力护甲减伤。
+     * 防止 {@link #onDamage} 在递归调用 {@link Player#damage} 时再次套用电力护甲减伤。
      */
     private static final ThreadLocal<Boolean> IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE =
             ThreadLocal.withInitial(() -> false);
 
     @Override
     public void ic2$activateSuperJumpProtection(ItemStack boots) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
         this.ic2$superJumpProtectionActive = true;
         this.ic2$superJumpLeftGround = !player.isOnGround();
         this.ic2$superJumpGroundedSinceAge = -1;
@@ -84,7 +84,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     }
 
     @Unique
-    private boolean ic2$isProtectedBootsStillEquipped(PlayerEntity player) {
+    private boolean ic2$isProtectedBootsStillEquipped(Player player) {
         ItemStack equippedBoots = player.getEquippedStack(EquipmentSlot.FEET);
         return equippedBoots == this.ic2$superJumpProtectionBoots
                 && equippedBoots.getItem() instanceof QuantumBoots;
@@ -96,7 +96,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             return;
         }
 
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
         int protectionAge = player.age - this.ic2$superJumpProtectionStartAge;
         if (protectionAge < 0
                 || protectionAge > IC2_SUPER_JUMP_PROTECTION_MAX_TICKS
@@ -108,7 +108,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
                 || player.hasVehicle()
                 || player.getAbilities().flying
                 || player.isFallFlying()
-                || player.hasStatusEffect(StatusEffects.LEVITATION)) {
+                || player.hasStatusEffect(MobEffects.LEVITATION)) {
             this.ic2$clearSuperJumpProtection();
             return;
         }
@@ -134,7 +134,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             DamageSource source,
             CallbackInfoReturnable<Boolean> cir
     ) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
         if (player.getWorld().isClient()) {
             return;
         }
@@ -168,7 +168,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
      */
     @ModifyVariable(method = "damage", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private DamageSource ic2ReplaceDamageSourceForNanoSaber(DamageSource source) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
         if (NanoSaberDamageHelper.shouldReplaceWithPierce(player, source)) {
             return NanoSaberDamageHelper.createPierceDamage(player, source);
         }
@@ -177,7 +177,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
 
         if (IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.get()) {
             return;
@@ -289,7 +289,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     /**
      * 复刻原版 LivingEntity.damage 在伤害已被护甲吸收为 0 时仍保留的受击反馈。
      */
-    private static void applyVanillaHitReaction(PlayerEntity player, DamageSource source) {
+    private static void applyVanillaHitReaction(Player player, DamageSource source) {
         player.timeUntilRegen = 20;
         player.maxHurtTime = 10;
         player.hurtTime = player.maxHurtTime;

@@ -4,10 +4,10 @@ import com.mojang.serialization.MapCodec
 import ic2_120.content.block.RubberFaceState
 import ic2_120.content.block.RubberLogBlock
 import ic2_120.registry.instance
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.Direction
-import net.minecraft.world.gen.treedecorator.TreeDecorator
-import net.minecraft.world.gen.treedecorator.TreeDecoratorType
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.Direction
+import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecorator
+import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecoratorType
 
 /**
  * 在树特性生成阶段直接初始化橡胶孔，避免依赖 onBlockAdded 或 BlockEntity tick。
@@ -19,7 +19,7 @@ class RubberHoleTreeDecorator : TreeDecorator() {
     override fun generate(generator: TreeDecorator.Generator) {
         val rubberLog = RubberLogBlock::class.instance()
         val baseState = rubberLog.defaultState
-            .with(Properties.AXIS, net.minecraft.util.math.Direction.Axis.Y)
+            .with(BlockStateProperties.AXIS, net.minecraft.core.Direction.Axis.Y)
             .with(RubberLogBlock.NATURAL, true)
 
         val initializedLogs = generator.logPositions
@@ -57,14 +57,14 @@ class RubberHoleTreeDecorator : TreeDecorator() {
     companion object {
         val CODEC: MapCodec<RubberHoleTreeDecorator> = MapCodec.unit(::RubberHoleTreeDecorator)
 
-        private fun hasWetRubberFace(state: net.minecraft.block.BlockState): Boolean =
+        private fun hasWetRubberFace(state: net.minecraft.world.level.block.state.BlockState): Boolean =
             listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
                 .any { state.get(RubberLogBlock.propFor(it)) == RubberFaceState.WET }
 
         private fun addFallbackHole(
-            state: net.minecraft.block.BlockState,
-            random: net.minecraft.util.math.random.Random
-        ): net.minecraft.block.BlockState {
+            state: net.minecraft.world.level.block.state.BlockState,
+            random: net.minecraft.util.RandomSource
+        ): net.minecraft.world.level.block.state.BlockState {
             val faces = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
             val fallbackFace = faces[random.nextInt(faces.size)]
             return state.with(RubberLogBlock.propFor(fallbackFace), RubberFaceState.WET)

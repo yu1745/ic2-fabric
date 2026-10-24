@@ -11,14 +11,14 @@ import ic2_120.content.sync.SteamKineticGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.Sprite
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.Fluids
-import net.minecraft.text.Text as McText
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.network.chat.Component as McText
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 蒸汽动能发电机 GUI — 1:1 对齐 ic2_origin GuiSteamKineticGenerator (176×166)。
@@ -36,22 +36,22 @@ import net.minecraft.util.Identifier
 @ModScreen(block = SteamKineticGeneratorBlock::class)
 class SteamKineticGeneratorScreen(
     handler: SteamKineticGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
+    playerInventory: Inventory,
     title: McText
-) : HandledScreen<SteamKineticGeneratorScreenHandler>(handler, playerInventory, title) {
+) : AbstractContainerScreen<SteamKineticGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176; backgroundHeight = 166
         titleX = 999
     }
 
-    private val waterSprite: Sprite? by lazy {
+    private val waterSprite: TextureAtlasSprite? by lazy {
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER) ?: return@lazy null
         handler.getFluidSprites(null, null, Fluids.WATER.defaultState)?.getOrNull(0)
     }
 
     // ==== 背景 — 先填充再纹理 ====
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         renderBackground(context)
         val left = x; val top = y
         val sync = handler.sync
@@ -94,7 +94,7 @@ class SteamKineticGeneratorScreen(
     }
 
     // ==== 前景 ====
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x; val top = y
         val sync = handler.sync
         val hasTurbine = sync.hasTurbine != 0
@@ -138,14 +138,14 @@ class SteamKineticGeneratorScreen(
         }
     }
 
-    private fun drawCentered(ctx: DrawContext, text: String, ax: Int, ay: Int, aw: Int, ah: Int, color: Int) {
+    private fun drawCentered(ctx: GuiGraphics, text: String, ax: Int, ay: Int, aw: Int, ah: Int, color: Int) {
         val tw = textRenderer.getWidth(text)
         ctx.drawText(textRenderer, text, ax + (aw - tw) / 2, ay + (ah - 8) / 2, color, true)
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisteamkineticgenerator.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guisteamkineticgenerator.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private val DISTILLED_WATER_TANK_DROPLETS = FluidConstants.BUCKET.toInt()
         private const val PLAYER_INV_Y = 84
         private const val HOTBAR_Y = 142

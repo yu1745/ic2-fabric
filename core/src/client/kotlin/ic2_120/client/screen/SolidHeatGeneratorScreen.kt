@@ -3,29 +3,29 @@ package ic2_120.client.screen
 import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.screen.SolidHeatGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = SolidHeatGeneratorBlock::class)
 class SolidHeatGeneratorScreen(
     handler: SolidHeatGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<SolidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<SolidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -59,7 +59,7 @@ class SolidHeatGeneratorScreen(
     /**
      * 燃烧进度条自底向上填充，纹理区域 (179,2)-(192,15) = 13×13。
      */
-    private fun drawBurnBar(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+    private fun drawBurnBar(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
         val barW = 12
         val barH = 12
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
@@ -70,6 +70,6 @@ class SolidHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisolidheatengine.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guisolidheatengine.png")
     }
 }

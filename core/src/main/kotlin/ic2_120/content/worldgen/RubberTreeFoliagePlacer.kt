@@ -3,16 +3,16 @@ package ic2_120.content.worldgen
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-import net.minecraft.block.BlockState
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.intprovider.IntProvider
-import net.minecraft.util.math.random.Random
-import net.minecraft.world.TestableWorld
-import net.minecraft.world.gen.feature.TreeFeature
-import net.minecraft.world.gen.foliage.BlobFoliagePlacer
-import net.minecraft.world.gen.foliage.FoliagePlacer
-import net.minecraft.world.gen.foliage.FoliagePlacerType
-import net.minecraft.world.gen.feature.TreeFeatureConfig
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.core.BlockPos
+import net.minecraft.util.valueproviders.IntProvider
+import net.minecraft.util.RandomSource
+import net.minecraft.world.level.LevelSimulatedReader
+import net.minecraft.world.level.levelgen.feature.TreeFeature
+import net.minecraft.world.level.levelgen.feature.foliageplacers.BlobFoliagePlacer
+import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacer
+import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacerType
+import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration
 import org.slf4j.LoggerFactory
 
 /**
@@ -28,10 +28,10 @@ class RubberTreeFoliagePlacer(
     override fun getType(): FoliagePlacerType<*> = ModWorldgen.RUBBER_TREE_FOLIAGE_PLACER_TYPE
 
     override fun generate(
-        world: TestableWorld,
+        world: LevelSimulatedReader,
         placer: FoliagePlacer.BlockPlacer,
-        random: Random,
-        config: TreeFeatureConfig,
+        random: RandomSource,
+        config: TreeConfiguration,
         trunkHeight: Int,
         treeNode: FoliagePlacer.TreeNode,
         foliageHeight: Int,

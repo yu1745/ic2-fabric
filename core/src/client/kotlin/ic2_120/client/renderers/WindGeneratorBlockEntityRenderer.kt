@@ -2,25 +2,25 @@ package ic2_120.client.renderers
 
 import ic2_120.content.block.WindGeneratorBlock
 import ic2_120.content.block.machines.WindGeneratorBlockEntity
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.RotationAxis
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.Direction
+import com.mojang.math.Axis
 import org.joml.Matrix4f
 
 class WindGeneratorBlockEntityRenderer(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<WindGeneratorBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
         private const val BASE_SPEED_DEG_PER_TICK = 6.0f
         private const val SPEED_PER_EU = 3.0f
     }
@@ -33,14 +33,14 @@ class WindGeneratorBlockEntityRenderer(
     override fun render(
         entity: WindGeneratorBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
         val world = entity.world ?: return
         val state = entity.cachedState
-        val facing = state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         // 使用方块状态 ACTIVE 判断是否发电（sync 仅在有 GUI 时同步，方块状态始终同步）
         val generating = state.get(WindGeneratorBlock.ACTIVE)
@@ -50,15 +50,15 @@ class WindGeneratorBlockEntityRenderer(
 
         matrices.push()
         matrices.translate(0.5, 0.5, 0.5)
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(yawFromFacing(facing)))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(yawFromFacing(facing)))
         matrices.translate(0.0, 0.0, -0.505)
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle))
+        matrices.multiply(Axis.POSITIVE_Z.rotationDegrees(angle))
 
-        val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(WHITE_TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
 
         repeat(4) { i ->
             matrices.push()
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees((i * 90).toFloat()))
+            matrices.multiply(Axis.POSITIVE_Z.rotationDegrees((i * 90).toFloat()))
             drawCuboid(
                 matrices,
                 vc,
@@ -94,7 +94,7 @@ class WindGeneratorBlockEntityRenderer(
         }
 
     private fun drawCuboid(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -137,7 +137,7 @@ class WindGeneratorBlockEntityRenderer(
     private fun quad(
         vc: VertexConsumer,
         pos: Matrix4f,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -155,7 +155,7 @@ class WindGeneratorBlockEntityRenderer(
     private fun vertex(
         vc: VertexConsumer,
         pos: Matrix4f,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         x: Float,
         y: Float,
         z: Float,

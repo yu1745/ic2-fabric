@@ -2,13 +2,13 @@ package ic2_120.content.recipes.blastfurnace
 
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonObject
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.JsonHelper
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.util.GsonHelper
 
 /**
  * 高炉配方序列化器
@@ -23,25 +23,25 @@ import net.minecraft.util.JsonHelper
  */
 @ModMachineRecipe(id = "blast_furnacing", recipeClass = BlastFurnaceRecipe::class)
 object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
-    override fun read(id: Identifier, json: JsonObject): BlastFurnaceRecipe {
-        val ingredient = Ingredient.fromJson(JsonHelper.getObject(json, "ingredient"))
+    override fun read(id: ResourceLocation, json: JsonObject): BlastFurnaceRecipe {
+        val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
 
-        val steelOutputJson = JsonHelper.getObject(json, "steel_output")
-        val steelItemId = Identifier(JsonHelper.getString(steelOutputJson, "item"))
-        val steelItem = Registries.ITEM.get(steelItemId)
-        val steelCount = JsonHelper.getInt(steelOutputJson, "count", 1)
+        val steelOutputJson = GsonHelper.getObject(json, "steel_output")
+        val steelItemId = ResourceLocation(GsonHelper.getString(steelOutputJson, "item"))
+        val steelItem = BuiltInRegistries.ITEM.get(steelItemId)
+        val steelCount = GsonHelper.getInt(steelOutputJson, "count", 1)
         val steelOutput = ItemStack(steelItem, steelCount)
 
-        val slagOutputJson = JsonHelper.getObject(json, "slag_output")
-        val slagItemId = Identifier(JsonHelper.getString(slagOutputJson, "item"))
-        val slagItem = Registries.ITEM.get(slagItemId)
-        val slagCount = JsonHelper.getInt(slagOutputJson, "count", 1)
+        val slagOutputJson = GsonHelper.getObject(json, "slag_output")
+        val slagItemId = ResourceLocation(GsonHelper.getString(slagOutputJson, "item"))
+        val slagItem = BuiltInRegistries.ITEM.get(slagItemId)
+        val slagCount = GsonHelper.getInt(slagOutputJson, "count", 1)
         val slagOutput = ItemStack(slagItem, slagCount)
 
         return BlastFurnaceRecipe(id, ingredient, steelOutput, slagOutput)
     }
 
-    override fun read(id: Identifier, buf: PacketByteBuf): BlastFurnaceRecipe {
+    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): BlastFurnaceRecipe {
         val ingredient = Ingredient.fromPacket(buf)
         val steelOutput = buf.readItemStack()
         val slagOutput = buf.readItemStack()
@@ -49,7 +49,7 @@ object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
         return BlastFurnaceRecipe(id, ingredient, steelOutput, slagOutput)
     }
 
-    override fun write(buf: PacketByteBuf, recipe: BlastFurnaceRecipe) {
+    override fun write(buf: FriendlyByteBuf, recipe: BlastFurnaceRecipe) {
         recipe.ingredient.write(buf)
         buf.writeItemStack(recipe.steelOutput.copy())
         buf.writeItemStack(recipe.slagOutput.copy())

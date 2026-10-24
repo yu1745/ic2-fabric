@@ -40,16 +40,16 @@ import ic2_120.content.block.transmission.TransmissionShaftBlock
 import ic2_120.content.block.transmission.WoodTransmissionShaftBlock
 import ic2_120.content.entity.AnimalFoodMapping
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.block.Block
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.passive.PassiveEntity
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.Registries
-import net.minecraft.util.math.Direction
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.AgeableMob
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Direction
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.resources.ResourceLocation
 import snownee.jade.api.BlockAccessor
 import snownee.jade.api.EntityAccessor
 import snownee.jade.api.IEntityComponentProvider
@@ -96,7 +96,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(TeleporterJadeProvider, TeleporterBlockEntity::class.java)
         registration.registerBlockDataProvider(ElectricHeatGeneratorJadeProvider, ElectricHeatGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(RubberLogJadeProvider, RubberLogBlockEntity::class.java)
-        registration.registerEntityDataProvider(AnimalJadeProvider, PassiveEntity::class.java)
+        registration.registerEntityDataProvider(AnimalJadeProvider, AgeableMob::class.java)
         registration.registerBlockDataProvider(MachineClaimJadeProvider, BlockEntity::class.java)
     }
 
@@ -117,13 +117,13 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(RubberLogJadeProvider, RubberLogBlock::class.java)
         registration.registerBlockComponent(ScaffoldJadeProvider, Ic2ScaffoldBlock::class.java)
         registration.registerBlockComponent(MachineClaimJadeProvider, Block::class.java)
-        registration.registerEntityComponent(AnimalJadeProvider, PassiveEntity::class.java)
+        registration.registerEntityComponent(AnimalJadeProvider, AgeableMob::class.java)
     }
 }
 
 /** IC2 脚手架 Jade 提示：显示从当前方块还能横向延伸多少格。 */
 object ScaffoldJadeProvider : IBlockComponentProvider {
-    private val SCAFFOLD_SUPPORT = Identifier.of("ic2_120", "scaffold_support")
+    private val SCAFFOLD_SUPPORT = ResourceLocation.of("ic2_120", "scaffold_support")
 
     override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val block = accessor.blockState.block as? Ic2ScaffoldBlock ?: return
@@ -131,19 +131,19 @@ object ScaffoldJadeProvider : IBlockComponentProvider {
 
         when {
             remaining < 0 -> tooltip.add(
-                Text.translatable("ic2_120.jade.scaffold_unsupported").formatted(Formatting.RED)
+                Component.translatable("ic2_120.jade.scaffold_unsupported").formatted(ChatFormatting.RED)
             )
             remaining == 0 -> tooltip.add(
-                Text.translatable("ic2_120.jade.scaffold_support_limit").formatted(Formatting.RED)
+                Component.translatable("ic2_120.jade.scaffold_support_limit").formatted(ChatFormatting.RED)
             )
             else -> tooltip.add(
-                Text.translatable("ic2_120.jade.scaffold_support_remaining", remaining)
-                    .formatted(if (remaining == 1) Formatting.YELLOW else Formatting.GREEN)
+                Component.translatable("ic2_120.jade.scaffold_support_remaining", remaining)
+                    .formatted(if (remaining == 1) ChatFormatting.YELLOW else ChatFormatting.GREEN)
             )
         }
     }
 
-    override fun getUid(): Identifier = SCAFFOLD_SUPPORT
+    override fun getUid(): ResourceLocation = SCAFFOLD_SUPPORT
 }
 
 /**
@@ -151,7 +151,7 @@ object ScaffoldJadeProvider : IBlockComponentProvider {
  */
 object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val PIPE_FLOW = Identifier.of("ic2_120", "pipe_flow")
+    private val PIPE_FLOW = ResourceLocation.of("ic2_120", "pipe_flow")
 
     /**
      * Per-block-position sliding window filter to smooth flow rate display.
@@ -167,7 +167,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
     }
 
     // IServerDataProvider — server side
-    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+    override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val be = accessor.blockEntity as? PipeBlockEntity
         if (be == null) {
             return
@@ -190,7 +190,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             val conflicts = network.conflictingFluidIds
             if (conflicts.isNotEmpty()) {
                 data.putInt("conflictCount", conflicts.size)
-                val nbtList = net.minecraft.nbt.NbtList()
+                val nbtList = net.minecraft.nbt.ListTag()
                 for (id in conflicts) {
                     nbtList.add(net.minecraft.nbt.NbtString.of(id))
                 }
@@ -212,45 +212,45 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         val loadMbPerSec = dropletsToMb(load) * 20L
         val capacityMbPerSec = dropletsToMb(capacity) * 20L
 
-        val flowText = Text.literal("")
-            .append(Text.translatable("ic2_120.jade.flow_label"))
-            .append(Text.literal("$loadMbPerSec / ").setStyle(Style.EMPTY.withColor(Formatting.YELLOW)))
-            .append(Text.literal("${capacityMbPerSec} mB/s = ").setStyle(Style.EMPTY.withColor(Formatting.GRAY)))
-            .append(Text.literal("${percent}%").setStyle(Style.EMPTY.withColor(flowColor(percent))))
+        val flowText = Component.literal("")
+            .append(Component.translatable("ic2_120.jade.flow_label"))
+            .append(Component.literal("$loadMbPerSec / ").setStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)))
+            .append(Component.literal("${capacityMbPerSec} mB/s = ").setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY)))
+            .append(Component.literal("${percent}%").setStyle(Style.EMPTY.withColor(flowColor(percent))))
         tooltip.add(flowText)
         if (accessor.serverData.contains("fluidName")) {
             val fluidId = accessor.serverData.getString("fluidName")
-            val fluid = Registries.FLUID.get(Identifier.tryParse(fluidId) ?: return)
-            val fluidText = Registries.FLUID.getId(fluid).toTranslationKey().let { Text.translatable("block.$it") }
-            tooltip.add(Text.translatable("ic2_120.jade.fluid_name", fluidText))
+            val fluid = BuiltInRegistries.FLUID.get(ResourceLocation.tryParse(fluidId) ?: return)
+            val fluidText = BuiltInRegistries.FLUID.getId(fluid).toTranslationKey().let { Component.translatable("block.$it") }
+            tooltip.add(Component.translatable("ic2_120.jade.fluid_name", fluidText))
         }
         if (accessor.serverData.getBoolean("stalled")) {
             val count = accessor.serverData.getInt("conflictCount")
-            tooltip.add(Text.translatable("ic2_120.jade.stalled_header", count).setStyle(Style.EMPTY.withColor(Formatting.RED)))
+            tooltip.add(Component.translatable("ic2_120.jade.stalled_header", count).setStyle(Style.EMPTY.withColor(ChatFormatting.RED)))
             val nbtList = accessor.serverData.getList("conflictFluids", 8) // 8 = NbtString
             for (i in 0 until nbtList.size) {
                 val fluidId = nbtList.getString(i)
-                val id = Identifier.tryParse(fluidId) ?: continue
-                val fluid = Registries.FLUID.get(id)
-                val fluidText = Registries.FLUID.getId(fluid).toTranslationKey().let { Text.translatable("block.$it") }
-                tooltip.add(Text.translatable("ic2_120.jade.stalled_fluid_entry", fluidText).setStyle(Style.EMPTY.withColor(Formatting.YELLOW)))
+                val id = ResourceLocation.tryParse(fluidId) ?: continue
+                val fluid = BuiltInRegistries.FLUID.get(id)
+                val fluidText = BuiltInRegistries.FLUID.getId(fluid).toTranslationKey().let { Component.translatable("block.$it") }
+                tooltip.add(Component.translatable("ic2_120.jade.stalled_fluid_entry", fluidText).setStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)))
             }
         }
         if (accessor.serverData.getBoolean("isPump")) {
-            tooltip.add(Text.translatable("ic2_120.jade.pump"))
+            tooltip.add(Component.translatable("ic2_120.jade.pump"))
         }
     }
 
-    private fun flowColor(percent: Int): Formatting {
+    private fun flowColor(percent: Int): ChatFormatting {
         return when {
-            percent >= 90 -> Formatting.RED
-            percent >= 70 -> Formatting.GOLD
-            percent >= 50 -> Formatting.YELLOW
-            else -> Formatting.GREEN
+            percent >= 90 -> ChatFormatting.RED
+            percent >= 70 -> ChatFormatting.GOLD
+            percent >= 50 -> ChatFormatting.YELLOW
+            else -> ChatFormatting.GREEN
         }
     }
 
-    override fun getUid(): Identifier = PIPE_FLOW
+    override fun getUid(): ResourceLocation = PIPE_FLOW
 
     private fun dropletsToMb(droplets: Long): Long = droplets * 1000L / FluidConstants.BUCKET
 
@@ -266,7 +266,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
  */
 object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val CABLE_LOAD = Identifier.of("ic2_120", "cable_load")
+    private val CABLE_LOAD = ResourceLocation.of("ic2_120", "cable_load")
 
     private val filterCache = object : LinkedHashMap<Long, FilteredLong>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, FilteredLong>?): Boolean =
@@ -278,7 +278,7 @@ object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcc
     }
 
     // IServerDataProvider — server side
-    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+    override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val be = accessor.blockEntity as? CableBlockEntity ?: return
         data.putLong("cableLoad", be.cableLoad)
 
@@ -298,11 +298,11 @@ object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcc
         val load = filteredLoad(posLong, rawLoad)
         val percent = if (capacity > 0) (load * 100 / capacity).toInt() else 0
 
-        val loadText = Text.literal("")
-            .append(Text.translatable("ic2_120.jade.cable_load_label"))
-            .append(Text.literal("${formatEu(load)} / ").setStyle(Style.EMPTY.withColor(Formatting.YELLOW)))
-            .append(Text.literal("${formatEu(capacity)}/t = ").setStyle(Style.EMPTY.withColor(Formatting.GRAY)))
-            .append(Text.literal("${percent}%").setStyle(Style.EMPTY.withColor(flowColor(percent))))
+        val loadText = Component.literal("")
+            .append(Component.translatable("ic2_120.jade.cable_load_label"))
+            .append(Component.literal("${formatEu(load)} / ").setStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)))
+            .append(Component.literal("${formatEu(capacity)}/t = ").setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY)))
+            .append(Component.literal("${percent}%").setStyle(Style.EMPTY.withColor(flowColor(percent))))
         tooltip.add(loadText)
     }
 
@@ -315,22 +315,22 @@ object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcc
         }
     }
 
-    private fun flowColor(percent: Int): Formatting {
+    private fun flowColor(percent: Int): ChatFormatting {
         return when {
-            percent >= 90 -> Formatting.RED
-            percent >= 70 -> Formatting.GOLD
-            percent >= 50 -> Formatting.YELLOW
-            else -> Formatting.GREEN
+            percent >= 90 -> ChatFormatting.RED
+            percent >= 70 -> ChatFormatting.GOLD
+            percent >= 50 -> ChatFormatting.YELLOW
+            else -> ChatFormatting.GREEN
         }
     }
 
-    override fun getUid(): Identifier = CABLE_LOAD
+    override fun getUid(): ResourceLocation = CABLE_LOAD
 }
 
 object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val CROP_GROWTH = Identifier.of("ic2_120", "crop_growth")
+    private val CROP_GROWTH = ResourceLocation.of("ic2_120", "crop_growth")
 
-    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+    override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val world = accessor.level
         val blockEntity = accessor.blockEntity ?: return
 
@@ -410,28 +410,28 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             val weedEx = accessor.serverData.getInt("weedEx")
 
             tooltip.add(
-                if (crossingBase) Text.translatable("ic2_120.jade.crop_stick_crossing").formatted(Formatting.YELLOW)
-                else Text.translatable("ic2_120.jade.crop_stick_empty").formatted(Formatting.GRAY)
+                if (crossingBase) Component.translatable("ic2_120.jade.crop_stick_crossing").formatted(ChatFormatting.YELLOW)
+                else Component.translatable("ic2_120.jade.crop_stick_empty").formatted(ChatFormatting.GRAY)
             )
             tooltip.add(
                 if (nutrients > 0) {
-                    Text.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).formatted(Formatting.GREEN)
+                    Component.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).formatted(ChatFormatting.GREEN)
                 } else {
-                    Text.translatable("ic2_120.jade.crop_fertilized_no").formatted(Formatting.GRAY)
+                    Component.translatable("ic2_120.jade.crop_fertilized_no").formatted(ChatFormatting.GRAY)
                 }
             )
             tooltip.add(
                 if (water > 0) {
-                    Text.translatable("ic2_120.jade.crop_hydrated_yes", water).formatted(Formatting.AQUA)
+                    Component.translatable("ic2_120.jade.crop_hydrated_yes", water).formatted(ChatFormatting.AQUA)
                 } else {
-                    Text.translatable("ic2_120.jade.crop_hydrated_no").formatted(Formatting.GRAY)
+                    Component.translatable("ic2_120.jade.crop_hydrated_no").formatted(ChatFormatting.GRAY)
                 }
             )
             tooltip.add(
                 if (weedEx > 0) {
-                    Text.translatable("ic2_120.jade.crop_weedex_yes", weedEx).formatted(Formatting.GREEN)
+                    Component.translatable("ic2_120.jade.crop_weedex_yes", weedEx).formatted(ChatFormatting.GREEN)
                 } else {
-                    Text.translatable("ic2_120.jade.crop_weedex_no").formatted(Formatting.GRAY)
+                    Component.translatable("ic2_120.jade.crop_weedex_no").formatted(ChatFormatting.GRAY)
                 }
             )
             return
@@ -448,41 +448,41 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         val water = accessor.serverData.getInt("water")
         val weedEx = accessor.serverData.getInt("weedEx")
 
-        tooltip.add(Text.translatable("ic2_120.jade.crop_progress", age, maxAge, progress))
+        tooltip.add(Component.translatable("ic2_120.jade.crop_progress", age, maxAge, progress))
         tooltip.add(
             if (nutrients > 0) {
-                Text.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).formatted(Formatting.GREEN)
+                Component.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).formatted(ChatFormatting.GREEN)
             } else {
-                Text.translatable("ic2_120.jade.crop_fertilized_no").formatted(Formatting.GRAY)
+                Component.translatable("ic2_120.jade.crop_fertilized_no").formatted(ChatFormatting.GRAY)
             }
         )
         tooltip.add(
             if (water > 0) {
-                Text.translatable("ic2_120.jade.crop_hydrated_yes", water).formatted(Formatting.AQUA)
+                Component.translatable("ic2_120.jade.crop_hydrated_yes", water).formatted(ChatFormatting.AQUA)
             } else {
-                Text.translatable("ic2_120.jade.crop_hydrated_no").formatted(Formatting.GRAY)
+                Component.translatable("ic2_120.jade.crop_hydrated_no").formatted(ChatFormatting.GRAY)
             }
         )
         tooltip.add(
             if (weedEx > 0) {
-                Text.translatable("ic2_120.jade.crop_weedex_yes", weedEx).formatted(Formatting.GREEN)
+                Component.translatable("ic2_120.jade.crop_weedex_yes", weedEx).formatted(ChatFormatting.GREEN)
             } else {
-                Text.translatable("ic2_120.jade.crop_weedex_no").formatted(Formatting.GRAY)
+                Component.translatable("ic2_120.jade.crop_weedex_no").formatted(ChatFormatting.GRAY)
             }
         )
 
         if (accessor.serverData.contains("uvGrowthBoost")) {
             val boost = accessor.serverData.getInt("uvGrowthBoost")
-            tooltip.add(Text.translatable("ic2_120.jade.uv_lamp_boost", boost + 1).formatted(Formatting.LIGHT_PURPLE))
+            tooltip.add(Component.translatable("ic2_120.jade.uv_lamp_boost", boost + 1).formatted(ChatFormatting.LIGHT_PURPLE))
         }
 
         if (isMature) {
-            tooltip.add(Text.translatable("ic2_120.jade.crop_mature").formatted(Formatting.GREEN))
+            tooltip.add(Component.translatable("ic2_120.jade.crop_mature").formatted(ChatFormatting.GREEN))
             return
         }
 
         if (!canGrowNow) {
-            tooltip.add(Text.translatable("ic2_120.jade.crop_cannot_grow").formatted(Formatting.RED))
+            tooltip.add(Component.translatable("ic2_120.jade.crop_cannot_grow").formatted(ChatFormatting.RED))
             if (accessor.serverData.contains("requirements")) {
                 val serialized = accessor.serverData.getString("requirements")
                 val entries = serialized.split(";")
@@ -494,7 +494,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
                     } else {
                         emptyArray()
                     }
-                    tooltip.add(Text.literal("  ⚠ ").append(Text.translatable("ic2_120.jade.crop_req.$key", *args)).formatted(Formatting.GRAY))
+                    tooltip.add(Component.literal("  ⚠ ").append(Component.translatable("ic2_120.jade.crop_req.$key", *args)).formatted(ChatFormatting.GRAY))
                 }
             }
             return
@@ -503,19 +503,19 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         if (accessor.serverData.contains("remainingSeconds")) {
             val sec = accessor.serverData.getDouble("remainingSeconds").coerceAtLeast(0.0)
             val min = sec / 60.0
-            tooltip.add(Text.translatable("ic2_120.jade.crop_remaining_time", String.format("%.1f", sec), String.format("%.2f", min)))
+            tooltip.add(Component.translatable("ic2_120.jade.crop_remaining_time", String.format("%.1f", sec), String.format("%.2f", min)))
         } else {
-            tooltip.add(Text.translatable("ic2_120.jade.crop_remaining_unknown").formatted(Formatting.YELLOW))
+            tooltip.add(Component.translatable("ic2_120.jade.crop_remaining_unknown").formatted(ChatFormatting.YELLOW))
         }
     }
 
-    override fun getUid(): Identifier = CROP_GROWTH
+    override fun getUid(): ResourceLocation = CROP_GROWTH
 }
 
 object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val KINETIC_INFO = Identifier.of("ic2_120", "kinetic_info")
+    private val KINETIC_INFO = ResourceLocation.of("ic2_120", "kinetic_info")
 
-    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+    override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val world = accessor.level
         val pos = accessor.position
         val state = accessor.blockState
@@ -579,8 +579,8 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 val ku = accessor.serverData.getInt("ku")
                 val cap = accessor.serverData.getInt("capacity")
                 val loss = accessor.serverData.getInt("loss")
-                tooltip.add(Text.translatable("ic2_120.jade.ku_line", ku, cap))
-                tooltip.add(Text.translatable("ic2_120.jade.ku_loss_line", loss))
+                tooltip.add(Component.translatable("ic2_120.jade.ku_line", ku, cap))
+                tooltip.add(Component.translatable("ic2_120.jade.ku_loss_line", loss))
             }
 
             "wind_kinetic" -> {
@@ -588,17 +588,17 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 val outputKu = accessor.serverData.getInt("outputKu")
                 val blocked = accessor.serverData.getBoolean("blocked")
                 val rotorHours = accessor.serverData.getDouble("rotorHours")
-                tooltip.add(Text.translatable("ic2_120.jade.wind_ku_generated", generatedKu))
-                tooltip.add(Text.translatable("ic2_120.jade.wind_ku_output", outputKu))
+                tooltip.add(Component.translatable("ic2_120.jade.wind_ku_generated", generatedKu))
+                tooltip.add(Component.translatable("ic2_120.jade.wind_ku_output", outputKu))
                 val windInsufficient = generatedKu == 0 && !blocked
-                tooltip.add(Text.translatable(
+                tooltip.add(Component.translatable(
                     when {
                         blocked -> "ic2_120.jade.wind_blocked"
                         windInsufficient -> "ic2_120.jade.wind_insufficient"
                         else -> "ic2_120.jade.wind_clear"
                     }
                 ))
-                tooltip.add(Text.translatable("ic2_120.jade.wind_rotor_lifetime", String.format("%.1f", rotorHours)))
+                tooltip.add(Component.translatable("ic2_120.jade.wind_rotor_lifetime", String.format("%.1f", rotorHours)))
             }
 
             "water_kinetic" -> {
@@ -608,30 +608,30 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 val submerged = accessor.serverData.getBoolean("submerged")
                 val flowBonus = accessor.serverData.getBoolean("flowBonus")
                 val rotorHours = accessor.serverData.getDouble("rotorHours")
-                tooltip.add(Text.translatable("ic2_120.jade.water_ku_generated", generatedKu))
-                tooltip.add(Text.translatable("ic2_120.jade.water_ku_output", outputKu))
-                tooltip.add(Text.translatable(if (blocked) "ic2_120.jade.water_blocked" else if (submerged) "ic2_120.jade.water_submerged" else "ic2_120.jade.water_not_submerged"))
+                tooltip.add(Component.translatable("ic2_120.jade.water_ku_generated", generatedKu))
+                tooltip.add(Component.translatable("ic2_120.jade.water_ku_output", outputKu))
+                tooltip.add(Component.translatable(if (blocked) "ic2_120.jade.water_blocked" else if (submerged) "ic2_120.jade.water_submerged" else "ic2_120.jade.water_not_submerged"))
                 if (flowBonus) {
-                    tooltip.add(Text.translatable("ic2_120.jade.water_flow_bonus"))
+                    tooltip.add(Component.translatable("ic2_120.jade.water_flow_bonus"))
                 }
-                tooltip.add(Text.translatable("ic2_120.jade.water_rotor_lifetime", String.format("%.1f", rotorHours)))
+                tooltip.add(Component.translatable("ic2_120.jade.water_rotor_lifetime", String.format("%.1f", rotorHours)))
             }
 
             "manual_kinetic" -> {
                 val storedKu = accessor.serverData.getInt("storedKu")
                 val outputKu = accessor.serverData.getInt("outputKu")
-                tooltip.add(Text.translatable("ic2_120.jade.manual_stored_ku", storedKu))
-                tooltip.add(Text.translatable("ic2_120.jade.manual_extracted_ku", outputKu))
+                tooltip.add(Component.translatable("ic2_120.jade.manual_stored_ku", storedKu))
+                tooltip.add(Component.translatable("ic2_120.jade.manual_extracted_ku", outputKu))
             }
 
             "leash_kinetic" -> {
                 val generatedKu = accessor.serverData.getInt("generatedKu")
                 val angularVelocity = accessor.serverData.getInt("angularVelocity")
                 val animalName = accessor.serverData.getString("animalName")
-                tooltip.add(Text.translatable("ic2_120.jade.leash_kinetic.generated", generatedKu))
-                tooltip.add(Text.translatable("ic2_120.jade.leash_kinetic.velocity", angularVelocity))
+                tooltip.add(Component.translatable("ic2_120.jade.leash_kinetic.generated", generatedKu))
+                tooltip.add(Component.translatable("ic2_120.jade.leash_kinetic.velocity", angularVelocity))
                 if (animalName.isNotEmpty()) {
-                    tooltip.add(Text.translatable("ic2_120.jade.leash_kinetic.animal", animalName))
+                    tooltip.add(Component.translatable("ic2_120.jade.leash_kinetic.animal", animalName))
                 }
             }
 
@@ -640,16 +640,16 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 val outputEu = accessor.serverData.getInt("outputEu")
                 val eu = accessor.serverData.getLong("eu")
                 val euCap = accessor.serverData.getLong("euCap")
-                tooltip.add(Text.translatable("ic2_120.jade.kinetic_input", inputKu))
-                tooltip.add(Text.translatable("ic2_120.jade.kinetic_output", outputEu))
-                tooltip.add(Text.translatable("ic2_120.jade.kinetic_buffer", eu, euCap))
+                tooltip.add(Component.translatable("ic2_120.jade.kinetic_input", inputKu))
+                tooltip.add(Component.translatable("ic2_120.jade.kinetic_output", outputEu))
+                tooltip.add(Component.translatable("ic2_120.jade.kinetic_buffer", eu, euCap))
             }
         }
     }
 
-    override fun getUid(): Identifier = KINETIC_INFO
+    override fun getUid(): ResourceLocation = KINETIC_INFO
 
-    private fun transmissionLimits(block: net.minecraft.block.Block): Pair<Int, Int> = when (block) {
+    private fun transmissionLimits(block: net.minecraft.world.level.block.Block): Pair<Int, Int> = when (block) {
         is WoodTransmissionShaftBlock -> 128 to 0
         is IronTransmissionShaftBlock -> 512 to 2
         is SteelTransmissionShaftBlock -> 2048 to 1
@@ -664,11 +664,11 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
  */
 object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<EntityAccessor> {
 
-    private val ANIMAL_MONITOR = Identifier.of("ic2_120", "animal_monitor")
+    private val ANIMAL_MONITOR = ResourceLocation.of("ic2_120", "animal_monitor")
 
-    override fun appendServerData(data: NbtCompound, accessor: EntityAccessor) {
+    override fun appendServerData(data: CompoundTag, accessor: EntityAccessor) {
         val entity = accessor.entity
-        if (entity !is PassiveEntity) return
+        if (entity !is AgeableMob) return
 
         val world = accessor.level
         val pos = entity.blockPos
@@ -688,17 +688,17 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
 
         if (AnimalmatronBlock.isManaged(entity)) {
             val searchBox = entity.boundingBox.expand(AnimalmatronBlock.RANGE_RADIUS)
-            val minPos = net.minecraft.util.math.BlockPos(
+            val minPos = net.minecraft.core.BlockPos(
                 Math.floor(searchBox.minX).toInt(),
                 Math.floor(searchBox.minY).toInt(),
                 Math.floor(searchBox.minZ).toInt()
             )
-            val maxPos = net.minecraft.util.math.BlockPos(
+            val maxPos = net.minecraft.core.BlockPos(
                 Math.ceil(searchBox.maxX).toInt(),
                 Math.ceil(searchBox.maxY).toInt(),
                 Math.ceil(searchBox.maxZ).toInt()
             )
-            outer@ for (bp in net.minecraft.util.math.BlockPos.iterate(minPos, maxPos)) {
+            outer@ for (bp in net.minecraft.core.BlockPos.iterate(minPos, maxPos)) {
                 val be = world.getBlockEntity(bp)
                 if (be is AnimalmatronBlockEntity && be.sync.amount > 0L) {
                     foundMachine = be
@@ -729,20 +729,20 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
         if (!accessor.serverData.getBoolean("isManaged")) return
 
         // 显示被监管标识
-        tooltip.add(Text.translatable("ic2_120.jade.animal_monitored").formatted(Formatting.GREEN))
+        tooltip.add(Component.translatable("ic2_120.jade.animal_monitored").formatted(ChatFormatting.GREEN))
 
         val hasWater = accessor.serverData.getBoolean("hasWater")
 
         // 显示水状态 / 干渴
         tooltip.add(
             if (hasWater) {
-                Text.translatable("ic2_120.jade.animal_water_ok").formatted(Formatting.AQUA)
+                Component.translatable("ic2_120.jade.animal_water_ok").formatted(ChatFormatting.AQUA)
             } else {
-                Text.translatable("ic2_120.jade.animal_water_low").formatted(Formatting.RED)
+                Component.translatable("ic2_120.jade.animal_water_low").formatted(ChatFormatting.RED)
             }
         )
         if (!hasWater) {
-            tooltip.add(Text.translatable("ic2_120.jade.animal_thirsty").formatted(Formatting.RED))
+            tooltip.add(Component.translatable("ic2_120.jade.animal_thirsty").formatted(ChatFormatting.RED))
         }
 
         // 注：除草剂已停用（不消耗、无作用），不再展示“杀虫剂/生病”状态，避免误导。
@@ -753,27 +753,27 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
             val canBreed = accessor.serverData.getBoolean("canBreed")
             if (canBreed) {
                 // 可以繁殖
-                tooltip.add(Text.translatable("ic2_120.jade.animal_ready_to_breed").formatted(Formatting.GREEN))
+                tooltip.add(Component.translatable("ic2_120.jade.animal_ready_to_breed").formatted(ChatFormatting.GREEN))
             } else {
                 val totalFed = accessor.serverData.getInt("totalFed")
                 val requiredToFed = accessor.serverData.getInt("requiredToFed")
                 if (accessor.serverData.getBoolean("breedUnlocked")) {
                     // 已解锁繁殖资格但暂不可配对（如范围内动物数量已达上限）
-                    tooltip.add(Text.translatable("ic2_120.jade.animal_fed_full").formatted(Formatting.YELLOW))
+                    tooltip.add(Component.translatable("ic2_120.jade.animal_fed_full").formatted(ChatFormatting.YELLOW))
                 } else if (totalFed < requiredToFed) {
                     // 还没喂够，显示进度（含外来成体：从 0/10 喂起解锁繁殖资格）
-                    tooltip.add(Text.translatable("ic2_120.jade.animal_feed_progress", totalFed, requiredToFed).formatted(Formatting.YELLOW))
+                    tooltip.add(Component.translatable("ic2_120.jade.animal_feed_progress", totalFed, requiredToFed).formatted(ChatFormatting.YELLOW))
                     val remaining = requiredToFed - totalFed
-                    tooltip.add(Text.translatable("ic2_120.jade.animal_remaining_feed", remaining).formatted(Formatting.GRAY))
+                    tooltip.add(Component.translatable("ic2_120.jade.animal_remaining_feed", remaining).formatted(ChatFormatting.GRAY))
                 } else {
                     // foodConsumed 达标但未解锁（32 上限内首次达标会立即解锁，此分支为上限外成长的幼崽）
-                    tooltip.add(Text.translatable("ic2_120.jade.animal_fed_full").formatted(Formatting.YELLOW))
+                    tooltip.add(Component.translatable("ic2_120.jade.animal_fed_full").formatted(ChatFormatting.YELLOW))
                 }
             }
         }
     }
 
-    override fun getUid(): Identifier = ANIMAL_MONITOR
+    override fun getUid(): ResourceLocation = ANIMAL_MONITOR
 }
 
 /**
@@ -787,7 +787,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
 * 2. 空间：上方生长盒子内没有其他原木阻挡。
  */
 object RubberSaplingJadeProvider : IBlockComponentProvider {
-    private val SAPLING_GROWTH = Identifier.of("ic2_120", "rubber_sapling_growth")
+    private val SAPLING_GROWTH = ResourceLocation.of("ic2_120", "rubber_sapling_growth")
     private const val MIN_GROW_LIGHT = 9
 
     override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
@@ -799,24 +799,24 @@ object RubberSaplingJadeProvider : IBlockComponentProvider {
         val clear = RubberSaplingGrowth.hasClearArea(world, pos)
 
         if (enoughLight && clear) {
-            tooltip.add(Text.translatable("ic2_120.jade.sapling_can_grow").formatted(Formatting.GREEN))
+            tooltip.add(Component.translatable("ic2_120.jade.sapling_can_grow").formatted(ChatFormatting.GREEN))
             return
         }
 
-        tooltip.add(Text.translatable("ic2_120.jade.sapling_cannot_grow").formatted(Formatting.RED))
+        tooltip.add(Component.translatable("ic2_120.jade.sapling_cannot_grow").formatted(ChatFormatting.RED))
         if (!clear) {
-            tooltip.add(Text.literal("  ⚠ ").append(Text.translatable("ic2_120.jade.sapling_blocked")).formatted(Formatting.GRAY))
+            tooltip.add(Component.literal("  ⚠ ").append(Component.translatable("ic2_120.jade.sapling_blocked")).formatted(ChatFormatting.GRAY))
         }
         if (!enoughLight) {
             tooltip.add(
-                Text.literal("  ⚠ ")
-                    .append(Text.translatable("ic2_120.jade.sapling_low_light", light, MIN_GROW_LIGHT))
-                    .formatted(Formatting.GRAY)
+                Component.literal("  ⚠ ")
+                    .append(Component.translatable("ic2_120.jade.sapling_low_light", light, MIN_GROW_LIGHT))
+                    .formatted(ChatFormatting.GRAY)
             )
         }
     }
 
-    override fun getUid(): Identifier = SAPLING_GROWTH
+    override fun getUid(): ResourceLocation = SAPLING_GROWTH
 }
 
 /**
@@ -825,7 +825,7 @@ object RubberSaplingJadeProvider : IBlockComponentProvider {
  * 提取时间戳通过 IServerDataProvider 从 BlockEntity 同步。
  */
 object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val RUBBER_LOG = Identifier.of("ic2_120", "rubber_log_info")
+    private val RUBBER_LOG = ResourceLocation.of("ic2_120", "rubber_log_info")
 
     private val FACES = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
 
@@ -833,7 +833,7 @@ object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<Bloc
     // → 期望 = 4096/3 * 7 ≈ 9557 ticks ≈ 8 min
     private const val RECOVERY_EXPECTED_TICKS = 9557L
 
-    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+    override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val be = accessor.blockEntity as? RubberLogBlockEntity ?: return
         data.putLong("worldTime", accessor.level.time)
         for (face in FACES) {
@@ -856,9 +856,9 @@ object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<Bloc
             when (faceState) {
                 RubberFaceState.WET -> {
                     tooltip.add(
-                        Text.literal("$dirLabel: ")
-                            .append(Text.translatable("ic2_120.jade.rubber_face_wet"))
-                            .formatted(Formatting.GREEN)
+                        Component.literal("$dirLabel: ")
+                            .append(Component.translatable("ic2_120.jade.rubber_face_wet"))
+                            .formatted(ChatFormatting.GREEN)
                     )
                 }
                 RubberFaceState.DRY -> {
@@ -867,13 +867,13 @@ object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<Bloc
                     val elapsedSec = elapsedTicks / 20.0
                     val expMin = RECOVERY_EXPECTED_TICKS / 20.0 / 60.0
                     tooltip.add(
-                        Text.literal("$dirLabel: ")
-                            .append(Text.translatable(
+                        Component.literal("$dirLabel: ")
+                            .append(Component.translatable(
                                 "ic2_120.jade.rubber_face_dry",
                                 String.format("%.0f", elapsedSec),
                                 String.format("%.1f", expMin)
                             ))
-                            .formatted(Formatting.GRAY)
+                            .formatted(ChatFormatting.GRAY)
                     )
                 }
                 else -> {}
@@ -881,5 +881,5 @@ object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<Bloc
         }
     }
 
-    override fun getUid(): Identifier = RUBBER_LOG
+    override fun getUid(): ResourceLocation = RUBBER_LOG
 }

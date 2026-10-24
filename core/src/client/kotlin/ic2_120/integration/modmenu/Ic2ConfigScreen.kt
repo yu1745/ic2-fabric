@@ -4,8 +4,8 @@ import ic2_120.config.*
 import ic2_120.Ic2_120
 import me.shedaniel.clothconfig2.api.ConfigBuilder
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.text.Text
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.network.chat.Component
 import org.slf4j.LoggerFactory
 
 object Ic2ConfigScreen {
@@ -26,7 +26,7 @@ object Ic2ConfigScreen {
         val config = Ic2Config.current
         val builder = ConfigBuilder.create()
             .setParentScreen(parent)
-            .setTitle(Text.literal("IC2 配置"))
+            .setTitle(Component.literal("IC2 配置"))
         val eb = builder.entryBuilder()
 
         val generalReader = generalCategory(builder, eb, config.general)
@@ -41,9 +41,9 @@ object Ic2ConfigScreen {
         val renderingReader = renderingCategory(builder, eb, config.rendering)
 
         // UU 复制：Map 结构不适合 GUI，引导至命令
-        builder.getOrCreateCategory(Text.literal("UU 复制"))
+        builder.getOrCreateCategory(Component.literal("UU 复制"))
             .addEntry(eb.startTextDescription(
-                Text.literal("UU 复制白名单请使用命令 /uureplication 管理")
+                Component.literal("UU 复制白名单请使用命令 /uureplication 管理")
             ).build())
 
         builder.setSavingRunnable {
@@ -76,27 +76,27 @@ object Ic2ConfigScreen {
     ): () -> RenderingConfig {
         val d = FluidCellRenderConfig()
         var c = cfg.fluidCell
-        val cat = builder.getOrCreateCategory(Text.literal("渲染"))
-        cat.addEntry(eb.startBooleanToggle(Text.literal("流体单元液面晃动"), c.slosh)
+        val cat = builder.getOrCreateCategory(Component.literal("渲染"))
+        cat.addEntry(eb.startBooleanToggle(Component.literal("流体单元液面晃动"), c.slosh)
             .setDefaultValue(d.slosh)
-            .setTooltip(Text.literal("第一人称手持流体单元时，液面随手部运动晃动"))
+            .setTooltip(Component.literal("第一人称手持流体单元时，液面随手部运动晃动"))
             .setSaveConsumer { c = c.copy(slosh = it) }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("晃动灵敏度"), c.gain)
+        cat.addEntry(eb.startDoubleField(Component.literal("晃动灵敏度"), c.gain)
             .setDefaultValue(d.gain).setMin(0.0).setMax(50.0)
-            .setTooltip(Text.literal("手部加速度转为液面倾斜的倍数，越大越容易晃"))
+            .setTooltip(Component.literal("手部加速度转为液面倾斜的倍数，越大越容易晃"))
             .setSaveConsumer { c = c.copy(gain = it) }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("回正力度"), c.stiffness)
+        cat.addEntry(eb.startDoubleField(Component.literal("回正力度"), c.stiffness)
             .setDefaultValue(d.stiffness).setMin(0.0).setMax(1.0)
-            .setTooltip(Text.literal("0~1，越大液面回到水平越快、来回摆动越急"))
+            .setTooltip(Component.literal("0~1，越大液面回到水平越快、来回摆动越急"))
             .setSaveConsumer { c = c.copy(stiffness = it) }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("阻尼"), c.damping)
+        cat.addEntry(eb.startDoubleField(Component.literal("阻尼"), c.damping)
             .setDefaultValue(d.damping).setMin(0.0).setMax(1.0)
-            .setTooltip(Text.literal("0~1，每 tick 损失的晃动速度比例，越大停得越快"))
+            .setTooltip(Component.literal("0~1，每 tick 损失的晃动速度比例，越大停得越快"))
             .setSaveConsumer { c = c.copy(damping = it) }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("最大倾斜"), c.maxTilt)
+        cat.addEntry(eb.startDoubleField(Component.literal("最大倾斜"), c.maxTilt)
             .setDefaultValue(d.maxTilt).setMin(0.0).setMax(3.0)
             .setSaveConsumer { c = c.copy(maxTilt = it) }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("波纹幅度"), c.ripple)
+        cat.addEntry(eb.startDoubleField(Component.literal("波纹幅度"), c.ripple)
             .setDefaultValue(d.ripple).setMin(0.0).setMax(0.2)
             .setSaveConsumer { c = c.copy(ripple = it) }.build())
         return { RenderingConfig(fluidCell = c) }
@@ -108,10 +108,10 @@ object Ic2ConfigScreen {
         builder: ConfigBuilder, eb: ConfigEntryBuilder, cfg: DifficultyConfig
     ): () -> DifficultyConfig {
         var hardMode = cfg.hardMode
-        val cat = builder.getOrCreateCategory(Text.literal("难度"))
-        cat.addEntry(eb.startBooleanToggle(Text.literal("困难模式"), hardMode)
+        val cat = builder.getOrCreateCategory(Component.literal("难度"))
+        cat.addEntry(eb.startBooleanToggle(Component.literal("困难模式"), hardMode)
             .setDefaultValue(false)
-            .setTooltip(Text.literal("关闭战利品箱中的铱矿石，并将铱碎片数量减半。修改后需要重启游戏或服务器。"))
+            .setTooltip(Component.literal("关闭战利品箱中的铱矿石，并将铱碎片数量减半。修改后需要重启游戏或服务器。"))
             .setSaveConsumer { hardMode = it }.build())
 
         return { DifficultyConfig(hardMode = hardMode) }
@@ -123,10 +123,10 @@ object Ic2ConfigScreen {
         builder: ConfigBuilder, eb: ConfigEntryBuilder, cfg: MatterGeneratorConfig
     ): () -> MatterGeneratorConfig {
         var allowScrapBoost = cfg.allowScrapBoost
-        val cat = builder.getOrCreateCategory(Text.literal("物质生成机"))
-        cat.addEntry(eb.startBooleanToggle(Text.literal("允许废料加速"), allowScrapBoost)
+        val cat = builder.getOrCreateCategory(Component.literal("物质生成机"))
+        cat.addEntry(eb.startBooleanToggle(Component.literal("允许废料加速"), allowScrapBoost)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("允许物质生成机使用废料降低 UU 物质生成的能耗。"))
+            .setTooltip(Component.literal("允许物质生成机使用废料降低 UU 物质生成的能耗。"))
             .setSaveConsumer { allowScrapBoost = it }.build())
 
         return { MatterGeneratorConfig(allowScrapBoost = allowScrapBoost) }
@@ -147,41 +147,41 @@ object Ic2ConfigScreen {
         var enableAnonymousStatistics = cfg.enableAnonymousStatistics
         var analyticsEndpoint = cfg.analyticsEndpoint
 
-        val cat = builder.getOrCreateCategory(Text.literal("通用"))
-        cat.addEntry(eb.startBooleanToggle(Text.literal("启用超压爆炸"), enableOvervoltageExplosion)
+        val cat = builder.getOrCreateCategory(Component.literal("通用"))
+        cat.addEntry(eb.startBooleanToggle(Component.literal("启用超压爆炸"), enableOvervoltageExplosion)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("是否启用超压爆炸。设为 false 则完全关闭超压机器爆炸。"))
+            .setTooltip(Component.literal("是否启用超压爆炸。设为 false 则完全关闭超压机器爆炸。"))
             .setSaveConsumer { enableOvervoltageExplosion = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("启动时打印配置到日志"), logConfigOnLoad)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("启动时打印配置到日志"), logConfigOnLoad)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("启动/重载时是否把当前配置打印到日志"))
+            .setTooltip(Component.literal("启动/重载时是否把当前配置打印到日志"))
             .setSaveConsumer { logConfigOnLoad = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("启用更新检查"), checkForUpdates)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("启用更新检查"), checkForUpdates)
             .setDefaultValue(true)
             .setSaveConsumer { checkForUpdates = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("无能量时电人"), shockWhenNoEnergyFlow)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("无能量时电人"), shockWhenNoEnergyFlow)
             .setDefaultValue(false)
-            .setTooltip(Text.literal("电网不发生能量流动时是否仍会电人。设为 false 则无能量时不漏电。"))
+            .setTooltip(Component.literal("电网不发生能量流动时是否仍会电人。设为 false 则无能量时不漏电。"))
             .setSaveConsumer { shockWhenNoEnergyFlow = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("无能量时超压爆炸"), explodeWhenNoEnergyFlow)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("无能量时超压爆炸"), explodeWhenNoEnergyFlow)
             .setDefaultValue(false)
-            .setTooltip(Text.literal("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。"))
+            .setTooltip(Component.literal("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。"))
             .setSaveConsumer { explodeWhenNoEnergyFlow = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("导线烧毁最小比例（%）"), cableBurnMinPercent)
+        cat.addEntry(eb.startIntField(Component.literal("导线烧毁最小比例（%）"), cableBurnMinPercent)
             .setDefaultValue(10)
-            .setTooltip(Text.literal("低耐压导线每次烧毁时随机选择的最小比例。范围 1～100%；100% 表示全部烧毁，不要填 0。"))
+            .setTooltip(Component.literal("低耐压导线每次烧毁时随机选择的最小比例。范围 1～100%；100% 表示全部烧毁，不要填 0。"))
             .setSaveConsumer { cableBurnMinPercent = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("导线烧毁最大比例（%）"), cableBurnMaxPercent)
+        cat.addEntry(eb.startIntField(Component.literal("导线烧毁最大比例（%）"), cableBurnMaxPercent)
             .setDefaultValue(20)
-            .setTooltip(Text.literal("低耐压导线每次烧毁时随机选择的最大比例。范围 1～100%；100% 表示全部烧毁，不要填 0。"))
+            .setTooltip(Component.literal("低耐压导线每次烧毁时随机选择的最大比例。范围 1～100%；100% 表示全部烧毁，不要填 0。"))
             .setSaveConsumer { cableBurnMaxPercent = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("发送匿名使用统计"), enableAnonymousStatistics)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("发送匿名使用统计"), enableAnonymousStatistics)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("仅发送匿名 installId + 版本号，每天一次，用于统计有多少玩家安装了本 mod。不含任何个人信息。"))
+            .setTooltip(Component.literal("仅发送匿名 installId + 版本号，每天一次，用于统计有多少玩家安装了本 mod。不含任何个人信息。"))
             .setSaveConsumer { enableAnonymousStatistics = it }.build())
-        cat.addEntry(eb.startStrField(Text.literal("匿名统计上报地址"), analyticsEndpoint)
+        cat.addEntry(eb.startStrField(Component.literal("匿名统计上报地址"), analyticsEndpoint)
             .setDefaultValue("")
-            .setTooltip(Text.literal("形如 https://xxx.workers.dev。留空使用内置默认地址。如不希望参与统计，关闭上面的开关即可。"))
+            .setTooltip(Component.literal("形如 https://xxx.workers.dev。留空使用内置默认地址。如不希望参与统计，关闭上面的开关即可。"))
             .setSaveConsumer { analyticsEndpoint = it }.build())
 
         return {
@@ -206,10 +206,10 @@ object Ic2ConfigScreen {
     ): () -> RecyclerConfig {
         var blacklist = cfg.blacklist.toMutableList()
 
-        val cat = builder.getOrCreateCategory(Text.literal("回收机"))
-        cat.addEntry(eb.startStrList(Text.literal("回收机黑名单"), blacklist)
+        val cat = builder.getOrCreateCategory(Component.literal("回收机"))
+        cat.addEntry(eb.startStrList(Component.literal("回收机黑名单"), blacklist)
             .setDefaultValue(listOf("minecraft:stick"))
-            .setTooltip(Text.literal("填写物品 id 列表，例如 minecraft:stick"))
+            .setTooltip(Component.literal("填写物品 id 列表，例如 minecraft:stick"))
             .setSaveConsumer { blacklist = it.toMutableList() }.build())
 
         return { RecyclerConfig(blacklist = blacklist.toList()) }
@@ -225,22 +225,22 @@ object Ic2ConfigScreen {
         var explosionBlocksPerTick = cfg.explosionBlocksPerTick
         var explosionCooldown = cfg.reactorExplosionCooldownMinutes
 
-        val cat = builder.getOrCreateCategory(Text.literal("核能"))
-        cat.addEntry(eb.startBooleanToggle(Text.literal("反应堆过热爆炸"), enableReactorExplosion)
+        val cat = builder.getOrCreateCategory(Component.literal("核能"))
+        cat.addEntry(eb.startBooleanToggle(Component.literal("反应堆过热爆炸"), enableReactorExplosion)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("是否允许核反应堆在过热时爆炸"))
+            .setTooltip(Component.literal("是否允许核反应堆在过热时爆炸"))
             .setSaveConsumer { enableReactorExplosion = it }.build())
-        cat.addEntry(eb.startFloatField(Text.literal("爆炸威力上限"), reactorExplosionPowerLimit)
+        cat.addEntry(eb.startFloatField(Component.literal("爆炸威力上限"), reactorExplosionPowerLimit)
             .setDefaultValue(0f)
-            .setTooltip(Text.literal("反应堆爆炸威力上限。0 = 不限制（实际最大 100）。"))
+            .setTooltip(Component.literal("反应堆爆炸威力上限。0 = 不限制（实际最大 100）。"))
             .setSaveConsumer { reactorExplosionPowerLimit = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("每 tick 摧毁方块数"), explosionBlocksPerTick)
+        cat.addEntry(eb.startIntField(Component.literal("每 tick 摧毁方块数"), explosionBlocksPerTick)
             .setDefaultValue(2000)
-            .setTooltip(Text.literal("核爆炸每 tick 摧毁方块数。越大炸得越快，但可能掉 tps。"))
+            .setTooltip(Component.literal("核爆炸每 tick 摧毁方块数。越大炸得越快，但可能掉 tps。"))
             .setSaveConsumer { explosionBlocksPerTick = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("爆炸公告冷却（分钟）"), explosionCooldown)
+        cat.addEntry(eb.startIntField(Component.literal("爆炸公告冷却（分钟）"), explosionCooldown)
             .setDefaultValue(30)
-            .setTooltip(Text.literal("同一玩家两次爆炸公告的最小间隔（分钟），爆炸本身不受影响。0 = 无冷却"))
+            .setTooltip(Component.literal("同一玩家两次爆炸公告的最小间隔（分钟），爆炸本身不受影响。0 = 无冷却"))
             .setSaveConsumer { explosionCooldown = it }.build())
 
         return {
@@ -260,10 +260,10 @@ object Ic2ConfigScreen {
     ): () -> MinerConfig {
         var additionalBlocks = cfg.additionalMineableBlocks.toMutableList()
 
-        val cat = builder.getOrCreateCategory(Text.literal("采矿机"))
-        cat.addEntry(eb.startStrList(Text.literal("额外可挖方块"), additionalBlocks)
+        val cat = builder.getOrCreateCategory(Component.literal("采矿机"))
+        cat.addEntry(eb.startStrList(Component.literal("额外可挖方块"), additionalBlocks)
             .setDefaultValue(emptyList())
-            .setTooltip(Text.literal("主要用于普通采矿机的自动扫描：默认矿石通过名称自动匹配（含 ore），此列表用于添加特殊方块或者别的 mod 的方块。高级采矿机使用 GUI 中的黑名单/白名单过滤槽手动指定目标。"))
+            .setTooltip(Component.literal("主要用于普通采矿机的自动扫描：默认矿石通过名称自动匹配（含 ore），此列表用于添加特殊方块或者别的 mod 的方块。高级采矿机使用 GUI 中的黑名单/白名单过滤槽手动指定目标。"))
             .setSaveConsumer { additionalBlocks = it.toMutableList() }.build())
 
         return { MinerConfig(additionalMineableBlocks = additionalBlocks.toList()) }
@@ -280,21 +280,21 @@ object Ic2ConfigScreen {
         var maxLife = cfg.maxLife
         var bulletRadius = cfg.bulletRadius
 
-        val cat = builder.getOrCreateCategory(Text.literal("采矿镭射枪"))
+        val cat = builder.getOrCreateCategory(Component.literal("采矿镭射枪"))
 
-        cat.addEntry(eb.startLongField(Text.literal("最大能量（EU）"), maxEnergy)
+        cat.addEntry(eb.startLongField(Component.literal("最大能量（EU）"), maxEnergy)
             .setDefaultValue(200_000L)
             .setSaveConsumer { maxEnergy = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("弹体视觉长度（blocks）"), visualLength)
+        cat.addEntry(eb.startDoubleField(Component.literal("弹体视觉长度（blocks）"), visualLength)
             .setDefaultValue(1.2)
             .setSaveConsumer { visualLength = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("最大渲染距离（blocks）"), renderDistance)
+        cat.addEntry(eb.startDoubleField(Component.literal("最大渲染距离（blocks）"), renderDistance)
             .setDefaultValue(256.0)
             .setSaveConsumer { renderDistance = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("弹体最大存活 tick"), maxLife)
+        cat.addEntry(eb.startIntField(Component.literal("弹体最大存活 tick"), maxLife)
             .setDefaultValue(200)
             .setSaveConsumer { maxLife = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("弹体截面半径（blocks）"), bulletRadius)
+        cat.addEntry(eb.startDoubleField(Component.literal("弹体截面半径（blocks）"), bulletRadius)
             .setDefaultValue(0.04)
             .setSaveConsumer { bulletRadius = it }.build())
 
@@ -339,7 +339,7 @@ object Ic2ConfigScreen {
         defaultEntityDamage: Float, defaultColor: String = "0xFF00BFFF",
         defaultExplosionPower: Float = 0f, defaultScatterCount: Int = 1, defaultSpread: Double = 0.0
     ): () -> LaserModeConfig {
-        cat.addEntry(eb.startTextDescription(Text.literal("§6§l--- $label ---")).build())
+        cat.addEntry(eb.startTextDescription(Component.literal("§6§l--- $label ---")).build())
 
         var energyCost = cfg.energyCost
         var range = cfg.range
@@ -350,21 +350,21 @@ object Ic2ConfigScreen {
         var scatterSpread = cfg.scatterSpread
         var entityDamage = cfg.entityDamage
 
-        cat.addEntry(eb.startLongField(Text.literal("  §7每发消耗能量（EU）"), energyCost)
+        cat.addEntry(eb.startLongField(Component.literal("  §7每发消耗能量（EU）"), energyCost)
             .setDefaultValue(defaultEnergyCost).setSaveConsumer { energyCost = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("  §7最大射程（blocks）"), range)
+        cat.addEntry(eb.startDoubleField(Component.literal("  §7最大射程（blocks）"), range)
             .setDefaultValue(defaultRange).setSaveConsumer { range = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("  §7弹体飞行速度（blocks/tick）"), speed)
+        cat.addEntry(eb.startDoubleField(Component.literal("  §7弹体飞行速度（blocks/tick）"), speed)
             .setDefaultValue(defaultSpeed).setSaveConsumer { speed = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("  §7爆炸威力（0=不爆炸, 4=TNT）"), explosionPower.toDouble())
+        cat.addEntry(eb.startDoubleField(Component.literal("  §7爆炸威力（0=不爆炸, 4=TNT）"), explosionPower.toDouble())
             .setDefaultValue(defaultExplosionPower.toDouble()).setSaveConsumer { explosionPower = it.toFloat() }.build())
-        cat.addEntry(eb.startIntField(Text.literal("  §7视觉颜色（ARGB 整数）"), color)
+        cat.addEntry(eb.startIntField(Component.literal("  §7视觉颜色（ARGB 整数）"), color)
             .setDefaultValue(0xFF00BFFF.toInt()).setSaveConsumer { color = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("  §7散射弹体数量"), scatterCount)
+        cat.addEntry(eb.startIntField(Component.literal("  §7散射弹体数量"), scatterCount)
             .setDefaultValue(defaultScatterCount).setSaveConsumer { scatterCount = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("  §7散射张角（度）"), scatterSpread)
+        cat.addEntry(eb.startDoubleField(Component.literal("  §7散射张角（度）"), scatterSpread)
             .setDefaultValue(defaultSpread).setSaveConsumer { scatterSpread = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("  §7对实体伤害"), entityDamage.toDouble())
+        cat.addEntry(eb.startDoubleField(Component.literal("  §7对实体伤害"), entityDamage.toDouble())
             .setDefaultValue(defaultEntityDamage.toDouble()).setSaveConsumer { entityDamage = it.toFloat() }.build())
 
         return {
@@ -418,18 +418,18 @@ object Ic2ConfigScreen {
         eb: ConfigEntryBuilder, builder: ConfigBuilder, initialMultiplier: Double,
         initialPreservesHitReaction: Boolean
     ): () -> Pair<Double, Boolean> {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 电力护甲通用"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 电力护甲通用"))
         var multiplier = initialMultiplier
         var preservesHitReaction = initialPreservesHitReaction
 
-        cat.addEntry(eb.startDoubleField(Text.literal("伤害扣电倍率"), multiplier)
+        cat.addEntry(eb.startDoubleField(Component.literal("伤害扣电倍率"), multiplier)
             .setDefaultValue(1.0)
             .setSaveConsumer { multiplier = it }
             .build())
 
-        cat.addEntry(eb.startBooleanToggle(Text.literal("量子护甲保留受击硬直和击退"), preservesHitReaction)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("量子护甲保留受击硬直和击退"), preservesHitReaction)
             .setDefaultValue(false)
-            .setTooltip(Text.literal("关闭：完全吸收伤害时不产生硬直和击退；开启：对齐原版 IC2 行为。"))
+            .setTooltip(Component.literal("关闭：完全吸收伤害时不产生硬直和击退；开启：对齐原版 IC2 行为。"))
             .setSaveConsumer { preservesHitReaction = it }
             .build())
 
@@ -439,13 +439,13 @@ object Ic2ConfigScreen {
     private fun jetpackConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: JetpackConfig
     ): () -> JetpackConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 喷气背包"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 喷气背包"))
         var maxFuel = cfg.maxFuel
         var flightDuration = cfg.flightDurationSeconds
 
-        cat.addEntry(eb.startLongField(Text.literal("燃料容量（mB）"), maxFuel)
+        cat.addEntry(eb.startLongField(Component.literal("燃料容量（mB）"), maxFuel)
             .setDefaultValue(30_000L).setSaveConsumer { maxFuel = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("飞行时长（秒）"), flightDuration)
+        cat.addEntry(eb.startIntField(Component.literal("飞行时长（秒）"), flightDuration)
             .setDefaultValue(750).setSaveConsumer { flightDuration = it }.build())
 
         return { JetpackConfig(maxFuel = maxFuel, flightDurationSeconds = flightDuration) }
@@ -454,13 +454,13 @@ object Ic2ConfigScreen {
     private fun electricJetpackConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: ElectricJetpackConfig
     ): () -> ElectricJetpackConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 电力喷气背包"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 电力喷气背包"))
         var maxEnergy = cfg.maxEnergy
         var flightDuration = cfg.flightDurationSeconds
 
-        cat.addEntry(eb.startLongField(Text.literal("最大能量（EU）"), maxEnergy)
+        cat.addEntry(eb.startLongField(Component.literal("最大能量（EU）"), maxEnergy)
             .setDefaultValue(30_000L).setSaveConsumer { maxEnergy = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("飞行时长（秒）"), flightDuration)
+        cat.addEntry(eb.startIntField(Component.literal("飞行时长（秒）"), flightDuration)
             .setDefaultValue(750).setSaveConsumer { flightDuration = it }.build())
 
         return { ElectricJetpackConfig(maxEnergy = maxEnergy, flightDurationSeconds = flightDuration) }
@@ -469,13 +469,13 @@ object Ic2ConfigScreen {
     private fun quantumChestplateConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: QuantumChestplateConfig
     ): () -> QuantumChestplateConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 量子胸甲"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 量子胸甲"))
         var maxEnergy = cfg.maxEnergy
         var flightDuration = cfg.flightDurationSeconds
 
-        cat.addEntry(eb.startLongField(Text.literal("最大能量（EU）"), maxEnergy)
+        cat.addEntry(eb.startLongField(Component.literal("最大能量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("飞行时长（秒）"), flightDuration)
+        cat.addEntry(eb.startIntField(Component.literal("飞行时长（秒）"), flightDuration)
             .setDefaultValue(3600).setSaveConsumer { flightDuration = it }.build())
 
         return { QuantumChestplateConfig(maxEnergy = maxEnergy, flightDurationSeconds = flightDuration) }
@@ -484,10 +484,10 @@ object Ic2ConfigScreen {
     private fun quantumHelmetConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: QuantumHelmetConfig
     ): () -> QuantumHelmetConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 量子头盔"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 量子头盔"))
         var nightVisionDuration = cfg.nightVisionDurationSeconds
 
-        cat.addEntry(eb.startIntField(Text.literal("夜视时长（秒）"), nightVisionDuration)
+        cat.addEntry(eb.startIntField(Component.literal("夜视时长（秒）"), nightVisionDuration)
             .setDefaultValue(28800).setSaveConsumer { nightVisionDuration = it }.build())
 
         return { QuantumHelmetConfig(nightVisionDurationSeconds = nightVisionDuration) }
@@ -496,19 +496,19 @@ object Ic2ConfigScreen {
     private fun quantumLeggingsConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: QuantumLeggingsConfig
     ): () -> QuantumLeggingsConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 量子护腿"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 量子护腿"))
         var maxEnergy = cfg.maxEnergy
         var speedDuration = cfg.speedBoostDurationSeconds
         var groundBoostTier2 = cfg.groundBoostTier2
         var waterBoostTier2 = cfg.waterBoostTier2
 
-        cat.addEntry(eb.startLongField(Text.literal("参考容量（EU）"), maxEnergy)
+        cat.addEntry(eb.startLongField(Component.literal("参考容量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("神行时长（秒，2档满电）"), speedDuration)
+        cat.addEntry(eb.startIntField(Component.literal("神行时长（秒，2档满电）"), speedDuration)
             .setDefaultValue(1800).setSaveConsumer { speedDuration = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("2 档地面推进力（1 档减半）"), groundBoostTier2)
+        cat.addEntry(eb.startDoubleField(Component.literal("2 档地面推进力（1 档减半）"), groundBoostTier2)
             .setDefaultValue(0.22).setSaveConsumer { groundBoostTier2 = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("2 档水中推进力（1 档减半）"), waterBoostTier2)
+        cat.addEntry(eb.startDoubleField(Component.literal("2 档水中推进力（1 档减半）"), waterBoostTier2)
             .setDefaultValue(0.1).setSaveConsumer { waterBoostTier2 = it }.build())
 
         return {
@@ -524,21 +524,21 @@ object Ic2ConfigScreen {
     private fun quantumBootsConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: QuantumBootsConfig
     ): () -> QuantumBootsConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 量子靴子"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 量子靴子"))
         var maxEnergy = cfg.maxEnergy
         var permanentFallProtection = cfg.permanentFallProtection
         var jumpCost = cfg.jumpEnergyCost
         var jumpHeight = cfg.jumpHeightMultiplier
 
-        cat.addEntry(eb.startLongField(Text.literal("参考容量（EU）"), maxEnergy)
+        cat.addEntry(eb.startLongField(Component.literal("参考容量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("永久免摔伤"), permanentFallProtection)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("永久免摔伤"), permanentFallProtection)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("开启：穿着量子靴时按原版 IC2 规则保护任意摔落，前 10 格免费，超过部分每点消耗 20,000 EU。关闭：仅保护量子大跳产生的落地伤害。"))
+            .setTooltip(Component.literal("开启：穿着量子靴时按原版 IC2 规则保护任意摔落，前 10 格免费，超过部分每点消耗 20,000 EU。关闭：仅保护量子大跳产生的落地伤害。"))
             .setSaveConsumer { permanentFallProtection = it }.build())
-        cat.addEntry(eb.startLongField(Text.literal("每次大跳消耗能量（EU）"), jumpCost)
+        cat.addEntry(eb.startLongField(Component.literal("每次大跳消耗能量（EU）"), jumpCost)
             .setDefaultValue(10_000L).setSaveConsumer { jumpCost = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("跳跃高度倍率"), jumpHeight)
+        cat.addEntry(eb.startDoubleField(Component.literal("跳跃高度倍率"), jumpHeight)
             .setDefaultValue(3.0).setSaveConsumer { jumpHeight = it }.build())
 
         return {
@@ -554,19 +554,19 @@ object Ic2ConfigScreen {
     private fun nightVisionConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: NightVisionConfig
     ): () -> NightVisionConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 夜视"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 夜视"))
         var gogglesMaxEnergy = cfg.nightVisionGogglesMaxEnergy
         var gogglesDuration = cfg.nightVisionGogglesDurationSeconds
         var nanoMaxEnergy = cfg.nanoHelmetMaxEnergy
         var nanoDuration = cfg.nanoHelmetDurationSeconds
 
-        cat.addEntry(eb.startLongField(Text.literal("夜视镜最大能量（EU）"), gogglesMaxEnergy)
+        cat.addEntry(eb.startLongField(Component.literal("夜视镜最大能量（EU）"), gogglesMaxEnergy)
             .setDefaultValue(100_000L).setSaveConsumer { gogglesMaxEnergy = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("夜视镜夜视时长（秒）"), gogglesDuration)
+        cat.addEntry(eb.startIntField(Component.literal("夜视镜夜视时长（秒）"), gogglesDuration)
             .setDefaultValue(5000).setSaveConsumer { gogglesDuration = it }.build())
-        cat.addEntry(eb.startLongField(Text.literal("纳米头盔最大能量（EU）"), nanoMaxEnergy)
+        cat.addEntry(eb.startLongField(Component.literal("纳米头盔最大能量（EU）"), nanoMaxEnergy)
             .setDefaultValue(1_000_000L).setSaveConsumer { nanoMaxEnergy = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("纳米头盔夜视时长（秒）"), nanoDuration)
+        cat.addEntry(eb.startIntField(Component.literal("纳米头盔夜视时长（秒）"), nanoDuration)
             .setDefaultValue(3571).setSaveConsumer { nanoDuration = it }.build())
 
         return {
@@ -582,13 +582,13 @@ object Ic2ConfigScreen {
     private fun rubberBootsConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: RubberBootsConfig
     ): () -> RubberBootsConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 橡胶靴"))
+        val cat = builder.getOrCreateCategory(Component.literal("护甲 • 橡胶靴"))
         var distance = cfg.distance
         var eu = cfg.eu
 
-        cat.addEntry(eb.startDoubleField(Text.literal("行走格数触发一次充电"), distance)
+        cat.addEntry(eb.startDoubleField(Component.literal("行走格数触发一次充电"), distance)
             .setDefaultValue(1.0).setSaveConsumer { distance = it }.build())
-        cat.addEntry(eb.startLongField(Text.literal("每次充电 EU"), eu)
+        cat.addEntry(eb.startLongField(Component.literal("每次充电 EU"), eu)
             .setDefaultValue(20L).setSaveConsumer { eu = it }.build())
 
         return { RubberBootsConfig(distance = distance, eu = eu) }
@@ -608,7 +608,7 @@ object Ic2ConfigScreen {
     private fun rubberTreeConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: RubberTreeWorldgenConfig
     ): () -> RubberTreeWorldgenConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("世界生成 • 橡胶树"))
+        val cat = builder.getOrCreateCategory(Component.literal("世界生成 • 橡胶树"))
         var enabled = cfg.enabled
         var saplingGuaranteeEnabled = cfg.saplingGuaranteeEnabled
         var saplingDropExpected = cfg.saplingDropExpected
@@ -627,47 +627,47 @@ object Ic2ConfigScreen {
         var ignoreVines = cfg.ignoreVines
         var forceDirt = cfg.forceDirt
 
-        cat.addEntry(eb.startBooleanToggle(Text.literal("启用自然生成"), enabled)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("启用自然生成"), enabled)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("是否允许自然生成橡胶树。变更后需要重启。"))
+            .setTooltip(Component.literal("是否允许自然生成橡胶树。变更后需要重启。"))
             .setSaveConsumer { enabled = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("开启树苗保底"), saplingGuaranteeEnabled)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("开启树苗保底"), saplingGuaranteeEnabled)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("数学期望包含保底；开启后每棵树至少掉落 1 个树苗"))
+            .setTooltip(Component.literal("数学期望包含保底；开启后每棵树至少掉落 1 个树苗"))
             .setSaveConsumer { saplingGuaranteeEnabled = it }.build())
-        cat.addEntry(eb.startFloatField(Text.literal("树苗掉落数学期望"), saplingDropExpected)
+        cat.addEntry(eb.startFloatField(Component.literal("树苗掉落数学期望"), saplingDropExpected)
             .setDefaultValue(1.25f)
-            .setTooltip(Text.literal("包含保底；1.25 = 保底 1 个后，以 0.25 概率额外掉 1 个"))
+            .setTooltip(Component.literal("包含保底；1.25 = 保底 1 个后，以 0.25 概率额外掉 1 个"))
             .setSaveConsumer { saplingDropExpected = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("每区块尝试次数"), countPerChunk)
-            .setDefaultValue(1).setTooltip(Text.literal("每个区块进行几次橡胶树放置尝试"))
+        cat.addEntry(eb.startIntField(Component.literal("每区块尝试次数"), countPerChunk)
+            .setDefaultValue(1).setTooltip(Component.literal("每个区块进行几次橡胶树放置尝试"))
             .setSaveConsumer { countPerChunk = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("基础稀有度"), rarityChance)
-            .setDefaultValue(2).setTooltip(Text.literal("2 表示森林/丛林基准每次尝试约 1/2，沼泽会更高"))
+        cat.addEntry(eb.startIntField(Component.literal("基础稀有度"), rarityChance)
+            .setDefaultValue(2).setTooltip(Component.literal("2 表示森林/丛林基准每次尝试约 1/2，沼泽会更高"))
             .setSaveConsumer { rarityChance = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("最大地表水深"), maxWaterDepth)
+        cat.addEntry(eb.startIntField(Component.literal("最大地表水深"), maxWaterDepth)
             .setDefaultValue(0).setSaveConsumer { maxWaterDepth = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("树干基础高度"), baseHeight)
+        cat.addEntry(eb.startIntField(Component.literal("树干基础高度"), baseHeight)
             .setDefaultValue(6).setSaveConsumer { baseHeight = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("第一段随机高度"), heightRandA)
+        cat.addEntry(eb.startIntField(Component.literal("第一段随机高度"), heightRandA)
             .setDefaultValue(2).setSaveConsumer { heightRandA = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("第二段随机高度"), heightRandB)
+        cat.addEntry(eb.startIntField(Component.literal("第二段随机高度"), heightRandB)
             .setDefaultValue(0).setSaveConsumer { heightRandB = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("树冠半径"), foliageRadius)
+        cat.addEntry(eb.startIntField(Component.literal("树冠半径"), foliageRadius)
             .setDefaultValue(2).setSaveConsumer { foliageRadius = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("树冠垂直偏移"), foliageOffset)
+        cat.addEntry(eb.startIntField(Component.literal("树冠垂直偏移"), foliageOffset)
             .setDefaultValue(0).setSaveConsumer { foliageOffset = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("树冠高度"), foliageHeight)
+        cat.addEntry(eb.startIntField(Component.literal("树冠高度"), foliageHeight)
             .setDefaultValue(4).setSaveConsumer { foliageHeight = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("0 孔权重"), zeroHole)
+        cat.addEntry(eb.startIntField(Component.literal("0 孔权重"), zeroHole)
             .setDefaultValue(11).setSaveConsumer { zeroHole = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("1 孔权重"), singleHole)
+        cat.addEntry(eb.startIntField(Component.literal("1 孔权重"), singleHole)
             .setDefaultValue(2).setSaveConsumer { singleHole = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("2 孔权重"), doubleHole)
+        cat.addEntry(eb.startIntField(Component.literal("2 孔权重"), doubleHole)
             .setDefaultValue(1).setSaveConsumer { doubleHole = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("忽略藤蔓阻挡"), ignoreVines)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("忽略藤蔓阻挡"), ignoreVines)
             .setDefaultValue(true).setSaveConsumer { ignoreVines = it }.build())
-        cat.addEntry(eb.startBooleanToggle(Text.literal("强制替换树底为泥土"), forceDirt)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("强制替换树底为泥土"), forceDirt)
             .setDefaultValue(false).setSaveConsumer { forceDirt = it }.build())
 
         return {
@@ -696,7 +696,7 @@ object Ic2ConfigScreen {
     private fun peatOreConfig(
         eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: PeatOreWorldgenConfig
     ): () -> PeatOreWorldgenConfig {
-        val cat = builder.getOrCreateCategory(Text.literal("世界生成 • 泥炭矿"))
+        val cat = builder.getOrCreateCategory(Component.literal("世界生成 • 泥炭矿"))
         var enabled = cfg.enabled
         var biomes = cfg.biomes.toMutableList()
         var veinsPerChunk = cfg.veinsPerChunk
@@ -704,26 +704,26 @@ object Ic2ConfigScreen {
         var minY = cfg.minY
         var maxY = cfg.maxY
 
-        cat.addEntry(eb.startBooleanToggle(Text.literal("启用自然生成"), enabled)
+        cat.addEntry(eb.startBooleanToggle(Component.literal("启用自然生成"), enabled)
             .setDefaultValue(true)
-            .setTooltip(Text.literal("是否允许自然生成泥炭矿。变更后需要重启。"))
+            .setTooltip(Component.literal("是否允许自然生成泥炭矿。变更后需要重启。"))
             .setSaveConsumer { enabled = it }.build())
-        cat.addEntry(eb.startStrList(Text.literal("允许生成的生物群系"), biomes)
+        cat.addEntry(eb.startStrList(Component.literal("允许生成的生物群系"), biomes)
             .setDefaultValue(DEFAULT_PEAT_BIOMES)
-            .setTooltip(Text.literal("生物群系列表，填写 biome id。变更后需要重启。"))
+            .setTooltip(Component.literal("生物群系列表，填写 biome id。变更后需要重启。"))
             .setSaveConsumer { biomes = it.toMutableList() }.build())
-        cat.addEntry(eb.startIntField(Text.literal("每区块矿脉数量"), veinsPerChunk)
+        cat.addEntry(eb.startIntField(Component.literal("每区块矿脉数量"), veinsPerChunk)
             .setDefaultValue(24)
-            .setTooltip(Text.literal("每个区块内生成多少条矿脉。"))
+            .setTooltip(Component.literal("每个区块内生成多少条矿脉。"))
             .setSaveConsumer { veinsPerChunk = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("矿脉大小"), veinSize)
+        cat.addEntry(eb.startIntField(Component.literal("矿脉大小"), veinSize)
             .setDefaultValue(24)
-            .setTooltip(Text.literal("每条矿脉最大包含的方块数。"))
+            .setTooltip(Component.literal("每条矿脉最大包含的方块数。"))
             .setSaveConsumer { veinSize = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("最低生成高度（Y）"), minY)
+        cat.addEntry(eb.startIntField(Component.literal("最低生成高度（Y）"), minY)
             .setDefaultValue(-16)
             .setSaveConsumer { minY = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("最高生成高度（Y）"), maxY)
+        cat.addEntry(eb.startIntField(Component.literal("最高生成高度（Y）"), maxY)
             .setDefaultValue(64)
             .setSaveConsumer { maxY = it }.build())
 

@@ -6,16 +6,16 @@ import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.block.misc.FilteredValue
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
 
@@ -54,7 +54,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     /** 导线当前负载（本 tick 内已传输的能量），仅用于 Jade 显示。不影响实际能量传输逻辑。 */
     var cableLoad: Long by FilteredValue(20)
 
-    override fun setWorld(world: World) {
+    override fun setWorld(world: Level) {
         super.setWorld(world)
         if (!world.isClient) {
             EnergyNetworkManager.queueNetworkBuild(world, pos)
@@ -84,7 +84,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         }
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         localEnergy = nbt.getLong(NBT_ENERGY)
         configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
@@ -96,7 +96,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         splitterInverted = nbt.getBoolean(NBT_SPLITTER_INVERTED)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putLong(NBT_ENERGY, network?.getEnergySharePerCable() ?: localEnergy)
         if (configuredLimit > 0) {
@@ -106,7 +106,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         nbt.putBoolean(NBT_SPLITTER_INVERTED, splitterInverted)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         val net = network ?: EnergyNetworkManager.getOrCreateNetwork(world, pos).also { network = it }
         net.tickIfNeeded(world)
@@ -131,9 +131,9 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
          *
          * 流程：
          * 1. 通过 fabric "ic2_120:cables" entrypoint 收集各附属贡献的导线方块（让附属
-         *    实例化并注册自己的 BaseCableBlock 到 Registries.BLOCK）；
+         *    实例化并注册自己的 BaseCableBlock 到 BuiltInRegistries.BLOCK）；
          *    （附属 main entrypoint 晚于 core，其 @ModBlock 导线此时尚未注册，改由此处由 core 代为注册）；
-         * 2. 扫描 Registries.BLOCK 里全部 BaseCableBlock（core 自有 + 刚由附属贡献的），合并成一个 BE 类型；
+         * 2. 扫描 BuiltInRegistries.BLOCK 里全部 BaseCableBlock（core 自有 + 刚由附属贡献的），合并成一个 BE 类型；
          * 3. 向 Energy API 注册 SIDED 查找。
          *
          * 调用时机：core.onInitialize 期间（注册表冻结前）。
@@ -151,7 +151,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
 
             // 2. 扫描注册表，收集全部 BaseCableBlock（core 自有 + 附属贡献）
             val cableBlocks = mutableListOf<Block>()
-            for (block in Registries.BLOCK) {
+            for (block in BuiltInRegistries.BLOCK) {
                 if (block is BaseCableBlock) cableBlocks.add(block)
             }
             if (cableBlocks.isEmpty()) {
@@ -167,7 +167,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
             TYPE = FabricBlockEntityTypeBuilder.create(factory, *cableBlocks.toTypedArray())
                 .build() as BlockEntityType<CableBlockEntity>
 
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier(modId, "cable"), TYPE)
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ResourceLocation(modId, "cable"), TYPE)
             EnergyStorage.SIDED.registerForBlockEntity({ be, _ -> be.energyStorage }, TYPE)
 
             logger.info("已注册 CableBlockEntity（电网模型），关联 {} 种导线方块", cableBlocks.size)

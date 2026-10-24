@@ -9,12 +9,12 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.resources.ResourceLocation
 import java.util.function.Consumer
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
@@ -26,7 +26,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class BronzePlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = BronzePlate::class.id(),
@@ -45,7 +45,7 @@ class BronzePlate : Item(Item.Settings()) {
 class CopperPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = CopperPlate::class.id(),
@@ -64,7 +64,7 @@ class CopperPlate : Item(Item.Settings()) {
 class GoldPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = GoldPlate::class.id(),
@@ -83,7 +83,7 @@ class GoldPlate : Item(Item.Settings()) {
 class IronPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = IronPlate::class.id(),
@@ -102,7 +102,7 @@ class IronPlate : Item(Item.Settings()) {
 class LapisPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = LapisPlate::class.id(),
@@ -121,7 +121,7 @@ class LapisPlate : Item(Item.Settings()) {
 class LeadPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = LeadPlate::class.id(),
@@ -146,7 +146,7 @@ class SteelPlate : Item(Item.Settings())
 class TinPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = TinPlate::class.id(),

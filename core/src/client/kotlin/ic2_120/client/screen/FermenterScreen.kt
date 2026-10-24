@@ -7,33 +7,33 @@ import ic2_120.content.screen.FermenterScreenHandler
 import ic2_120.content.sync.FermenterSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.Sprite
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = FermenterBlock::class)
 class FermenterScreen(
     handler: FermenterScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<FermenterScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<FermenterScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 175
         backgroundHeight = 184
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, 175, 184, 256, 256)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -87,23 +87,23 @@ class FermenterScreen(
         val biofuelX = x + 128; val biofuelY = y + 25; val biofuelW = 12; val biofuelH = 47
 
         if (mouseX in biomassX until (biomassX + biomassW) && mouseY in biomassY until (biomassY + biomassH)) {
-            val lines = if (inputBiomassMb > 0) listOf(Text.literal("生物质"), Text.literal("${"%,d".format(inputBiomassMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
-                        else listOf(Text.literal("空"))
+            val lines = if (inputBiomassMb > 0) listOf(Component.literal("生物质"), Component.literal("${"%,d".format(inputBiomassMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
+                        else listOf(Component.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
         if (mouseX in heatX until (heatX + heatW) && mouseY in heatY until (heatY + heatH)) {
-            context.drawTooltip(textRenderer, Text.literal("热量: ${bufferedHeat} / 40000 HU"), mouseX, mouseY)
+            context.drawTooltip(textRenderer, Component.literal("热量: ${bufferedHeat} / 40000 HU"), mouseX, mouseY)
         }
         if (mouseX in biofuelX until (biofuelX + biofuelW) && mouseY in biofuelY until (biofuelY + biofuelH)) {
-            val lines = if (outputBiogasMb > 0) listOf(Text.literal("生物燃料"), Text.literal("${"%,d".format(outputBiogasMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
-                        else listOf(Text.literal("空"))
+            val lines = if (outputBiogasMb > 0) listOf(Component.literal("生物燃料"), Component.literal("${"%,d".format(outputBiogasMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
+                        else listOf(Component.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
         if (mouseX in (x + 3) until (x + 19) && mouseY in (y + 3) until (y + 19)) {
-            val upgradeTooltip = mutableListOf<Text>()
-            upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
+            val upgradeTooltip = mutableListOf<Component>()
+            upgradeTooltip.add(Component.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
-                val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
+                val item = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", id))
                 upgradeTooltip.add(item.name)
             }
             context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
@@ -112,7 +112,7 @@ class FermenterScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun getFluidSprite(fluid: Fluid?): Sprite? {
+    private fun getFluidSprite(fluid: Fluid?): TextureAtlasSprite? {
         if (fluid == null) return null
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
         return handler.getFluidSprites(null, null, fluid.defaultState)?.getOrNull(0)
@@ -120,8 +120,8 @@ class FermenterScreen(
 
     /** 平铺流体纹理在槽内，自下而上 scissor 限制不超出区域，调用流体颜色渲染 */
     private fun drawFluidTank(
-        context: DrawContext, gx: Int, gy: Int, tankW: Int, tankH: Int,
-        amountMb: Int, capMb: Int, sprite: Sprite?, fluidColor: Int
+        context: GuiGraphics, gx: Int, gy: Int, tankW: Int, tankH: Int,
+        amountMb: Int, capMb: Int, sprite: TextureAtlasSprite?, fluidColor: Int
     ) {
         val fillH = (amountMb.toFloat() / capMb * tankH).toInt().coerceIn(0, tankH)
         if (fillH <= 0) return
@@ -143,7 +143,7 @@ class FermenterScreen(
     }
 
     /** 水平进度条自左向右填充 */
-    private fun drawProgressH(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, u: Float, v: Float, frac: Float) {
+    private fun drawProgressH(context: GuiGraphics, gx: Int, gy: Int, w: Int, h: Int, u: Float, v: Float, frac: Float) {
         val fillW = (frac.coerceIn(0f, 1f) * w).toInt()
         if (fillW <= 0) return
         context.enableScissor(gx, gy, gx + fillW, gy + h)
@@ -152,7 +152,7 @@ class FermenterScreen(
     }
 
     /** 热量条：纹理 (199,13)-(203,54) = 4×41，自底向上填充 */
-    private fun drawHeatBar(context: DrawContext, gx: Int, gy: Int, frac: Float) {
+    private fun drawHeatBar(context: GuiGraphics, gx: Int, gy: Int, frac: Float) {
         val barW = 4
         val barH = 41
         val fillH = (frac.coerceIn(0f, 1f) * barH).toInt()
@@ -163,8 +163,8 @@ class FermenterScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guifermenter.png")
-        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guifermenter.png")
+        private val UPTIPS = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private val SUPPORTED_UPGRADES = listOf(
             "fluid_ejector_upgrade",
             "fluid_pulling_upgrade"

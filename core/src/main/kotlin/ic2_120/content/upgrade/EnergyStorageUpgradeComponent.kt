@@ -1,7 +1,7 @@
 package ic2_120.content.upgrade
 
 import ic2_120.content.item.EnergyStorageUpgrade
-import net.minecraft.inventory.Inventory
+import net.minecraft.world.Container
 
 /**
  * 储能升级处理组件。
@@ -16,14 +16,14 @@ object EnergyStorageUpgradeComponent {
     /**
      * 从升级槽统计储能升级数量，并应用到机器。
      */
-    fun apply(inventory: Inventory, upgradeSlotIndices: IntArray, machine: Any) {
+    fun apply(inventory: Container, upgradeSlotIndices: IntArray, machine: Any) {
         if (machine !is IEnergyStorageUpgradeSupport) return
 
         val count = countUpgrades(inventory, upgradeSlotIndices)
         machine.capacityBonus = count * CAPACITY_PER_UPGRADE
     }
 
-    fun countUpgrades(inventory: Inventory, upgradeSlotIndices: IntArray): Int {
+    fun countUpgrades(inventory: Container, upgradeSlotIndices: IntArray): Int {
         var count = 0
         for (idx in upgradeSlotIndices) {
             val stack = inventory.getStack(idx)

@@ -1,16 +1,16 @@
 package ic2_120.client.renderers
 
 import ic2_120.content.block.machines.TeleporterBlockEntity
-import net.minecraft.client.render.LightmapTextureManager
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.Entity
-import net.minecraft.util.Identifier
+import net.minecraft.client.renderer.LightTexture
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.entity.Entity
+import net.minecraft.resources.ResourceLocation
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 import kotlin.math.PI
@@ -19,11 +19,11 @@ import kotlin.math.max
 import kotlin.math.sin
 
 class TeleporterBlockEntityRenderer(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<TeleporterBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = Identifier.of("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.of("textures/misc/white.png")
         private const val SEGMENTS = 36
         private data class RenderCache(
             var lastProgress: Float = 0f,
@@ -43,8 +43,8 @@ class TeleporterBlockEntityRenderer(
     override fun render(
         entity: TeleporterBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -64,7 +64,7 @@ class TeleporterBlockEntityRenderer(
         val centerY = entity.pos.y + 1.5
         val centerZ = entity.pos.z + 0.5
 
-        val sourceBox = net.minecraft.util.math.Box(
+        val sourceBox = net.minecraft.world.phys.AABB(
             centerX - half, centerY - half, centerZ - half,
             centerX + half, centerY + half, centerZ + half
         )
@@ -117,8 +117,8 @@ class TeleporterBlockEntityRenderer(
             cache.sz - entity.pos.z
         )
 
-        val vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEXTURE))
-        val fullLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
+        val vc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
+        val fullLight = LightTexture.MAX_LIGHT_COORDINATE
 
         drawRingBand(matrices, vc, fullLight, overlay, radiusOuter, radiusInner, ringY, 80, 235, 255, alpha)
         drawRingBand(matrices, vc, fullLight, overlay, radiusOuter * 0.68f, radiusInner * 0.58f, ringY + 0.03f, 120, 250, 255, alpha - 20)
@@ -132,7 +132,7 @@ class TeleporterBlockEntityRenderer(
     }
 
     private fun drawRingBand(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -174,7 +174,7 @@ class TeleporterBlockEntityRenderer(
     }
 
     private fun drawBeam(
-        matrices: MatrixStack,
+        matrices: PoseStack,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,

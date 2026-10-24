@@ -9,33 +9,33 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.state.property.Properties
-import net.minecraft.util.math.Direction
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.core.Direction
 
 @ModScreenHandler(block = EnergyOMatBlock::class)
 class EnergyOMatScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate,
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    propertyDelegate: ContainerData,
     val isOwner: Boolean
-) : ScreenHandler(EnergyOMatScreenHandler::class.type(), syncId) {
+) : AbstractContainerMenu(EnergyOMatScreenHandler::class.type(), syncId) {
 
     val sync = EnergyOMatSync(
         SyncedDataView(propertyDelegate),
-        getFacing = { context.get({ w, p -> w.getBlockState(p).get(Properties.HORIZONTAL_FACING) }, Direction.NORTH) }
+        getFacing = { context.get({ w, p -> w.getBlockState(p).get(BlockStateProperties.HORIZONTAL_FACING) }, Direction.NORTH) }
     )
 
     init {
@@ -61,7 +61,7 @@ class EnergyOMatScreenHandler(
         }
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         if (!isOwner) return true
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? EnergyOMatBlockEntity ?: return@get
@@ -79,7 +79,7 @@ class EnergyOMatScreenHandler(
         return true
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -112,7 +112,7 @@ class EnergyOMatScreenHandler(
         return stack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is EnergyOMatBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -149,13 +149,13 @@ class EnergyOMatScreenHandler(
         const val BUTTON_OFFER_UP_BIG = 5
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): EnergyOMatScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): EnergyOMatScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val isOwner = buf.readBoolean()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(EnergyOMatBlockEntity.INVENTORY_SIZE)
-            return EnergyOMatScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), isOwner)
+            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val blockInv = SimpleContainer(EnergyOMatBlockEntity.INVENTORY_SIZE)
+            return EnergyOMatScreenHandler(syncId, playerInventory, blockInv, context, SimpleContainerData(propertyCount), isOwner)
         }
     }
 }

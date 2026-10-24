@@ -1,10 +1,10 @@
 package ic2_120.client.compose
 
 import ic2_120.client.ui.GuiBackground
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.font.TextRenderer
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.util.Identifier
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.Font
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.resources.ResourceLocation
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -12,8 +12,8 @@ import org.lwjgl.glfw.GLFW
  * measure 阶段设置 textRenderer；render 阶段额外设置 drawContext / mouseX / mouseY。
  */
 class RenderContext {
-    lateinit var textRenderer: TextRenderer
-    lateinit var drawContext: DrawContext
+    lateinit var textRenderer: Font
+    lateinit var drawContext: GuiGraphics
     var mouseX: Int = 0
     var mouseY: Int = 0
     var drawEnabled: Boolean = true
@@ -72,7 +72,7 @@ class RenderContext {
     data class TooltipHit(
         val x: Int, val y: Int,
         val w: Int, val h: Int,
-        val lines: List<net.minecraft.text.Text>
+        val lines: List<net.minecraft.network.chat.Component>
     )
 
     data class ScrollHit(
@@ -161,14 +161,14 @@ class PanelNode(
     }
 }
 
-// ──────────────────────────── Text ────────────────────────────
+// ──────────────────────────── Component ────────────────────────────
 
 class TextNode(
     val text: String,
     val color: Int = 0xFFFFFF,
     val shadow: Boolean = true,
     val center: Boolean = false,
-    val tooltip: List<net.minecraft.text.Text>? = null
+    val tooltip: List<net.minecraft.network.chat.Component>? = null
 ) : UiNode() {
 
     override fun measure(ctx: RenderContext, constraints: Constraints) {
@@ -207,9 +207,9 @@ class TextNode(
 // ──────────────────────────── Image ────────────────────────────
 
 /**
- * 纹理图片节点。渲染指定 Identifier 的 PNG 纹理（或其中一个区域）。
+ * 纹理图片节点。渲染指定 ResourceLocation 的 PNG 纹理（或其中一个区域）。
  *
- * @param texture      纹理资源路径，如 Identifier.of("ic2", "textures/gui/slot.png")
+ * @param texture      纹理资源路径，如 ResourceLocation.of("ic2", "textures/gui/slot.png")
  * @param width        绘制宽度（像素）
  * @param height       绘制高度（像素）
  * @param u            纹理裁剪起始 U（默认 0）
@@ -220,7 +220,7 @@ class TextNode(
  * @param textureHeight 纹理文件实际高度（默认 = height）
  */
 class ImageNode(
-    val texture: Identifier,
+    val texture: ResourceLocation,
     val imgWidth: Int,
     val imgHeight: Int,
     val u: Float = 0f,
@@ -255,10 +255,10 @@ class ImageNode(
 
 /**
  * 物品/方块图标节点。仅渲染 ItemStack 的贴图，不绘制数量。
- * 数量可用外部 DSL 拼接，例如：`Row(spacing = 4) { ItemStack(stack); Text("${stack.count}") }`
+ * 数量可用外部 DSL 拼接，例如：`Row(spacing = 4) { ItemStack(stack); Component("${stack.count}") }`
  */
 class ItemStackNode(
-    val stack: net.minecraft.item.ItemStack,
+    val stack: net.minecraft.world.item.ItemStack,
     val size: Int = 16
 ) : UiNode() {
 
@@ -308,7 +308,7 @@ class ItemStackNode(
 class ButtonNode(
     val text: String,
     val onClick: () -> Unit = {},
-    val tooltip: List<net.minecraft.text.Text>? = null
+    val tooltip: List<net.minecraft.network.chat.Component>? = null
 ) : UiNode() {
     private val vanillaFace = 0xFF8B8B8B.toInt()
     private val vanillaFaceHover = 0xFF9D9D9D.toInt()
@@ -339,7 +339,7 @@ class ButtonNode(
         val hovered = mouseInButton && mouseInClip
 
         val mousePressed = GLFW.glfwGetMouseButton(
-            MinecraftClient.getInstance().window.handle,
+            Minecraft.getInstance().window.handle,
             GLFW.GLFW_MOUSE_BUTTON_LEFT
         ) == GLFW.GLFW_PRESS
         val pressed = hovered && mousePressed

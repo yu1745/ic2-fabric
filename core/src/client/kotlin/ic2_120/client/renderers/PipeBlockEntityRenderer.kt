@@ -5,29 +5,29 @@ import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PipeMaterial
 import ic2_120.content.block.pipes.PumpAttachmentBlock
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.texture.Sprite
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.fluid.Fluid
-import net.minecraft.registry.Registries
-import net.minecraft.screen.PlayerScreenHandler
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 class PipeBlockEntityRenderer(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<PipeBlockEntity> {
 
     companion object {
-        private val PIPE_TEXTURE = Identifier.of("ic2_120", "textures/block/transport/pipe_white.png")
+        private val PIPE_TEXTURE = ResourceLocation.of("ic2_120", "textures/block/transport/pipe_white.png")
 
         private const val BRONZE_COLOR_R = 133
         private const val BRONZE_COLOR_G = 66
@@ -82,7 +82,7 @@ class PipeBlockEntityRenderer(
         private const val GLASS_PARTICLE_ALPHA_VARIATION_MIN = 0.72f
         private const val GLASS_PARTICLE_ALPHA_VARIATION_MAX = 1.0f
 
-        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
     }
 
     init {
@@ -93,8 +93,8 @@ class PipeBlockEntityRenderer(
     override fun render(
         entity: PipeBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -115,14 +115,14 @@ class PipeBlockEntityRenderer(
 
         // 解析流体
         val fluid = entity.currentFluidId?.let { idStr ->
-            Identifier.tryParse(idStr)?.let { id ->
-                if (Registries.FLUID.containsId(id)) Registries.FLUID.get(id) else null
+            ResourceLocation.tryParse(idStr)?.let { id ->
+                if (BuiltInRegistries.FLUID.containsId(id)) BuiltInRegistries.FLUID.get(id) else null
             }
         }
 
         // --- 渲染管道外壳（Cutout，不使用半透明） ---
         // pipe_white 贴图上的透明区域即“观察窗”，只有这些区域能看到内部流体。
-        val shellVc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(PIPE_TEXTURE))
+        val shellVc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(PIPE_TEXTURE))
         val entry = matrices.peek()
 
         // 连续四角骨架：从截面看仅四角不透明，其余全部留空。
@@ -130,10 +130,10 @@ class PipeBlockEntityRenderer(
             state, entry, shellVc, light, overlay,
             min, max, matR, matG, matB
         )
-        if (block is PumpAttachmentBlock && state.contains(Properties.FACING)) {
+        if (block is PumpAttachmentBlock && state.contains(BlockStateProperties.FACING)) {
             drawPumpAttachmentPlate(
                 entry, shellVc, light, overlay,
-                state.get(Properties.FACING),
+                state.get(BlockStateProperties.FACING),
                 matR, matG, matB
             )
         }
@@ -145,7 +145,7 @@ class PipeBlockEntityRenderer(
                 ?.getFluidSprites(world, entity.pos, fluid.defaultState)
             val fluidSprite = fluidSprites?.firstOrNull()
             val fluidColor = getFluidTintColor(fluid)
-            val fluidVc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE))
+            val fluidVc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(InventoryMenu.BLOCK_ATLAS_TEXTURE))
 
             val inset = FLUID_WALL_GAP
             val fMin = min + inset
@@ -167,7 +167,7 @@ class PipeBlockEntityRenderer(
         }
 
         // --- 渲染观察窗玻璃（纯代码着色，不使用图案贴图） ---
-        val glassVc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEXTURE))
+        val glassVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
         val connectionCount = Direction.entries.count { state.get(BasePipeBlock.propertyFor(it)) }
         val cutCenter = connectionCount > 2
         drawWindowGlass(
@@ -186,8 +186,8 @@ class PipeBlockEntityRenderer(
     // ========== 管壁渲染 ==========
 
     private fun drawContinuousCornerShell(
-        state: net.minecraft.block.BlockState,
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        state: net.minecraft.world.level.block.state.BlockState,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         min: Float, max: Float,
         r: Int, g: Int, b: Int
@@ -242,7 +242,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawPumpAttachmentPlate(
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -265,8 +265,8 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawWindowGlass(
-        state: net.minecraft.block.BlockState,
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        state: net.minecraft.world.level.block.state.BlockState,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         min: Float, max: Float,
         cutCenter: Boolean,
@@ -350,7 +350,7 @@ class PipeBlockEntityRenderer(
         to: Float,
         min: Float,
         max: Float,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -397,7 +397,7 @@ class PipeBlockEntityRenderer(
         max: Float,
         lo2: Float,
         hi2: Float,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -431,8 +431,8 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawWindowGlassParticles(
-        state: net.minecraft.block.BlockState,
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        state: net.minecraft.world.level.block.state.BlockState,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         min: Float, max: Float,
         cutCenter: Boolean,
@@ -486,7 +486,7 @@ class PipeBlockEntityRenderer(
         cutCenter: Boolean,
         paneInset: Float,
         paneThickness: Float,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -531,7 +531,7 @@ class PipeBlockEntityRenderer(
         lo2: Float,
         hi2: Float,
         paneThickness: Float,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -565,7 +565,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawParticleSpotsOnPane(
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -651,10 +651,10 @@ class PipeBlockEntityRenderer(
     // ========== 流体渲染 ==========
 
     private fun drawArmFluid(
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         radius: Float, inset: Float, dir: Direction,
-        sprite: Sprite, color: Int,
+        sprite: TextureAtlasSprite, color: Int,
         coreMin: Float, coreMax: Float
     ) {
         val min = 0.5f - radius + inset
@@ -676,7 +676,7 @@ class PipeBlockEntityRenderer(
     // ========== 通用几何体绘制 ==========
 
     private fun drawCuboidColor(
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         minX: Float, minY: Float, minZ: Float,
         maxX: Float, maxY: Float, maxZ: Float,
@@ -709,7 +709,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawCuboidWindowFrame(
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         minX: Float, minY: Float, minZ: Float,
         maxX: Float, maxY: Float, maxZ: Float,
@@ -747,7 +747,7 @@ class PipeBlockEntityRenderer(
         to: Float,
         min: Float,
         max: Float,
-        entry: MatrixStack.Entry,
+        entry: PoseStack.Entry,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -785,7 +785,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawFaceFrameXY(
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         minX: Float, minY: Float, maxX: Float, maxY: Float, z: Float,
         frameX: Float, frameY: Float, normalZ: Float,
@@ -814,7 +814,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawFaceFrameYZ(
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         minY: Float, minZ: Float, maxY: Float, maxZ: Float, x: Float,
         frameY: Float, frameZ: Float, normalX: Float,
@@ -843,7 +843,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawFaceFrameXZ(
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         minX: Float, minZ: Float, maxX: Float, maxZ: Float, y: Float,
         frameX: Float, frameZ: Float, normalY: Float,
@@ -872,11 +872,11 @@ class PipeBlockEntityRenderer(
     }
 
     private fun drawCuboidFluid(
-        entry: MatrixStack.Entry, vc: VertexConsumer,
+        entry: PoseStack.Entry, vc: VertexConsumer,
         light: Int, overlay: Int,
         minX: Float, minY: Float, minZ: Float,
         maxX: Float, maxY: Float, maxZ: Float,
-        sprite: Sprite, color: Int
+        sprite: TextureAtlasSprite, color: Int
     ) {
         val u0 = sprite.minU
         val u1 = sprite.maxU
@@ -933,7 +933,7 @@ class PipeBlockEntityRenderer(
     // ========== Quad 辅助 ==========
 
     private fun quadColor(
-        vc: VertexConsumer, entry: MatrixStack.Entry,
+        vc: VertexConsumer, entry: PoseStack.Entry,
         light: Int, overlay: Int,
         x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float,
@@ -949,7 +949,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun quadFluid(
-        vc: VertexConsumer, entry: MatrixStack.Entry,
+        vc: VertexConsumer, entry: PoseStack.Entry,
         light: Int, overlay: Int,
         x1: Float, y1: Float, z1: Float, u1: Float, v1: Float,
         x2: Float, y2: Float, z2: Float, u2: Float, v2: Float,
@@ -965,7 +965,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun vertexColor(
-        vc: VertexConsumer, entry: MatrixStack.Entry,
+        vc: VertexConsumer, entry: PoseStack.Entry,
         x: Float, y: Float, z: Float,
         u: Float, v: Float,
         light: Int, overlay: Int,
@@ -981,7 +981,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun vertexFluid(
-        vc: VertexConsumer, entry: MatrixStack.Entry,
+        vc: VertexConsumer, entry: PoseStack.Entry,
         x: Float, y: Float, z: Float,
         u: Float, v: Float,
         light: Int, overlay: Int,
@@ -997,7 +997,7 @@ class PipeBlockEntityRenderer(
     }
 
     private fun getFluidTintColor(fluid: Fluid): Int {
-        val world = MinecraftClient.getInstance().world ?: return 0xFFFFFF
+        val world = Minecraft.getInstance().world ?: return 0xFFFFFF
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return 0xFFFFFF
         return handler.getFluidColor(world, BlockPos.ORIGIN, fluid.defaultState)
     }

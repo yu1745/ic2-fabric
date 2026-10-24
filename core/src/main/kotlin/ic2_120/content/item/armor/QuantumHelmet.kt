@@ -17,21 +17,21 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffectCategory
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffectCategory
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.player.Player
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
 /**
@@ -85,7 +85,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val glass = ReinforcedGlassBlock::class.item()
             val nano = NanoHelmet::class.instance()
             val adv = AdvancedCircuit::class.instance()
@@ -111,11 +111,11 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
 
-        val player = entity as? PlayerEntity ?: return
+        val player = entity as? Player ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
 
         val nbt = stack.orCreateNbt
@@ -143,7 +143,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
                 if (toConsume > 0) {
                     if (energy < toConsume) {
                         nbt.putBoolean(NIGHT_VISION_KEY, false)
-                        player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+                        player.removeStatusEffect(MobEffects.NIGHT_VISION)
                         energy = 0
                     } else {
                         energy -= toConsume
@@ -155,7 +155,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
                 nbt.putDouble(NV_REMAINDER_KEY, remainder - (if (toConsume > 0 && energy > 0) toConsume else 0))
             } else {
                 nbt.putBoolean(NIGHT_VISION_KEY, false)
-                player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+                player.removeStatusEffect(MobEffects.NIGHT_VISION)
             }
         }
 
@@ -181,7 +181,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
             // 按效果类别动态覆盖所有负面效果（包括坚守者的 DARKNESS 以及模组效果）。
             val harmfulEffects = player.statusEffects
                 .filter {
-                    it.effectType.category == StatusEffectCategory.HARMFUL ||
+                    it.effectType.category == MobEffectCategory.HARMFUL ||
                         it.effectType === ModStatusEffects.RADIATION
                 }
             for (effect in harmfulEffects) {
@@ -194,9 +194,9 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         setEnergy(stack, energy)
     }
 
-    private fun consumeAirCellIfAvailable(player: PlayerEntity): Boolean {
-        val airCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "air_cell"))
-        val emptyCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+    private fun consumeAirCellIfAvailable(player: Player): Boolean {
+        val airCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "air_cell"))
+        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
         val slot = player.inventory.main.find { !it.isEmpty && it.item === airCellItem }
         if (slot != null) {
             slot.decrement(1)
@@ -209,9 +209,9 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         return false
     }
 
-    private fun consumeFilledTinCanIfAvailable(player: PlayerEntity): Boolean {
-        val filledCanItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "filled_tin_can"))
-        val emptyCanItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "tin_can"))
+    private fun consumeFilledTinCanIfAvailable(player: Player): Boolean {
+        val filledCanItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "filled_tin_can"))
+        val emptyCanItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "tin_can"))
         val slot = player.inventory.main.find { !it.isEmpty && it.item === filledCanItem }
         if (slot != null) {
             slot.decrement(1)
@@ -224,18 +224,18 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         return false
     }
 
-    private fun applyNightVisionEffect(player: PlayerEntity, world: World) {
+    private fun applyNightVisionEffect(player: Player, world: Level) {
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
-            player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+            player.removeStatusEffect(MobEffects.NIGHT_VISION)
         } else {
             player.addStatusEffect(
-                StatusEffectInstance(StatusEffects.NIGHT_VISION, 220, 0, true, false, true)
+                MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, true, false, true)
             )
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
         val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
@@ -251,12 +251,12 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_helmet.night_vision",
-            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_helmet.night_vision",
+            Component.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
             timeText
-        ).formatted(Formatting.GRAY))
+        ).formatted(ChatFormatting.GRAY))
         val pct = "%.0f".format(getDamageReduction() * 100)
-        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_helmet.features", pct).formatted(Formatting.GRAY))
-        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_helmet.full_set").formatted(Formatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_helmet.features", pct).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_helmet.full_set").formatted(ChatFormatting.GRAY))
     }
 }

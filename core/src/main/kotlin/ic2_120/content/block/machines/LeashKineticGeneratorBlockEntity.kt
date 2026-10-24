@@ -6,22 +6,22 @@ import ic2_120.content.sync.LeashKineticGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.Entity
-import net.minecraft.entity.mob.MobEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.Mob
+import net.minecraft.world.entity.player.Player
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
 
 @ModBlockEntity(block = LeashKineticGeneratorBlock::class)
 class LeashKineticGeneratorBlockEntity(
@@ -52,7 +52,7 @@ class LeashKineticGeneratorBlockEntity(
     private var mobName: String = ""
 
     private val angleHistory = mutableListOf<Double>()
-    private val positionHistory = mutableListOf<Pair<Long, Vec3d>>()
+    private val positionHistory = mutableListOf<Pair<Long, Vec3>>()
     private var lastTickAngle: Double? = null
     private var syncCounter = 0
 
@@ -80,23 +80,23 @@ class LeashKineticGeneratorBlockEntity(
 
     fun hasLeashedMob(): Boolean = leashedMobUuid != null
 
-    override fun getInventory(): net.minecraft.inventory.Inventory? = null
+    override fun getInventory(): net.minecraft.world.Container? = null
 
-    fun findLeashedMob(): MobEntity? {
+    fun findLeashedMob(): Mob? {
         val world = world ?: return null
         val uuid = leashedMobUuid ?: return null
-        val serverWorld = world as? ServerWorld ?: return null
-        return serverWorld.getEntity(uuid) as? MobEntity
+        val serverWorld = world as? ServerLevel ?: return null
+        return serverWorld.getEntity(uuid) as? Mob
     }
 
     fun findKnot(): Entity? {
         val world = world ?: return null
         val uuid = knotUuid ?: return null
-        val serverWorld = world as? ServerWorld ?: return null
+        val serverWorld = world as? ServerLevel ?: return null
         return serverWorld.getEntity(uuid)
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) {
             return
         }
@@ -140,7 +140,7 @@ class LeashKineticGeneratorBlockEntity(
             return
         }
 
-        val currentAngle = MathHelper.atan2(dz, dx)
+        val currentAngle = Mth.atan2(dz, dx)
         val previousAngle = lastTickAngle
         lastTickAngle = currentAngle
 
@@ -217,11 +217,11 @@ class LeashKineticGeneratorBlockEntity(
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerWorld)?.chunkManager?.markForUpdate(pos)
+            (world as? ServerLevel)?.chunkManager?.markForUpdate(pos)
         }
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
         if (nbt.containsUuid("LeashedMobUuid")) {
@@ -234,7 +234,7 @@ class LeashKineticGeneratorBlockEntity(
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putInt("PendingKu", pendingOutputKu)
         leashedMobUuid?.let { nbt.putUuid("LeashedMobUuid", it) }
@@ -243,7 +243,7 @@ class LeashKineticGeneratorBlockEntity(
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
 
-    override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
+    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 }

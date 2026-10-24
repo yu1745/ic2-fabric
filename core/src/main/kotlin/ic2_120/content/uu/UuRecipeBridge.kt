@@ -9,18 +9,18 @@ import ic2_120.content.recipes.macerator.MaceratorRecipe
 import ic2_120.content.recipes.metalformer.MetalFormerRecipe
 import ic2_120.content.recipes.orewashing.OreWashingRecipe
 import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.recipe.AbstractCookingRecipe
-import net.minecraft.recipe.CuttingRecipe as McCuttingRecipe
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.Recipe
-import net.minecraft.recipe.RecipeType
-import net.minecraft.recipe.ShapedRecipe
-import net.minecraft.recipe.ShapelessRecipe
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.AbstractCookingRecipe
+import net.minecraft.world.item.crafting.SingleItemRecipe as McCuttingRecipe
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.world.item.crafting.ShapedRecipe
+import net.minecraft.world.item.crafting.ShapelessRecipe
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 
 /**
@@ -37,7 +37,7 @@ object UuRecipeBridge {
      * 从 [RecipeManager] 收集所有 [UuGraph.Transformation]。
      * 返回 transformations 列表 + 诊断统计。
      */
-    fun collect(recipeManager: net.minecraft.recipe.RecipeManager, registryManager: net.minecraft.registry.DynamicRegistryManager): Result {
+    fun collect(recipeManager: net.minecraft.world.item.crafting.RecipeManager, registryManager: net.minecraft.core.RegistryAccess): Result {
         val transformations = mutableListOf<UuGraph.Transformation>()
         var skippedEmpty = 0
         var skippedAir = 0
@@ -191,7 +191,7 @@ object UuRecipeBridge {
 
     // ===== 原版配方适配 =====
 
-    private fun AbstractCookingRecipe.toSmeltingTx(rm: net.minecraft.registry.DynamicRegistryManager): UuGraph.Transformation? {
+    private fun AbstractCookingRecipe.toSmeltingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? {
         // AbstractCookingRecipe.getIngredients() (public) 返回单元素 list，getOutput(rm) 返回输出
         val ingredientList = this.ingredients
         if (ingredientList.isEmpty()) return null
@@ -206,7 +206,7 @@ object UuRecipeBridge {
         )
     }
 
-    private fun McCuttingRecipe.toStonecuttingTx(rm: net.minecraft.registry.DynamicRegistryManager): UuGraph.Transformation? {
+    private fun McCuttingRecipe.toStonecuttingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? {
         val ingredientList = this.ingredients
         if (ingredientList.isEmpty()) return null
         val out = this.getOutput(rm)
@@ -219,13 +219,13 @@ object UuRecipeBridge {
         )
     }
 
-    private fun ShapedRecipe.toCraftingTx(rm: net.minecraft.registry.DynamicRegistryManager): UuGraph.Transformation? =
+    private fun ShapedRecipe.toCraftingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? =
         toCraftingTxCommon(rm)
 
-    private fun ShapelessRecipe.toCraftingTx(rm: net.minecraft.registry.DynamicRegistryManager): UuGraph.Transformation? =
+    private fun ShapelessRecipe.toCraftingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? =
         toCraftingTxCommon(rm)
 
-    private fun Recipe<*>.toCraftingTxCommon(rm: net.minecraft.registry.DynamicRegistryManager): UuGraph.Transformation? {
+    private fun Recipe<*>.toCraftingTxCommon(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? {
         val out = this.getOutput(rm)
         if (out.isEmpty) return null
         val ingredientList = this.ingredients

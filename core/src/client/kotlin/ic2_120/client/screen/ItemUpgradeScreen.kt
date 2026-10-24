@@ -4,23 +4,23 @@ import ic2_120.client.t
 import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.util.math.Rect2i
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.Rect2i
+import net.minecraft.client.gui.components.Button
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.Direction
 
 @ModScreen(handler = "item_upgrade")
 class ItemUpgradeScreen(
     handler: ItemUpgradeScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<ItemUpgradeScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<ItemUpgradeScreenHandler>(handler, playerInventory, title) {
 
     /** Slot index used by the AE2-style JEI fake-slot packet. */
     val ghostFilterSlotIndex: Int get() = handler.filterSlotIndex
@@ -30,7 +30,7 @@ class ItemUpgradeScreen(
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
@@ -38,15 +38,15 @@ class ItemUpgradeScreen(
         super.init()
         val client = client ?: return
 
-        addDrawableChild(ButtonWidget.builder(Text.empty()) {
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
+        addDrawableChild(Button.builder(Component.empty()) {
+            client.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
         }.dimensions(x + 27, y + 37, 20, 14).build())
 
         // 六个方向分别独立开关，支持任意方向组合。
         for (dirIdx in Direction.entries.indices) {
-            addDrawableChild(ButtonWidget.builder(Text.empty()) {
+            addDrawableChild(Button.builder(Component.empty()) {
                 client.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(
+                    ServerboundContainerButtonClickPacket(
                         handler.syncId,
                         ItemUpgradeScreenHandler.BUTTON_TOGGLE_DIR + dirIdx
                     )
@@ -55,7 +55,7 @@ class ItemUpgradeScreen(
         }
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -66,7 +66,7 @@ class ItemUpgradeScreen(
 
         // 过滤文本 (9,18)-(104,32)
         val filterName = if (handler.itemRawId > 0) {
-            Registries.ITEM.get(handler.itemRawId).name.string
+            BuiltInRegistries.ITEM.get(handler.itemRawId).name.string
         } else {
             t("gui.ic2_120.item_upgrade.no_filter")
         }
@@ -83,7 +83,7 @@ class ItemUpgradeScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawDirectionButtons(context: DrawContext) {
+    private fun drawDirectionButtons(context: GuiGraphics) {
         Direction.entries.forEachIndexed { index, direction ->
             val glyph = when (direction) {
                 Direction.DOWN -> "↓"
@@ -99,21 +99,21 @@ class ItemUpgradeScreen(
         }
     }
 
-    private fun drawFilterItem(context: DrawContext) {
+    private fun drawFilterItem(context: GuiGraphics) {
         if (handler.itemRawId <= 0) return
-        val item = Registries.ITEM.get(handler.itemRawId)
-        if (item != net.minecraft.item.Items.AIR) context.drawItem(item.defaultStack, x + 8, y + 35)
+        val item = BuiltInRegistries.ITEM.get(handler.itemRawId)
+        if (item != net.minecraft.world.item.Items.AIR) context.drawItem(item.defaultStack, x + 8, y + 35)
     }
 
-    private fun drawJeiHint(context: DrawContext, mouseX: Int, mouseY: Int) {
+    private fun drawJeiHint(context: GuiGraphics, mouseX: Int, mouseY: Int) {
         if (!FabricLoader.getInstance().isModLoaded("jei")) return
         context.drawTexture(UPTIPS_TEXTURE, x + HINT_X, y + HINT_Y, 0f, 0f, HINT_SIZE, HINT_SIZE, HINT_SIZE, HINT_SIZE)
         if (mouseX - x in HINT_X until HINT_X + HINT_SIZE && mouseY - y in HINT_Y until HINT_Y + HINT_SIZE) {
-            context.drawTooltip(textRenderer, Text.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
+            context.drawTooltip(textRenderer, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
         }
     }
 
-    private fun draw7pxText(context: DrawContext, bx: Int, by: Int, bw: Int, bh: Int, text: String) {
+    private fun draw7pxText(context: GuiGraphics, bx: Int, by: Int, bw: Int, bh: Int, text: String) {
         val scale = 7f / textRenderer.fontHeight
         val textW = textRenderer.getWidth(text)
         val scaledW = textW * scale
@@ -127,8 +127,8 @@ class ItemUpgradeScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiupgrade.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiupgrade.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
         private const val HINT_X = 4
         private const val HINT_Y = 4

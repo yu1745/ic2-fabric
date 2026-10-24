@@ -11,9 +11,9 @@ import ic2_120.content.item.armor.QuantumLeggings
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 
 /**
  * 护甲 Tooltip 客户端处理器
@@ -31,39 +31,39 @@ object ArmorTooltipHandler {
 
             // 喷气背包：双击空格
             if (item is JetpackItem || item is ElectricJetpack) {
-                type.add(Text.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(Formatting.GRAY))
+                type.add(Component.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(ChatFormatting.GRAY))
             }
 
             // 夜视仪、纳米/量子头盔：N 键
             if (item is NightVisionGoggles || item is NanoHelmet || item is QuantumHelmet) {
                 val key = ArmorKeybinds.getVisionKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.translatable("tooltip.ic2_120.armor.key.vision").formatted(Formatting.GRAY)
-                    .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
-                    .append(Text.literal(name).formatted(Formatting.YELLOW)))
+                type.add(Component.translatable("tooltip.ic2_120.armor.key.vision").formatted(ChatFormatting.GRAY)
+                    .append(Component.literal("Alt + ").formatted(ChatFormatting.YELLOW))
+                    .append(Component.literal(name).formatted(ChatFormatting.YELLOW)))
             }
 
             // 量子胸甲：双击空格
             if (item is QuantumChestplate) {
-                type.add(Text.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(Formatting.GRAY))
+                type.add(Component.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(ChatFormatting.GRAY))
             }
 
             // 量子护腿：L 键
             if (item is QuantumLeggings) {
                 val key = ArmorKeybinds.getSpeedKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.translatable("tooltip.ic2_120.armor.key.speed").formatted(Formatting.GRAY)
-                    .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
-                    .append(Text.literal(name).formatted(Formatting.YELLOW)))
+                type.add(Component.translatable("tooltip.ic2_120.armor.key.speed").formatted(ChatFormatting.GRAY)
+                    .append(Component.literal("Alt + ").formatted(ChatFormatting.YELLOW))
+                    .append(Component.literal(name).formatted(ChatFormatting.YELLOW)))
             }
 
             // 量子靴子：J 键
             if (item is QuantumBoots) {
                 val key = ArmorKeybinds.getJumpKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.translatable("tooltip.ic2_120.armor.key.jump").formatted(Formatting.GRAY)
-                    .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
-                    .append(Text.literal(name).formatted(Formatting.YELLOW)))
+                type.add(Component.translatable("tooltip.ic2_120.armor.key.jump").formatted(ChatFormatting.GRAY)
+                    .append(Component.literal("Alt + ").formatted(ChatFormatting.YELLOW))
+                    .append(Component.literal(name).formatted(ChatFormatting.YELLOW)))
             }
         }
     }

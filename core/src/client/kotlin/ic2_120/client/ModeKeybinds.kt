@@ -12,11 +12,11 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
-import net.minecraft.client.MinecraftClient
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.TypedActionResult
+import net.minecraft.client.Minecraft
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResultHolder
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -55,18 +55,18 @@ object ModeKeybinds {
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
             if (world.isClient && isAltDown() && player.getStackInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
                 toggleFoamModeOnceThisTick(player.age)
-                ActionResult.FAIL
+                InteractionResult.FAIL
             } else {
-                ActionResult.PASS
+                InteractionResult.PASS
             }
         }
 
         UseItemCallback.EVENT.register { player, world, hand ->
             if (world.isClient && isAltDown() && player.getStackInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
                 toggleFoamModeOnceThisTick(player.age)
-                TypedActionResult.fail(player.getStackInHand(hand))
+                InteractionResultHolder.fail(player.getStackInHand(hand))
             } else {
-                TypedActionResult.pass(player.getStackInHand(hand))
+                InteractionResultHolder.pass(player.getStackInHand(hand))
             }
         }
     }
@@ -94,15 +94,15 @@ object ModeKeybinds {
 
     /**
      * Handles Alt+use before vanilla chooses the entity/block/item interaction path.
-     * Returning true tells the MinecraftClient mixin to cancel the entire use action,
+     * Returning true tells the Minecraft mixin to cancel the entire use action,
      * which prevents Connector from continuing into useOnBlock after the mode packet.
      */
     @JvmStatic
     fun tryHandleModeSwitchUse(): Boolean {
         if (!isAltDown()) return false
-        val player = MinecraftClient.getInstance().player ?: return false
+        val player = Minecraft.getInstance().player ?: return false
 
-        val packet = Hand.values().firstNotNullOfOrNull { hand ->
+        val packet = InteractionHand.values().firstNotNullOfOrNull { hand ->
             when (player.getStackInHand(hand).item) {
                 is FoamSprayerItem -> NetworkManager.TOGGLE_FOAM_SPRAYER_MODE_PACKET
                 is MiningLaserItem -> NetworkManager.TOGGLE_MINING_LASER_MODE_PACKET
@@ -116,7 +116,7 @@ object ModeKeybinds {
         // but only send the mode packet on the initial press.
         if (modeToggleConsumedForCurrentUse) return true
         modeToggleConsumedForCurrentUse = true
-        ClientPlayNetworking.send(packet, PacketByteBuf(Unpooled.buffer()))
+        ClientPlayNetworking.send(packet, FriendlyByteBuf(Unpooled.buffer()))
         return true
     }
 
@@ -125,7 +125,7 @@ object ModeKeybinds {
         lastFoamToggleAge = playerAge
         ClientPlayNetworking.send(
             NetworkManager.TOGGLE_FOAM_SPRAYER_MODE_PACKET,
-            PacketByteBuf(Unpooled.buffer())
+            FriendlyByteBuf(Unpooled.buffer())
         )
     }
 

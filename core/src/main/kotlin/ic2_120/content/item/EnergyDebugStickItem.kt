@@ -7,11 +7,11 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.item.Item
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.math.Direction
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.InteractionResult
+import net.minecraft.ChatFormatting
+import net.minecraft.core.Direction
 import team.reborn.energy.api.EnergyStorage
 
 /**
@@ -21,11 +21,11 @@ import team.reborn.energy.api.EnergyStorage
 @ModItem(name = "energy_debug_stick", tab = CreativeTab.IC2_TOOLS, group = "debug")
 class EnergyDebugStickItem : Item(Item.Settings()) {
 
-    override fun useOnBlock(context: ItemUsageContext): ActionResult {
+    override fun useOnBlock(context: UseOnContext): InteractionResult {
         val world = context.world
         val pos = context.blockPos
-        val player = context.player ?: return ActionResult.PASS
-        if (world.isClient) return ActionResult.SUCCESS
+        val player = context.player ?: return InteractionResult.PASS
+        if (world.isClient) return InteractionResult.SUCCESS
 
         // 先尝试被点击的面，再尝试六个方向
         val directions = listOf(context.side) + Direction.values().toList()
@@ -40,11 +40,11 @@ class EnergyDebugStickItem : Item(Item.Settings()) {
 
         if (storage == null) {
             player.sendMessage(
-                net.minecraft.text.Text.translatable("message.ic2_120.energy_debug_stick.no_energy")
-                    .formatted(Formatting.GRAY),
+                net.minecraft.network.chat.Component.translatable("message.ic2_120.energy_debug_stick.no_energy")
+                    .formatted(ChatFormatting.GRAY),
                 true
             )
-            return ActionResult.SUCCESS
+            return InteractionResult.SUCCESS
         }
 
         val amount = storage.amount
@@ -65,7 +65,7 @@ class EnergyDebugStickItem : Item(Item.Settings()) {
                 maxExtractOnce = storage.extract(Long.MAX_VALUE, tx)
             }
         }
-        val msg = net.minecraft.text.Text.translatable(
+        val msg = net.minecraft.network.chat.Component.translatable(
             "message.ic2_120.energy_debug_stick.info",
             amount,
             capacity,
@@ -74,19 +74,19 @@ class EnergyDebugStickItem : Item(Item.Settings()) {
             if (extract) "✓" else "—",
             maxInsertOnce,
             maxExtractOnce
-        ).formatted(Formatting.GREEN)
+        ).formatted(ChatFormatting.GREEN)
         player.sendMessage(msg, true)
 
         // 点击导线时额外显示电网等级与导线数
         if (world.getBlockState(pos).block is BaseCableBlock) {
             val network = EnergyNetworkManager.getOrCreateNetwork(world, pos)
-            val networkMsg = net.minecraft.text.Text.translatable(
+            val networkMsg = net.minecraft.network.chat.Component.translatable(
                 "message.ic2_120.energy_debug_stick.network",
                 network.outputLevel,
                 network.cables.size
-            ).formatted(Formatting.AQUA)
+            ).formatted(ChatFormatting.AQUA)
             player.sendMessage(networkMsg, true)
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 }

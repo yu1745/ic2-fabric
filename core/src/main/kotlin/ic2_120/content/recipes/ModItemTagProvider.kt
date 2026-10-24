@@ -4,15 +4,15 @@ import ic2_120.Ic2_120
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.ItemTags
+import net.minecraft.tags.TagKey
+import net.minecraft.resources.ResourceLocation
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 
@@ -22,12 +22,12 @@ import kotlin.reflect.KClass
  */
 class ModItemTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<net.minecraft.registry.RegistryWrapper.WrapperLookup>,
+    registriesFuture: CompletableFuture<net.minecraft.core.HolderLookup.WrapperLookup>,
 ) : FabricTagProvider.ItemTagProvider(output, registriesFuture) {
 
     private val compatPathsBuilt = mutableSetOf<String>()
 
-    override fun configure(registries: net.minecraft.registry.RegistryWrapper.WrapperLookup) {
+    override fun configure(registries: net.minecraft.core.HolderLookup.WrapperLookup) {
         for ((clazz, paths) in MaterialTagRegistry.itemEntries) {
             @Suppress("UNCHECKED_CAST")
             val item = (clazz as KClass<out Item>).instance()
@@ -52,14 +52,14 @@ class ModItemTagProvider(
                 val parts = tagId.split(":", limit = 2)
                 val namespace = parts[0]
                 val path = if (parts.size == 2) parts[1] else parts[0]
-                val tagKey = TagKey.of(RegistryKeys.ITEM, Identifier(namespace, path))
+                val tagKey = TagKey.of(Registries.ITEM, ResourceLocation(namespace, path))
                 getOrCreateTagBuilder(tagKey).add(item)
             }
         }
 
         // 橡胶木系列原木（含 stripped 变体）：填入原版方块/物品标签，并保留 IC2 自用标签。
         listOf("rubber_log", "rubber_wood", "stripped_rubber_log", "stripped_rubber_wood").forEach { path ->
-            val block = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, path))
+            val block = BuiltInRegistries.BLOCK.get(ResourceLocation(Ic2_120.MOD_ID, path))
             if (block !== Blocks.AIR && block.asItem() !== Items.AIR) {
                 val item = block.asItem()
                 getOrCreateTagBuilder(ItemTags.LOGS).setReplace(false).add(item)
@@ -70,7 +70,7 @@ class ModItemTagProvider(
 
         // 橡胶树苗和树叶同步加入原版物品标签，供 Create 等兼容方块使用。
         listOf("rubber_sapling", "rubber_leaves").forEach { path ->
-            val block = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, path))
+            val block = BuiltInRegistries.BLOCK.get(ResourceLocation(Ic2_120.MOD_ID, path))
             if (block !== Blocks.AIR && block.asItem() !== Items.AIR) {
                 val item = block.asItem()
                 if (path == "rubber_sapling") {
@@ -131,11 +131,11 @@ class ModItemTagProvider(
     }
 
     private fun cItem(path: String): TagKey<Item> =
-        TagKey.of(RegistryKeys.ITEM, Identifier.of("c", path))
+        TagKey.of(Registries.ITEM, ResourceLocation.of("c", path))
 
     private fun forgeItem(path: String): TagKey<Item> =
-        TagKey.of(RegistryKeys.ITEM, Identifier.of("forge", path))
+        TagKey.of(Registries.ITEM, ResourceLocation.of("forge", path))
 
     private fun compatItem(path: String): TagKey<Item> =
-        TagKey.of(RegistryKeys.ITEM, Identifier.of("ic2_120", "compat/$path"))
+        TagKey.of(Registries.ITEM, ResourceLocation.of("ic2_120", "compat/$path"))
 }

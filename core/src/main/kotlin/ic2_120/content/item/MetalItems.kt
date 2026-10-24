@@ -11,13 +11,13 @@ import ic2_120.content.block.TinBlock
 import ic2_120.content.block.TinOreBlock
 import ic2_120.content.item.RawTin
 import ic2_120.content.recipes.ModTags
-import net.minecraft.data.server.recipe.CookingRecipeJsonBuilder
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.SimpleCookingRecipeBuilder
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.ShapelessRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -31,13 +31,13 @@ import ic2_120.registry.annotation.RecipeProvider
 class TinIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TinIngot::class.instance(), 9)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, TinIngot::class.instance(), 9)
                 .input(TinBlock::class.instance())
                 .criterion(hasItem(TinBlock::class.instance()), conditionsFromItem(TinBlock::class.instance()))
                 .offerTo(exporter, TinIngot::class.recipeId("from_block"))
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, TinBlock::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, TinBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
@@ -45,7 +45,7 @@ class TinIngot : Item(Item.Settings()) {
                 .criterion(hasItem(TinIngot::class.instance()), conditionsFromItem(TinIngot::class.instance()))
                 .offerTo(exporter, TinBlock::class.recipeId("from_ingot"))
 
-            CookingRecipeJsonBuilder.createSmelting(
+            SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(TinOreBlock::class.item()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
@@ -55,7 +55,7 @@ class TinIngot : Item(Item.Settings()) {
                 .criterion(hasItem(TinOreBlock::class.item()), conditionsFromItem(TinOreBlock::class.item()))
                 .offerTo(exporter, TinIngot::class.recipeId("from_tin_ore_smelting"))
 
-            CookingRecipeJsonBuilder.createSmelting(
+            SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(DeepslateTinOreBlock::class.item()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
@@ -68,7 +68,7 @@ class TinIngot : Item(Item.Settings()) {
                 )
                 .offerTo(exporter, TinIngot::class.recipeId("from_deepslate_tin_ore_smelting"))
 
-            CookingRecipeJsonBuilder.createSmelting(
+            SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(RawTin::class.instance()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
@@ -78,7 +78,7 @@ class TinIngot : Item(Item.Settings()) {
                 .criterion(hasItem(RawTin::class.instance()), conditionsFromItem(RawTin::class.instance()))
                 .offerTo(exporter, TinIngot::class.recipeId("from_raw_tin_smelting"))
 
-            CookingRecipeJsonBuilder.createSmelting(
+            SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(CrushedTin::class.instance()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
@@ -88,7 +88,7 @@ class TinIngot : Item(Item.Settings()) {
                 .criterion(hasItem(CrushedTin::class.instance()), conditionsFromItem(CrushedTin::class.instance()))
                 .offerTo(exporter, TinIngot::class.recipeId("from_crushed_tin_smelting"))
 
-            CookingRecipeJsonBuilder.createSmelting(
+            SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(PurifiedTin::class.instance()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
@@ -108,13 +108,13 @@ class TinIngot : Item(Item.Settings()) {
 class BronzeIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapelessRecipeBuilder.create(RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
                 .input(BronzeBlock::class.instance())
                 .criterion(hasItem(BronzeBlock::class.instance()), conditionsFromItem(BronzeBlock::class.instance()))
                 .offerTo(exporter, BronzeIngot::class.recipeId("from_block"))
 
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeBlock::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, BronzeBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")

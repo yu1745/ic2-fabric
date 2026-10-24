@@ -1,7 +1,7 @@
 package ic2_120.content.upgrade
 
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import java.util.WeakHashMap
 
 /**
@@ -24,7 +24,7 @@ object RedstoneControlComponent {
     private const val REDSTONE_TTL_TICKS = 6L
 
     private class RedstoneCacheEntry(
-        val world: World,
+        val world: Level,
         val tick: Long,
         val inverted: Boolean,
         val powered: Boolean
@@ -40,7 +40,7 @@ object RedstoneControlComponent {
      *
      * TTL 内的重复调用不重查世界；inverted 配置变化立即绕过缓存。
     */
-    fun canRun(world: World, pos: BlockPos, machine: Any): Boolean {
+    fun canRun(world: Level, pos: BlockPos, machine: Any): Boolean {
         if (machine !is IRedstoneControlSupport) return true
         val inverted = machine.redstoneInverted
         val now = world.time

@@ -7,11 +7,11 @@ import mezz.jei.api.recipe.IFocusGroup
 import mezz.jei.api.recipe.RecipeIngredientRole
 import mezz.jei.api.recipe.category.IRecipeCategory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.fluid.Fluids
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 /**
  * AE2 TransformCategory 风格的 common JEI 分类。
@@ -21,17 +21,17 @@ import net.minecraft.util.Identifier
 class CoalWaterTransformRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CoalWaterTransformJeiRecipe> {
     private val background: IDrawable = guiHelper.createBlankDrawable(130, 62)
     private val slotBackground: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2_120", "textures/gui/jei_transform.png"), 0, 34, 18, 18
+        ResourceLocation.of("ic2_120", "textures/gui/jei_transform.png"), 0, 34, 18, 18
     )
     private val arrow: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2_120", "textures/gui/jei_transform.png"), 0, 17, 24, 17
+        ResourceLocation.of("ic2_120", "textures/gui/jei_transform.png"), 0, 17, 24, 17
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "coal_fuel_dust")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "coal_fuel_dust")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.COAL_WATER_TRANSFORM
-    override fun getTitle(): Text = Text.translatable("jei.ic2_120.coal_water_transform.title")
+    override fun getTitle(): Component = Component.translatable("jei.ic2_120.coal_water_transform.title")
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
@@ -56,7 +56,7 @@ class CoalWaterTransformRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
             .setFluidRenderer(FluidConstants.BUCKET, false, 16, 16)
             .addTooltipCallback { _, tooltip ->
                 tooltip.clear()
-                tooltip.add(Text.translatable("jei.ic2_120.coal_water_transform.tooltip"))
+                tooltip.add(Component.translatable("jei.ic2_120.coal_water_transform.tooltip"))
             }
 
         builder.addSlot(RecipeIngredientRole.OUTPUT, 106, 24)

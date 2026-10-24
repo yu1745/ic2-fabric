@@ -8,17 +8,17 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.annotation.ModMachineRecipe
 import ic2_120.content.sync.EnergyStorageSync
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.inventory.RecipeInputInventory
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.ShapedRecipe
-import net.minecraft.registry.DynamicRegistryManager
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.inventory.CraftingContainer
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.ShapedRecipe
+import net.minecraft.core.RegistryAccess
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
 import java.util.function.Consumer
 
 /**
@@ -31,10 +31,10 @@ class ConsumeWrenchShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
     delegate.width,
     delegate.height,
     delegate.ingredients,
-    delegate.getOutput(DynamicRegistryManager.EMPTY),
+    delegate.getOutput(RegistryAccess.EMPTY),
     delegate.showNotification()
 ) {
-    override fun craft(inventory: RecipeInputInventory, registryManager: DynamicRegistryManager): ItemStack {
+    override fun craft(inventory: CraftingContainer, registryManager: RegistryAccess): ItemStack {
         val result = super.craft(inventory, registryManager)
 
         val totalEnergy = sumEnergyFromIngredients(inventory)
@@ -57,15 +57,15 @@ class ConsumeWrenchShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
         return result
     }
 
-    override fun getRemainder(inventory: RecipeInputInventory): DefaultedList<ItemStack> {
+    override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> {
         // 完全消耗所有材料，不返回任何东西
-        return DefaultedList.ofSize(inventory.size(), ItemStack.EMPTY)
+        return NonNullList.ofSize(inventory.size(), ItemStack.EMPTY)
     }
 
     override fun getSerializer(): RecipeSerializer<*> = ConsumeWrenchShapedRecipeSerializer
 }
 
-private fun sumEnergyFromIngredients(inventory: RecipeInputInventory): Long {
+private fun sumEnergyFromIngredients(inventory: CraftingContainer): Long {
     var total = 0L
     for (slot in 0 until inventory.size()) {
         val stack = inventory.getStack(slot)
@@ -87,7 +87,7 @@ private fun getEnergyFromStack(stack: ItemStack): Long {
     }
 
     if (item is EnergyStorageBlock.EnergyStorageBlockItem) {
-        val id = Registries.ITEM.getId(item)
+        val id = BuiltInRegistries.ITEM.getId(item)
         val config = EnergyStorageConfig.fromBlockPath(id.path) ?: return 0L
 
         if (stack.nbt?.getBoolean(EnergyStorageBlock.NBT_FULL) == true) {
@@ -104,7 +104,7 @@ private fun getEnergyFromStack(stack: ItemStack): Long {
 }
 
 private fun setStorageEnergy(result: ItemStack, energy: Long) {
-    val id = Registries.ITEM.getId(result.item)
+    val id = BuiltInRegistries.ITEM.getId(result.item)
     val config = EnergyStorageConfig.fromBlockPath(id.path) ?: return
     val clamped = energy.coerceIn(0L, config.capacity)
 
@@ -134,25 +134,25 @@ private fun Long.saturatingAdd(other: Long): Long {
 
 @ModMachineRecipe(id = "consume_wrench_shaped", recipeClass = ConsumeWrenchShapedRecipe::class)
 object ConsumeWrenchShapedRecipeSerializer : RecipeSerializer<ConsumeWrenchShapedRecipe> {
-    override fun read(id: Identifier, json: JsonObject): ConsumeWrenchShapedRecipe {
+    override fun read(id: ResourceLocation, json: JsonObject): ConsumeWrenchShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, json)
         return ConsumeWrenchShapedRecipe(shaped)
     }
 
-    override fun read(id: Identifier, buf: PacketByteBuf): ConsumeWrenchShapedRecipe {
+    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): ConsumeWrenchShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, buf)
         return ConsumeWrenchShapedRecipe(shaped)
     }
 
-    override fun write(buf: PacketByteBuf, recipe: ConsumeWrenchShapedRecipe) {
+    override fun write(buf: FriendlyByteBuf, recipe: ConsumeWrenchShapedRecipe) {
         RecipeSerializer.SHAPED.write(buf, recipe)
     }
 }
 
 object ConsumeWrenchShapedRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeExporter>,
-        recipeId: Identifier,
+        exporter: Consumer<RecipeOutput>,
+        recipeId: ResourceLocation,
         result: Item,
         pattern: List<String>,
         keys: Map<Char, Item>,
@@ -172,13 +172,13 @@ object ConsumeWrenchShapedRecipeDatagen {
     }
 
     private class Provider(
-        private val recipeId: Identifier,
+        private val recipeId: ResourceLocation,
         private val result: Item,
         private val pattern: List<String>,
         private val keys: Map<Char, Item>,
         private val count: Int,
         private val category: String
-    ) : RecipeExporter {
+    ) : RecipeOutput {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:consume_wrench_shaped")
             json.addProperty("category", category)
@@ -186,7 +186,7 @@ object ConsumeWrenchShapedRecipeDatagen {
             val keyObj = JsonObject()
             for ((charKey, item) in keys) {
                 val ingredient = JsonObject()
-                ingredient.addProperty("item", Registries.ITEM.getId(item).toString())
+                ingredient.addProperty("item", BuiltInRegistries.ITEM.getId(item).toString())
                 keyObj.add(charKey.toString(), ingredient)
             }
             json.add("key", keyObj)
@@ -196,7 +196,7 @@ object ConsumeWrenchShapedRecipeDatagen {
             json.add("pattern", patternArr)
 
             val resultObj = JsonObject()
-            resultObj.addProperty("item", Registries.ITEM.getId(result).toString())
+            resultObj.addProperty("item", BuiltInRegistries.ITEM.getId(result).toString())
             if (count > 1) resultObj.addProperty("count", count)
             json.add("result", resultObj)
             json.addProperty("show_notification", true)
@@ -204,10 +204,10 @@ object ConsumeWrenchShapedRecipeDatagen {
 
         override fun getSerializer(): RecipeSerializer<*> = ConsumeWrenchShapedRecipeSerializer
 
-        override fun getRecipeId(): Identifier = recipeId
+        override fun getRecipeId(): ResourceLocation = recipeId
 
         override fun toAdvancementJson(): JsonObject? = null
 
-        override fun getAdvancementId(): Identifier? = null
+        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

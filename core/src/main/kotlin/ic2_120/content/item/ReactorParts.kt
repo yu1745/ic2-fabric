@@ -12,15 +12,15 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.instance
 import ic2_120.registry.recipeId
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.util.Identifier
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.ShapelessRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.resources.ResourceLocation
 
 // ========== 反应堆核心部件 ==========
 
@@ -28,17 +28,17 @@ import net.minecraft.util.Identifier
  * 冷凝器修复配方生成器
  */
 private object CondensatorRepairRecipe {
-    fun generate(exporter: RecipeExporter, condensator: Item, repairItem: Item, repairAmount: Int) {
-        // 使用特殊配方类型，这里暂时用 ShapelessRecipeJsonBuilder
+    fun generate(exporter: RecipeOutput, condensator: Item, repairItem: Item, repairAmount: Int) {
+        // 使用特殊配方类型，这里暂时用 ShapelessRecipeBuilder
         // 注意：这只是占位，实际修复逻辑需要在 CondensatorItem 中实现
-        ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, condensator, 1)
+        ShapelessRecipeBuilder.create(RecipeCategory.MISC, condensator, 1)
             .input(condensator)
             .input(repairItem)
             .criterion(
                 FabricRecipeProvider.hasItem(condensator),
                 FabricRecipeProvider.conditionsFromItem(condensator)
             )
-            .offerTo(exporter, Identifier.of("ic2_120", "${condensator.toString().replace(':','_')}_repair_with_${repairItem.toString().replace(':','_')}"))
+            .offerTo(exporter, ResourceLocation.of("ic2_120", "${condensator.toString().replace(':','_')}_repair_with_${repairItem.toString().replace(':','_')}"))
     }
 }
 
@@ -165,9 +165,9 @@ abstract class ReactorCoolantCellBase(
 class ReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 10_000) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 十字形配方：中间冷却液单元，上下左右4个锡板
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorCoolantCellItem::class.instance(), 1)
                 .pattern(" T ")
                 .pattern("TCT")
                 .pattern(" T ")
@@ -183,9 +183,9 @@ class ReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 10_000) {
 class TripleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 30_000) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 中间行3个10k，上下两行6个锡板
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, TripleReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, TripleReactorCoolantCellItem::class.instance(), 1)
                 .pattern("TTT")
                 .pattern("CCC")
                 .pattern("TTT")
@@ -201,9 +201,9 @@ class TripleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 30_
 class SextupleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 60_000) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 上下两行6个锡板，中间行2个30k + 1个铁板
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SextupleReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SextupleReactorCoolantCellItem::class.instance(), 1)
                 .pattern("TTT")
                 .pattern("SIS")
                 .pattern("TTT")
@@ -223,9 +223,9 @@ class ReactorPlatingItem : AbstractReactorComponent(Item.Settings()) {
         const val EXPLOSION_MODIFIER = 0.9f  // -10% 爆炸范围（累乘）
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 1个铅板 + 1个高基合金（竖放）
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorPlatingItem::class.instance(), 1)
                 .pattern("L")
                 .pattern("A")
                 .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
@@ -251,9 +251,9 @@ class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Settings()) {
         const val EXPLOSION_MODIFIER = 0.99f  // -1% 爆炸范围（累乘）
 
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 1个普通隔板（中间） + 8个铜板
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorHeatPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorHeatPlatingItem::class.instance(), 1)
                 .pattern("CCC")
                 .pattern("CPC")
                 .pattern("CCC")
@@ -277,11 +277,11 @@ class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Settings()) {
 class ContainmentReactorPlatingItem : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plating = ReactorPlatingItem::class.instance()
             val alloy = Alloy::class.instance()
             if (plating == Items.AIR || alloy == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ContainmentReactorPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, ContainmentReactorPlatingItem::class.instance(), 1)
                 .pattern("   ")
                 .pattern("   ")
                 .pattern("PAA")
@@ -300,9 +300,9 @@ class ContainmentReactorPlatingItem : Item(Item.Settings()) {
 class NeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Settings(), 30_000) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // TCT / CPC / TCT — 锡粉、煤粉、铜板
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, NeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, NeutronReflectorItem::class.instance(), 1)
                 .pattern("TCT")
                 .pattern("CPC")
                 .pattern("TCT")
@@ -322,9 +322,9 @@ class NeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Settings(),
 class ThickNeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Settings(), 120_000) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 四角+中心铜板，四边中子反射板
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ThickNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, ThickNeutronReflectorItem::class.instance(), 1)
                 .pattern("CRC")
                 .pattern("RCR")
                 .pattern("CRC")
@@ -343,7 +343,7 @@ class ThickNeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Settin
 class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val thick = ThickNeutronReflectorItem::class.instance()
             val denseCu = DenseCopperPlate::class.instance()
             val iridium = IridiumPlate::class.instance()
@@ -351,7 +351,7 @@ class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Settings()) {
             val unlockThick = FabricRecipeProvider.conditionsFromItem(thick)
 
             // RRR / DID / RRR
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
                 .pattern("RRR")
                 .pattern("DID")
                 .pattern("RRR")
@@ -362,7 +362,7 @@ class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Settings()) {
                 .offerTo(exporter, IridiumNeutronReflectorItem::class.recipeId("from_bands_horizontal"))
 
             // RDR / RIR / RDR
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
                 .pattern("RDR")
                 .pattern("RIR")
                 .pattern("RDR")
@@ -375,9 +375,9 @@ class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Settings()) {
     }
 
     override fun acceptUraniumPulse(
-        stack: net.minecraft.item.ItemStack,
+        stack: net.minecraft.world.item.ItemStack,
         reactor: ic2_120.content.reactor.IReactor,
-        pulsingStack: net.minecraft.item.ItemStack,
+        pulsingStack: net.minecraft.world.item.ItemStack,
         youX: Int,
         youY: Int,
         pulseX: Int,
@@ -390,12 +390,12 @@ class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Settings()) {
 class RshCondensatorItem : CondensatorItem(Item.Settings(), 20_000) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 散热片中间，红石围7个，下面中间空着放热交换器
             // [R R R]
             // [R V R]
             // [R H R]
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RshCondensatorItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, RshCondensatorItem::class.instance(), 1)
                 .pattern("RRR")
                 .pattern("RVR")
                 .pattern("RHR")
@@ -418,12 +418,12 @@ class RshCondensatorItem : CondensatorItem(Item.Settings(), 20_000) {
 class LzhCondensatorItem : CondensatorItem(Item.Settings(), 100_000) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 中间青金石块，第一行中间散热片，四角红石，左右红石冷凝模块，底下反应堆热交换器
             // [R V R]
             // [L C L]
             // [R H R]
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LzhCondensatorItem::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, LzhCondensatorItem::class.instance(), 1)
                 .pattern("RVR")
                 .pattern("LCL")
                 .pattern("RHR")

@@ -13,13 +13,13 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 import java.util.function.Consumer
 
 /**
@@ -113,7 +113,7 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val casing = MachineCasingBlock::class.item()
             val lapotron = LapotronCrystalItem::class.instance()
             val iridium = IridiumPlate::class.instance()
@@ -136,7 +136,7 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
         val tier = stack.orCreateNbt.getInt(SPEED_TIER_KEY)
         val energy = getEnergy(stack)
@@ -154,12 +154,12 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         }
 
         val tierText = when (tier) {
-            1 -> Text.translatable("tooltip.ic2_120.armor.speed_tier.1")
-            2 -> Text.translatable("tooltip.ic2_120.armor.speed_tier.2")
-            else -> Text.translatable("tooltip.ic2_120.armor.speed_tier.off")
+            1 -> Component.translatable("tooltip.ic2_120.armor.speed_tier.1")
+            2 -> Component.translatable("tooltip.ic2_120.armor.speed_tier.2")
+            else -> Component.translatable("tooltip.ic2_120.armor.speed_tier.off")
         }
-        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_leggings.speed", tierText, timeText).formatted(Formatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_leggings.speed", tierText, timeText).formatted(ChatFormatting.GRAY))
         val pct = "%.0f".format(getDamageReduction() * 100)
-        tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(ChatFormatting.GRAY))
     }
 }

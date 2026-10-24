@@ -35,29 +35,29 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluids
-import net.minecraft.fluid.Fluid
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 
 /**
@@ -82,7 +82,7 @@ class SolarDistillerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
     override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
@@ -130,7 +130,7 @@ class SolarDistillerBlockEntity(
         }
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -359,18 +359,18 @@ class SolarDistillerBlockEntity(
         state
     )
 
-    // Inventory 接口实现
+    // Container 接口实现
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() {
         super.markDirty()
     }
 
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_WATER -> isWaterInputStack(stack)
@@ -388,35 +388,35 @@ class SolarDistillerBlockEntity(
     }
 
     // ExtendedScreenHandlerFactory 接口实现（用于打开 GUI）
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.solar_distiller")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solar_distiller")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         SolarDistillerScreenHandler(
             syncId,
             playerInventory,
             this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos),
             syncedData,
             itemStorage
         )
 
     // NBT 数据读写
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         inputTankInternal.setStoredWater(nbt.getLong(NBT_INPUT_TANK))
         outputTankInternal.setStoredDistilled(nbt.getLong(NBT_OUTPUT_TANK))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
@@ -426,8 +426,8 @@ class SolarDistillerBlockEntity(
      * 检查当前是否可以工作
      * 条件：主世界 + 非雨天 + 白天 + 顶部无遮挡
      */
-    private fun canWorkNow(world: World, pos: BlockPos): Boolean {
-        if (world.registryKey != World.OVERWORLD) return false  // 只在主世界工作
+    private fun canWorkNow(world: Level, pos: BlockPos): Boolean {
+        if (world.registryKey != Level.OVERWORLD) return false  // 只在主世界工作
         if (world.isRaining) return false  // 雨天不工作
         val time = world.timeOfDay % 24000
         if (time < DAY_START_TICK || time > DAY_END_TICK) return false  // 只在白天工作
@@ -451,7 +451,7 @@ class SolarDistillerBlockEntity(
      * 3. 检查工作条件并执行蒸馏过程
      * 4. 更新方块激活状态
      */
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return  // 客户端不执行逻辑
 
         // 每 tick 重新从升级槽同步”是否参与流体管网 + 过滤条件”
@@ -509,7 +509,7 @@ class SolarDistillerBlockEntity(
         if (input.isEmpty) return
 
         val emptyOutput = getStack(SLOT_OUTPUT_EMPTY)
-        val emptyCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
 
         // 确定输入容器类型和对应的空容器
         val emptyContainer = when {
@@ -552,11 +552,11 @@ class SolarDistillerBlockEntity(
         val input = getStack(SLOT_INPUT_CELL)
         if (input.isEmpty) return
 
-        val distilledCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "distilled_water_cell")))
+        val distilledCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "distilled_water_cell")))
 
         // 确定输出电池类型
         val outputCell = when {
-            input.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) -> distilledCell
+            input.item == BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) -> distilledCell
             input.item is FluidCellItem && input.isFluidCellEmpty() -> {
                 ItemStack(input.item).apply { setFluidCellVariant(FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)) }
             }
@@ -589,7 +589,7 @@ class SolarDistillerBlockEntity(
      */
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
         // 正面（水平朝向面）禁用流体口，保留为机器交互面；其余面均开放管道/容器访问。
-        // if (side == (world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
+        // if (side == (world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
         return ioStorage
     }
 
@@ -599,7 +599,7 @@ class SolarDistillerBlockEntity(
 
     private fun isInputCellStack(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val emptyCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
         return stack.item == emptyCell || (stack.item is FluidCellItem && stack.isFluidCellEmpty())
     }
 }

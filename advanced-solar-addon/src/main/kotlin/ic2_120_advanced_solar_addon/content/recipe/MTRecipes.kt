@@ -1,10 +1,10 @@
 package ic2_120_advanced_solar_addon.content.recipe
 
 import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.util.Identifier
-import net.minecraft.registry.Registries
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.registries.BuiltInRegistries
 import org.slf4j.LoggerFactory
 
 object MTRecipes {
@@ -67,7 +67,7 @@ object MTRecipes {
     private fun reinjectExtensionRecipes() {
         for (ext in extensionRecipes) {
             val alreadyPresent = recipes.any { existing ->
-                val existingInputId = Registries.ITEM.getId(existing.input.item).toString()
+                val existingInputId = BuiltInRegistries.ITEM.getId(existing.input.item).toString()
                 existingInputId == ext.inputId
             }
             if (alreadyPresent) continue
@@ -124,14 +124,14 @@ object MTRecipes {
     }
 
     private fun addRecipe(inputId: String, outputId: String, energy: Long, outputCount: Int = 1) {
-        val inId = Identifier.tryParse(inputId)
-        val outId = Identifier.tryParse(outputId)
+        val inId = ResourceLocation.tryParse(inputId)
+        val outId = ResourceLocation.tryParse(outputId)
         if (inId == null || outId == null) {
             LOGGER.warn("MT recipe dropped (invalid id): {} -> {}", inputId, outputId)
             return
         }
-        val inputItem = Registries.ITEM.get(inId)
-        val outputItem = Registries.ITEM.get(outId)
+        val inputItem = BuiltInRegistries.ITEM.get(inId)
+        val outputItem = BuiltInRegistries.ITEM.get(outId)
         if (inputItem == Items.AIR || outputItem == Items.AIR || energy <= 0) {
             // 静默丢弃会表现为「物品无法放入分子重组仪」，必须留痕：
             // 常见诱因是加载时机早于物品注册（如 Connector 服务器上 core 初始化晚于附属）。

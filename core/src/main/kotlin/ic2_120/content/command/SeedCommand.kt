@@ -10,14 +10,14 @@ import ic2_120.content.crop.CropType
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
-import net.minecraft.server.command.CommandManager
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.text.Text
+import net.minecraft.commands.Commands
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.network.chat.Component
 
 object SeedCommand {
     private const val PERMISSION_LEVEL = 2
 
-    private val seedTypeSuggestionProvider = SuggestionProvider<ServerCommandSource> { _, builder ->
+    private val seedTypeSuggestionProvider = SuggestionProvider<CommandSourceStack> { _, builder ->
         val remaining = builder.remaining.lowercase()
         for (type in CropType.entries) {
             if (type.asString().lowercase().startsWith(remaining)) {
@@ -30,24 +30,24 @@ object SeedCommand {
     fun register() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
-                CommandManager.literal("ic2seed")
+                Commands.literal("ic2seed")
                     .requires { source ->
                         source.hasPermissionLevel(PERMISSION_LEVEL) ||
                         source.player?.isCreative() == true
                     }
                     .then(
-                        CommandManager.literal("list")
+                        Commands.literal("list")
                             .executes { ctx -> listExecute(ctx) }
                     )
                     .then(
-                        CommandManager.argument("seed_type", StringArgumentType.string())
+                        Commands.argument("seed_type", StringArgumentType.string())
                             .suggests(seedTypeSuggestionProvider)
                             .then(
-                                CommandManager.argument("growth", IntegerArgumentType.integer(0, 31))
+                                Commands.argument("growth", IntegerArgumentType.integer(0, 31))
                                     .then(
-                                        CommandManager.argument("gain", IntegerArgumentType.integer(0, 31))
+                                        Commands.argument("gain", IntegerArgumentType.integer(0, 31))
                                             .then(
-                                                CommandManager.argument("resistance", IntegerArgumentType.integer(0, 31))
+                                                Commands.argument("resistance", IntegerArgumentType.integer(0, 31))
                                                     .executes { ctx -> execute(ctx) }
                                             )
                                     )
@@ -57,28 +57,28 @@ object SeedCommand {
         }
     }
 
-    private fun listExecute(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun listExecute(ctx: CommandContext<CommandSourceStack>): Int {
         val source = ctx.source
         val types = CropType.entries
         val maxKeyWidth = types.maxOf { it.asString().length }
-        val msg = Text.literal("=== 作物种子类型 (${types.size} 种) ===\n")
+        val msg = Component.literal("=== 作物种子类型 (${types.size} 种) ===\n")
         types.forEachIndexed { idx, type ->
-            if (idx > 0) msg.append(Text.literal("\n"))
-            msg.append(Text.literal("  ${type.asString().padEnd(maxKeyWidth)} - "))
+            if (idx > 0) msg.append(Component.literal("\n"))
+            msg.append(Component.literal("  ${type.asString().padEnd(maxKeyWidth)} - "))
             msg.append(CropSeedData.displayName(type))
         }
         source.sendFeedback({ msg }, false)
         return types.size
     }
 
-    private fun execute(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun execute(ctx: CommandContext<CommandSourceStack>): Int {
         val source = ctx.source
         val player = source.player ?: return 0
 
         val seedTypeStr = StringArgumentType.getString(ctx, "seed_type")
         val seedType = CropType.entries.firstOrNull { it.asString().equals(seedTypeStr, ignoreCase = true) }
             ?: run {
-                source.sendError(Text.literal("未知种子类型: $seedTypeStr，可用类型见 Tab 补全"))
+                source.sendError(Component.literal("未知种子类型: $seedTypeStr，可用类型见 Tab 补全"))
                 return 0
             }
 
@@ -91,15 +91,15 @@ object SeedCommand {
         if (!player.inventory.insertStack(itemStack)) {
             player.dropItem(itemStack, true)
             source.sendFeedback(
-                { Text.literal("已给予种子（背包已满，丢在地上）") },
+                { Component.literal("已给予种子（背包已满，丢在地上）") },
                 false
             )
         } else {
             source.sendFeedback(
                 {
-                    Text.literal("已给予 ")
+                    Component.literal("已给予 ")
                         .append(CropSeedData.displayName(seedType))
-                        .append(Text.literal(" G:$growth Ga:$gain R:$resistance"))
+                        .append(Component.literal(" G:$growth Ga:$gain R:$resistance"))
                 },
                 false
             )

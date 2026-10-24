@@ -1,9 +1,9 @@
 package ic2_120.content.network
 
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.network.codec.PacketCodec
-import net.minecraft.network.packet.CustomPayload
-import net.minecraft.util.math.BlockPos
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
+import net.minecraft.core.BlockPos
 
 class TeleporterVisualStatePacket(
     val pos: BlockPos,
@@ -12,17 +12,17 @@ class TeleporterVisualStatePacket(
     val chargeMax: Int,
     val teleportRange: Int,
     val chargingEntityId: Int
-) : CustomPayload {
-    override fun getId(): CustomPayload.Id<*> = ID
+) : CustomPacketPayload {
+    override fun getId(): CustomPacketPayload.Id<*> = ID
 
     companion object {
-        val ID = CustomPayload.Id<TeleporterVisualStatePacket>(net.minecraft.util.Identifier.of("ic2_120", "teleporter_visual_state"))
-        val CODEC: PacketCodec<PacketByteBuf, TeleporterVisualStatePacket> = PacketCodec.of(
+        val ID = CustomPacketPayload.Id<TeleporterVisualStatePacket>(net.minecraft.resources.ResourceLocation.of("ic2_120", "teleporter_visual_state"))
+        val CODEC: StreamCodec<FriendlyByteBuf, TeleporterVisualStatePacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }
         )
 
-        fun read(buf: PacketByteBuf): TeleporterVisualStatePacket {
+        fun read(buf: FriendlyByteBuf): TeleporterVisualStatePacket {
             val pos = buf.readBlockPos()
             val charging = buf.readBoolean()
             val progress = buf.readVarInt()
@@ -32,7 +32,7 @@ class TeleporterVisualStatePacket(
             return TeleporterVisualStatePacket(pos, charging, progress, max, range, entityId)
         }
 
-        fun write(packet: TeleporterVisualStatePacket, buf: PacketByteBuf) {
+        fun write(packet: TeleporterVisualStatePacket, buf: FriendlyByteBuf) {
             buf.writeBlockPos(packet.pos)
             buf.writeBoolean(packet.charging)
             buf.writeVarInt(packet.chargeProgress)

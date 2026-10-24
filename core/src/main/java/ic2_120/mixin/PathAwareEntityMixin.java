@@ -1,8 +1,8 @@
 package ic2_120.mixin;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.PathfinderMob;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 取消拴绳的拉扯和跟随效果，允许生物自由跑动。
  * 同时保留兜底逻辑：超过 20 格自动断开拴绳。
  */
-@Mixin(PathAwareEntity.class)
+@Mixin(PathfinderMob.class)
 public class PathAwareEntityMixin {
 
     /**
@@ -24,16 +24,16 @@ public class PathAwareEntityMixin {
         method = "updateLeash",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/entity/mob/MobEntity;updateLeash()V",
+            target = "Lnet/minecraft/entity/mob/Mob;updateLeash()V",
             shift = At.Shift.AFTER
         ),
         cancellable = true
     )
     private void ic2$skipLeashPullingForKineticGenerator(CallbackInfo ci) {
-        PathAwareEntity self = (PathAwareEntity) (Object) this;
+        PathfinderMob self = (PathfinderMob) (Object) this;
         Entity holdingEntity = self.getHoldingEntity();
 
-        if (holdingEntity instanceof ArmorStandEntity armorStand
+        if (holdingEntity instanceof ArmorStand armorStand
             && armorStand.isInvisible()
             && armorStand.hasNoGravity()) {
             // 兜底：距离过远时断开拴绳

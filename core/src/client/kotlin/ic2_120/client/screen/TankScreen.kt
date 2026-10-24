@@ -4,26 +4,26 @@ import ic2_120.client.FluidUtils
 import ic2_120.content.screen.TankScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "tank")
 class TankScreen(
     handler: TankScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<TankScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<TankScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 与压缩机相同的升级提示图标，复用上游 uptips 资源。
@@ -43,7 +43,7 @@ class TankScreen(
 
         // 流体全铺渲染至 (79,27)-(97,45) = 18x18，使用 FluidUtils 着色
         val fluidId = handler.sync.fluidId ?: return
-        val fluid = Registries.FLUID.get(fluidId)
+        val fluid = BuiltInRegistries.FLUID.get(fluidId)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
         val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultState)
         val sprite = sprites[0]
@@ -62,7 +62,7 @@ class TankScreen(
         )
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -79,12 +79,12 @@ class TankScreen(
             context.drawTooltip(
                 textRenderer,
                 listOf(
-                    Text.translatable("gui.ic2_120.tank.level_change"),
-                    Text.translatable("gui.ic2_120.tank.level_change_1s", formatRate(handler.sync.levelChange1s)),
-                    Text.translatable("gui.ic2_120.tank.level_change_5s", formatRate(handler.sync.levelChange5s)),
-                    Text.translatable("gui.ic2_120.tank.level_change_15s", formatRate(handler.sync.levelChange15s)),
-                    Text.translatable("gui.ic2_120.tank.level_change_30s", formatRate(handler.sync.levelChange30s)),
-                    Text.translatable("gui.ic2_120.tank.level_change_60s", formatRate(handler.sync.levelChange60s))
+                    Component.translatable("gui.ic2_120.tank.level_change"),
+                    Component.translatable("gui.ic2_120.tank.level_change_1s", formatRate(handler.sync.levelChange1s)),
+                    Component.translatable("gui.ic2_120.tank.level_change_5s", formatRate(handler.sync.levelChange5s)),
+                    Component.translatable("gui.ic2_120.tank.level_change_15s", formatRate(handler.sync.levelChange15s)),
+                    Component.translatable("gui.ic2_120.tank.level_change_30s", formatRate(handler.sync.levelChange30s)),
+                    Component.translatable("gui.ic2_120.tank.level_change_60s", formatRate(handler.sync.levelChange60s))
                 ),
                 mouseX, mouseY
             )
@@ -104,13 +104,13 @@ class TankScreen(
             val capacity = handler.sync.capacity
 
             val lines = if (fluidId != null && amount > 0) {
-                val fluid = Registries.FLUID.get(fluidId)
+                val fluid = BuiltInRegistries.FLUID.get(fluidId)
                 val fluidName = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes.getName(
                     net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(fluid)
                 ).string
-                listOf(Text.literal(fluidName), Text.literal("${"%,d".format(amount)} / ${"%,d".format(capacity)} mB"))
+                listOf(Component.literal(fluidName), Component.literal("${"%,d".format(amount)} / ${"%,d".format(capacity)} mB"))
             } else {
-                listOf(Text.literal("空"))
+                listOf(Component.literal("空"))
             }
 
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
@@ -120,8 +120,8 @@ class TankScreen(
     private fun formatRate(rate: Int): String = "%+d mB/s".format(rate)
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiother.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val UPTIPS_SIZE = 16
         private const val UPTIPS_X = 4

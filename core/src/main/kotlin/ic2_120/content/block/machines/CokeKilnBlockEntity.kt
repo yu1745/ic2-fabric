@@ -15,35 +15,35 @@ import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.util.Identifier
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.ItemTags
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 @ModBlockEntity(block = CokeKilnBlock::class)
 class CokeKilnBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     companion object {
         private const val SLOT_INPUT = 0
@@ -52,7 +52,7 @@ class CokeKilnBlockEntity(
         private const val PROCESS_TICKS = 1800
         private const val NBT_PROGRESS = "Progress"
 
-        fun markKilnsDirtyAround(world: World, origin: BlockPos) {
+        fun markKilnsDirtyAround(world: Level, origin: BlockPos) {
             for (dx in -2..2) {
                 for (dy in -2..2) {
                     for (dz in -2..2) {
@@ -65,8 +65,8 @@ class CokeKilnBlockEntity(
         }
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
-    private val peatOreItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore")) }
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val peatOreItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "peat_ore")) }
 
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
@@ -92,7 +92,7 @@ class CokeKilnBlockEntity(
 
     constructor(pos: BlockPos, state: BlockState) : this(CokeKilnBlockEntity::class.type(), pos, state)
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         refreshStructureCacheIfNeeded(world, pos)
         sync.structureValid = if (cachedStructureValid) 1 else 0
@@ -125,29 +125,29 @@ class CokeKilnBlockEntity(
         markDirty()
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.coke_kiln")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.coke_kiln")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        CokeKilnScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        CokeKilnScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    fun tryInteractItem(player: PlayerEntity, hand: Hand): ActionResult {
+    fun tryInteractItem(player: Player, hand: InteractionHand): InteractionResult {
         val handStack = player.getStackInHand(hand)
         val out = getStack(SLOT_OUTPUT)
         if (!out.isEmpty) {
             if (handStack.isEmpty) {
                 player.setStackInHand(hand, out.copy())
                 setStack(SLOT_OUTPUT, ItemStack.EMPTY)
-                return ActionResult.SUCCESS
+                return InteractionResult.SUCCESS
             }
             if (ItemStack.canCombine(handStack, out) && handStack.count + out.count <= handStack.maxCount) {
                 handStack.increment(out.count)
                 setStack(SLOT_OUTPUT, ItemStack.EMPTY)
-                return ActionResult.SUCCESS
+                return InteractionResult.SUCCESS
             }
         }
         if (!handStack.isEmpty && getRecipe(handStack) != null) {
@@ -157,17 +157,17 @@ class CokeKilnBlockEntity(
                 moved.count = 1
                 setStack(SLOT_INPUT, moved)
                 if (!player.abilities.creativeMode) handStack.decrement(1)
-                return ActionResult.SUCCESS
+                return InteractionResult.SUCCESS
             }
         }
-        val center = findKilnCenter(world ?: return ActionResult.PASS, pos)
+        val center = findKilnCenter(world ?: return InteractionResult.PASS, pos)
         player.sendMessage(
-            Text.translatable(
+            Component.translatable(
                 if (center != null) "message.ic2_120.coke_kiln.structure_ok" else "message.ic2_120.coke_kiln.structure_invalid"
             ),
             true
         )
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
     private fun getRecipe(input: ItemStack): Recipe? {
@@ -194,7 +194,7 @@ class CokeKilnBlockEntity(
         structureDirty = true
     }
 
-    private fun findKilnCenter(world: World, kilnPos: BlockPos): BlockPos? {
+    private fun findKilnCenter(world: Level, kilnPos: BlockPos): BlockPos? {
         for (dir in Direction.Type.HORIZONTAL) {
             val center = kilnPos.offset(dir)
             val hatchPos = center.up()
@@ -207,7 +207,7 @@ class CokeKilnBlockEntity(
         return null
     }
 
-    private fun refreshStructureCacheIfNeeded(world: World, kilnPos: BlockPos) {
+    private fun refreshStructureCacheIfNeeded(world: Level, kilnPos: BlockPos) {
         if (!structureDirty) return
         structureDirty = false
         val center = findKilnCenter(world, kilnPos)
@@ -220,7 +220,7 @@ class CokeKilnBlockEntity(
         cachedGratePos = if (cachedStructureValid) center.down() else null
     }
 
-    private fun getCachedGrateEntity(world: World): CokeKilnGrateBlockEntity? {
+    private fun getCachedGrateEntity(world: Level): CokeKilnGrateBlockEntity? {
         val gratePos = cachedGratePos ?: return null
         return world.getBlockEntity(gratePos) as? CokeKilnGrateBlockEntity
     }
@@ -228,14 +228,14 @@ class CokeKilnBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
     override fun clear() = inventory.clear()
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
@@ -244,16 +244,16 @@ class CokeKilnBlockEntity(
         else -> false
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         nbt.putInt(NBT_PROGRESS, progress)
         syncedData.writeNbt(nbt)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         progress = nbt.getInt(NBT_PROGRESS)
         syncedData.readNbt(nbt)
         sync.progress = progress

@@ -1,6 +1,6 @@
 package ic2_120.client.ui
 
-import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.GuiGraphics
 
 /**
  * 原版风格的进度条：深色底、浅色填充、细边框。
@@ -19,7 +19,7 @@ object ProgressBar {
 
     /**
      * 在指定区域绘制横向进度条。
-     * @param context DrawContext（如 drawBackground 的 context）
+     * @param context GuiGraphics（如 drawBackground 的 context）
      * @param x 左上角 X（屏幕坐标）
      * @param y 左上角 Y
      * @param width 总宽度
@@ -32,7 +32,7 @@ object ProgressBar {
      */
     @JvmStatic
     fun draw(
-        context: DrawContext,
+        context: GuiGraphics,
         x: Int,
         y: Int,
         width: Int,
@@ -71,7 +71,7 @@ object ProgressBar {
 
     /**
      * 绘制竖向燃料/容量条。
-     * @param context DrawContext
+     * @param context GuiGraphics
      * @param x 左上角 X
      * @param y 左上角 Y
      * @param width 宽度（建议 6～12）
@@ -83,7 +83,7 @@ object ProgressBar {
      */
     @JvmStatic
     fun drawVerticalFuelBar(
-        context: DrawContext,
+        context: GuiGraphics,
         x: Int,
         y: Int,
         width: Int,
@@ -132,7 +132,7 @@ object ProgressBar {
      */
     @JvmStatic
     fun drawHeatBar(
-        context: DrawContext,
+        context: GuiGraphics,
         x: Int,
         y: Int,
         width: Int,

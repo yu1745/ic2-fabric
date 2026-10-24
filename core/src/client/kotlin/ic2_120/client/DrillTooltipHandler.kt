@@ -9,9 +9,9 @@ import ic2_120.content.item.energy.IElectricTool
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 
 /**
  * 钻头 Tooltip 客户端处理器
@@ -50,16 +50,16 @@ object DrillTooltipHandler {
                 val energy = item.getEnergy(stack)
                 val remainingBlocks = if (euPerBlock > 0) energy / euPerBlock else 0L
                 lines.add(
-                    Text.literal(
+                    Component.literal(
                         when (item) {
                             is Chainsaw -> "还能砍 "
                             is NanoSaber -> "还能攻击 "
                             else -> "还能挖 "
                         }
                     )
-                        .formatted(Formatting.GRAY)
-                        .append(Text.literal("$remainingBlocks").formatted(Formatting.YELLOW))
-                        .append(Text.literal(" 次").formatted(Formatting.GRAY))
+                        .formatted(ChatFormatting.GRAY)
+                        .append(Component.literal("$remainingBlocks").formatted(ChatFormatting.YELLOW))
+                        .append(Component.literal(" 次").formatted(ChatFormatting.GRAY))
                 )
             }
 
@@ -67,28 +67,28 @@ object DrillTooltipHandler {
             if (item is IridiumDrill) {
                 val silkEnabled = IridiumDrill.isSilkTouchEnabled(stack)
                 lines.add(
-                    Text.literal(
+                    Component.literal(
                         if (silkEnabled) "当前模式: 精准采集" else "当前模式: 时运III + 效率III"
-                    ).formatted(Formatting.GRAY)
+                    ).formatted(ChatFormatting.GRAY)
                 )
                 lines.add(
-                    Text.literal("精准采集按键: ")
-                        .formatted(Formatting.GRAY)
-                        .append(Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(Formatting.YELLOW))
+                    Component.literal("精准采集按键: ")
+                        .formatted(ChatFormatting.GRAY)
+                        .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(ChatFormatting.YELLOW))
                 )
             }
 
             if (item is Chainsaw) {
                 val shearEnabled = Chainsaw.isShearEnabled(stack)
                 lines.add(
-                    Text.translatable(
+                    Component.translatable(
                         if (shearEnabled) "tooltip.ic2_120.chainsaw.mode_shear" else "tooltip.ic2_120.chainsaw.mode_normal"
-                    ).formatted(Formatting.GRAY)
+                    ).formatted(ChatFormatting.GRAY)
                 )
                 lines.add(
-                    Text.translatable("tooltip.ic2_120.chainsaw.toggle_mode")
-                        .formatted(Formatting.GRAY)
-                        .append(Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(Formatting.YELLOW))
+                    Component.translatable("tooltip.ic2_120.chainsaw.toggle_mode")
+                        .formatted(ChatFormatting.GRAY)
+                        .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(ChatFormatting.YELLOW))
                 )
             }
         }

@@ -4,19 +4,19 @@ import ic2_120.Ic2_120
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.sound.MovingSoundInstance
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.random.Random
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.util.RandomSource
 import org.slf4j.LoggerFactory
 
 
 object JetpackSoundController {
     private val logger = LoggerFactory.getLogger("ic2_120/JetpackSoundController")
-    private val JETPACK_SOUND_ID = Identifier.of(Ic2_120.MOD_ID, "item.jetpack.loop")
+    private val JETPACK_SOUND_ID = ResourceLocation.of(Ic2_120.MOD_ID, "item.jetpack.loop")
     private val JETPACK_SOUND = SoundEvent.of(JETPACK_SOUND_ID)
 
     private var loopSound: JetpackLoopSoundInstance? = null
@@ -53,7 +53,7 @@ object JetpackSoundController {
         }
     }
 
-    private fun isJetpackFlightActive(player: ClientPlayerEntity): Boolean {
+    private fun isJetpackFlightActive(player: LocalPlayer): Boolean {
         if (player.isCreative || player.isSpectator) return false
         if (!player.abilities.flying) return false
         if (player.isOnGround || player.isTouchingWater || player.isClimbing) return false
@@ -63,8 +63,8 @@ object JetpackSoundController {
     }
 
     private class JetpackLoopSoundInstance(
-        private val player: ClientPlayerEntity
-    ) : MovingSoundInstance(JETPACK_SOUND, SoundCategory.PLAYERS, Random.create()) {
+        private val player: LocalPlayer
+    ) : AbstractTickableSoundInstance(JETPACK_SOUND, SoundSource.PLAYERS, RandomSource.create()) {
         private var fadingOut = false
 
         init {
@@ -79,7 +79,7 @@ object JetpackSoundController {
 
         override fun tick() {
             if (player.isRemoved) {
-                setDone()
+                stop()
                 return
             }
 
@@ -90,7 +90,7 @@ object JetpackSoundController {
             if (fadingOut) {
                 volume = (volume - 0.06f).coerceAtLeast(0f)
                 if (volume <= 0.001f) {
-                    setDone()
+                    stop()
                 }
             } else {
                 volume = 0.42f

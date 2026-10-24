@@ -73,14 +73,14 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.util.math.Direction
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Direction
+import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
 
@@ -122,16 +122,16 @@ object Ic2_120 : ModInitializer {
             listOf(
                 "ic2_120.content.tab",     // 扫描物品栏类（必须先注册）
                 "ic2_120.content.entity",  // 扫描 Entity 类（须在物品前注册，供船物品引用）
-                "ic2_120.content.effect",  // 扫描 StatusEffect 类
+                "ic2_120.content.effect",  // 扫描 MobEffect 类
                 "ic2_120.content.block",   // 扫描方块类（包括 cables, machines, energy 等子包）
-                "ic2_120.content.screen",  // 扫描 ScreenHandler 类
+                "ic2_120.content.screen",  // 扫描 AbstractContainerMenu 类
                 "ic2_120.content.item"     // 扫描物品类（含 @ModItem 船物品）
             )
         )
 
         // 焦炭作为固体燃料：燃烧时间为煤炭 2 倍（影响原版熔炉、铁炉、发电机等读取 FuelRegistry 的设备）
         val coalBurnTicks = FuelRegistry.INSTANCE.get(Items.COAL) ?: 1600
-        Registries.ITEM.getOrEmpty(Identifier(MOD_ID, "coke")).ifPresent { cokeItem ->
+        BuiltInRegistries.ITEM.getOrEmpty(ResourceLocation(MOD_ID, "coke")).ifPresent { cokeItem ->
             FuelRegistry.INSTANCE.add(cokeItem, coalBurnTicks * 2)
         }
 
@@ -141,7 +141,7 @@ object Ic2_120 : ModInitializer {
         // 特殊处理：导线 BlockEntity 需在所有方块（含附属 mod 的 BaseCableBlock）注册后统一注册。
         // core 自有导线扫描注册表；附属导线因 core.onInitialize 先于附属（硬依赖拓扑序），无法被扫描捕获，
         // 改由 "ic2_120:cables" entrypoint 贡献：core 调 getEntrypoints 时执行附属 provider，
-        // 收集其返回的 BaseCableBlock 并代为注册进 Registries.BLOCK，再合并进 CableBlockEntity。
+        // 收集其返回的 BaseCableBlock 并代为注册进 BuiltInRegistries.BLOCK，再合并进 CableBlockEntity。
         CableBlockEntity.registerWithAddons(MOD_ID)
 
         // 扳手与机器方块交互（旋转、拆卸、掉落逻辑）
@@ -214,11 +214,11 @@ object Ic2_120 : ModInitializer {
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
-        val ic2CropSeedsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
+        val ic2CropSeedsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries ->
-            val seedBag = Registries.ITEM.get(Identifier(MOD_ID, "crop_seed_bag"))
+            val seedBag = BuiltInRegistries.ITEM.get(ResourceLocation(MOD_ID, "crop_seed_bag"))
             val initialSeeds = CropSeedBagItem.createInitialSeedStacks()
-            if (seedBag != net.minecraft.item.Items.AIR) {
+            if (seedBag != net.minecraft.world.item.Items.AIR) {
                 for (stack in initialSeeds) entries.addAfter(seedBag, stack)
             } else {
                 for (stack in initialSeeds) entries.add(stack)
@@ -226,9 +226,9 @@ object Ic2_120 : ModInitializer {
         }
 
         // 刷子 16 色变体（基础未染色刷子由 @ModItem 自动加入）
-        val ic2ToolsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_TOOLS.id))
+        val ic2ToolsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation(MOD_ID, CreativeTab.IC2_TOOLS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2ToolsKey).register { entries ->
-            val painter = Registries.ITEM.get(Identifier(MOD_ID, "painter"))
+            val painter = BuiltInRegistries.ITEM.get(ResourceLocation(MOD_ID, "painter"))
             val coloredPainters = PainterItem.createColoredStacks()
             if (painter != Items.AIR) {
                 for (stack in coloredPainters) entries.addAfter(painter, stack)
@@ -250,7 +250,7 @@ object Ic2_120 : ModInitializer {
             )
         }
 
-        // 玩家维度切换后客户端 ClientPlayerEntity 会被重建，allowFlying 被 vanilla 按
+        // 玩家维度切换后客户端 LocalPlayer 会被重建，allowFlying 被 vanilla 按
         // 生存模式重置为 false；登记给 FlightManager 在下次 tick 强制重发 abilities 包兜底。
         ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register { player, _, _ ->
             FlightManager.onWorldChanged(player)
@@ -288,5 +288,5 @@ object Ic2_120 : ModInitializer {
     /**
      * 创建模组内的标识符
      */
-    fun id(path: String): Identifier = Identifier(MOD_ID, path)
+    fun id(path: String): ResourceLocation = ResourceLocation(MOD_ID, path)
 }

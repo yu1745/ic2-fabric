@@ -3,8 +3,8 @@ package ic2_120.content.energy.charge
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.ITiered
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
 
 /**
  * 通用充电组件。
@@ -16,7 +16,7 @@ import net.minecraft.item.ItemStack
  * （如采矿机高压升级提升扫描仪充电电压等级）。
  */
 class BatteryChargerComponent(
-    private val inventory: Inventory,
+    private val inventory: Container,
     private val batterySlot: Int,
     private val machineTierProvider: () -> Int,
     private val machineEnergyProvider: () -> Long,
@@ -84,7 +84,7 @@ class BatteryChargerComponent(
         return inserted
     }
 
-    private fun chargeBattery(stack: net.minecraft.item.ItemStack, battery: IBatteryItem): Long {
+    private fun chargeBattery(stack: net.minecraft.world.item.ItemStack, battery: IBatteryItem): Long {
         if (!battery.canCharge) return 0L
         if (battery.tier > machineTierProvider()) return 0L
         if (battery.isFullyCharged(stack)) return 0L
@@ -109,7 +109,7 @@ class BatteryChargerComponent(
         return charged
     }
 
-    private fun chargeElectricTool(stack: net.minecraft.item.ItemStack, tool: IElectricTool): Long {
+    private fun chargeElectricTool(stack: net.minecraft.world.item.ItemStack, tool: IElectricTool): Long {
         if (tool.tier > machineTierProvider()) return 0L
         if (tool.isFullyCharged(stack)) return 0L
 

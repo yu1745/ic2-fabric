@@ -8,13 +8,13 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
 
 @ModItem(name = "iron_block_cutting_blade", tab = CreativeTab.IC2_MATERIALS)
 class IronBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
@@ -22,10 +22,10 @@ class IronBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val dense = DenseIronPlate::class.instance()
             if (dense != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronBlockCuttingBladeItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, IronBlockCuttingBladeItem::class.instance(), 1)
                     .pattern("PPP").pattern("PSP").pattern("PPP")
                     .input('P', dense).input('S', Items.STONE)
                     .criterion(hasItem(dense), conditionsFromItem(dense))
@@ -41,10 +41,10 @@ class SteelBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = SteelPlate::class.instance()
             if (plate != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelBlockCuttingBladeItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, SteelBlockCuttingBladeItem::class.instance(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
                     .input('A', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL)).input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
                     .criterion(hasItem(plate), conditionsFromItem(plate))
@@ -60,10 +60,10 @@ class DiamondBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val steel = SteelIngot::class.instance()
             if (steel != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, DiamondBlockCuttingBladeItem::class.instance(), 1)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, DiamondBlockCuttingBladeItem::class.instance(), 1)
                     .pattern("DDD").pattern("DSD").pattern("DDD")
                     .input('D', Items.DIAMOND).input('S', steel)
                     .criterion(hasItem(steel), conditionsFromItem(steel))

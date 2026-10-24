@@ -3,13 +3,13 @@ package ic2_120.content.effect
 import ic2_120.content.item.*
 import ic2_120.content.item.armor.QuantumArmorItem
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.MinecraftServer
 
 object RadiationHandler {
@@ -32,7 +32,7 @@ object RadiationHandler {
                 if (isImmune(player)) continue
                 if (hasRadioactiveItem(player)) {
                     player.addStatusEffect(
-                        StatusEffectInstance(ModStatusEffects.RADIATION, 400, 0, true, true, true)
+                        MobEffectInstance(ModStatusEffects.RADIATION, 400, 0, true, true, true)
                     )
                 }
             }
@@ -40,7 +40,7 @@ object RadiationHandler {
     }
 
     private fun isImmune(entity: LivingEntity): Boolean {
-        if (entity is PlayerEntity && QuantumArmorItem.hasFullQuantumArmor(entity)) return true
+        if (entity is Player && QuantumArmorItem.hasFullQuantumArmor(entity)) return true
         return hasFullHazmat(entity)
     }
 
@@ -52,7 +52,7 @@ object RadiationHandler {
 
         fun isHazmat(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is ArmorItem) return false
-            val id = Registries.ITEM.getId(stack.item)
+            val id = BuiltInRegistries.ITEM.getId(stack.item)
             return "hazmat" in id.path || id.path == "rubber_boots"
         }
 
@@ -72,7 +72,7 @@ object RadiationHandler {
             if (isRadioactiveItem(entity.getEquippedStack(slot))) return true
         }
 
-        if (entity is PlayerEntity) {
+        if (entity is Player) {
             for (stack in entity.inventory.main) {
                 if (isRadioactiveItem(stack)) return true
             }

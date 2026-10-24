@@ -1,12 +1,12 @@
 package ic2_120.integration.ftbchunks
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.entity.Entity
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import java.util.UUID
 import kotlin.math.ceil
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.server.level.ServerPlayer
 
 /**
  * FTB Chunks 领地保护集成（外观层）。
@@ -32,11 +32,11 @@ object ClaimProtection {
     }
 
     @JvmStatic
-    fun isProtected(world: World, pos: BlockPos, ownerUuid: UUID? = null, protectionType: String = EDIT_BLOCK): Boolean =
+    fun isProtected(world: Level, pos: BlockPos, ownerUuid: UUID? = null, protectionType: String = EDIT_BLOCK): Boolean =
         impl?.isProtected(world, pos, ownerUuid, protectionType) == true
 
     @JvmStatic
-    fun isProtected(world: World, pos: BlockPos, actor: Entity?, protectionType: String = EDIT_BLOCK): Boolean =
+    fun isProtected(world: Level, pos: BlockPos, actor: Entity?, protectionType: String = EDIT_BLOCK): Boolean =
         impl?.isProtected(world, pos, actor, protectionType) == true
 
     /**
@@ -45,7 +45,7 @@ object ClaimProtection {
      * claim 是 chunk 粒度，调用方应按 chunk 缓存结果以优化批量场景（如核爆炸）。
      */
     @JvmStatic
-    fun isExplosionProtected(world: World, pos: BlockPos, ownerUuid: UUID? = null): Boolean =
+    fun isExplosionProtected(world: Level, pos: BlockPos, ownerUuid: UUID? = null): Boolean =
         impl?.isExplosionProtected(world, pos, ownerUuid) == true
 
     /**
@@ -54,8 +54,8 @@ object ClaimProtection {
      * center block before discovering a denied edge block.
      */
     @JvmStatic
-    fun allAllowed(world: World, positions: Iterable<BlockPos>, player: PlayerEntity?, protectionType: String = EDIT_BLOCK): Boolean {
-        val serverPlayer = player as? ServerPlayerEntity
+    fun allAllowed(world: Level, positions: Iterable<BlockPos>, player: Player?, protectionType: String = EDIT_BLOCK): Boolean {
+        val serverPlayer = player as? ServerPlayer
         if (serverPlayer != null) {
             return positions.all { !isProtected(world, it, serverPlayer, protectionType) }
         }
@@ -64,15 +64,15 @@ object ClaimProtection {
     }
 
     @JvmStatic
-    fun allAllowedUuid(world: World, positions: Iterable<BlockPos>, ownerUuid: UUID?, protectionType: String = EDIT_BLOCK): Boolean =
+    fun allAllowedUuid(world: Level, positions: Iterable<BlockPos>, ownerUuid: UUID?, protectionType: String = EDIT_BLOCK): Boolean =
         positions.all { !isProtected(world, it, ownerUuid, protectionType) }
 
     @JvmStatic
-    fun allExplosionAllowed(world: World, positions: Iterable<BlockPos>, ownerUuid: UUID?): Boolean =
+    fun allExplosionAllowed(world: Level, positions: Iterable<BlockPos>, ownerUuid: UUID?): Boolean =
         positions.all { !isExplosionProtected(world, it, ownerUuid) }
 
     @JvmStatic
-    fun explosionCubeAllowed(world: World, center: BlockPos, radius: Float, ownerUuid: UUID?): Boolean {
+    fun explosionCubeAllowed(world: Level, center: BlockPos, radius: Float, ownerUuid: UUID?): Boolean {
         val r = ceil(radius.toDouble()).toInt().coerceAtLeast(1)
         val positions = BlockPos.iterate(
             center.x - r, center.y - r, center.z - r,

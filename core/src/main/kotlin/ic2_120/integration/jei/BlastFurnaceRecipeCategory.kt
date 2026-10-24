@@ -6,10 +6,10 @@ import mezz.jei.api.helpers.IGuiHelper
 import mezz.jei.api.recipe.IFocusGroup
 import mezz.jei.api.recipe.RecipeIngredientRole
 import mezz.jei.api.recipe.category.IRecipeCategory
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 高炉 JEI 分类 — 使用机器纹理 [guiblockcutter.png] 上半部分作为背景。
@@ -19,15 +19,15 @@ import net.minecraft.util.Identifier
  */
 class BlastFurnaceRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlastFurnaceJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2", "textures/gui/guiblockcutter.png"),
+        ResourceLocation.of("ic2", "textures/gui/guiblockcutter.png"),
         0, 0, 170, 80
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "blast_furnace")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "blast_furnace")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.BLAST_FURNACE
-    override fun getTitle(): Text = Text.translatable("block.ic2_120.blast_furnace")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120.blast_furnace")
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon

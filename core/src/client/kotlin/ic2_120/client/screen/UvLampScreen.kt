@@ -5,29 +5,29 @@ import ic2_120.client.t
 import ic2_120.content.block.UvLampBlock
 import ic2_120.content.screen.UvLampScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = UvLampBlock::class)
 class UvLampScreen(
     handler: UvLampScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<UvLampScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<UvLampScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 162
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -87,14 +87,14 @@ class UvLampScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(capacity)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(capacity)} EU"),
                 mouseX, mouseY
             )
         }
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiuvlamp.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiuvlamp.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条纹理区域 (180,4)-(194,18) = 14×14

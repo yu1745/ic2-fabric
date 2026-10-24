@@ -1,12 +1,12 @@
 package ic2_120.content.block.machines
 
-import net.minecraft.entity.ExperienceOrbEntity
-import net.minecraft.recipe.AbstractCookingRecipe
-import net.minecraft.recipe.Recipe
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.ExperienceOrb
+import net.minecraft.world.item.crafting.AbstractCookingRecipe
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 
 /**
  * 熔炉经验工具：提供经验累加和掉落逻辑，供铁炉/电炉复用。
@@ -18,13 +18,13 @@ object FurnaceExperienceHelper {
      * 在指定位置掉落经验球。
      * 经验总量为浮点数，整数部分直接掉落，小数部分按概率进位（与原版一致）。
      */
-    fun dropExperience(world: ServerWorld, pos: BlockPos, totalExperience: Float) {
+    fun dropExperience(world: ServerLevel, pos: BlockPos, totalExperience: Float) {
         if (totalExperience <= 0f) return
-        val intPart = MathHelper.floor(totalExperience)
-        val fracPart = MathHelper.fractionalPart(totalExperience)
+        val intPart = Mth.floor(totalExperience)
+        val fracPart = Mth.fractionalPart(totalExperience)
         var amount = intPart
         if (fracPart != 0.0f && Math.random() < fracPart) amount++
-        if (amount > 0) ExperienceOrbEntity.spawn(world, Vec3d.ofCenter(pos), amount)
+        if (amount > 0) ExperienceOrb.spawn(world, Vec3.ofCenter(pos), amount)
     }
 
     /**

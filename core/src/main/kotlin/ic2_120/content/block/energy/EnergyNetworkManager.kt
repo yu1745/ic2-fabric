@@ -2,10 +2,10 @@ package ic2_120.content.block.energy
 
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.cables.CableBlockEntity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.registry.RegistryKey
-import net.minecraft.world.World
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.level.Level
 import org.slf4j.LoggerFactory
 
 /**
@@ -18,9 +18,9 @@ import org.slf4j.LoggerFactory
 object EnergyNetworkManager {
 
     private val logger = LoggerFactory.getLogger("ic2_120/EnergyNetworkManager")
-    private val worldPosToNetwork = mutableMapOf<RegistryKey<World>, MutableMap<Long, EnergyNetwork>>()
-    private val worldNetworks = mutableMapOf<RegistryKey<World>, MutableSet<EnergyNetwork>>()
-    private val pendingBuilds = mutableMapOf<RegistryKey<World>, MutableSet<Long>>()
+    private val worldPosToNetwork = mutableMapOf<ResourceKey<Level>, MutableMap<Long, EnergyNetwork>>()
+    private val worldNetworks = mutableMapOf<ResourceKey<Level>, MutableSet<EnergyNetwork>>()
+    private val pendingBuilds = mutableMapOf<ResourceKey<Level>, MutableSet<Long>>()
 
     /**
      * Register a loaded or newly placed cable for lazy network construction.
@@ -29,7 +29,7 @@ object EnergyNetworkManager {
      * construction must be bootstrapped explicitly instead of relying on the
      * first cable tick.
      */
-    fun queueNetworkBuild(world: World, pos: BlockPos) {
+    fun queueNetworkBuild(world: Level, pos: BlockPos) {
         pendingBuilds.getOrPut(world.registryKey) { mutableSetOf() }.add(pos.asLong())
     }
 
@@ -39,7 +39,7 @@ object EnergyNetworkManager {
      * tick and one map lookup per cable even though EnergyNetwork deduplicated
      * the actual work internally.
      */
-    fun tickAll(world: World) {
+    fun tickAll(world: Level) {
         pendingBuilds.remove(world.registryKey)?.forEach { posLong ->
             val pos = BlockPos.fromLong(posLong)
             if (world.getBlockState(pos).block is BaseCableBlock) {
@@ -54,11 +54,11 @@ object EnergyNetworkManager {
         for (network in networks) network.tickIfNeeded(world)
     }
 
-    private fun mapFor(world: World): MutableMap<Long, EnergyNetwork> =
+    private fun mapFor(world: Level): MutableMap<Long, EnergyNetwork> =
         worldPosToNetwork.getOrPut(world.registryKey) { mutableMapOf() }
 
     /** 获取 [pos] 所在电网；不存在时 BFS 构建。 */
-    fun getOrCreateNetwork(world: World, pos: BlockPos): EnergyNetwork {
+    fun getOrCreateNetwork(world: Level, pos: BlockPos): EnergyNetwork {
         val posToNetwork = mapFor(world)
         posToNetwork[pos.asLong()]?.let { return it }
         return buildNetwork(world, pos, posToNetwork)
@@ -69,7 +69,7 @@ object EnergyNetworkManager {
      * 构建一个新的 [EnergyNetwork]，并吸收途中遇到的任何旧网。
      */
     private fun buildNetwork(
-        world: World,
+        world: Level,
         startPos: BlockPos,
         posToNetwork: MutableMap<Long, EnergyNetwork>
     ): EnergyNetwork {
@@ -134,7 +134,7 @@ object EnergyNetworkManager {
      * [CableBlockEntity.localEnergy]，清除所有网络引用。
      * 剩余导线会在下次 tick 惰性重建新电网。
      */
-    fun invalidateAt(world: World, pos: BlockPos) {
+    fun invalidateAt(world: Level, pos: BlockPos) {
         val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
         worldNetworks[world.registryKey]?.remove(network)
@@ -150,13 +150,13 @@ object EnergyNetworkManager {
     }
 
     /** 连接边界变化（如相邻机器放置/移除）时，让所在电网刷新拓扑缓存。 */
-    fun invalidateConnectionCachesAt(world: World, pos: BlockPos) {
+    fun invalidateConnectionCachesAt(world: Level, pos: BlockPos) {
         val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
         network.invalidateConnectionCaches()
     }
 
-    private fun distributeEnergyToEntities(world: World, network: EnergyNetwork) {
+    private fun distributeEnergyToEntities(world: Level, network: EnergyNetwork) {
         val entities = network.cables.mapNotNull { posLong ->
             world.getBlockEntity(BlockPos.fromLong(posLong)) as? CableBlockEntity
         }
@@ -171,7 +171,7 @@ object EnergyNetworkManager {
     }
 
     /** 世界卸载时仅清理该维度缓存，避免误伤其他维度电网。 */
-    fun onWorldUnload(world: World) {
+    fun onWorldUnload(world: Level) {
         worldPosToNetwork.remove(world.registryKey)
         worldNetworks.remove(world.registryKey)
         pendingBuilds.remove(world.registryKey)

@@ -21,22 +21,22 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.Block
-import net.minecraft.item.ItemStack
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.state.property.Properties
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.item.ItemStack
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 /**
  * 扳手与机器方块的交互逻辑：
@@ -45,27 +45,27 @@ import net.minecraft.world.World
  * - 扳手/电扳手右键：正面朝向玩家，Shift+右键：背面朝向玩家，不耗耐久/不耗电
  * - 非扳手拆卸：只掉机器外壳（由 MachineBlock.getCasingDrop 决定）
  *
- * 注意：World.breakBlock(..., drop=true, player) 内部对掉落使用 ItemStack.EMPTY 作为 TOOL，
+ * 注意：Level.breakBlock(..., drop=true, player) 内部对掉落使用 ItemStack.EMPTY 作为 TOOL，
  * match_tool（扳手）战利品条件不会生效。扳手拆机需先 breakBlock(false) 再 Block.dropStacks(..., 扳手)。
  *
  * 储罐：扳手拆卸保留 80% 流体
  */
 object WrenchHandler {
 
-    private val WRENCH_ID = Identifier(Ic2_120.MOD_ID, "wrench")
-    private val ELECTRIC_WRENCH_ID = Identifier(Ic2_120.MOD_ID, "electric_wrench")
-    private val WRENCH_USE_SOUND = SoundEvent.of(Identifier.of("ic2", "item.wrench.use"))
+    private val WRENCH_ID = ResourceLocation(Ic2_120.MOD_ID, "wrench")
+    private val ELECTRIC_WRENCH_ID = ResourceLocation(Ic2_120.MOD_ID, "electric_wrench")
+    private val WRENCH_USE_SOUND = SoundEvent.of(ResourceLocation.of("ic2", "item.wrench.use"))
     private const val ENERGY_RETAIN_RATIO = 0.8
 
     fun isWrench(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val id = Registries.ITEM.getId(stack.item)
+        val id = BuiltInRegistries.ITEM.getId(stack.item)
         return id == WRENCH_ID || id == ELECTRIC_WRENCH_ID
     }
 
     private fun isElectricWrench(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        return Registries.ITEM.getId(stack.item) == ELECTRIC_WRENCH_ID
+        return BuiltInRegistries.ITEM.getId(stack.item) == ELECTRIC_WRENCH_ID
     }
 
     fun register() {
@@ -73,7 +73,7 @@ object WrenchHandler {
             // 右键正面朝向玩家，Shift+右键背面朝向玩家
         UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
             val stack = player.getStackInHand(hand)
-            if (!isWrench(stack)) return@register ActionResult.PASS
+            if (!isWrench(stack)) return@register InteractionResult.PASS
 
             val pos = hitResult.blockPos
             val state = world.getBlockState(pos)
@@ -82,14 +82,14 @@ object WrenchHandler {
             if (block is BasePipeBlock) {
                 if (!world.isClient) {
                     if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK)) {
-                        return@register ActionResult.FAIL
+                        return@register InteractionResult.FAIL
                     }
                     if (player.isSneaking) {
                         val transparent = !state.get(BasePipeBlock.TRANSPARENT)
                         world.setBlockState(pos, state.with(BasePipeBlock.TRANSPARENT, transparent), Block.NOTIFY_ALL)
-                        world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
+                        world.playSound(null, pos, WRENCH_USE_SOUND, SoundSource.BLOCKS, 1.0f, 1.0f)
                     } else {
-                        val be = world.getBlockEntity(pos) as? PipeBlockEntity ?: return@register ActionResult.PASS
+                        val be = world.getBlockEntity(pos) as? PipeBlockEntity ?: return@register InteractionResult.PASS
                         be.toggleDisabled(hitResult.side)
                         val recomputed = block.recomputeState(world, pos, state, be)
                         world.setBlockState(pos, recomputed, Block.NOTIFY_ALL)
@@ -97,18 +97,18 @@ object WrenchHandler {
                         PipeNetworkManager.invalidateConnectionCachesAt(world, pos.offset(hitResult.side))
                     }
                 }
-                return@register ActionResult.SUCCESS
+                return@register InteractionResult.SUCCESS
             }
 
-            if (block !is MachineBlock && block !is DirectionalMachineBlock) return@register ActionResult.PASS
+            if (block !is MachineBlock && block !is DirectionalMachineBlock) return@register InteractionResult.PASS
 
             if (!world.isClient) {
                 if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK)) {
-                    return@register ActionResult.FAIL
+                    return@register InteractionResult.FAIL
                 }
                 if (isElectricWrench(stack)) {
                     val tool = stack.item as IElectricTool
-                    if (tool.getEnergy(stack) < 100L) return@register ActionResult.FAIL
+                    if (tool.getEnergy(stack) < 100L) return@register InteractionResult.FAIL
                     tool.setEnergy(stack, tool.getEnergy(stack) - 100L)
                 }
                 when (block) {
@@ -120,16 +120,16 @@ object WrenchHandler {
                             else -> player.horizontalFacing
                         }
                         val target = if (player.isSneaking) fullFacing else fullFacing.opposite
-                        world.setBlockState(pos, state.with(Properties.FACING, target))
+                        world.setBlockState(pos, state.with(BlockStateProperties.FACING, target))
                     }
                     is MachineBlock -> {
                         val target = if (player.isSneaking) player.horizontalFacing else player.horizontalFacing.opposite
-                        world.setBlockState(pos, state.with(Properties.HORIZONTAL_FACING, target))
+                        world.setBlockState(pos, state.with(BlockStateProperties.HORIZONTAL_FACING, target))
                     }
                 }
-                world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
+                world.playSound(null, pos, WRENCH_USE_SOUND, SoundSource.BLOCKS, 1.0f, 1.0f)
             }
-            ActionResult.SUCCESS
+            InteractionResult.SUCCESS
         }
 
         // 左键：扳手瞬间拆机器，掉完整机器
@@ -137,13 +137,13 @@ object WrenchHandler {
         // - 电动扳手：耗 1000 EU（电量不足则无法拆卸）
         AttackBlockCallback.EVENT.register { player, world, hand, pos, direction ->
             val stack = player.getStackInHand(hand)
-            if (!isWrench(stack)) return@register ActionResult.PASS
+            if (!isWrench(stack)) return@register InteractionResult.PASS
 
             val state = world.getBlockState(pos)
             val block = state.block
 
             if (!world.isClient && ClaimProtection.isProtected(world, pos, player, ClaimProtection.EDIT_BLOCK)) {
-                return@register ActionResult.FAIL
+                return@register InteractionResult.FAIL
             }
 
             // 储罐：扳手拆卸保留 80% 流体
@@ -155,21 +155,21 @@ object WrenchHandler {
                 // fall through to normal break
             }
 
-            if (block !is MachineBlock && block !is DirectionalMachineBlock && block !is TankBlock && block !is StorageBoxBlock) return@register ActionResult.PASS
+            if (block !is MachineBlock && block !is DirectionalMachineBlock && block !is TankBlock && block !is StorageBoxBlock) return@register InteractionResult.PASS
 
             // 电动扳手：电量不足 1000 EU 则不允许拆卸
             if (isElectricWrench(stack)) {
                 val tool = stack.item as IElectricTool
-                if (tool.getEnergy(stack) < 1000) return@register ActionResult.FAIL
+                if (tool.getEnergy(stack) < 1000) return@register InteractionResult.FAIL
             }
 
-            if (!world.isClient && player is ServerPlayerEntity) {
+            if (!world.isClient && player is ServerPlayer) {
                 // 副手扳手时临时换到主手，确保 loot 表识别为扳手拆卸
-                val swapped = hand == Hand.OFF_HAND
+                val swapped = hand == InteractionHand.OFF_HAND
                 if (swapped) {
                     val main = player.mainHandStack
-                    player.setStackInHand(Hand.MAIN_HAND, stack)
-                    player.setStackInHand(Hand.OFF_HAND, main)
+                    player.setStackInHand(InteractionHand.MAIN_HAND, stack)
+                    player.setStackInHand(InteractionHand.OFF_HAND, main)
                 }
                 val broken = if (block is EnergyStorageBlock) {
                     val energyBe = world.getBlockEntity(pos) as? EnergyStorageBlockEntity
@@ -178,14 +178,14 @@ object WrenchHandler {
                     if (didBreak) {
                         val dropped = ItemStack(block.asItem())
                         if (retained > 0L) {
-                            val blockEntityTag = NbtCompound()
+                            val blockEntityTag = CompoundTag()
                             blockEntityTag.putLong(
                                 ic2_120.content.sync.EnergyStorageSync.NBT_ENERGY_STORED,
                                 retained
                             )
                             dropped.orCreateNbt.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
                         }
-                        val itemEntity = net.minecraft.entity.ItemEntity(
+                        val itemEntity = net.minecraft.world.entity.item.ItemEntity(
                             world,
                             pos.x.toDouble() + 0.5,
                             pos.y.toDouble() + 0.5,
@@ -208,7 +208,7 @@ object WrenchHandler {
                         if (!nbt.isEmpty) {
                             dropped.orCreateNbt.put("BlockEntityTag", nbt)
                         }
-                        val patternEntity = net.minecraft.entity.ItemEntity(
+                        val patternEntity = net.minecraft.world.entity.item.ItemEntity(
                             world,
                             pos.x.toDouble() + 0.5,
                             pos.y.toDouble() + 0.5,
@@ -219,7 +219,7 @@ object WrenchHandler {
                         world.spawnEntity(patternEntity)
                         // 水晶单独掉落
                         if (crystalStack != null && !crystalStack.isEmpty) {
-                            val crystalEntity = net.minecraft.entity.ItemEntity(
+                            val crystalEntity = net.minecraft.world.entity.item.ItemEntity(
                                 world,
                                 pos.x.toDouble() + 0.5,
                                 pos.y.toDouble() + 0.5,
@@ -238,15 +238,15 @@ object WrenchHandler {
                     val stateBefore = state
                     val be = if (stateBefore.hasBlockEntity()) world.getBlockEntity(pos) else null
                     val didBreak = world.breakBlock(pos, false, player)
-                    if (didBreak && world is ServerWorld) {
+                    if (didBreak && world is ServerLevel) {
                         Block.dropStacks(stateBefore, world, pos, be, player, stack.copy())
                     }
                     didBreak
                 }
                 if (swapped) {
                     val main = player.mainHandStack
-                    player.setStackInHand(Hand.MAIN_HAND, player.getStackInHand(Hand.OFF_HAND))
-                    player.setStackInHand(Hand.OFF_HAND, main)
+                    player.setStackInHand(InteractionHand.MAIN_HAND, player.getStackInHand(InteractionHand.OFF_HAND))
+                    player.setStackInHand(InteractionHand.OFF_HAND, main)
                 }
                 if (broken) {
                     when {
@@ -259,10 +259,10 @@ object WrenchHandler {
                             stack.damage(10, player) { it.sendToolBreakStatus(hand) }
                         }
                     }
-                    world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
+                    world.playSound(null, pos, WRENCH_USE_SOUND, SoundSource.BLOCKS, 1.0f, 1.0f)
                 }
             }
-            ActionResult.SUCCESS
+            InteractionResult.SUCCESS
         }
     }
 }

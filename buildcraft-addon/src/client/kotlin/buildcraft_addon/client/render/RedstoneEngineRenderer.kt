@@ -3,44 +3,44 @@ package buildcraft_addon.client.render
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.PowerStage
 import buildcraft_addon.content.blockentity.RedstoneEngineBlockEntity
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.LightmapTextureManager
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.WorldRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.texture.Sprite
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.screen.PlayerScreenHandler
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.LightTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.LevelRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.Direction
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 import org.joml.Quaternionf
 import kotlin.math.cos
 import kotlin.math.sin
 
-class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
+class RedstoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
     BlockEntityRenderer<RedstoneEngineBlockEntity> {
 
-    private lateinit var trunkBlue: Sprite
-    private lateinit var trunkGreen: Sprite
-    private lateinit var trunkYellow: Sprite
-    private lateinit var trunkRed: Sprite
-    private lateinit var trunkOverheat: Sprite
-    private lateinit var chamberSprite: Sprite
-    private lateinit var backSprite: Sprite
-    private lateinit var sideSprite: Sprite
+    private lateinit var trunkBlue: TextureAtlasSprite
+    private lateinit var trunkGreen: TextureAtlasSprite
+    private lateinit var trunkYellow: TextureAtlasSprite
+    private lateinit var trunkRed: TextureAtlasSprite
+    private lateinit var trunkOverheat: TextureAtlasSprite
+    private lateinit var chamberSprite: TextureAtlasSprite
+    private lateinit var backSprite: TextureAtlasSprite
+    private lateinit var sideSprite: TextureAtlasSprite
 
     private var spritesLoaded = false
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = MinecraftClient.getInstance().bakedModelManager.getAtlas(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE)
-        fun sprite(name: String) = atlas.getSprite(Identifier(BuildCraftAddon.MOD_ID, "block/engine/$name"))
+        val atlas = Minecraft.getInstance().bakedModelManager.getAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE)
+        fun sprite(name: String) = atlas.getSprite(ResourceLocation(BuildCraftAddon.MOD_ID, "block/engine/$name"))
         trunkBlue = sprite("trunk_blue")
         trunkGreen = sprite("trunk_green")
         trunkYellow = sprite("trunk_yellow")
@@ -52,7 +52,7 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
         spritesLoaded = true
     }
 
-    private fun getTrunkSprite(stage: PowerStage): Sprite = when (stage) {
+    private fun getTrunkSprite(stage: PowerStage): TextureAtlasSprite = when (stage) {
         PowerStage.BLUE -> trunkBlue
         PowerStage.GREEN -> trunkGreen
         PowerStage.YELLOW -> trunkYellow
@@ -61,7 +61,7 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
         PowerStage.BLACK -> trunkBlue
     }
 
-    private fun applyDirectionRotation(matrices: MatrixStack, direction: Direction) {
+    private fun applyDirectionRotation(matrices: PoseStack, direction: Direction) {
         if (direction == Direction.UP) return
         matrices.translate(0.5, 0.5, 0.5)
         when (direction) {
@@ -78,8 +78,8 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
     override fun render(
         entity: RedstoneEngineBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -96,24 +96,24 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
         val ps = progressSize / 16f
 
         matrices.push()
-        val facing = entity.cachedState.get(Properties.FACING)
+        val facing = entity.cachedState.get(BlockStateProperties.FACING)
         applyDirectionRotation(matrices, facing)
 
         val world = entity.world
         val pos = entity.pos
 
         val baseLight = if (world != null) {
-            WorldRenderer.getLightmapCoordinates(world, pos)
+            LevelRenderer.getLightmapCoordinates(world, pos)
         } else {
             light
         }
         val topLight = if (world != null) {
-            WorldRenderer.getLightmapCoordinates(world, pos.up())
+            LevelRenderer.getLightmapCoordinates(world, pos.up())
         } else {
             light
         }
 
-        val buffer = vertexConsumers.getBuffer(RenderLayer.getCutout())
+        val buffer = vertexConsumers.getBuffer(RenderType.getCutout())
 
         // Part 1: base (0,0,0) to (1, 0.25, 1)
         renderBox(matrices, buffer, baseLight, overlay,
@@ -139,9 +139,9 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
     }
 
     private fun renderTrunkBox(
-        matrices: MatrixStack, buffer: VertexConsumer, light: Int, overlay: Int,
+        matrices: PoseStack, buffer: VertexConsumer, light: Int, overlay: Int,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
-        sprite: Sprite
+        sprite: TextureAtlasSprite
     ) {
         val ctx = matrices.peek()
         val posMat = ctx.positionMatrix
@@ -168,9 +168,9 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
     }
 
     private fun renderChamberBox(
-        matrices: MatrixStack, buffer: VertexConsumer, light: Int, overlay: Int, progressSize: Float,
+        matrices: PoseStack, buffer: VertexConsumer, light: Int, overlay: Int, progressSize: Float,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
-        sprite: Sprite
+        sprite: TextureAtlasSprite
     ) {
         val ctx = matrices.peek()
         val posMat = ctx.positionMatrix
@@ -193,9 +193,9 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
     }
 
     private fun renderBox(
-        matrices: MatrixStack, buffer: VertexConsumer, light: Int, overlay: Int,
+        matrices: PoseStack, buffer: VertexConsumer, light: Int, overlay: Int,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
-        topBottomSprite: Sprite, sideSprite: Sprite, allFaces: Boolean
+        topBottomSprite: TextureAtlasSprite, sideSprite: TextureAtlasSprite, allFaces: Boolean
     ) {
         val ctx = matrices.peek()
         val posMat = ctx.positionMatrix
@@ -229,7 +229,7 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
-        nx: Float, ny: Float, nz: Float, sprite: Sprite
+        nx: Float, ny: Float, nz: Float, sprite: TextureAtlasSprite
     ) {
         emitQuad(buffer, posMat, normMat, light, overlay,
             x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
@@ -247,7 +247,7 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
-        nx: Float, ny: Float, nz: Float, sprite: Sprite
+        nx: Float, ny: Float, nz: Float, sprite: TextureAtlasSprite
     ) {
         val su0 = u0 / 16f; val sv0 = v0 / 16f
         val su1 = u1 / 16f; val sv1 = v1 / 16f
@@ -266,7 +266,7 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererFactory.Context) :
         x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float,
         x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float,
         u0: Float, v0: Float, u1: Float, v1: Float, u2: Float, v2: Float, u3: Float, v3: Float,
-        nx: Float, ny: Float, nz: Float, sprite: Sprite
+        nx: Float, ny: Float, nz: Float, sprite: TextureAtlasSprite
     ) {
         val minU = sprite.minU; val maxU = sprite.maxU
         val minV = sprite.minV; val maxV = sprite.maxV

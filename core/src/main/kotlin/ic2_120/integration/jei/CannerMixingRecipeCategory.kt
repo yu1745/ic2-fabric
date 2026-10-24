@@ -7,10 +7,10 @@ import mezz.jei.api.recipe.IFocusGroup
 import mezz.jei.api.recipe.RecipeIngredientRole
 import mezz.jei.api.recipe.category.IRecipeCategory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 流体/固体装罐机（ENRICH_LIQUID 模式）JEI 分类 — 使用机器纹理 [guicanner.png]。
@@ -21,15 +21,15 @@ import net.minecraft.util.Identifier
  */
 class CannerMixingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CannerMixingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2", "textures/gui/guicanner.png"),
+        ResourceLocation.of("ic2", "textures/gui/guicanner.png"),
         33, 8, 104, 90
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "canner")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "canner")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.CANNER_MIXING
-    override fun getTitle(): Text = Text.translatable("block.ic2_120.canner.mixing")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120.canner.mixing")
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon

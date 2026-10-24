@@ -14,11 +14,11 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.BlockPos
 
 @ModBlockEntity(block = CokeKilnGrateBlock::class)
 class CokeKilnGrateBlockEntity(
@@ -83,7 +83,7 @@ class CokeKilnGrateBlockEntity(
     constructor(pos: BlockPos, state: BlockState) : this(CokeKilnGrateBlockEntity::class.type(), pos, state)
 
     fun getStoredAmount(): Long = creosoteTank.amount
-    fun getStoredFluidRawId(): Int = if (creosoteTank.variant.isBlank) -1 else net.minecraft.registry.Registries.FLUID.getRawId(creosoteTank.variant.fluid)
+    fun getStoredFluidRawId(): Int = if (creosoteTank.variant.isBlank) -1 else net.minecraft.core.registries.BuiltInRegistries.FLUID.getRawId(creosoteTank.variant.fluid)
 
     fun canAcceptDroplets(amount: Long): Boolean = amount > 0 && (TANK_CAPACITY - creosoteTank.amount) >= amount
 
@@ -102,15 +102,15 @@ class CokeKilnGrateBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        val tankNbt = NbtCompound()
+        val tankNbt = CompoundTag()
         tankNbt.put("Variant", creosoteTank.variant.toNbt())
         tankNbt.putLong("Amount", creosoteTank.amount)
         nbt.put(NBT_TANK, tankNbt)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         val tankNbt = nbt.getCompound(NBT_TANK)
         if (!tankNbt.isEmpty) {

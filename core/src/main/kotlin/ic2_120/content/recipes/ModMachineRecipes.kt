@@ -6,12 +6,12 @@ import ic2_120.content.recipes.metalformer.CuttingRecipe
 import ic2_120.content.recipes.metalformer.ExtrudingRecipe
 import ic2_120.content.recipes.metalformer.MetalFormerRecipe
 import ic2_120.content.recipes.metalformer.RollingRecipe
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.recipe.Recipe
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.RecipeType
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
 import kotlin.reflect.KClass
 
 object ModMachineRecipes {
@@ -38,8 +38,8 @@ object ModMachineRecipes {
             val type = object : RecipeType<Recipe<*>> {
                 override fun toString() = "$modId:${e.id}"
             }
-            Registry.register(Registries.RECIPE_TYPE, Ic2_120.id(e.id), type)
-            Registry.register(Registries.RECIPE_SERIALIZER, Ic2_120.id(e.id), serializer)
+            Registry.register(BuiltInRegistries.RECIPE_TYPE, Ic2_120.id(e.id), type)
+            Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, Ic2_120.id(e.id), serializer)
             recipeTypeByRecipeClass[e.recipeClass] = type
             recipeSerializerByRecipeClass[e.recipeClass] = serializer
             recipeTypeBySerializerClass[e.serializerClass] = type

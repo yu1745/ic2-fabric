@@ -6,22 +6,22 @@ import ic2_120.content.network.OreScanEntry
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.screen.ScannerScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.components.Button
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "scanner")
 class ScannerScreen(
     handler: ScannerScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<ScannerScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<ScannerScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
@@ -29,7 +29,7 @@ class ScannerScreen(
         titleY = 6
     }
 
-    private lateinit var scanBtn: ButtonWidget
+    private lateinit var scanBtn: Button
     private var scrollOffset = 0.0
 
     override fun init() {
@@ -50,20 +50,20 @@ class ScannerScreen(
             handler.slots[idx].y = HOTBAR_Y
         }
 
-        scanBtn = addDrawableChild(ButtonWidget.builder(
-            Text.literal("")
+        scanBtn = addDrawableChild(Button.builder(
+            Component.literal("")
         ) {
             client?.player?.networkHandler?.sendPacket(
-                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_ID_SCAN)
+                ServerboundContainerButtonClickPacket(handler.syncId, ScannerScreenHandler.BUTTON_ID_SCAN)
             )
         }.dimensions(x + SCAN_BTN_X, y + SCAN_BTN_Y, SCAN_BTN_W, SCAN_BTN_H).build())
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -73,7 +73,7 @@ class ScannerScreen(
 
         // 标题
         val scannerTitle = if (type.tier == 3) "OV 扫描仪" else "OD 扫描仪"
-        context.drawText(textRenderer, Text.literal(scannerTitle), x + 8, y + 6, 0x404040, false)
+        context.drawText(textRenderer, Component.literal(scannerTitle), x + 8, y + 6, 0x404040, false)
 
         // 扫描按钮文字（7px）
         drawScanButtonText(context, x + SCAN_BTN_X, y + SCAN_BTN_Y)
@@ -86,12 +86,12 @@ class ScannerScreen(
         if (results.isEmpty()) {
             // 空状态提示
             context.drawText(
-                textRenderer, Text.literal("点击扫描按钮开始扫描"), scissorLeft, scissorTop + 4, 0x666666, false
+                textRenderer, Component.literal("点击扫描按钮开始扫描"), scissorLeft, scissorTop + 4, 0x666666, false
             )
         } else {
             // 扫描结果： 固定标题，不滚动
             context.drawText(
-                textRenderer, Text.literal("扫描结果："), scissorLeft, scissorTop, RESULTS_TITLE_COLOR, false
+                textRenderer, Component.literal("扫描结果："), scissorLeft, scissorTop, RESULTS_TITLE_COLOR, false
             )
 
             // 列头：名称（左） 数量（中），7px 亮绿色，不滚动
@@ -111,8 +111,8 @@ class ScannerScreen(
                 val oreStack = entryToItemStack(entry)
                 val label = "${oreStack.name.string}"
 
-                context.drawText(textRenderer, Text.literal(label), scissorLeft, rowY + 4, 0xFFFFFF, false)
-                context.drawText(textRenderer, Text.literal("${entry.count}"), scissorLeft + RESULTS_W / 2, rowY + 4, 0xFFFFFF, false)
+                context.drawText(textRenderer, Component.literal(label), scissorLeft, rowY + 4, 0xFFFFFF, false)
+                context.drawText(textRenderer, Component.literal("${entry.count}"), scissorLeft + RESULTS_W / 2, rowY + 4, 0xFFFFFF, false)
                 if (!oreStack.isEmpty) {
                     context.drawItem(oreStack, scissorLeft + RESULTS_W - 18, rowY)
                 }
@@ -146,7 +146,7 @@ class ScannerScreen(
         return true
     }
 
-    private fun drawSmallText(context: DrawContext, text: String, tx: Int, ty: Int, color: Int) {
+    private fun drawSmallText(context: GuiGraphics, text: String, tx: Int, ty: Int, color: Int) {
         val scale = 7f / textRenderer.fontHeight
         context.matrices.push()
         context.matrices.translate(tx.toDouble(), ty.toDouble(), 0.0)
@@ -155,7 +155,7 @@ class ScannerScreen(
         context.matrices.pop()
     }
 
-    private fun drawScanButtonText(context: DrawContext, bx: Int, by: Int) {
+    private fun drawScanButtonText(context: GuiGraphics, bx: Int, by: Int) {
         val text = "扫描"
         val scale = 8f / textRenderer.fontHeight
         val tw = textRenderer.getWidth(text)
@@ -168,7 +168,7 @@ class ScannerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guitoolscanner.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guitoolscanner.png")
         private const val TEXTURE_SIZE = 256
 
         private const val SCAN_BTN_X = 148
@@ -194,10 +194,10 @@ class ScannerScreen(
         }
 
         private fun entryToItemStack(entry: OreScanEntry): ItemStack {
-            val id = Identifier.tryParse(entry.blockId) ?: return ItemStack.EMPTY
-            val block = Registries.BLOCK.getOrEmpty(id).orElse(null) ?: return ItemStack.EMPTY
+            val id = ResourceLocation.tryParse(entry.blockId) ?: return ItemStack.EMPTY
+            val block = BuiltInRegistries.BLOCK.getOrEmpty(id).orElse(null) ?: return ItemStack.EMPTY
             val item = block.asItem()
-            if (item == net.minecraft.item.Items.AIR) return ItemStack.EMPTY
+            if (item == net.minecraft.world.item.Items.AIR) return ItemStack.EMPTY
             return ItemStack(item, entry.count.coerceAtLeast(1))
         }
     }

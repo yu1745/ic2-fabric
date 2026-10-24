@@ -1,6 +1,6 @@
 package ic2_120.integration.jei
 
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * 金属成型机 JEI 配方 - 辊压模式

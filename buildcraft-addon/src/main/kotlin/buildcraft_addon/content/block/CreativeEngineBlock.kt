@@ -3,80 +3,80 @@ package buildcraft_addon.content.block
 import buildcraft_addon.content.blockentity.CreativeEngineBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockEntityProvider
-import net.minecraft.block.BlockRenderType
-import net.minecraft.block.BlockState
-import net.minecraft.block.BlockWithEntity
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.ItemStack
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.Properties
-import net.minecraft.util.ActionResult
-import net.minecraft.util.BlockRotation
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.shape.VoxelShape
-import net.minecraft.util.shape.VoxelShapes
-import net.minecraft.world.BlockView
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.EntityBlock
+import net.minecraft.world.level.block.RenderShape
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.BaseEntityBlock
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.level.block.Rotation
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.shapes.VoxelShape
+import net.minecraft.world.phys.shapes.Shapes
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.Level
 
 @ModBlock(name = "creative_engine", registerItem = true, tab = CreativeTab.BUILDCRAFT)
-class CreativeEngineBlock : BlockWithEntity(
+class CreativeEngineBlock : BaseEntityBlock(
     Settings.create().strength(-1.0f, 3600000.0f).nonOpaque()
-), BlockEntityProvider {
+), EntityBlock {
 
     companion object {
-        private val SHAPE_ENGINE: VoxelShape = VoxelShapes.fullCube()
+        private val SHAPE_ENGINE: VoxelShape = Shapes.fullCube()
     }
 
     init {
-        defaultState = stateManager.defaultState.with(Properties.FACING, Direction.UP)
+        defaultState = stateManager.defaultState.with(BlockStateProperties.FACING, Direction.UP)
     }
 
-    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
-        builder.add(Properties.FACING)
+    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
+        builder.add(BlockStateProperties.FACING)
     }
 
-    override fun rotate(state: BlockState, rotation: BlockRotation): BlockState {
-        return state.with(Properties.FACING, rotation.rotate(state.get(Properties.FACING)))
+    override fun rotate(state: BlockState, rotation: Rotation): BlockState {
+        return state.with(BlockStateProperties.FACING, rotation.rotate(state.get(BlockStateProperties.FACING)))
     }
 
     override fun onUse(
-        state: BlockState, world: World, pos: BlockPos,
-        player: PlayerEntity, hand: Hand, hit: BlockHitResult
-    ): ActionResult {
+        state: BlockState, world: Level, pos: BlockPos,
+        player: Player, hand: InteractionHand, hit: BlockHitResult
+    ): InteractionResult {
         if (!world.isClient) {
-            val be = world.getBlockEntity(pos) as? CreativeEngineBlockEntity ?: return ActionResult.PASS
+            val be = world.getBlockEntity(pos) as? CreativeEngineBlockEntity ?: return InteractionResult.PASS
             if (player.isSneaking) {
                 be.cycleOutput()
             } else {
-                be.rotateToNextFacing(state.get(Properties.FACING))
+                be.rotateToNextFacing(state.get(BlockStateProperties.FACING))
             }
         }
-        return ActionResult.SUCCESS
+        return InteractionResult.SUCCESS
     }
 
-    override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
+    override fun onPlaced(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? CreativeEngineBlockEntity ?: return
-            be.currentDirection = state.get(Properties.FACING)
+            be.currentDirection = state.get(BlockStateProperties.FACING)
             be.markDirty()
         }
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
-        return defaultState.with(Properties.FACING, ctx.side.opposite)
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState {
+        return defaultState.with(BlockStateProperties.FACING, ctx.side.opposite)
     }
 
-    override fun neighborUpdate(state: BlockState, world: World, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
+    override fun neighborUpdate(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
         super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
         val be = world.getBlockEntity(pos) as? CreativeEngineBlockEntity ?: return
         be.checkRedstonePower()
@@ -86,23 +86,23 @@ class CreativeEngineBlock : BlockWithEntity(
         return CreativeEngineBlockEntity(pos, state)
     }
 
-    override fun getRenderType(state: BlockState): BlockRenderType {
-        return BlockRenderType.ENTITYBLOCK_ANIMATED
+    override fun getRenderType(state: BlockState): RenderShape {
+        return RenderShape.ENTITYBLOCK_ANIMATED
     }
 
-    override fun getOutlineShape(state: BlockState, world: BlockView, pos: BlockPos, context: net.minecraft.block.ShapeContext): VoxelShape {
+    override fun getOutlineShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: net.minecraft.world.phys.shapes.CollisionContext): VoxelShape {
         return SHAPE_ENGINE
     }
 
-    override fun getCollisionShape(state: BlockState, world: BlockView, pos: BlockPos, context: net.minecraft.block.ShapeContext): VoxelShape {
+    override fun getCollisionShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: net.minecraft.world.phys.shapes.CollisionContext): VoxelShape {
         return SHAPE_ENGINE
     }
 
-    override fun getCullingShape(state: BlockState, world: BlockView, pos: BlockPos): VoxelShape {
-        return VoxelShapes.empty()
+    override fun getCullingShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape {
+        return Shapes.empty()
     }
 
-    override fun isTransparent(state: BlockState, world: BlockView, pos: BlockPos): Boolean {
+    override fun isTransparent(state: BlockState, world: BlockGetter, pos: BlockPos): Boolean {
         return true
     }
 
@@ -111,7 +111,7 @@ class CreativeEngineBlock : BlockWithEntity(
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? {
+    override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? {
         return if (world.isClient) {
             BlockEntityTicker { _, _, _, be -> (be as CreativeEngineBlockEntity).clientTick() }
         } else {

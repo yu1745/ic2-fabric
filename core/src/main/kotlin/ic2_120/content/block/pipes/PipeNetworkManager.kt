@@ -1,24 +1,24 @@
 package ic2_120.content.block.pipes
 
-import net.minecraft.registry.RegistryKey
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 
 object PipeNetworkManager {
-    private val worldPosToNetwork = mutableMapOf<RegistryKey<World>, MutableMap<Long, PipeNetwork>>()
-    private val worldNetworks = mutableMapOf<RegistryKey<World>, MutableSet<PipeNetwork>>()
+    private val worldPosToNetwork = mutableMapOf<ResourceKey<Level>, MutableMap<Long, PipeNetwork>>()
+    private val worldNetworks = mutableMapOf<ResourceKey<Level>, MutableSet<PipeNetwork>>()
 
-    private fun mapFor(world: World): MutableMap<Long, PipeNetwork> =
+    private fun mapFor(world: Level): MutableMap<Long, PipeNetwork> =
         worldPosToNetwork.getOrPut(world.registryKey) { mutableMapOf() }
 
-    fun getOrCreateNetwork(world: World, pos: BlockPos): PipeNetwork {
+    fun getOrCreateNetwork(world: Level, pos: BlockPos): PipeNetwork {
         val map = mapFor(world)
         map[pos.asLong()]?.let { return it }
         return buildNetwork(world, pos, map)
     }
 
-    private fun buildNetwork(world: World, startPos: BlockPos, map: MutableMap<Long, PipeNetwork>): PipeNetwork {
+    private fun buildNetwork(world: Level, startPos: BlockPos, map: MutableMap<Long, PipeNetwork>): PipeNetwork {
         val network = PipeNetwork()
         val visited = mutableSetOf<Long>()
         val queue = ArrayDeque<BlockPos>()
@@ -62,7 +62,7 @@ object PipeNetworkManager {
         return network
     }
 
-    fun invalidateAt(world: World, pos: BlockPos) {
+    fun invalidateAt(world: Level, pos: BlockPos) {
         val map = worldPosToNetwork[world.registryKey] ?: return
         val network = map[pos.asLong()] ?: return
         worldNetworks[world.registryKey]?.remove(network)
@@ -72,7 +72,7 @@ object PipeNetworkManager {
         }
     }
 
-    fun invalidateConnectionCachesAt(world: World, pos: BlockPos) {
+    fun invalidateConnectionCachesAt(world: Level, pos: BlockPos) {
         val map = worldPosToNetwork[world.registryKey] ?: return
         val network = map[pos.asLong()] ?: return
         network.invalidateConnectionCaches()
@@ -88,7 +88,7 @@ object PipeNetworkManager {
         }
     }
 
-    fun onWorldUnload(world: World) {
+    fun onWorldUnload(world: Level) {
         worldPosToNetwork.remove(world.registryKey)
         worldNetworks.remove(world.registryKey)
     }

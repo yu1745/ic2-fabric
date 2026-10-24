@@ -1,14 +1,14 @@
 package ic2_120.content.item
 
 import ic2_120.Ic2_120
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ArmorMaterial
-import net.minecraft.recipe.Ingredient
-import net.minecraft.registry.Registries
-import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.sound.SoundEvent
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ArmorMaterial
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Holder
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.resources.ResourceLocation
 import java.util.function.Supplier
 
 /**
@@ -19,11 +19,11 @@ import java.util.function.Supplier
 object ModArmorMaterials {
 
     // ========== 修复原料 ==========
-    private val bronzeIngot = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "bronze_ingot")))
-    private val rubber = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "rubber")))
-    private val carbonFibre = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "carbon_fibre")))
-    private val advancedAlloy = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "alloy")))
-    private val iridium = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "iridium")))
+    private val bronzeIngot = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "bronze_ingot")))
+    private val rubber = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "rubber")))
+    private val carbonFibre = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "carbon_fibre")))
+    private val advancedAlloy = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "alloy")))
+    private val iridium = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "iridium")))
 
     /**
      * 创建自定义护甲材料
@@ -32,17 +32,17 @@ object ModArmorMaterials {
         name: String,
         protection: Map<ArmorItem.Type, Int>,
         enchantability: Int,
-        equipSound: RegistryEntry<SoundEvent>,
+        equipSound: Holder<SoundEvent>,
         toughness: Float,
         knockbackResistance: Float,
         repairIngredient: Ingredient
-    ): RegistryEntry<ArmorMaterial> = RegistryEntry.of(
+    ): Holder<ArmorMaterial> = Holder.of(
         ArmorMaterial(
             protection,
             enchantability,
             equipSound,
             Supplier { repairIngredient },
-            listOf(ArmorMaterial.Layer(Identifier.ofVanilla(name))),
+            listOf(ArmorMaterial.Layer(ResourceLocation.ofVanilla(name))),
             toughness,
             knockbackResistance
         )

@@ -5,24 +5,24 @@ import ic2_120.content.block.machines.IronFurnaceBlockEntity
 import ic2_120.content.screen.IronFurnaceScreenHandler
 import ic2_120.content.sync.IronFurnaceSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.components.Button
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = IronFurnaceBlock::class)
 class IronFurnaceScreen(
     handler: IronFurnaceScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<IronFurnaceScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<IronFurnaceScreenHandler>(handler, playerInventory, title) {
 
-    private lateinit var collectXpBtn: ButtonWidget
+    private lateinit var collectXpBtn: Button
 
     init {
         backgroundWidth = 176
@@ -33,19 +33,19 @@ class IronFurnaceScreen(
         super.init()
 
         collectXpBtn = addDrawableChild(
-            ButtonWidget.builder(Text.empty()) { btn ->
+            Button.builder(Component.empty()) { btn ->
                 client?.player?.networkHandler?.sendPacket(
-                    ButtonClickC2SPacket(handler.syncId, IronFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
+                    ServerboundContainerButtonClickPacket(handler.syncId, IronFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
                 )
             }.dimensions(x + XP_BTN_X, y + XP_BTN_Y, XP_BTN_SIZE, XP_BTN_SIZE).build()
         )
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -117,14 +117,14 @@ class IronFurnaceScreen(
             val xpFrac = xpRaw % 10
             context.drawTooltip(
                 textRenderer,
-                Text.literal("XP: $xpWhole.$xpFrac"),
+                Component.literal("XP: $xpWhole.$xpFrac"),
                 mouseX, mouseY
             )
         }
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiironfurnace.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiironfurnace.png")
         private const val TEXTURE_SIZE = 256
 
         // 燃烧值纹理 (180,5)-(193,18) = 13×13

@@ -2,8 +2,8 @@ package ic2_120.integration.modmenu
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory
 import com.terraformersmc.modmenu.api.ModMenuApi
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.text.Text
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.network.chat.Component
 import org.slf4j.LoggerFactory
 
 class ModMenuIntegration : ModMenuApi {
@@ -23,18 +23,18 @@ class ModMenuIntegration : ModMenuApi {
     }
 
     private fun errorScreen(parent: Screen?, message: String): Screen {
-        val text = Text.literal("IC2 Config")
+        val text = Component.literal("IC2 Config")
         return object : Screen(text) {
             override fun init() {
                 addDrawableChild(
-                    net.minecraft.client.gui.widget.ButtonWidget.builder(
-                        Text.literal("§c$message"),
+                    net.minecraft.client.gui.components.Button.builder(
+                        Component.literal("§c$message"),
                         { client!!.setScreen(parent) }
                     ).dimensions(width / 2 - 100, height / 2 - 10, 200, 20).build()
                 )
                 addDrawableChild(
-                    net.minecraft.client.gui.widget.ButtonWidget.builder(
-                        Text.literal("返回"),
+                    net.minecraft.client.gui.components.Button.builder(
+                        Component.literal("返回"),
                         { client!!.setScreen(parent) }
                     ).dimensions(width / 2 - 50, height / 2 + 20, 100, 20).build()
                 )

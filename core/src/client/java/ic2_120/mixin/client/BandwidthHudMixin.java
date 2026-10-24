@@ -2,11 +2,11 @@ package ic2_120.mixin.client;
 
 import ic2_120.client.network.BandwidthHudState;
 import ic2_120.content.network.BandwidthPlayerStat;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,14 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(InGameHud.class)
+@Mixin(Gui.class)
 public abstract class BandwidthHudMixin {
     @Shadow
     @Final
-    private MinecraftClient client;
+    private Minecraft client;
 
     @Inject(method = "render", at = @At("RETURN"))
-    private void ic2_120$renderBandwidthHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+    private void ic2_120$renderBandwidthHud(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
         if (client.getDebugHud().shouldShowDebugHud() || client.options.hudHidden || !BandwidthHudState.INSTANCE.getEnabled()) {
             return;
         }
@@ -34,7 +34,7 @@ public abstract class BandwidthHudMixin {
         int line = 10;
 
         long serverBps = BandwidthHudState.INSTANCE.getServerBytesPerSecond();
-        context.drawText(tr, Text.literal("IC2 Net Out: " + formatBps(serverBps)), x, y, 0xFF8FE38F, true);
+        context.drawText(tr, Component.literal("IC2 Net Out: " + formatBps(serverBps)), x, y, 0xFF8FE38F, true);
         y += line;
 
         List<BandwidthPlayerStat> players = BandwidthHudState.INSTANCE.getPlayers();
@@ -42,7 +42,7 @@ public abstract class BandwidthHudMixin {
         for (int i = 0; i < shown; i++) {
             BandwidthPlayerStat stat = players.get(i);
             String text = stat.getName() + ": " + formatBps(stat.getBytesPerSecond());
-            context.drawText(tr, Text.literal(text), x, y, 0xFFFFFFFF, true);
+            context.drawText(tr, Component.literal(text), x, y, 0xFFFFFFFF, true);
             y += line;
         }
     }

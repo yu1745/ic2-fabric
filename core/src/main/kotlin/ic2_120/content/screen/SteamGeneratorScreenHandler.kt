@@ -6,26 +6,26 @@ import ic2_120.content.sync.SteamGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
 
 /**
- * 蒸汽发生器 ScreenHandler — 对齐 ic2_origin ContainerSteamGenerator。
+ * 蒸汽发生器 AbstractContainerMenu — 对齐 ic2_origin ContainerSteamGenerator。
  * 无物品槽位，仅同步数据 + 按钮事件。
  */
 @ModScreenHandler(block = SteamGeneratorBlock::class, inventorySize = SteamGeneratorBlockEntity.INVENTORY_SIZE)
 class SteamGeneratorScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    blockInventory: Inventory,
-    private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(SteamGeneratorScreenHandler::class.type(), syncId) {
+    playerInventory: Inventory,
+    blockInventory: Container,
+    private val context: ContainerLevelAccess,
+    private val propertyDelegate: ContainerData
+) : AbstractContainerMenu(SteamGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = SteamGeneratorSync(SyncedDataView(propertyDelegate))
 
@@ -35,15 +35,15 @@ class SteamGeneratorScreenHandler(
         // 无槽位 — 对齐 ic2_origin ContainerSteamGenerator
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack = ItemStack.EMPTY
+    override fun quickMove(player: Player, index: Int): ItemStack = ItemStack.EMPTY
 
-    override fun canUse(player: PlayerEntity): Boolean =
+    override fun canUse(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is SteamGeneratorBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? SteamGeneratorBlockEntity ?: return@get
             val event = BUTTON_EVENTS.getOrNull(id) ?: return@get

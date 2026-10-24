@@ -4,21 +4,21 @@ import ic2_120.content.sync.TankSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 
 @ModScreenHandler(name = "tank")
 class TankScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    private val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate,
-) : ScreenHandler(TankScreenHandler::class.type(), syncId) {
+    playerInventory: Inventory,
+    private val context: ContainerLevelAccess,
+    propertyDelegate: ContainerData,
+) : AbstractContainerMenu(TankScreenHandler::class.type(), syncId) {
 
     val sync = TankSync(SyncedDataView(propertyDelegate)) { 0 }
 
@@ -35,7 +35,7 @@ class TankScreenHandler(
         }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         var moved = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
@@ -52,7 +52,7 @@ class TankScreenHandler(
         return moved
     }
 
-    override fun canUse(player: PlayerEntity): Boolean = true
+    override fun canUse(player: Player): Boolean = true
 
     companion object {
     }

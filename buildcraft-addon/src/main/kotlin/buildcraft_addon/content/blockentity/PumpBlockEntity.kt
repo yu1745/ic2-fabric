@@ -15,23 +15,23 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.FluidState
-import net.minecraft.fluid.Fluids
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.FluidState
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.Level
 import java.util.*
 
 /**
@@ -73,8 +73,8 @@ class PumpBlockEntity(
         // A* 单次搜索最大候选数（开放集硬上限）
         private const val A_STAR_MAX_OPEN = 2048
 
-        private val TUBE_BLOCK by lazy { Registries.BLOCK.get(BuildCraftAddon.id("tube")) }
-        private val SPRING_BLOCK by lazy { Registries.BLOCK.get(BuildCraftAddon.id("spring")) }
+        private val TUBE_BLOCK by lazy { BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("tube")) }
+        private val SPRING_BLOCK by lazy { BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("spring")) }
 
         // 3D 6 邻接方向（buildQueue 扫描 + A* 都用）
         private val ALL_DIRS = arrayOf(Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
@@ -364,7 +364,7 @@ class PumpBlockEntity(
         }
     }
 
-    private fun nf_check(fluid: Fluid, target: Fluid, targetBlock: net.minecraft.block.Block): Boolean {
+    private fun nf_check(fluid: Fluid, target: Fluid, targetBlock: net.minecraft.world.level.block.Block): Boolean {
         return fluid === target || fluid.defaultState.blockState.block === targetBlock
     }
 
@@ -384,8 +384,8 @@ class PumpBlockEntity(
     // 从 start 出发，走 6 方向流体方块，找回到 goal（必须严格命中 goal 才算连通）
     // 纯连通性检查，不修改任何状态；找到返回 true，否则 false
     private fun aStarPathExists(
-        w: World, start: BlockPos, goal: BlockPos,
-        target: Fluid, targetBlock: net.minecraft.block.Block
+        w: Level, start: BlockPos, goal: BlockPos,
+        target: Fluid, targetBlock: net.minecraft.world.level.block.Block
     ): Boolean {
         if (start == goal) return true
         // A* 必须严格命中 goal：之前把"碰到任意 fluidSet 节点"也当连通是错误的
@@ -505,7 +505,7 @@ class PumpBlockEntity(
     /** 服务端 tubeDepth 变化时主动推送更新包，客户端 readNbt 后会重置 renderTubeDepth */
     private fun syncTubeDepthToClient() {
         val w = world ?: return
-        val sw = w as? net.minecraft.server.world.ServerWorld ?: return
+        val sw = w as? net.minecraft.server.level.ServerLevel ?: return
         sw.chunkManager.markForUpdate(pos)
     }
 
@@ -536,10 +536,10 @@ class PumpBlockEntity(
     }
 
     // ========== NBT ==========
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putLong("tankAmount", tank.amount)
-        if (!tank.variant.isBlank) nbt.putString("tankFluid", Registries.FLUID.getId(tank.variant.fluid).toString())
+        if (!tank.variant.isBlank) nbt.putString("tankFluid", BuiltInRegistries.FLUID.getId(tank.variant.fluid).toString())
         nbt.putBoolean("powered", isRedstonePowered)
         nbt.putBoolean("isActive", isActive)
         nbt.putBoolean("isBlocked", isBlocked)
@@ -549,12 +549,12 @@ class PumpBlockEntity(
         nbt.putBoolean("hasOilAchievement", hasOilAchievement)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         val amt = nbt.getLong("tankAmount")
         if (amt > 0 && nbt.contains("tankFluid")) {
-            val fid = Identifier(nbt.getString("tankFluid"))
-            tank.variant = FluidVariant.of(Registries.FLUID.get(fid))
+            val fid = ResourceLocation(nbt.getString("tankFluid"))
+            tank.variant = FluidVariant.of(BuiltInRegistries.FLUID.get(fid))
             tank.amount = amt
         }
         isRedstonePowered = nbt.getBoolean("powered")
@@ -569,7 +569,7 @@ class PumpBlockEntity(
     // ========== 客户端 NBT 同步 ==========
     // 客户端渲染需要 tubeDepth，必须把 NBT 同步到客户端。
     // 否则 PumpRenderer 收到的 tubeDepth 永远是 0，管道不显示。
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
 
-    override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
+    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 }

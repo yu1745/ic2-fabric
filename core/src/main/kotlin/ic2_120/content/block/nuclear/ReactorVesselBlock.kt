@@ -10,13 +10,13 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Blocks
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 import ic2_120.content.recipes.ModTags
 
@@ -24,14 +24,14 @@ import ic2_120.content.recipes.ModTags
  * 核反应堆压力容器。
  */
 @ModBlock(name = "reactor_vessel", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "reactor", renderLayer = "translucent")
-class ReactorVesselBlock(settings: AbstractBlock.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
+class ReactorVesselBlock(settings: BlockBehaviour.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val leadPlate = LeadPlate::class.instance()
             if (leadPlate != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
                     .pattern("LGL").pattern("GLG").pattern("LGL")
                     .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
                     .input('G', ReinforcedGlassBlock::class.item())  // 透明外壳：铅框 + 强化玻璃

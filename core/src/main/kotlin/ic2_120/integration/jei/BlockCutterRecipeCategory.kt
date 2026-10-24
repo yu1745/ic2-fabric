@@ -6,10 +6,10 @@ import mezz.jei.api.helpers.IGuiHelper
 import mezz.jei.api.recipe.IFocusGroup
 import mezz.jei.api.recipe.RecipeIngredientRole
 import mezz.jei.api.recipe.category.IRecipeCategory
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 方块切割机 JEI 分类 — 使用机器纹理 [guiblockcuttingmachine.png] 作为背景。
@@ -19,15 +19,15 @@ import net.minecraft.util.Identifier
  */
 class BlockCutterRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlockCutterJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier.of("ic2", "textures/gui/guiblockcuttingmachine.png"),
+        ResourceLocation.of("ic2", "textures/gui/guiblockcuttingmachine.png"),
         10, 5, 130, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "block_cutter")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "block_cutter")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.BLOCK_CUTTER
-    override fun getTitle(): Text = Text.translatable("block.ic2_120.block_cutter")
+    override fun getTitle(): Component = Component.translatable("block.ic2_120.block_cutter")
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon

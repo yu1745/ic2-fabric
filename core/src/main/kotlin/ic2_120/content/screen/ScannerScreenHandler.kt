@@ -2,20 +2,20 @@ package ic2_120.content.screen
 
 import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.Identifier
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.resources.ResourceLocation
 
 import ic2_120.content.item.AdvancedScannerItem
 import ic2_120.content.item.OdScannerItem
@@ -32,13 +32,13 @@ import ic2_120.registry.annotation.ScreenFactory
 @ModScreenHandler(name = "scanner")
 class ScannerScreenHandler(
     syncId: Int,
-    val playerInventory: PlayerInventory,
-    private val context: ScreenHandlerContext
-) : ScreenHandler(ScannerScreenHandler::class.type(), syncId) {
+    val playerInventory: Inventory,
+    private val context: ContainerLevelAccess
+) : AbstractContainerMenu(ScannerScreenHandler::class.type(), syncId) {
 
     private val syncedData = SyncedData()
     val sync = ScannerSync(syncedData)
-    private val scannerUseSound: SoundEvent = SoundEvent.of(Identifier.of("ic2", "item.scanner.use"))
+    private val scannerUseSound: SoundEvent = SoundEvent.of(ResourceLocation.of("ic2", "item.scanner.use"))
 
     init {
         addProperties(syncedData)
@@ -70,7 +70,7 @@ class ScannerScreenHandler(
         return stack.takeIf { it.item is OdScannerItem || it.item is AdvancedScannerItem }
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+    override fun onButtonClick(player: Player, id: Int): Boolean {
         val stack = player.mainHandStack
         if (stack.item !is OdScannerItem && stack.item !is AdvancedScannerItem) return false
 
@@ -82,8 +82,8 @@ class ScannerScreenHandler(
 
         if (!sync.consumeEnergy(energyCost)) {
             player.sendMessage(
-                net.minecraft.text.Text.translatable("message.ic2_120.scanner.no_energy")
-                    .formatted(net.minecraft.util.Formatting.RED),
+                net.minecraft.network.chat.Component.translatable("message.ic2_120.scanner.no_energy")
+                    .formatted(net.minecraft.ChatFormatting.RED),
                 false
             )
             return true
@@ -91,8 +91,8 @@ class ScannerScreenHandler(
 
         if (!sync.consumeUse()) {
             player.sendMessage(
-                net.minecraft.text.Text.translatable("message.ic2_120.scanner.no_uses")
-                    .formatted(net.minecraft.util.Formatting.RED),
+                net.minecraft.network.chat.Component.translatable("message.ic2_120.scanner.no_uses")
+                    .formatted(net.minecraft.ChatFormatting.RED),
                 false
             )
             return true
@@ -107,12 +107,12 @@ class ScannerScreenHandler(
             null,
             player.blockPos,
             scannerUseSound,
-            SoundCategory.PLAYERS,
+            SoundSource.PLAYERS,
             1.0f,
             1.0f
         )
 
-        val buf = PacketByteBuf(Unpooled.buffer())
+        val buf = FriendlyByteBuf(Unpooled.buffer())
         ScannerResultPacket.write(
             ScannerResultPacket(
                 energy = sync.energy,
@@ -123,19 +123,19 @@ class ScannerScreenHandler(
             ),
             buf
         )
-        (player as? net.minecraft.server.network.ServerPlayerEntity)?.let {
+        (player as? net.minecraft.server.level.ServerPlayer)?.let {
             ServerPlayNetworking.send(it, ScannerResultPacket.ID, buf)
         }
 
         return true
     }
 
-    private fun performScan(player: PlayerEntity): List<OreScanEntry> {
+    private fun performScan(player: Player): List<OreScanEntry> {
         val world = player.world
         if (world.isClient) return emptyList()
 
         val center = player.blockPos
-        val oreCounts = mutableMapOf<Identifier, Int>()
+        val oreCounts = mutableMapOf<ResourceLocation, Int>()
 
         val stack = player.mainHandStack
         val type = OdScannerItem.getScannerType(stack)
@@ -149,7 +149,7 @@ class ScannerScreenHandler(
                     val pos = center.add(dx, 0, dz).withY(y)
                     val state = world.getBlockState(pos)
                     if (state.isAir) continue
-                    val blockId = Registries.BLOCK.getId(state.block)
+                    val blockId = BuiltInRegistries.BLOCK.getId(state.block)
                     oreCounts[blockId] = oreCounts.getOrDefault(blockId, 0) + 1
                 }
             }
@@ -163,7 +163,7 @@ class ScannerScreenHandler(
             .sortedByDescending { it.count }
     }
 
-    override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
+    override fun quickMove(player: Player, index: Int): ItemStack {
         val slot = slots[index]
         if (!slot.hasStack()) return ItemStack.EMPTY
         val stack = slot.stack
@@ -191,7 +191,7 @@ class ScannerScreenHandler(
         }
     }
 
-    override fun canUse(player: PlayerEntity): Boolean = true
+    override fun canUse(player: Player): Boolean = true
 
     companion object {
         const val PLAYER_INV_START = 0
@@ -225,13 +225,13 @@ class ScannerScreenHandler(
         )
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ScannerScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): ScannerScreenHandler {
             val energy = buf.readInt()
             val energyCapacity = buf.readInt()
             val usesRemaining = buf.readVarInt()
             val maxUses = buf.readVarInt()
 
-            val context = ScreenHandlerContext.create(playerInventory.player.world, net.minecraft.util.math.BlockPos.ORIGIN)
+            val context = ContainerLevelAccess.create(playerInventory.player.world, net.minecraft.core.BlockPos.ORIGIN)
 
             val handler = ScannerScreenHandler(syncId, playerInventory, context)
             handler.sync.init(energy, energyCapacity, usesRemaining, maxUses)

@@ -1,56 +1,56 @@
 package ic2_120.client.renderers
 
 import ic2_120.content.block.machines.LeashKineticGeneratorBlockEntity
-import net.minecraft.block.Blocks
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.render.entity.model.LeashKnotEntityModel
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.Entity
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.RotationAxis
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import net.minecraft.client.model.LeashKnotModel
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.world.entity.Entity
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import com.mojang.math.Axis
 
 class LeashKineticGeneratorBlockEntityRenderer(
-    @Suppress("UNUSED_PARAMETER") context: BlockEntityRendererFactory.Context
+    @Suppress("UNUSED_PARAMETER") context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<LeashKineticGeneratorBlockEntity> {
 
     companion object {
-        private val LEASH_KNOT_TEXTURE = Identifier.of("textures/entity/lead_knot.png")
+        private val LEASH_KNOT_TEXTURE = ResourceLocation.of("textures/entity/lead_knot.png")
     }
 
-    private val leashKnotModel = LeashKnotEntityModel<Entity>(
-        LeashKnotEntityModel.getTexturedModelData().createModel()
+    private val leashKnotModel = LeashKnotModel<Entity>(
+        LeashKnotModel.getTexturedModelData().createModel()
     )
 
     override fun render(
         entity: LeashKineticGeneratorBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
         if (!entity.sync.hasAnimal) return
 
-        val world = entity.world as? ClientWorld ?: return
+        val world = entity.world as? ClientLevel ?: return
         val renderPos = entity.pos.up()
-        val renderLight = net.minecraft.client.render.WorldRenderer.getLightmapCoordinates(world, renderPos)
+        val renderLight = net.minecraft.client.renderer.LevelRenderer.getLightmapCoordinates(world, renderPos)
 
         val angle = entity.sync.animalAngle
 
         matrices.push()
         matrices.translate(0.5, 1.0, 0.5)
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-angle))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(-angle))
 
         // Render single oak fence post (centered, no connections in default state)
         matrices.push()
         matrices.translate(-0.5, -0.5, -0.5)
-        MinecraftClient.getInstance().blockRenderManager.renderBlockAsEntity(
+        Minecraft.getInstance().blockRenderManager.renderBlockAsEntity(
             Blocks.OAK_FENCE.defaultState,
             matrices,
             vertexConsumers,

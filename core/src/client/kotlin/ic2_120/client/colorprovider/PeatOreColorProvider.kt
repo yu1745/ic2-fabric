@@ -2,8 +2,8 @@ package ic2_120.client.colorprovider
 
 import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 /**
  * 泥炭矿着色器。
@@ -17,8 +17,8 @@ object PeatOreColorProvider {
     private const val PEAT_COLOR = 0x4A3728
 
     fun register() {
-        val block = Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "peat_ore"))
-        val item = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "peat_ore"))
+        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.of(Ic2_120.MOD_ID, "peat_ore"))
+        val item = BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "peat_ore"))
 
         ColorProviderRegistry.BLOCK.register({ _, _, _, _ ->
             PEAT_COLOR

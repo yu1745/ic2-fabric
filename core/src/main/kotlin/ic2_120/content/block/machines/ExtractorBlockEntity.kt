@@ -34,33 +34,33 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.block.BlockState
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.recipe.RecipeManager
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.text.Text
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.ContainerHelper
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.RecipeManager
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.network.chat.Component
+import net.minecraft.core.NonNullList
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import ic2_120.content.upgrade.IValidInputItem
 
 @ModBlockEntity(block = ExtractorBlock::class)
 @ModMachineRecipeBinding(ExtractorRecipeSerializer::class)
 class ExtractorBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = ExtractorBlock.ACTIVE
+    override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = ExtractorBlock.ACTIVE
 
     override val soundConfig: MachineSoundConfig = MachineSoundConfig.operate(
         soundId = "machine.extractor.operate",
@@ -69,7 +69,7 @@ class ExtractorBlockEntity(
         intervalTicks = 20
     )
 
-    override fun getInventory(): net.minecraft.inventory.Inventory = this
+    override fun getInventory(): net.minecraft.world.Container = this
 
     override val tier: Int = EXTRACTOR_TIER
 
@@ -99,7 +99,7 @@ class ExtractorBlockEntity(
         const val INVENTORY_SIZE = 7
     }
 
-    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -149,12 +149,12 @@ class ExtractorBlockEntity(
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecipeInput(stack)
@@ -164,19 +164,19 @@ class ExtractorBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.extractor")
+    override fun getDisplayName(): Component = Component.translatable("block.ic2_120.extractor")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        ExtractorScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+        ExtractorScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+        ContainerHelper.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ExtractorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -189,9 +189,9 @@ class ExtractorBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+        ContainerHelper.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ExtractorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -207,7 +207,7 @@ class ExtractorBlockEntity(
         }
     }
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
@@ -277,14 +277,14 @@ class ExtractorBlockEntity(
 
     // 配方缓存：ExtractorRecipe.matches 只检查物品类型（不看数量），结果仅依赖
     // item，因此按 item 缓存（含 null）安全，避免每 tick 重复查询 recipeManager。
-    private var cachedRecipeItem: net.minecraft.item.Item? = null
+    private var cachedRecipeItem: net.minecraft.world.item.Item? = null
     private var cachedRecipe: ExtractorRecipe? = null
     private var cachedRecipeEpoch = -1
 
-    private fun getRecipe(world: World, input: ItemStack): ExtractorRecipe? {
+    private fun getRecipe(world: Level, input: ItemStack): ExtractorRecipe? {
         if (input.isEmpty) return null
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedRecipeItem === input.item) return cachedRecipe
-        val inventory = SimpleInventory(input)
+        val inventory = SimpleContainer(input)
         val recipeManager = world.recipeManager
         val optionalRecipe = recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), inventory, world)
         val recipe = optionalRecipe.orElse(null)
@@ -298,7 +298,7 @@ class ExtractorBlockEntity(
 
     // 类型判定缓存：isRecipeInput 用 copyWithCount(1) 查询（Extractor 配方不看数量），
     // 结果仅依赖物品类型，按 item 缓存安全。
-    private var cachedInputItem: net.minecraft.item.Item? = null
+    private var cachedInputItem: net.minecraft.world.item.Item? = null
     private var cachedIsInput = false
     private var cachedInputEpoch = -1
 
@@ -306,7 +306,7 @@ class ExtractorBlockEntity(
         if (stack.isEmpty || isBatteryItem(stack)) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(1))
+        val inv = SimpleContainer(stack.copyWithCount(1))
         val found = w.recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
@@ -331,9 +331,9 @@ class ExtractorBlockEntity(
     }
     /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
      *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */
-    override fun isValidInputItem(item: net.minecraft.item.Item): Boolean {
-        if (isBatteryItem(net.minecraft.item.ItemStack(item, 1))) return false
-        val w = world as? net.minecraft.server.world.ServerWorld ?: return true
+    override fun isValidInputItem(item: net.minecraft.world.item.Item): Boolean {
+        if (isBatteryItem(net.minecraft.world.item.ItemStack(item, 1))) return false
+        val w = world as? net.minecraft.server.level.ServerLevel ?: return true
         return ic2_120.content.RecipeInputLookupCache.hasAnyRecipe(getRecipeType<ExtractorRecipe>(), item, w)
     }
 

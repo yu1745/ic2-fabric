@@ -11,31 +11,31 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Block
-import net.minecraft.block.ShapeContext
-import net.minecraft.block.BlockRenderType
-import net.minecraft.block.BlockState
-import net.minecraft.block.BlockWithEntity
-import net.minecraft.block.Blocks
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.Items
-import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.BooleanProperty
-import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.shape.VoxelShape
-import net.minecraft.util.shape.VoxelShapes
-import net.minecraft.world.BlockView
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.level.block.RenderShape
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.BaseEntityBlock
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.Items
+import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.shapes.VoxelShape
+import net.minecraft.world.phys.shapes.Shapes
+import net.minecraft.world.level.BlockGetter
+import net.minecraft.world.level.Level
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
@@ -47,35 +47,35 @@ import ic2_120.registry.annotation.RecipeProvider
  * 电压等级 5（不限制电压），active 时发光等级 15。
  */
 @ModBlock(name = "luminator_flat", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class LuminatorFlatBlock : BlockWithEntity(
-    AbstractBlock.Settings.copy(Blocks.IRON_BLOCK)
+class LuminatorFlatBlock : BaseEntityBlock(
+    BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK)
         .strength(5.0f, 6.0f)
         .luminance { state -> if (state.get(ACTIVE)) 15 else 0 }
 ) {
 
     init {
         defaultState = stateManager.defaultState
-            .with(Properties.FACING, Direction.NORTH)
+            .with(BlockStateProperties.FACING, Direction.NORTH)
             .with(ACTIVE, false)
     }
 
-    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
         super.appendProperties(builder)
-        builder.add(Properties.FACING, ACTIVE)
+        builder.add(BlockStateProperties.FACING, ACTIVE)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? {
+    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? {
         val side = ctx.side
         // 侧面：发光朝向房间内部，用 opposite；顶底：发光朝向点击面，用 side（与 blockstate 模型旋转对应）
         val facing = if (side.axis == Direction.Axis.Y) side else side.opposite
-        return defaultState.with(Properties.FACING, facing)
+        return defaultState.with(BlockStateProperties.FACING, facing)
     }
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         LuminatorFlatBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
-        world: World,
+        world: Level,
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
@@ -84,23 +84,23 @@ class LuminatorFlatBlock : BlockWithEntity(
             be.tick(w, p, s)
         }
 
-    override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
+    override fun getRenderType(state: BlockState): RenderShape = RenderShape.MODEL
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getOutlineShape(
         state: BlockState,
-        world: BlockView,
+        world: BlockGetter,
         pos: BlockPos,
-        context: ShapeContext
-    ): VoxelShape = luminatorShape(state.get(Properties.FACING))
+        context: CollisionContext
+    ): VoxelShape = luminatorShape(state.get(BlockStateProperties.FACING))
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getCollisionShape(
         state: BlockState,
-        world: BlockView,
+        world: BlockGetter,
         pos: BlockPos,
-        context: ShapeContext
-    ): VoxelShape = luminatorShape(state.get(Properties.FACING))
+        context: CollisionContext
+    ): VoxelShape = luminatorShape(state.get(BlockStateProperties.FACING))
 
     /** 薄板厚度 1/16，与 luminator_shape_flat 模型一致 */
     private fun luminatorShape(facing: Direction): VoxelShape = when (facing) {
@@ -118,20 +118,20 @@ class LuminatorFlatBlock : BlockWithEntity(
         /** 薄板厚度 1/16，与 luminator_shape_flat 模型一致 */
         private const val THICK = 1.0 / 16.0
 
-        private val SHAPE_NORTH = VoxelShapes.cuboid(0.0, 0.0, 0.0, 1.0, 1.0, THICK)
-        private val SHAPE_SOUTH = VoxelShapes.cuboid(0.0, 0.0, 1.0 - THICK, 1.0, 1.0, 1.0)
-        private val SHAPE_EAST = VoxelShapes.cuboid(1.0 - THICK, 0.0, 0.0, 1.0, 1.0, 1.0)
-        private val SHAPE_WEST = VoxelShapes.cuboid(0.0, 0.0, 0.0, THICK, 1.0, 1.0)
-        private val SHAPE_UP = VoxelShapes.cuboid(0.0, 0.0, 0.0, 1.0, THICK, 1.0)
-        private val SHAPE_DOWN = VoxelShapes.cuboid(0.0, 1.0 - THICK, 0.0, 1.0, 1.0, 1.0)
+        private val SHAPE_NORTH = Shapes.cuboid(0.0, 0.0, 0.0, 1.0, 1.0, THICK)
+        private val SHAPE_SOUTH = Shapes.cuboid(0.0, 0.0, 1.0 - THICK, 1.0, 1.0, 1.0)
+        private val SHAPE_EAST = Shapes.cuboid(1.0 - THICK, 0.0, 0.0, 1.0, 1.0, 1.0)
+        private val SHAPE_WEST = Shapes.cuboid(0.0, 0.0, 0.0, THICK, 1.0, 1.0)
+        private val SHAPE_UP = Shapes.cuboid(0.0, 0.0, 0.0, 1.0, THICK, 1.0)
+        private val SHAPE_DOWN = Shapes.cuboid(0.0, 1.0 - THICK, 0.0, 1.0, 1.0, 1.0)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val tinCable = TinCableBlock::class.item()
             val ironCasing = IronCasing::class.instance()
             if (insulatedCopperCable != Items.AIR && tinCable != Items.AIR && ironCasing != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LuminatorFlatBlock::class.item(), 8)
+                ShapedRecipeBuilder.create(RecipeCategory.MISC, LuminatorFlatBlock::class.item(), 8)
                     .pattern("ICI")
                     .pattern("GTG")
                     .pattern("GGG")

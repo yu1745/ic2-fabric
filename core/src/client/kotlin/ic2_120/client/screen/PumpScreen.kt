@@ -9,32 +9,32 @@ import ic2_120.content.sync.PumpSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.Sprite
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.fluid.Fluid
-import net.minecraft.registry.Registries
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.texture.TextureAtlasSprite
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = PumpBlock::class)
 class PumpScreen(
     handler: PumpScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
-) : HandledScreen<PumpScreenHandler>(handler, playerInventory, title) {
+    playerInventory: Inventory,
+    title: Component
+) : AbstractContainerScreen<PumpScreenHandler>(handler, playerInventory, title) {
 
     init {
         backgroundWidth = 176
         backgroundHeight = 166
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
@@ -94,7 +94,7 @@ class PumpScreen(
 
         // 流体纹理 (100,26)-(112,73) = 12x47，自下而上
         if (fluidAmount > 0 && fluidRawId != -1) {
-            val fluid = Registries.FLUID.get(fluidRawId)
+            val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
             val sprite = getFluidStillSprite(fluid)
             if (sprite != null) {
                 val fillHeight = (TANK_H * fluidFraction).toInt().coerceAtLeast(1)
@@ -151,7 +151,7 @@ class PumpScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -161,11 +161,11 @@ class PumpScreen(
             relY in TANK_Y until TANK_Y + TANK_H
         ) {
             val lines = if (fluidAmount > 0 && fluidRawId != -1) {
-                val fluid = Registries.FLUID.get(fluidRawId)
+                val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
                 val fluidName = fluid.defaultState.blockState.block.name.string
-                listOf(Text.literal(fluidName), Text.literal("${"%,d".format(fluidAmount / DROPLETS_PER_MB)} / ${"%,d".format(fluidCapacity / DROPLETS_PER_MB)} mB"))
+                listOf(Component.literal(fluidName), Component.literal("${"%,d".format(fluidAmount / DROPLETS_PER_MB)} / ${"%,d".format(fluidCapacity / DROPLETS_PER_MB)} mB"))
             } else {
-                listOf(Text.literal("空"))
+                listOf(Component.literal("空"))
             }
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -177,14 +177,14 @@ class PumpScreen(
             context.drawTooltip(
                 textRenderer,
                 listOf(
-                    Text.translatable("gui.ic2_120.pump.uptips"),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+                    Component.translatable("gui.ic2_120.pump.uptips"),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.pulling_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_ejector_upgrade")),
+                    Component.literal("§7").append(Component.translatable("item.ic2_120.fluid_pulling_upgrade"))
                 ),
                 mouseX, mouseY
             )
@@ -192,8 +192,8 @@ class PumpScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2", "textures/gui/guipump.png")
-        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guipump.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
@@ -235,7 +235,7 @@ class PumpScreen(
     }
 }
 
-private fun getFluidStillSprite(fluid: Fluid): Sprite? {
+private fun getFluidStillSprite(fluid: Fluid): TextureAtlasSprite? {
     val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
     return handler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0)
 }

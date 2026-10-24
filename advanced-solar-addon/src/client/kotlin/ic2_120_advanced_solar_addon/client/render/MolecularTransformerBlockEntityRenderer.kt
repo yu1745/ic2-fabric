@@ -2,25 +2,25 @@ package ic2_120_advanced_solar_addon.client.render
 
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlock
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlockEntity
-import net.minecraft.client.render.OverlayTexture
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.RotationAxis
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.client.renderer.RenderType
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.resources.ResourceLocation
+import com.mojang.math.Axis
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 
 class MolecularTransformerBlockEntityRenderer(
-    context: BlockEntityRendererFactory.Context
+    context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<MolecularTransformerBlockEntity> {
 
     companion object {
-        private val TEXTURE = Identifier.of("ic2_120_advanced_solar_addon", "textures/models/texturemoleculartransformer.png")
-        private val PLAZMA_TEXTURE = Identifier.of("ic2_120_advanced_solar_addon", "textures/models/plazma.png")
+        private val TEXTURE = ResourceLocation.of("ic2_120_advanced_solar_addon", "textures/models/texturemoleculartransformer.png")
+        private val PLAZMA_TEXTURE = ResourceLocation.of("ic2_120_advanced_solar_addon", "textures/models/plazma.png")
         private const val TW = 128f
         private const val TH = 64f
 
@@ -48,8 +48,8 @@ class MolecularTransformerBlockEntityRenderer(
     override fun render(
         entity: MolecularTransformerBlockEntity,
         tickDelta: Float,
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
@@ -59,7 +59,7 @@ class MolecularTransformerBlockEntityRenderer(
         val isActive = try { state.get(MolecularTransformerBlock.ACTIVE) } catch (_: Exception) { false }
         val ov = overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV
 
-        val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(TEXTURE))
 
         matrices.push()
 
@@ -75,7 +75,7 @@ class MolecularTransformerBlockEntityRenderer(
         // Second electrode: Y rotation -120°
         matrices.push()
         matrices.translate(0.5, 0.5, 0.5)
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-120f))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(-120f))
         matrices.translate(-0.5, -0.5, -0.5)
         renderBox(vc, matrices, light, ov, EL_TOP, 20, 16, 4, 3, 10)
         renderBox(vc, matrices, light, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
@@ -84,14 +84,14 @@ class MolecularTransformerBlockEntityRenderer(
         // Third electrode: Y rotation +120°
         matrices.push()
         matrices.translate(0.5, 0.5, 0.5)
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(120f))
+        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(120f))
         matrices.translate(-0.5, -0.5, -0.5)
         renderBox(vc, matrices, light, ov, EL_TOP, 20, 16, 4, 3, 10)
         renderBox(vc, matrices, light, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
         matrices.pop()
 
         // Translucent coreWorkZone
-        val vcTrans = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(TEXTURE))
+        val vcTrans = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(TEXTURE))
         renderBox(vcTrans, matrices, light, ov, CORE_WORK_ZONE, 0, 44, 6, 9, 6)
 
         matrices.pop()
@@ -116,7 +116,7 @@ class MolecularTransformerBlockEntityRenderer(
      *   where d=depth(sizeZ), w=width(sizeX), h=height(sizeY)
      */
     private fun renderBox(
-        vc: VertexConsumer, matrices: MatrixStack,
+        vc: VertexConsumer, matrices: PoseStack,
         light: Int, overlay: Int,
         coords: FloatArray,
         texU: Int, texV: Int,
@@ -202,12 +202,12 @@ class MolecularTransformerBlockEntityRenderer(
     }
 
     private fun renderActiveCore(
-        matrices: MatrixStack,
-        vertexConsumers: VertexConsumerProvider,
+        matrices: PoseStack,
+        vertexConsumers: MultiBufferSource,
         light: Int,
         overlay: Int
     ) {
-        val vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(PLAZMA_TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(PLAZMA_TEXTURE))
         renderBox(vc, matrices, light, overlay,
             floatArrayOf(px(1.5f), py(9f), pz(-1.5f), px(-1.5f), py(5f), pz(1.5f)),
             0, 0, 3, 4, 3)

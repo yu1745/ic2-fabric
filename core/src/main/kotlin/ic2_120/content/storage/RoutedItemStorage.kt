@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 data class ItemInsertRoute(
     val slotIndices: IntArray,
@@ -95,7 +95,7 @@ class RoutedItemStorage(
     }
 
     /**
-     * 判断指定 slot 是否允许从侧面插入指定物品（供 SidedInventory.canInsert 委托）。
+     * 判断指定 slot 是否允许从侧面插入指定物品（供 WorldlyContainer.canInsert 委托）。
      */
     fun canInsertFromSide(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -226,7 +226,7 @@ class RoutedItemStorage(
 
         val maxItemCount = routing?.explicitMaxPerSlot ?: 64
 
-        val canTake: (net.minecraft.entity.player.PlayerEntity) -> Boolean = if (isExtractable) {
+        val canTake: (net.minecraft.world.entity.player.Player) -> Boolean = if (isExtractable) {
             { true }
         } else {
             { false }

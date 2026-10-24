@@ -14,19 +14,19 @@ import mezz.jei.api.ingredients.IIngredientTypeWithSubtypes
 import mezz.jei.api.ingredients.ITypedIngredient
 import mezz.jei.api.registration.IGuiHandlerRegistration
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.util.math.Rect2i
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.Fluids
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.Rect2i
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 @JeiPlugin
 class Ic2JeiGhostPlugin : IModPlugin {
-    override fun getPluginUid(): Identifier = Identifier.of("ic2_120", "ghost_filters")
+    override fun getPluginUid(): ResourceLocation = ResourceLocation.of("ic2_120", "ghost_filters")
 
     override fun registerGuiHandlers(registration: IGuiHandlerRegistration) {
         val fluidIngredientType = registration.jeiHelpers.platformFluidHelper.fluidIngredientType
@@ -40,7 +40,7 @@ class Ic2JeiGhostPlugin : IModPlugin {
         )
 
         registration.addGhostIngredientHandler(
-            HandledScreen::class.java,
+            AbstractContainerScreen::class.java,
             ItemFilterGhostHandler()
         )
     }
@@ -86,15 +86,15 @@ class Ic2JeiGhostPlugin : IModPlugin {
 
         private fun sendFluidFilter(fluid: Fluid) {
             if (fluid == Fluids.EMPTY) return
-            val buf = PacketByteBuf(Unpooled.buffer())
-            buf.writeIdentifier(Registries.FLUID.getId(fluid))
+            val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeIdentifier(BuiltInRegistries.FLUID.getId(fluid))
             ClientPlayNetworking.send(NetworkManager.SET_FLUID_FILTER_PACKET, buf)
         }
     }
 
-    private class ItemFilterGhostHandler : IGhostIngredientHandler<HandledScreen<*>> {
+    private class ItemFilterGhostHandler : IGhostIngredientHandler<AbstractContainerScreen<*>> {
         override fun <I : Any> getTargetsTyped(
-            gui: HandledScreen<*>,
+            gui: AbstractContainerScreen<*>,
             ingredient: ITypedIngredient<I>,
             doStart: Boolean
         ): List<IGhostIngredientHandler.Target<I>> {
@@ -115,11 +115,11 @@ class Ic2JeiGhostPlugin : IModPlugin {
             val stack = VanillaTypes.ITEM_STACK.castIngredient(ingredient.ingredient)
                 .orElse(null)
                 ?: return null
-            return stack.takeUnless { it.isEmpty || it.item == net.minecraft.item.Items.AIR }
+            return stack.takeUnless { it.isEmpty || it.item == net.minecraft.world.item.Items.AIR }
         }
 
         private fun sendItemFilter(slotIndex: Int, stack: ItemStack) {
-            val buf = PacketByteBuf(Unpooled.buffer())
+            val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeVarInt(slotIndex)
             buf.writeItemStack(stack)
             ClientPlayNetworking.send(NetworkManager.SET_ITEM_FILTER_PACKET, buf)

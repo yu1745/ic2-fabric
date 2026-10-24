@@ -64,14 +64,14 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration
 import mezz.jei.api.registration.IRecipeRegistration
 import mezz.jei.api.registration.ISubtypeRegistration
 import mezz.jei.api.runtime.IJeiRuntime
-import net.minecraft.fluid.Fluid
-import net.minecraft.fluid.Fluids
-import net.minecraft.recipe.Recipe
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 /**
  * JEI 插件 - 注册电力物品、喷气背包、建筑泡沫喷枪等的空/满变体与子类型
@@ -108,7 +108,7 @@ class Ic2JeiPlugin : IModPlugin {
             }
             val newRecipes = Ic2Config.getAllReplicationCosts()
                 .mapNotNull { (itemId, uuCostUb) ->
-                    val item = Registries.ITEM.get(Identifier.tryParse(itemId))
+                    val item = BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(itemId))
                     if (item == Items.AIR) null
                     else ReplicatorJeiRecipe(ItemStack(item, 1), uuCostUb)
                 }
@@ -120,13 +120,13 @@ class Ic2JeiPlugin : IModPlugin {
         }
     }
 
-    override fun getPluginUid(): Identifier {
-        return Identifier.of("ic2_120", "main")
+    override fun getPluginUid(): ResourceLocation {
+        return ResourceLocation.of("ic2_120", "main")
     }
 
     override fun registerItemSubtypes(registration: ISubtypeRegistration) {
         // 遍历所有已注册的物品
-        Registries.ITEM.forEach { item ->
+        BuiltInRegistries.ITEM.forEach { item ->
             if (item === Items.AIR) return@forEach
             // 检查物品是否实现了电力接口
             if (item is IBatteryItem || item is IElectricTool) {
@@ -165,7 +165,7 @@ class Ic2JeiPlugin : IModPlugin {
         }
 
         // 通用流体单元：按 NBT 中存储的 FluidVariant 区分子类型
-        val fluidCell = Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell"))
+        val fluidCell = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "fluid_cell"))
         if (fluidCell !== Items.AIR) {
             registration.registerSubtypeInterpreter(fluidCell, FluidCellSubtypeInterpreter())
         }
@@ -174,7 +174,7 @@ class Ic2JeiPlugin : IModPlugin {
     override fun registerExtraIngredients(registration: IExtraIngredientRegistration) {
         val extraStacks = mutableListOf<ItemStack>()
 
-        Registries.ITEM.forEach { item ->
+        BuiltInRegistries.ITEM.forEach { item ->
             if (item === Items.AIR) return@forEach
             when (item) {
                 is IBatteryItem -> {
@@ -220,12 +220,12 @@ class Ic2JeiPlugin : IModPlugin {
                 is EnergyStorageBlock.EnergyStorageBlockItem -> {
                     // 储电盒/充电座：补充空电 + 满电两个明确变体
                     extraStacks += ItemStack(item as Item).also { stack ->
-                        stack.nbt = net.minecraft.nbt.NbtCompound().also { nbt ->
+                        stack.nbt = net.minecraft.nbt.CompoundTag().also { nbt ->
                             nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
                         }
                     }
                     extraStacks += ItemStack(item as Item).also { stack ->
-                        stack.nbt = net.minecraft.nbt.NbtCompound().also { nbt ->
+                        stack.nbt = net.minecraft.nbt.CompoundTag().also { nbt ->
                             nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
                         }
                     }
@@ -241,7 +241,7 @@ class Ic2JeiPlugin : IModPlugin {
         extraStacks += PainterItem.createColoredStacks()
 
         // 通用流体单元：为所有没有专用单元类的流体注册 NBT 变体
-        val fluidCell = Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell"))
+        val fluidCell = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "fluid_cell"))
         if (fluidCell !== Items.AIR) {
             // 从 ModFluidCell 子类反查已有专用单元的流体，自动同步不会有遗漏
             val modFluidCells = mutableSetOf<Fluid>()
@@ -251,12 +251,12 @@ class Ic2JeiPlugin : IModPlugin {
                 "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell",
                 "construction_foam_cell", "steam_cell", "superheated_steam_cell"
             )) {
-                val item = Registries.ITEM.get(Identifier.of("ic2_120", fluidId))
+                val item = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", fluidId))
                 if (item is ModFluidCell) {
                     val fluid = item.getFluid()
                     modFluidCells.add(fluid)
                     // also add flowing variant if it exists
-                    val flowing = Registries.FLUID.get(Identifier.of("ic2_120", "flowing_${Registries.FLUID.getId(fluid).path}"))
+                    val flowing = BuiltInRegistries.FLUID.get(ResourceLocation.of("ic2_120", "flowing_${BuiltInRegistries.FLUID.getId(fluid).path}"))
                     if (flowing !== Fluids.EMPTY) modFluidCells.add(flowing)
                 }
             }
@@ -266,7 +266,7 @@ class Ic2JeiPlugin : IModPlugin {
             modFluidCells.add(Fluids.LAVA)
             modFluidCells.add(Fluids.FLOWING_LAVA)
 
-            extraStacks += Registries.FLUID
+            extraStacks += BuiltInRegistries.FLUID
                 .filter { fluid ->
                     fluid !== Fluids.EMPTY &&
                     fluid !== Fluids.FLOWING_LAVA &&
@@ -274,7 +274,7 @@ class Ic2JeiPlugin : IModPlugin {
                     fluid !in modFluidCells &&
                     isFluidVariantRepresentable(fluid)  // 病态流体不注册（#27，与创造栏同步）
                 }
-                .sortedBy { Registries.FLUID.getId(it).toString() }
+                .sortedBy { BuiltInRegistries.FLUID.getId(it).toString() }
                 .mapNotNull { fluid ->
                     try {
                         ItemStack(fluidCell).apply { setFluidCellVariant(FluidVariant.of(fluid)) }
@@ -332,8 +332,8 @@ class Ic2JeiPlugin : IModPlugin {
             Ic2JeiRecipeTypes.COAL_WATER_TRANSFORM,
             listOf(
                 CoalWaterTransformJeiRecipe(
-                    ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "coal_dust"))),
-                    ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "coal_fuel_dust")))
+                    ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "coal_dust"))),
+                    ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "coal_fuel_dust")))
                 )
             )
         )
@@ -481,7 +481,7 @@ class Ic2JeiPlugin : IModPlugin {
                 slot1 = entry.slot1Ingredient.toItemStacks(entry.slot1Count),
                 output = ItemStack(entry.outputItem, entry.outputCount)
             )
-        }) + Registries.ITEM.mapNotNull { item ->
+        }) + BuiltInRegistries.ITEM.mapNotNull { item ->
                 val food = item.foodComponent ?: return@mapNotNull null
                 val canCount = food.hunger.coerceAtLeast(1)
                 SolidCannerJeiRecipe(
@@ -506,7 +506,7 @@ class Ic2JeiPlugin : IModPlugin {
             }
         registration.addRecipes(Ic2JeiRecipeTypes.CANNER_MIXING, cannerMixingRecipes)
 
-        val recyclerScrap = Registries.ITEM.get(Identifier.of("ic2_120", "scrap"))
+        val recyclerScrap = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "scrap"))
         registration.addRecipes(
             Ic2JeiRecipeTypes.RECYCLER,
             listOf(
@@ -520,7 +520,7 @@ class Ic2JeiPlugin : IModPlugin {
         // Replicator 配方
         replicatorRecipes = Ic2Config.getAllReplicationCosts()
             .mapNotNull { (itemId, uuCostUb) ->
-                val item = Registries.ITEM.get(Identifier.tryParse(itemId))
+                val item = BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(itemId))
                 if (item == Items.AIR) null
                 else ReplicatorJeiRecipe(ItemStack(item, 1), uuCostUb)
             }
@@ -531,71 +531,71 @@ class Ic2JeiPlugin : IModPlugin {
     override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
         // Macerator
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "macerator"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "macerator"))),
             Ic2JeiRecipeTypes.MACERATOR
         )
 
         // Compressor
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "compressor"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "compressor"))),
             Ic2JeiRecipeTypes.COMPRESSOR
         )
 
         // Extractor
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "extractor"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "extractor"))),
             Ic2JeiRecipeTypes.EXTRACTOR
         )
 
         // Centrifuge
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "centrifuge"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "centrifuge"))),
             Ic2JeiRecipeTypes.CENTRIFUGE
         )
 
         // BlockCutter
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "block_cutter"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "block_cutter"))),
             Ic2JeiRecipeTypes.BLOCK_CUTTER
         )
 
         // BlastFurnace
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "blast_furnace"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "blast_furnace"))),
             Ic2JeiRecipeTypes.BLAST_FURNACE
         )
 
         // OreWashing
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "ore_washing_plant"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "ore_washing_plant"))),
             Ic2JeiRecipeTypes.ORE_WASHING
         )
 
         // MetalFormer - 同一机器显示在三个分类下
-        val metalFormerStack = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
+        val metalFormerStack = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "metal_former")))
         registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_ROLLING)
         registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_CUTTING)
         registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING)
 
         // SolidCanner
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "solid_canner"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "solid_canner"))),
             Ic2JeiRecipeTypes.SOLID_CANNER
         )
 
         // Canner（流体/固体装罐机）
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "canner"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "canner"))),
             Ic2JeiRecipeTypes.CANNER_MIXING
         )
 
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "recycler"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "recycler"))),
             Ic2JeiRecipeTypes.RECYCLER
         )
 
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "replicator"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "replicator"))),
             Ic2JeiRecipeTypes.REPLICATOR
         )
     }
@@ -713,7 +713,7 @@ class Ic2JeiPlugin : IModPlugin {
             if (uidContext == mezz.jei.api.ingredients.subtypes.UidContext.Recipe) {
                 return ""
             }
-            return Registries.FLUID.getId(variant.fluid).toString()
+            return BuiltInRegistries.FLUID.getId(variant.fluid).toString()
         }
     }
 
@@ -748,17 +748,17 @@ class Ic2JeiPlugin : IModPlugin {
             "batbox_chargepad", "cesu_chargepad", "mfe_chargepad", "mfsu_chargepad"
         )
         for (id in storageIds) {
-            val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
-            if (item === net.minecraft.item.Items.AIR) continue
+            val item = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", id))
+            if (item === net.minecraft.world.item.Items.AIR) continue
             // 空电
             extraStacks += ItemStack(item).also { stack ->
-                stack.nbt = net.minecraft.nbt.NbtCompound().also { nbt ->
+                stack.nbt = net.minecraft.nbt.CompoundTag().also { nbt ->
                     nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
                 }
             }
             // 满电
             extraStacks += ItemStack(item).also { stack ->
-                stack.nbt = net.minecraft.nbt.NbtCompound().also { nbt ->
+                stack.nbt = net.minecraft.nbt.CompoundTag().also { nbt ->
                     nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
                 }
             }

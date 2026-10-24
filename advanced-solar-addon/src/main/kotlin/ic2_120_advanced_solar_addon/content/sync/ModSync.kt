@@ -3,7 +3,7 @@ package ic2_120_advanced_solar_addon.content.sync
 import ic2_120.content.TickLimitedSidedEnergyContainer
 import ic2_120.content.energy.EnergyTier
 import ic2_120.content.syncs.SyncSchema
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 
 class SolarPanelSync(
     schema: SyncSchema,

@@ -10,15 +10,15 @@ import ic2_120.content.recipes.ModRecipeProvider
 import ic2_120.registry.ClassScanner
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.resources.ResourceLocation
 
 object Ic2_120DataGenerator : DataGeneratorEntrypoint {
 	override fun onInitializeDataGenerator(fabricDataGenerator: FabricDataGenerator) {
 		// datagen 可能在 ModInitializer 之前执行；若注解矿辞表为空且物品未注册，则先完成扫描注册。
 		if (MaterialTagRegistry.itemEntries.isEmpty()) {
-			val tinId = Identifier.of(Ic2_120.MOD_ID, "tin_ingot")
-			if (!Registries.ITEM.containsId(tinId)) {
+			val tinId = ResourceLocation.of(Ic2_120.MOD_ID, "tin_ingot")
+			if (!BuiltInRegistries.ITEM.containsId(tinId)) {
 			ModFluids.register()
 			ClassScanner.scanAndRegister(
 				Ic2_120.MOD_ID,

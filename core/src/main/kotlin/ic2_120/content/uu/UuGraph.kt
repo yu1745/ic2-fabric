@@ -1,7 +1,7 @@
 package ic2_120.content.uu
 
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
+import net.minecraft.world.item.Item
+import net.minecraft.core.registries.BuiltInRegistries
 import org.slf4j.LoggerFactory
 import java.util.IdentityHashMap
 import kotlin.math.abs

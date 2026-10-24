@@ -1,10 +1,10 @@
 package ic2_120.content.entity
 
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.damage.DamageSource
-import net.minecraft.entity.vehicle.BoatEntity
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.entity.vehicle.Boat
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
 import kotlin.math.sqrt
 
 /**
@@ -13,8 +13,8 @@ import kotlin.math.sqrt
  */
 abstract class Ic2BoatEntity(
     entityType: EntityType<out Ic2BoatEntity>,
-    world: World
-) : BoatEntity(entityType, world) {
+    world: Level
+) : Boat(entityType, world) {
     protected open val maxHorizontalSpeed: Double = 0.40
     protected open val waterDragMultiplier: Double = 1.0
     protected open val damageTakenMultiplier: Float = 1.0f
@@ -24,7 +24,7 @@ abstract class Ic2BoatEntity(
         if (world.isClient || !isTouchingWater) return
 
         val velocity = velocity
-        val adjusted = Vec3d(velocity.x * waterDragMultiplier, velocity.y, velocity.z * waterDragMultiplier)
+        val adjusted = Vec3(velocity.x * waterDragMultiplier, velocity.y, velocity.z * waterDragMultiplier)
         val horizontalSpeed = sqrt(adjusted.x * adjusted.x + adjusted.z * adjusted.z)
         if (horizontalSpeed <= maxHorizontalSpeed || horizontalSpeed <= 1.0E-6) {
             this.velocity = adjusted
@@ -32,7 +32,7 @@ abstract class Ic2BoatEntity(
         }
 
         val scale = maxHorizontalSpeed / horizontalSpeed
-        this.velocity = Vec3d(adjusted.x * scale, adjusted.y, adjusted.z * scale)
+        this.velocity = Vec3(adjusted.x * scale, adjusted.y, adjusted.z * scale)
     }
 
     override fun damage(source: DamageSource, amount: Float): Boolean {

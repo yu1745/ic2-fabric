@@ -3,18 +3,18 @@ package ic2_120.util;
 import ic2_120.content.item.NanoSaber;
 import ic2_120.content.item.armor.NanoArmorItem;
 import ic2_120.content.item.armor.QuantumArmorItem;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageType;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Holder;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 纳米剑对穿戴纳米护甲（且未穿戴量子护甲）的玩家使用可无视护甲的伤害类型。
@@ -23,8 +23,8 @@ public final class NanoSaberDamageHelper {
 
     private NanoSaberDamageHelper() {}
 
-    public static final RegistryKey<DamageType> NANO_SABER_ARMOR_PIERCE_KEY =
-        RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("ic2_120", "nano_saber_armor_pierce"));
+    public static final ResourceKey<DamageType> NANO_SABER_ARMOR_PIERCE_KEY =
+        ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.of("ic2_120", "nano_saber_armor_pierce"));
 
     public static boolean isNanoSaberArmorPierceDamage(DamageSource source) {
         return source.isOf(NANO_SABER_ARMOR_PIERCE_KEY);
@@ -33,7 +33,7 @@ public final class NanoSaberDamageHelper {
     /**
      * 攻击者为手持纳米剑的玩家、且近战；被击玩家任一件量子护甲则 false；被击玩家任一件纳米护甲则 true。
      */
-    public static boolean shouldReplaceWithPierce(PlayerEntity victim, DamageSource source) {
+    public static boolean shouldReplaceWithPierce(Player victim, DamageSource source) {
         if (victim.getWorld().isClient()) {
             return false;
         }
@@ -41,7 +41,7 @@ public final class NanoSaberDamageHelper {
             return false;
         }
         Entity attackerEntity = source.getAttacker();
-        if (!(attackerEntity instanceof PlayerEntity attacker)) {
+        if (!(attackerEntity instanceof Player attacker)) {
             return false;
         }
         ItemStack mainHand = attacker.getMainHandStack();
@@ -54,17 +54,17 @@ public final class NanoSaberDamageHelper {
         return hasNanoArmorPiece(victim);
     }
 
-    public static DamageSource createPierceDamage(PlayerEntity victim, DamageSource original) {
-        PlayerEntity attacker = (PlayerEntity) original.getAttacker();
-        ServerWorld world = (ServerWorld) victim.getWorld();
-        RegistryEntry<DamageType> entry = world.getRegistryManager()
-            .get(RegistryKeys.DAMAGE_TYPE)
+    public static DamageSource createPierceDamage(Player victim, DamageSource original) {
+        Player attacker = (Player) original.getAttacker();
+        ServerLevel world = (ServerLevel) victim.getWorld();
+        Holder<DamageType> entry = world.getRegistryManager()
+            .get(Registries.DAMAGE_TYPE)
             .getEntry(NANO_SABER_ARMOR_PIERCE_KEY)
             .orElseThrow();
         return new DamageSource(entry, attacker, attacker);
     }
 
-    private static boolean hasQuantumArmorPiece(PlayerEntity player) {
+    private static boolean hasQuantumArmorPiece(Player player) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
                 continue;
@@ -77,7 +77,7 @@ public final class NanoSaberDamageHelper {
         return false;
     }
 
-    private static boolean hasNanoArmorPiece(PlayerEntity player) {
+    private static boolean hasNanoArmorPiece(Player player) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
                 continue;

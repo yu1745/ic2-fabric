@@ -7,17 +7,17 @@ import ic2_120.content.block.LeashKineticGeneratorBlock
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.LeashKineticGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text as McText
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Container
+import net.minecraft.network.chat.Component as McText
 
 @ModScreen(block = LeashKineticGeneratorBlock::class)
 class LeashKineticGeneratorScreen(
     handler: LeashKineticGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
+    playerInventory: Inventory,
     title: McText
-) : HandledScreen<LeashKineticGeneratorScreenHandler>(handler, playerInventory, title) {
+) : AbstractContainerScreen<LeashKineticGeneratorScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
 
@@ -27,11 +27,11 @@ class LeashKineticGeneratorScreen(
         titleY = -1000
     }
 
-    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x
         val top = y
         val generatedKu = handler.sync.generatedKu.coerceAtLeast(0)
@@ -59,8 +59,8 @@ class LeashKineticGeneratorScreen(
                 spacing = 6,
                 modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                Text(title.string, color = 0xFFFFFF)
-                Text(t("gui.ic2_120.leash_kinetic.status",
+                Component(title.string, color = 0xFFFFFF)
+                Component(t("gui.ic2_120.leash_kinetic.status",
                     if (hasAnimal) "gui.ic2_120.leash_kinetic.running" else "gui.ic2_120.leash_kinetic.idle"
                 ), color = if (hasAnimal) 0x55FF55 else 0xAAAAAA, shadow = false)
             }

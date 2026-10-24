@@ -1,6 +1,6 @@
 package ic2_120.content.heat
 
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 
 /**
  * 耗热机接口：由加热机向其注入 HU。

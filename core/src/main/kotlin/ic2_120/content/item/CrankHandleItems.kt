@@ -9,10 +9,10 @@ import ic2_120.registry.recipeId
 import ic2_120.content.recipes.ModTags
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeExporter
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.item.Item
-import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.world.item.Item
+import net.minecraft.data.recipes.RecipeCategory
 
 /**
  * 曲柄材质类型
@@ -46,9 +46,9 @@ abstract class CrankHandleItem(
 class WoodenCrankHandle : CrankHandleItem(CrankMaterial.WOOD) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
-            val stick = net.minecraft.item.Items.STICK
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenCrankHandle::class.instance(), 1)
+        fun generateRecipes(exporter: RecipeOutput) {
+            val stick = net.minecraft.world.item.Items.STICK
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, WoodenCrankHandle::class.instance(), 1)
                 .pattern(" S ")
                 .pattern("S S")
                 .pattern(" S ")
@@ -63,10 +63,10 @@ class WoodenCrankHandle : CrankHandleItem(CrankMaterial.WOOD) {
 class IronCrankHandle : CrankHandleItem(CrankMaterial.IRON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val wooden = WoodenCrankHandle::class.instance()
             val plate = IronPlate::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronCrankHandle::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, IronCrankHandle::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PWP")
                 .pattern(" P ")
@@ -82,10 +82,10 @@ class IronCrankHandle : CrankHandleItem(CrankMaterial.IRON) {
 class SteelCrankHandle : CrankHandleItem(CrankMaterial.STEEL) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val iron = IronCrankHandle::class.instance()
             val plate = SteelPlate::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelCrankHandle::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, SteelCrankHandle::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PWP")
                 .pattern(" P ")
@@ -101,10 +101,10 @@ class SteelCrankHandle : CrankHandleItem(CrankMaterial.STEEL) {
 class CarbonCrankHandle : CrankHandleItem(CrankMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: RecipeExporter) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val steel = SteelCrankHandle::class.instance()
             val plate = CarbonPlate::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonCrankHandle::class.instance(), 1)
+            ShapedRecipeBuilder.create(RecipeCategory.MISC, CarbonCrankHandle::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PWP")
                 .pattern(" P ")

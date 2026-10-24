@@ -3,28 +3,28 @@ package buildcraft_addon.content.screen
 import buildcraft_addon.content.block.StoneEngineBlock
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.PropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.screen.slot.Slot
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.ContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
 import ic2_120.registry.annotation.ScreenFactory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 
 @ModScreenHandler(block = StoneEngineBlock::class)
 class StoneEngineScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
-    val blockInventory: Inventory,
-    val context: ScreenHandlerContext,
-    val propertyDelegate: PropertyDelegate,
-) : ScreenHandler(StoneEngineScreenHandler::class.type(), syncId) {
+    playerInventory: Inventory,
+    val blockInventory: Container,
+    val context: ContainerLevelAccess,
+    val propertyDelegate: ContainerData,
+) : AbstractContainerMenu(StoneEngineScreenHandler::class.type(), syncId) {
 
     init {
         checkSize(blockInventory, 1)
@@ -32,7 +32,7 @@ class StoneEngineScreenHandler(
 
         // Fuel slot (BC8 pos: 80, 41)
         addSlot(object : Slot(blockInventory, 0, 80, 41) {
-            override fun canInsert(stack: net.minecraft.item.ItemStack): Boolean {
+            override fun canInsert(stack: net.minecraft.world.item.ItemStack): Boolean {
                 return stack.item.recipeRemainder !== stack.item || stack.item.toString().contains("coal")
             }
         })
@@ -57,7 +57,7 @@ class StoneEngineScreenHandler(
         return propertyDelegate.get(0).toFloat() / total.toFloat()
     }
 
-    override fun quickMove(player: PlayerEntity, slotIndex: Int): net.minecraft.item.ItemStack {
+    override fun quickMove(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
         val slot = slots[slotIndex] ?: return ItemStack.EMPTY
         if (!slot.hasStack()) return ItemStack.EMPTY
         val original = slot.stack
@@ -77,7 +77,7 @@ class StoneEngineScreenHandler(
         return newStack
     }
 
-    override fun canUse(player: PlayerEntity): Boolean {
+    override fun canUse(player: Player): Boolean {
         return context.get({ world, pos ->
             world.getBlockState(pos).block is StoneEngineBlock && player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -85,10 +85,10 @@ class StoneEngineScreenHandler(
 
     companion object {
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): StoneEngineScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): StoneEngineScreenHandler {
             buf.readBlockPos()
             buf.readVarInt()
-            return StoneEngineScreenHandler(syncId, playerInventory, SimpleInventory(1), ScreenHandlerContext.EMPTY, ArrayPropertyDelegate(2))
+            return StoneEngineScreenHandler(syncId, playerInventory, SimpleContainer(1), ContainerLevelAccess.EMPTY, SimpleContainerData(2))
         }
     }
 }

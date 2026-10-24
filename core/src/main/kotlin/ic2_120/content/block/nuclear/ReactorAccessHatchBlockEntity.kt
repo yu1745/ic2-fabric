@@ -2,24 +2,24 @@ package ic2_120.content.block.nuclear
 
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.Container
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
 /**
  * 反应堆访问接口方块实体。
- * Inventory 直接委托到对应的中心核反应堆，一切操作都是对中心的操作。
+ * Container 直接委托到对应的中心核反应堆，一切操作都是对中心的操作。
  */
 @ModBlockEntity(block = ReactorAccessHatchBlock::class)
 class ReactorAccessHatchBlockEntity(
-    type: net.minecraft.block.entity.BlockEntityType<*>,
+    type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory {
+) : BlockEntity(type, pos, state), Container {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ReactorAccessHatchBlockEntity::class.type(),
@@ -44,7 +44,7 @@ class ReactorAccessHatchBlockEntity(
         return null
     }
 
-    // ========== Inventory 委托到中心反应堆 ==========
+    // ========== Container 委托到中心反应堆 ==========
     override fun size(): Int = getCentralReactor()?.size() ?: 0
     override fun getStack(slot: Int): ItemStack = getCentralReactor()?.getStack(slot) ?: ItemStack.EMPTY
     override fun setStack(slot: Int, stack: ItemStack) = getCentralReactor()?.setStack(slot, stack) ?: Unit
@@ -57,14 +57,14 @@ class ReactorAccessHatchBlockEntity(
         getCentralReactor()?.markDirty()
         super.markDirty()
     }
-    override fun canPlayerUse(player: PlayerEntity): Boolean =
+    override fun canPlayerUse(player: Player): Boolean =
         getCentralReactor()?.canPlayerUse(player) ?: false
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean =
         getCentralReactor()?.isValid(slot, stack) ?: true
 
     companion object {
-        fun tick(world: World, pos: BlockPos, state: BlockState, be: ReactorAccessHatchBlockEntity) {
+        fun tick(world: Level, pos: BlockPos, state: BlockState, be: ReactorAccessHatchBlockEntity) {
             // 不需要额外的 tick 逻辑，所有逻辑都由中心反应堆处理
         }
     }

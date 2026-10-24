@@ -1,14 +1,14 @@
 package ic2_120.content.recipes.orewashing
 
-import net.minecraft.item.ItemStack
-import net.minecraft.recipe.Ingredient
-import net.minecraft.recipe.Recipe
-import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.recipe.RecipeType
-import net.minecraft.recipe.input.RecipeInput
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.util.Identifier
-import net.minecraft.world.World
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.crafting.RecipeSerializer
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.world.item.crafting.RecipeInput
+import net.minecraft.core.HolderLookup
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.Level
 
 /**
  * 洗矿机配方：粉碎矿石 + 水 → 多个输出
@@ -16,7 +16,7 @@ import net.minecraft.world.World
  * 支持多输出（最多3个）和流体消耗
  */
 class OreWashingRecipe(
-    private val id: Identifier,
+    private val id: ResourceLocation,
     val ingredient: Ingredient,
     val outputItems: List<ItemStack>,
     /** 水消耗量（droplets） */
@@ -28,11 +28,11 @@ class OreWashingRecipe(
         require(waterConsumptionDroplets > 0) { "Water consumption must be positive" }
     }
 
-    override fun matches(inventory: Input, world: World): Boolean {
+    override fun matches(inventory: Input, world: Level): Boolean {
         return ingredient.test(inventory.getStack(0))
     }
 
-    override fun craft(inventory: Input, lookup: RegistryWrapper.WrapperLookup): ItemStack {
+    override fun craft(inventory: Input, lookup: HolderLookup.WrapperLookup): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
 
@@ -42,12 +42,12 @@ class OreWashingRecipe(
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getResult(lookup: RegistryWrapper.WrapperLookup): ItemStack {
+    override fun getResult(lookup: HolderLookup.WrapperLookup): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
 
-    override fun getRemainder(inventory: Input): net.minecraft.util.collection.DefaultedList<ItemStack> {
-        return net.minecraft.util.collection.DefaultedList.ofSize(1, ItemStack.EMPTY)
+    override fun getRemainder(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
+        return net.minecraft.core.NonNullList.ofSize(1, ItemStack.EMPTY)
     }
 
     /**
@@ -58,7 +58,7 @@ class OreWashingRecipe(
     /**
      * 简单输入容器，仅包含单个物品栈用于配方匹配
      */
-    class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.inventory.Inventory {
+    class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.world.Container {
         override fun getStack(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
         override fun getStackInSlot(slot: Int): ItemStack = getStack(slot)
 
@@ -77,7 +77,7 @@ class OreWashingRecipe(
 
         override fun markDirty() {}
 
-        override fun canPlayerUse(player: net.minecraft.entity.player.PlayerEntity): Boolean = true
+        override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = true
     }
 
     companion object {

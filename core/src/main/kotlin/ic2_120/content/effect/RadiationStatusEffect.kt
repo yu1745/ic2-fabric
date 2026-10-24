@@ -2,17 +2,17 @@ package ic2_120.content.effect
 
 import ic2_120.Ic2_120
 import ic2_120.registry.annotation.ModStatusEffect
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.damage.DamageSource
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.entity.effect.StatusEffectCategory
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.Identifier
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.effect.MobEffectCategory
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.resources.ResourceLocation
 
 @ModStatusEffect(name = "radiation", namespace = "ic2")
-class RadiationStatusEffect : StatusEffect(StatusEffectCategory.HARMFUL, 0x55FF55) {
+class RadiationStatusEffect : MobEffect(MobEffectCategory.HARMFUL, 0x55FF55) {
 
     override fun canApplyUpdateEffect(duration: Int, amplifier: Int): Boolean {
         return duration % 20 == 0
@@ -20,16 +20,16 @@ class RadiationStatusEffect : StatusEffect(StatusEffectCategory.HARMFUL, 0x55FF5
 
     override fun applyUpdateEffect(entity: LivingEntity, amplifier: Int): Boolean {
         val world = entity.world
-        if (world !is ServerWorld) return false
+        if (world !is ServerLevel) return false
 
-        val registry = world.registryManager.get(RegistryKeys.DAMAGE_TYPE)
-        val key = RegistryKey.of(
-            RegistryKeys.DAMAGE_TYPE,
-            Identifier.of(Ic2_120.MOD_ID, "radiation")
+        val registry = world.registryManager.get(Registries.DAMAGE_TYPE)
+        val key = ResourceKey.of(
+            Registries.DAMAGE_TYPE,
+            ResourceLocation.of(Ic2_120.MOD_ID, "radiation")
         )
         val entry = registry.getEntry(key).orElse(null)
             ?: registry.getEntry(
-                RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("minecraft", "magic"))
+                ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.of("minecraft", "magic"))
             ).orElse(null)
 
         return if (entry != null) {

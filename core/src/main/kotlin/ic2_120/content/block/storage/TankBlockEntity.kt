@@ -15,23 +15,23 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ArrayPropertyDelegate
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerContext
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
 import java.util.ArrayDeque
 
 
@@ -128,7 +128,7 @@ class TankBlockEntity(
 
     val syncedData = SyncedData()
     val sync = TankSync(syncedData) { getCapacityMb() }
-    val guiSlotInv = SimpleInventory(1)
+    val guiSlotInv = SimpleContainer(1)
     var shouldDropOnBreak = true
     private var trackingInitialized = false
     private var observedAmountMb = 0
@@ -200,7 +200,7 @@ class TankBlockEntity(
 
     fun syncFluidState() {
         val variant = tankInternal.variant
-        sync.fluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
+        sync.fluidRawId = if (variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(variant.fluid)
         sync.fluidAmount = getFluidAmountMb()
         sync.capacity = getCapacityMb()
         if (!trackingInitialized) {
@@ -209,7 +209,7 @@ class TankBlockEntity(
         }
     }
 
-    fun extractFluidForBucket(player: PlayerEntity): Boolean {
+    fun extractFluidForBucket(player: Player): Boolean {
         if (tankInternal.amount < FluidConstants.BUCKET) return false
         val current = tankInternal.variant
         if (current.isBlank) return false
@@ -261,23 +261,23 @@ class TankBlockEntity(
 
     // ========== ExtendedScreenHandlerFactory ==========
 
-    override fun getDisplayName(): Text {
+    override fun getDisplayName(): Component {
         val block = cachedState.block
-        return Text.translatable(block.translationKey)
+        return Component.translatable(block.translationKey)
     }
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
         syncFluidState()
         refreshRateStatistics()
         return TankScreenHandler(
             syncId,
             playerInventory,
-            ScreenHandlerContext.create(world!!, pos),
+            ContainerLevelAccess.create(world!!, pos),
             syncedData
         )
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -299,7 +299,7 @@ class TankBlockEntity(
 
     // ========== NBT 持久化 ==========
 
-    override fun writeNbt(nbt: NbtCompound) {
+    override fun writeNbt(nbt: CompoundTag) {
         super.writeNbt(nbt)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
@@ -308,7 +308,7 @@ class TankBlockEntity(
         syncedData.writeNbt(nbt)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
+    override fun readNbt(nbt: CompoundTag) {
         super.readNbt(nbt)
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
