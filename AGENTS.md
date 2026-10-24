@@ -1,236 +1,61 @@
-# AGENTS.md / CLAUDE.md - ic2_120 协作规范
+# AGENTS.md / CLAUDE.md — ic2_120 协作规范
 
-本文件通过符号链接同时作为 `AGENTS.md` 和 `CLAUDE.md` 使用，一处更新两处生效。
+本文件通过符号链接同时作为 `AGENTS.md` 和 `CLAUDE.md` 使用。
 
-本文件是代理/协作者的最小执行规范。详细实现细节统一放在 `docs/`，避免重复维护。
+## 1. 唯一硬规则：API 问题看本地源码
 
-## 1. 先看这里
+遇到任何 Minecraft / Fabric API 的问题（类名、方法签名、继承链、事件、网络包），**直接查文件系统中的本地源码，不要猜、不要靠记忆**：
 
-- 辅助资料（assets 清单 / Fabric API 报告 / 归档）：`docs/README.md`
-- **main → 1.21.1 迁移 cherry-pick：`docs/guides/branch-cherry-pick-guide.md`（每次 cherry-pick 前必读，否则必踩坑）**
-- 新机器实现：`docs/guides/machine-implementation-guide.md`
-- 3D 机器模型（OBJ 加载器、共享机身、动画、游戏内截图闭环）：`docs/guides/model3d-pipeline.md`
-- 3D 物品建模（逐个手工建模、离线对照预览、分工）：`docs/guides/item3d-modeling.md`
-- 机器组合复用：`docs/guides/machine-composition-reuse.md`（减少 container/slot/sync 重复代码）
-- mcdebug 测试编写：`core/src/mcdebugTest/kotlin/`（Kotlin + JUnit 5，mcdebug-cli 0.5.0）+ `docs/guides/mcdebug-test-guide.md`（test 矩阵、be.tick 驱动、slot 速查、踩过的坑）
-- 新物品实现：`docs/guides/item-implemented.md`
-- 传送卷轴：`docs/guides/recall-scroll.md`
-- 方块掉落机制选型：`docs/guides/block-drop-pathways.md`（破坏掉落途径全景，新增方块时对照）
-- 注解注册系统：`docs/registry/CLASS_BASED_REGISTRY.md`
+- MC 反编译源码（按版本）：`../mc_source_{version}/`
+  - 当前开发线：`../mc_source_1.21.1/`（Mojang 官方名）
+  - 1.20.1 归档参考：`../mc_source_1.20.1/`（yarn 名）
+- Fabric API 源码：`../fabric-api_{version}/`
+  - `../fabric-api_1.21.1/`、`../fabric-api_1.20.1/`（注意：fabric-api 仓库源码是 yarn 名，经 loom remap 编译，类名行为一致但方法名要换算）
+- 需要重新生成 MC 源码时：`sh gradlew :core:genSources`，产物在 `.gradle/loom-cache/minecraftMaven/` 下提取。
 
-## 2. 硬性约束
+## 2. 项目状态
 
-- 资源文件只能新增/修改在 `src/main/resources/assets/ic2_120/**`。
-- `assets/ic2/**` 仅作为被引用上游资源，不可直接修改。
-- 机器类改动后必须同时验证服务端与客户端编译，不接受只跑一侧。
-- 涉及 Screen/ScreenHandler/SyncedData 的改动，必须检查属性顺序与同步链路一致。
+- **当前主线：1.21.1（分支 `1.21.1-v2`），Mojang mappings。** 宏观路线见 `PLAN.md`，微观进度见 `docs/PROGRESS.md`。
+- 1.20.1（`main` 分支）已归档，只读参考，不再开发。
+- 旧 `backup/1.21.1` 分支只是当年 yarn 时代的迁移范本，已无内容价值。
+- yarn↔mojang 名字对照表：`docs/yarn-to-mojang-1.21.1.tsv`（生成：`tools/gen-yarn-mojang-table.py`；全库替换工具：`tools/yarn2mojang.py`）。
 
-## 3. 注册约定（摘要）
+## 3. 硬性约束
 
-使用类级注解进行注册，不手写分散注册表逻辑：
+- 资源文件只能动 `assets/ic2_120/**`；`assets/ic2/**` 是上游引用，不可修改。
+- 机器类（Block/BlockEntity/ScreenHandler/Screen/Sync）改动必须服务端+客户端都编译过。
+- Screen/ScreenHandler/SyncedData 改动必须检查属性顺序与同步链路一致。
+- `mc_source_1.21.1` 里查不到的东西（fabric 专属 API）才去 `fabric-api_1.21.1` 查。
 
-- `@ModBlock`
-- `@ModItem`
-- `@ModBlockEntity`
-- `@ModScreenHandler`
-- `@ModScreen`
-- `@ModCreativeTab`
-
-主入口通过 `ClassScanner.scanAndRegister(...)` 扫描包。
-注册与参数细节以 `docs/registry/CLASS_BASED_REGISTRY.md` 为准。
-
-注册扩展参考：
-- `docs/registry/biome-colored-blocks.md` — 生物群系着色
-- `docs/registry/block-variants.md` — 创造模式满电变体
-- `docs/registry/loot-table-system.md` — 掉落物系统
-
-合成表同样遵循”基于约定的扫描”：
-
-- 所有 `data/**/recipes/*.json` 合成表均由 Kotlin 代码导出（datagen），不手写、不直接维护 JSON。
-- `ClassScanner.scanAndRegister(...)` 会收集 Block/Item companion 中签名为 `generateRecipes(Consumer<RecipeJsonProvider>)` 的方法。
-- 统一由 `ClassScanner.generateAllRecipes(...)` 执行，不新增分散的手写配方注册入口。
-- 约定与实现细节以 `docs/registry/CLASS_BASED_REGISTRY.md` 为准。
-- **每个物品的合成配方必须写在对应物品类的 companion object 中，不得写在其他类里。**
-
-## 4. 机器实现最小清单
-
-1. Block + BlockEntity + Sync + ScreenHandler + Screen 成套落地。
-2. 能量容器使用现有可升级容器与组件，不重复造轮子。
-3. 升级支持至少覆盖：超频、变压、储能（按机器需求可裁剪）。
-4. Shift 快速移动遵循 `SlotSpec + SlotMoveHelper` 规则。
-5. 语言、模型、blockstates 在 `ic2_120` 命名空间补齐。
-
-完整模板见 `docs/guides/machine-implementation-guide.md`。
-
-## 5. 子系统文档位置
-
-- 电网与能量流速：`docs/systems/energy-network.md`、`docs/systems/energy-flow-sync.md`
-- 流体：`docs/systems/fluid-system.md`、`docs/systems/fluid-registration-and-cells.md`
-- 热能：`docs/systems/heat-system.md`
-- 动能传输：`docs/systems/kinetic-transmission.md`
-- 核电：`docs/systems/nuclear-power.md`
-- 升级：`docs/systems/upgrade-system.md`
-- 同步：`docs/systems/sync-system.md`
-- 声音：`docs/systems/sound-system.md`
-- 配置系统：`docs/systems/config-system.md`
-- 作物系统：`docs/systems/crop-growth-requirements.md`、`docs/systems/crop-hybrid-system.md`
-- 橡胶树世界生成：`docs/systems/rubber-tree-worldgen.md`
-- JEI 集成：`docs/systems/jei-integration.md`
-
-## 6. UI 文档位置
-
-- Compose UI 总览：`docs/ui/compose-ui.md`
-- 槽位规则：`docs/ui/slot-spec-system.md`
-- GUI 尺寸与坐标参考：`docs/ui/gui-size-handlers.md`
-- DrawContext 参考：`docs/ui/drawcontext-methods.md`
-- 坐标换算：`docs/ui/canner-ui-coordinates.md`
-- Compose 子文档：`docs/compose-ui/*.md`
-- 踩坑记录：
-  - 代码层面：`docs/pitfalls/common-pitfalls.md`
-  - 工具链（Kotlin LSP）：`docs/pitfalls/lsp-pitfalls.md` — `goToImplementation` 必须把 `character` 偏移 +2~5；`prepareCallHierarchy` / `incomingCalls` / `outgoingCalls` 在 JB 官方 Kotlin LSP（`2.4.0-dev-3554`）未实现，翻 jar 确认是协议层缺失，不要换偏移浪费时间。
-
-## 7. 提交前验证
-
-推荐最小命令：
+## 4. 构建与验证
 
 ```bash
-./gradlew build
+sh gradlew build              # 全模块编译（gradle 用 sh 调用或加执行权限）
+sh gradlew :core:runDatagen   # 配方/数据变更后必须重跑，data json 是生成物不手写
+sh gradlew :core:validateGuidebook  # guidebook 文档校验
 ```
 
-- 运行 Gradle 时**不要**使用 `--no-daemon`（保持 daemon 以复用 JVM、加快增量构建）。
-- `markDirty()` 仅标记区块需要落盘保存，**不会**触发网络包同步到客户端。同步到客户端需要调用 `world.updateListeners(pos, state, state, NOTIFY_LISTENERS)` + `chunkManager.markForUpdate(pos)`（参考 `markDirtyAndSync()` 模式）。
+- 不要用 `--no-daemon`。
+- `data/**/recipes/*.json` 全部由 datagen 生成；配方写在对应物品类 companion 的 `generateRecipes(exporter)`（1.21.1 是 `RecipeOutput`），`@RecipeProvider` 注解，`ClassScanner` 统一收集。
+- `markDirty()` 不触发网络同步；同步用 `markDirtyAndSync()` 模式。
 
-若只改文档，可跳过编译；若改 Kotlin/资源/注册链路，不可跳过。
-- **涉及配方（`@RecipeProvider` / `generateRecipes`）修改时**，必须先执行 `./gradlew :core:runDatagen` 重新生成 data json，再 `./gradlew build`。否则配方变更不会生效。
-- Guidebook 文档改动后，优先执行 `./gradlew :core:validateGuidebook`，它会用 Fabric Guidebook 的 `PageCompiler.parse` 校验页面与链接。
-- 需要实时预览 Guidebook 时，先执行 `./gradlew :core:printGuidebookDevCommand`，按输出的 `/fabricguidebook dev watch ...` 命令在游戏内开启热重载。
+## 5. 注册与结构约定
 
-- 若遇到 Gradle lock（如 `gradle-*.zip.lck`）导致构建或 datagen 失败，直接删除对应 `.lck` 文件后重试：
-  - Linux: `rm -f ~/.gradle/wrapper/dists/gradle-*.zip.lck`
-  - Windows: `Remove-Item -Force "$env:USERPROFILE\.gradle\wrapper\dists\...\gradle-*.zip.lck" -ErrorAction SilentlyContinue`
+- 注解注册：`@ModBlock` / `@ModItem` / `@ModBlockEntity` / `@ModScreenHandler` / `@ModScreen` / `@ModCreativeTab`，入口 `ClassScanner.scanAndRegister(...)`。
+- 类名 = registry key 的 PascalCase + 类型后缀；同一机器的 Block/BE/Handler/Screen/Sync 用一致前缀。
+- 中文名查 key：`zh_cn.json` 里搜中文名得 `"block.ic2_120.<key>"`。
+- 模块：`core` + `advanced-solar-addon` + `advanced-weapons-addon` + `buildcraft-addon` + `industrial-upgrade-addon` + `addon-template`（新附属复制模板）。
 
-## 8. 设计原则
+## 6. 已知坑（1.21.1 mojmap 特有）
 
-- **文档主索引以本文件（AGENTS.md / CLAUDE.md）为单一来源**：guides/systems/ui/registry/pitfalls 索引只在 §1/§5/§6 维护；`docs/README.md` 仅收录低频辅助资料（assets 清单、统计报告、归档），不重复主索引。新增文档只需登记到本文件。
-- 优先复用已有组件与模式，避免引入第二套实现。
-- 优先使用机器组合模式复用（见 `docs/guides/machine-composition-reuse.md`）以避免重复的 container/slot/sync 代码。
-- 发现规则冲突时：以对应主文档（`docs/{guides|systems|ui|registry}`）为准修正，不在 AGENTS.md 堆细节。
-- 新增规范时，优先写入对应 `docs/{guides|systems|ui|registry}`，AGENTS.md 只保留摘要与入口。
+- Kotlin 调用 mojmap 的 `is(...)` 方法要反引号：``stack.`is`(item)``。
+- `ExtendedScreenHandlerFactory<FriendlyByteBuf>` 必须带泛型，方法是 `getScreenOpeningData(player)` 返回 buf（不是 write）。
+- C2S/S2C 网络包：`CustomPacketPayload` + `Type<>` + `PacketCodec`/`StreamCodec`，`override fun type()`；接收 lambda 单参 `(payload, context)`，不要包 `server.execute {}`。
+- BE 序列化：`saveAdditional(tag, lookup)` / `loadAdditional(tag, lookup)`，`Inventories`→`ContainerHelper.saveAllItems/loadAllItems`（都带 lookup）。
+- Item 耐久/堆叠走 `Item.Properties().maxDamage()/stacksTo()`；`maxCountPerStack`→`Item.ABSOLUTE_MAX_STACK_SIZE`。
+- 高频 yarn 风格属性靠 `ic2_120/compat/YarnStyleCompat.kt` 垫片，新代码请直接用 mojmap 名。
+- gradle lock 报错删 `~/.gradle/wrapper/dists/gradle-*.zip.lck`。
 
-## 9. 分支同步管理
+## 7. 详细文档
 
-> 🛑 **分支同步状态机制已暂停（2026-07-01 起）**
-> - 不再为每个 main commit 登记同步状态，不再维护 `docs/branch-sync-status.md` / `docs/branch-sync-archive.md`。
-> - 提交时**无需**再附单独的「同步状态」commit；§9.1 的登记流程与 §9.2 的计数/归档规则**停止执行**。
-> - 历史数据保留，`docs/branch-sync-status.md`（停在 #203）、`docs/migration-1.20.1-to-1.21.1.md`、`docs/guides/branch-cherry-pick-guide.md` 作为历史参考，不再更新。
-> - 暂停原因：1.21.1 分支已封存（最后同步 commit #194 `e04f4bcc`），无双向同步需求；继续逐条登记维护成本高、收益低。
-> - 未来若解封并恢复 cherry-pick，再重启本机制：届时先把暂停期间积累的 commit 批量补登，再恢复 §9.1/§9.2 流程。
-
-> 🔒 **1.21.1 分支封存**（历史说明）：最后一个已同步 commit 为 **#194（`e04f4bcc`）**，其后不再主动双向同步。`main`（1.20.1）为唯一活跃开发分支。
-
-### 9.1 提交后登记流程（已暂停）
-
-> **当前已暂停（2026-07-01 起），不需要执行。** 下列流程仅作历史记录保留，未来解封恢复同步时参考。
-
-1. 在 main 上完成功能开发，`git commit`（一次性干净提交，禁止修修补补的 fixup commit）
-2. 在 `docs/branch-sync-status.md` 末尾追加新条目，标记 🔒（封存期新增，未同步）+ 备注
-3. 归档判断：若新条目 # 编号相对上一次批量归档增加了 10（即本次 # 编号 - 上次归档时最大 # = 10 的倍数且当前主表会超 20），则**一次性把当前主表最旧的 10 条**移入 `docs/branch-sync-archive.md`，并更新总览计数；否则只追加新条目，不归档
-4. `git commit` 同步状态更新（**单独提交，不与功能 commit 混在一起**）
-
-> 解封后的同步流程（原双向 cherry-pick 流程）见 `docs/guides/branch-cherry-pick-guide.md` 顶部归档说明。
-
-### 9.2 同步状态表
-
-- 文件：`docs/branch-sync-status.md`
-- 记录格式：commit SHA、说明、状态标记（见下）、备注
-- 状态标记：
-  - ✅ 已同步到 1.21.1（封存前的历史 commit）
-  - ⏭️ 跳过（纯状态记录 / merge commit，无需单独迁移）
-  - 🔒 封存期新增，未同步到 1.21.1（2026-06-18 起）
-- **总览计数必须与逐 commit 清单保持一致**
-- **主表保留最近 20 个 commit，每累积 10 个新 commit 触发一次批量归档（一次性归档 10 条最旧的）**
-  - 触发判定：设上次批量归档时主表最大 # 为 `N`，本次新增条目的 # 为 `M`。当 `M - N = 10`（即刚好累计 10 个新 commit）时触发归档；M 处于 `(N, N+10]` 之间时不归档
-  - 例：上次归档后主表最大 # 为 #203，下次 #213 到来时一次性把 #194–#203 共 10 条移入 archive，主表剩 #204–#213 共 10 条
-  - 归档格式与主表一致（含表头），保留 `#` 编号
-  - 主表的总览计数仍包含已归档的 commit
-
-### 9.3 Cherry-pick 注意事项（封存期不执行，解封后参考）
-
-> ⚠️ **未来解封后执行 cherry-pick 之前必读 `docs/guides/branch-cherry-pick-guide.md`**——基于 193 条历史同步条目归纳的 5 大类真实坑（API 重命名、NBT/DataComponent、CustomPayload 网络包、datagen 路径、merge commit / PR 误删 / 单源真相），每类都有 entry 编号做证据。读完再动手能避免 80% 重复踩坑。
-> 配套：API 细节查询表见 `docs/migration-1.20.1-to-1.21.1.md`（Identifier.of、validateTicker、RecipeExporter、onUse 无 Hand、CustomPayload 等的具体写法）。
-
-1. 1.21.1 的 data 目录使用单数（`advancement/`、`recipe/`、`loot_table/`），main 使用复数（`advancements/`、`recipes/`、`loot_tables/`）
-2. 1.21.1 API 签名差异：`BlockEntityTicker` 用 `validateTicker`（main 用 `checkType`），`RecipeExporter`（main 用 `Consumer<RecipeJsonProvider>`）
-3. `assets/ic2/**` 为上游引用不可修改；`assets/ic2_120/**` 可修改
-
-## 10. 命名约定
-
-- 中文名 → registry key：在 `zh_cn.json` 中搜索中文名，找到 `"block.ic2_120.<key>"` 或 `"item.ic2_120.<key>"`，key 即 registry name
-- 类名 = registry name 的 PascalCase + 类型后缀（`Block`/`Item`/`BlockEntity`/`ScreenHandler`/`Screen`/`Sync`）
-- 同一功能的 Block、BlockEntity、ScreenHandler、Screen、Sync 类名必须使用一致的命名前缀
-
-## 11. 常见操作检查清单
-
-### 修改合成配方后
-1. 修改 companion object 中 `@RecipeProvider` 方法
-2. 运行 `./gradlew :core:runDatagen`
-3. 构建 `./gradlew build`
-
-### 重命名（注册名 + 类名）
-1. `grep -r` 完整搜索旧名（区分大小写：`FluidBottler` / `fluid_bottler` / `FLUID_BOTTLER`）
-2. `git mv` 移动所有源文件（保持 rename 跟踪）
-3. 全局替换内容（可用 `sed -i`）
-4. 更新 lang 文件（zh_cn.json / en_us.json 中的 key）
-5. 运行 datagen 重新生成 data 文件
-6. 构建验证
-
-### 提交前确认
-- 干净的功能 commit，没有 fixup/amend（分支同步状态机制已暂停，无需附同步状态 commit）
-
-## 12. 源码参考（MC 源码 & Fabric API）
-
-### MC 源码
-
-使用 Gradle 任务生成反编译源码：
-
-```bash
-./gradlew :core:genSources
-```
-
-产物在 `./.gradle/loom-cache/minecraftMaven/net/minecraft/` 下，或参考 `../mc_source_{minecraft_version}/` 的副本。
-
-### Yarn 反混淆表
-
-用于将崩溃报告中的 `class_XXXX` / `method_XXXXX` 翻译为可读类名/方法名：
-
-```bash
-# 当前项目版本（1.20.1 / 1.21.1）在 loom-cache 下，替换 {version} 为具体版本号
-ls ~/.gradle/caches/fabric-loom/{version}/net.fabricmc.yarn.*/mappings.jar
-
-# 旧版 mappings，替换 {minecraft_version} + {build}
-ls ../yarn-{minecraft_version}+build.{build}-v2.jar
-#   示例: https://maven.fabricmc.net/net/fabricmc/yarn/1.19.2+build.28/yarn-1.19.2+build.28-v2.jar
-
-# 用法：从 jar 提取并查找
-jar tf /path/to/mappings.jar                  # 列出内容
-grep $'\tclass_XXXX\t' mappings/mappings.tiny # 查类名
-grep $'\tmethod_XXXXX\t' mappings/mappings.tiny # 查方法名
-```
-
-### Fabric API 源码
-
-```bash
-git clone -b 1.20.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.20.1
-git clone -b 1.21.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.21.1
-```
-
-### FTB Chunks / FTB Library 源码
-
-用于查阅 FTB Chunks 保护 API（`ClaimedChunkManager`、`ChunkTeamData`、`canExplosionsDamageTerrain` 等）：
-
-`ash
-git clone --depth 1 https://github.com/FTBTeam/FTB-Chunks.git ../ftb-chunks-src
-git clone --depth 1 https://github.com/FTBTeam/FTB-Library.git ../ftb-library-src
-`
-
-当前副本位于 `../ftb-chunks-src` 和 `../ftb-library-src`。
+实现细节文档在 `docs/`（系统、UI、registry、pitfalls 子目录），`docs/PROGRESS.md` 记录迁移进度，`PLAN.md` 是宏观路线。文档主索引以本文件为唯一入口。
