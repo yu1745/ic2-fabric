@@ -4,7 +4,8 @@ import ic2_120.Ic2_120
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.minecraft.minecraft.player.LocalPlayer
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.client.Minecraft
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.sounds.SoundSource
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory
 
 
 object JetpackSoundController {
+    private val minecraft = Minecraft.getInstance()
     private val logger = LoggerFactory.getLogger("ic2_120/JetpackSoundController")
     private val JETPACK_SOUND_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item.jetpack.loop")
     private val JETPACK_SOUND = SoundEvent.createVariableRangeEvent(JETPACK_SOUND_ID)
@@ -37,7 +39,7 @@ object JetpackSoundController {
 
             val current = loopSound
             if (active) {
-                if (current == null || current.isDone) {
+                if (current == null || current.isStopped) {
                     val created = JetpackLoopSoundInstance(player)
                     loopSound = created
                     minecraft.getSoundManager().play(created)
@@ -46,7 +48,7 @@ object JetpackSoundController {
                 }
             } else if (current != null) {
                 current.setFadingOut(true)
-                if (current.isDone) {
+                if (current.isStopped) {
                     loopSound = null
                 }
             }
@@ -54,9 +56,9 @@ object JetpackSoundController {
     }
 
     private fun isJetpackFlightActive(player: LocalPlayer): Boolean {
-        if (player.isCreative || player.isSpectator) return false
+        if (player.isSpectator || player.abilities.instabuild) return false
         if (!player.abilities.flying) return false
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing) return false
+        if (player.isOnGround || player.isInWater || player.onClimbable) return false
 
         val chest = player.getItemBySlot(EquipmentSlot.CHEST)
         return chest.item is JetpackItem || chest.item is ElectricJetpack
@@ -68,8 +70,8 @@ object JetpackSoundController {
         private var fadingOut = false
 
         init {
-            repeat = true
-            repeatDelay = 0
+            looping = true
+            delay = 0
             volume = 0.42f
             pitch = 1.0f
             x = player.x

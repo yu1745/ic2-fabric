@@ -40,25 +40,24 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
         BlockModel.deserialize("{\"overrides\":$it}")
     }
 
-    override fun getModelDependencies(): Collection<ResourceLocation> =
-        listOfNotNull(spec.parent) + (overrideHolder?.overrides?.map { it.modelId } ?: emptyList())
+    override fun getDependencies(): Collection<ResourceLocation> =
+        listOfNotNull(spec.parent) + (overrideHolder?.overrides?.map { it.model } ?: emptyList())
 
-    override fun setParents(modelLoader: Function<ResourceLocation, UnbakedModel>) {
+    override fun resolveParents(modelLoader: Function<ResourceLocation, UnbakedModel>) {
         val parent = spec.parent?.let(modelLoader::apply) as? BlockModel ?: return
-        parent.setParents(modelLoader)
-        transformation = parent.transformations
+        parent.resolveParents(modelLoader)
+        transformation = parent.transforms
     }
 
     override fun bake(
         baker: ModelBaker,
         textureGetter: Function<Material, TextureAtlasSprite>,
         rotationContainer: ModelState,
-        modelId: ResourceLocation,
     ): BakedModel {
         val atlas = InventoryMenu.BLOCK_ATLAS_TEXTURE
         val sprite = { slot: String ->
             spec.textures[slot]?.let { textureGetter.apply(Material(atlas, it)) }
-                ?: textureGetter.apply(Material(atlas, MissingTextureAtlasSprite.getMissingSpriteId()))
+                ?: textureGetter.apply(Material(atlas, MissingTextureAtlasSprite.getLocation()))
         }
         val renderer = RendererAccess.INSTANCE.renderer
             ?: error("ic2_120 OBJ 模型需要 Fabric Renderer API（Indigo 或 Indium）")
@@ -91,14 +90,14 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
                 val uv = tri.uv[k]
                 val v = if (spec.flipV) 1f - uv.y else uv.y
                 emitter.pos(i, pos[k])
-                emitter.uv(i, sp.getFrameU(uv.x * 16.0), sp.getFrameV(v * 16.0))
+                emitter.uv(i, sp.getU(uv.x * 16.0f), sp.getV(v * 16.0f))
                 val n = tri.normal?.let { rotateDir(it[k]) } ?: faceNormal
                 emitter.normal(i, n)
                 emitter.color(i, mat?.color ?: -1)
                 if (mat?.emissive == true) emitter.lightmap(i, LightTexture.MAX_LIGHT_COORDINATE)
             }
             emitter.colorIndex(mat?.tintIndex ?: -1)
-            emitter.nominalFace(Direction.getFacing(faceNormal.x, faceNormal.y, faceNormal.z))
+            emitter.nominalFace(Direction.getNearest(faceNormal.x.toDouble(), faceNormal.y.toDouble(), faceNormal.z.toDouble()))
             emitter.material(if (mat?.emissive == true) glow else standard)
             emitter.emit()
         }
@@ -136,10 +135,10 @@ class ObjBakedModel(
         quadLists[ModelHelper.toFaceIndex(face)]
 
     override fun useAmbientOcclusion() = true
-    override fun hasDepth() = true
-    override fun isSideLit() = true
-    override fun isBuiltin() = false
-    override fun getParticleSprite() = particle
-    override fun getTransformation() = transformation
+    override fun isGui3d() = true
+    override fun usesBlockLight() = true
+    override fun isCustomRenderer() = false
+    override fun getParticleIcon() = particle
+    override fun getTransforms() = transformation
     override fun getOverrides(): ItemOverrides = overrides
 }
