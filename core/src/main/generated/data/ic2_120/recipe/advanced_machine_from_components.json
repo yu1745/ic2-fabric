@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "c": {
+      "item": "ic2_120:carbon_plate"
+    },
+    "g": {
+      "item": "ic2_120:alloy"
+    },
+    "s": {
+      "tag": "ic2_120:compat/plates/steel"
+    },
+    "x": {
+      "item": "ic2_120:machine"
+    }
+  },
+  "pattern": [
+    "sgs",
+    "cxc",
+    "sgs"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:advanced_machine"
+  }
+}

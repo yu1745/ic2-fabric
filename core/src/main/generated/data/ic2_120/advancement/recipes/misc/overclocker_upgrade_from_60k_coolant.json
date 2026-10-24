@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_sextuple_reactor_coolant_cell": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:sextuple_reactor_coolant_cell"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:overclocker_upgrade_from_60k_coolant"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_sextuple_reactor_coolant_cell"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:overclocker_upgrade_from_60k_coolant"
+    ]
+  }
+}

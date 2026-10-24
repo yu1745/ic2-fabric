@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "pattern": [
+    "II ",
+    " IS",
+    "  I"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:painter"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:machine"
+    },
+    "L": {
+      "item": "minecraft:lever"
+    }
+  },
+  "pattern": [
+    "L",
+    "C"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:manual_kinetic_generator"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "tag": "ic2_120:compat/plates/copper"
+    },
+    "E": {
+      "item": "ic2_120:circuit"
+    },
+    "T": {
+      "tag": "ic2_120:compat/plates/tin"
+    }
+  },
+  "pattern": [
+    "CEC",
+    "TCT",
+    "CTC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:heat_exchanger"
+  }
+}

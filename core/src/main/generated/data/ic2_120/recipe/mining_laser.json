@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": {
+      "item": "ic2_120:alloy"
+    },
+    "C": {
+      "item": "ic2_120:advanced_circuit"
+    },
+    "E": {
+      "item": "ic2_120:energy_crystal"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "REE",
+    "AAC",
+    " AA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:mining_laser"
+  }
+}

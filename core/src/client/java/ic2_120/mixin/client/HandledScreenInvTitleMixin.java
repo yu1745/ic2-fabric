@@ -14,17 +14,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class HandledScreenInvTitleMixin {
 
     @Shadow
-    private int titleY;
+    private int titleLabelX;
 
     @Shadow
-    private int playerInventoryTitleY;
+    private int titleLabelY;
+
+    @Shadow
+    private int inventoryLabelX;
+
+    @Shadow
+    private int inventoryLabelY;
 
     @Inject(method = "init", at = @At("TAIL"))
     private void moveTitlesOffScreen(CallbackInfo ci) {
         Object self = this;
         if (self.getClass().getName().startsWith("ic2_120.client.screen.")) {
-            titleY = -1000;
-            playerInventoryTitleY = -1000;
+            titleLabelX = -1000;
+            titleLabelY = -1000;
+            inventoryLabelX = -1000;
+            inventoryLabelY = -1000;
         }
     }
 }

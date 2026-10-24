@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "a": {
+      "item": "ic2_120:advanced_circuit"
+    },
+    "d": {
+      "item": "minecraft:diamond"
+    },
+    "f": {
+      "item": "ic2_120:frequency_transmitter"
+    },
+    "g": {
+      "item": "ic2_120:glass_fibre_cable"
+    },
+    "m": {
+      "item": "ic2_120:advanced_machine"
+    }
+  },
+  "pattern": [
+    "afa",
+    "gmg",
+    "ada"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:teleporter"
+  }
+}

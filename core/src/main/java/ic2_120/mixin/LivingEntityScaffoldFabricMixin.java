@@ -13,14 +13,14 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class LivingEntityScaffoldFabricMixin {
 
     @Redirect(
-        method = "applyClimbingSpeed",
+        method = "handleOnClimbable",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/block/BlockState;isOf(Lnet/minecraft/block/Block;)Z"
+            target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z"
         ),
         require = 0
     )
-    private boolean ic2_120$treatIc2ScaffoldAsScaffolding(BlockState state, Block vanillaScaffolding) {
-        return state.is(vanillaScaffolding) || state.getBlock() instanceof Ic2ScaffoldBlock;
+    private boolean ic2_120$treatIc2ScaffoldAsScaffolding(BlockState state, Block vanillaBlock) {
+        return state.is(vanillaBlock) || state.getBlock() instanceof Ic2ScaffoldBlock;
     }
 }

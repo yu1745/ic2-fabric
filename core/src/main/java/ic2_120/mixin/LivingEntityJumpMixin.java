@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LivingEntity.class)
 public class LivingEntityJumpMixin {
 
-    @Inject(method = "jump", at = @At("TAIL"))
+    @Inject(method = "jumpFromGround", at = @At("TAIL"))
     private void ic2$onJump(CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (!(self instanceof ServerPlayer player)) return;

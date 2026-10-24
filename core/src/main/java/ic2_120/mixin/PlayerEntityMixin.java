@@ -127,7 +127,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         }
     }
 
-    @Inject(method = "handleFallDamage", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "causeFallDamage", at = @At("HEAD"), cancellable = true)
     private void ic2$handleSuperJumpFallDamage(
             float fallDistance,
             float damageMultiplier,

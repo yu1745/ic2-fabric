@@ -1,0 +1,14 @@
+{
+  "type": "ic2_120:damage_tool_shapeless",
+  "ingredients": [
+    {
+      "item": "ic2_120:forge_hammer"
+    },
+    {
+      "item": "minecraft:air"
+    }
+  ],
+  "result": {
+    "item": "ic2_120:iron_plate"
+  }
+}

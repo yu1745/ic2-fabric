@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_iodine": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:iodine"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:iodine_tablet"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_iodine"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:iodine_tablet"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "H": {
+      "item": "minecraft:hopper"
+    },
+    "T": {
+      "item": "ic2_120:dense_tin_plate"
+    }
+  },
+  "pattern": [
+    "T T",
+    " H ",
+    "T T"
+  ],
+  "result": {
+    "count": 9,
+    "id": "ic2_120:pulling_upgrade"
+  }
+}

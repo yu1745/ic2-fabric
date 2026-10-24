@@ -1,12 +1,3 @@
 {
-  "type": "ic2_120:compressing",
-  "container_return": {},
-  "ingredient": {
-    "item": "minecraft:nether_brick"
-  },
-  "input_count": 4,
-  "result": {
-    "count": 1,
-    "id": "minecraft:nether_bricks"
-  }
+  "type": "ic2_120:compressing"
 }

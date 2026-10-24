@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /** Keeps modifier state in sync with actual keyboard events for mode-switch interactions. */
 @Mixin(KeyboardHandler.class)
 public abstract class KeyboardModifierStateMixin {
-    @Inject(method = "onKey", at = @At("HEAD"))
+    @Inject(method = "keyPress", at = @At("HEAD"))
     private void ic2_120$trackModifierState(
         long window,
         int key,

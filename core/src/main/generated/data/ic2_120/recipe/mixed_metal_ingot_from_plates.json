@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "tag": "ic2_120:compat/plates/bronze"
+    },
+    "I": {
+      "tag": "ic2_120:compat/plates/iron"
+    },
+    "T": {
+      "tag": "ic2_120:compat/plates/tin"
+    }
+  },
+  "pattern": [
+    "III",
+    "BBB",
+    "TTT"
+  ],
+  "result": {
+    "count": 2,
+    "id": "ic2_120:mixed_metal_ingot"
+  }
+}

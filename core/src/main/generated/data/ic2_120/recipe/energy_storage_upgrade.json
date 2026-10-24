@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:re_battery"
+    },
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "R": {
+      "item": "ic2_120:circuit"
+    },
+    "W": {
+      "item": "ic2_120:insulated_copper_cable"
+    }
+  },
+  "pattern": [
+    "PPP",
+    "WBW",
+    "PRP"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:energy_storage_upgrade"
+  }
+}

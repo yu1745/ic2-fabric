@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:advanced_circuit"
+    },
+    "D": {
+      "item": "ic2_120:dense_lead_plate"
+    },
+    "G": {
+      "item": "ic2_120:generator"
+    },
+    "R": {
+      "item": "ic2_120:reactor_chamber"
+    }
+  },
+  "pattern": [
+    "DCD",
+    "RRR",
+    "DGD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:nuclear_reactor"
+  }
+}

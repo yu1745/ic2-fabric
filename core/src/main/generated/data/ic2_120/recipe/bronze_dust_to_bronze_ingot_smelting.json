@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "ingredient": {
+    "tag": "ic2_120:compat/dusts/bronze"
+  },
+  "result": {
+    "id": "ic2_120:bronze_ingot"
+  }
+}

@@ -207,7 +207,7 @@ abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(de
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
         super.createBlockStateDefinition(builder)
-        // ACTIVE 已在 EnergyStorageBlock.appendProperties 中添加
+        builder.add(EnergyStorageBlock.ACTIVE)
     }
 
     /** 红石模式输出（与储电箱同源：BE 红石模式 0-6，默认 0 = 不输出）。 */

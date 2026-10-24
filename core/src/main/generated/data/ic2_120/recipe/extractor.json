@@ -1,0 +1,23 @@
+{
+  "type": "ic2_120:consume_treetap_shaped",
+  "key": {
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "T": {
+      "item": "ic2_120:treetap"
+    }
+  },
+  "pattern": [
+    "   ",
+    "TMT",
+    "TCT"
+  ],
+  "result": {
+    "item": "ic2_120:extractor"
+  },
+  "show_notification": true
+}

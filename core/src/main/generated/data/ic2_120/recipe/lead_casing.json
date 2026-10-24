@@ -1,0 +1,15 @@
+{
+  "type": "ic2_120:damage_tool_shapeless",
+  "ingredients": [
+    {
+      "item": "ic2_120:forge_hammer"
+    },
+    {
+      "item": "minecraft:air"
+    }
+  ],
+  "result": {
+    "count": 2,
+    "item": "ic2_120:lead_casing"
+  }
+}

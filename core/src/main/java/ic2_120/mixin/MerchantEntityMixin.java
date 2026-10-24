@@ -16,7 +16,7 @@ public class MerchantEntityMixin {
      * @reason 原版 AbstractVillager.canBeLeashedBy 返回 false，导致村民无法被拴绳
      */
     @Overwrite
-    public boolean canBeLeashedBy(Player player) {
+    public boolean canBeLeashed() {
         return true;
     }
 }

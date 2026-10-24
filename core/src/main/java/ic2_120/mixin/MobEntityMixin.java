@@ -1,6 +1,7 @@
 package ic2_120.mixin;
 
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Ghast;
@@ -27,7 +28,7 @@ public class MobEntityMixin {
      * @reason 允许拴绳动能发生机拴住怪物
      */
     @Overwrite
-    public boolean canBeLeashedBy(Player player) {
+    public boolean canBeLeashed() {
         Mob self = (Mob) (Object) this;
         if (self instanceof WitherBoss
             || self instanceof Ghast
@@ -37,36 +38,7 @@ public class MobEntityMixin {
         return !self.isLeashed();
     }
 
-    /**
-     * 拴绳动能发生机使用隐形盔甲架作为拴绳锚点。
-     * 原版 startRiding 会在生物骑乘时强制断开拴绳，
-     * 此处拦截：当持有者是盔甲架（即动能发生机的锚点）时跳过断开。
-     */
-    @Redirect(
-        method = "startRiding(Lnet/minecraft/entity/Entity;Z)Z",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/Mob;detachLeash(ZZ)V")
-    )
-    private void keepLeashOnKineticGenerator(Mob instance, boolean sendPacket, boolean dropItem) {
-        if (instance.getLeashHolder() instanceof ArmorStand) {
-            return;
-        }
-        instance.dropLeash(sendPacket, dropItem);
-    }
+    // 1.21.1 的 Entity.startRiding 不再强制断开拴绳，原 startRiding→detachLeash 拦截已不需要。
 
-    /**
-     * 区块重新加载时的另一条路径：
-     * readLeashNbt() → attachLeash() → stopRiding()
-     * 原版 attachLeash 在绑定拴绳时会强制让骑乘中的生物下车，
-     * 此处拦截：当持有者是盔甲架（即动能发生机的锚点）时跳过下车。
-     */
-    @Redirect(
-        method = "attachLeash",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/Mob;stopRiding()V")
-    )
-    private void keepRidingOnLeashAttach(Mob instance) {
-        if (instance.getLeashHolder() instanceof ArmorStand) {
-            return;
-        }
-        instance.stopRiding();
-    }
+
 }

@@ -19,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class SimpleInventoryMixin {
 
     @Redirect(
-        method = "setStack(ILnet/minecraft/item/ItemStack;)V",
+        method = "setItem(ILnet/minecraft/world/item/ItemStack;)V",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/item/ItemStack;setCount(I)V"
+            target = "Lnet/minecraft/world/item/ItemStack;setCount(I)V"
         )
     )
     private void redirectSetCount(ItemStack stack, int count) {

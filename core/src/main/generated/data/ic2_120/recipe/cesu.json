@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:advanced_re_battery"
+    },
+    "T": {
+      "item": "ic2_120:insulated_copper_cable"
+    },
+    "W": {
+      "tag": "ic2_120:compat/plates/bronze"
+    }
+  },
+  "pattern": [
+    "WTW",
+    "BBB",
+    "WWW"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:cesu"
+  }
+}

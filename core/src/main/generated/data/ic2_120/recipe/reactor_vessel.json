@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "item": "ic2_120:reinforced_glass"
+    },
+    "L": {
+      "tag": "ic2_120:compat/plates/lead"
+    }
+  },
+  "pattern": [
+    "LGL",
+    "GLG",
+    "LGL"
+  ],
+  "result": {
+    "count": 4,
+    "id": "ic2_120:reactor_vessel"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "P": {
+      "item": "ic2_120:rubber_planks"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "pattern": [
+    "PP",
+    "PP",
+    "SS"
+  ],
+  "result": {
+    "count": 3,
+    "id": "ic2_120:rubber_door"
+  }
+}

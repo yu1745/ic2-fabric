@@ -34,7 +34,7 @@ public abstract class ReactorComponentStackMixin {
 	@Shadow
 	public abstract Item getItem();
 
-	@Inject(method = "getMaxCount", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "getMaxStackSize", at = @At("HEAD"), cancellable = true)
 	private void ic2$reactorComponentGetMaxCount(CallbackInfoReturnable<Integer> cir) {
 		if (this.getItem() instanceof AbstractDamageableReactorComponent) {
 			cir.setReturnValue(AbstractDamageableReactorComponent.MAX_STACK_SIZE);

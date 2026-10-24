@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:advanced_machine"
+    },
+    "C": {
+      "item": "ic2_120:advanced_circuit"
+    },
+    "G": {
+      "item": "minecraft:glowstone_dust"
+    },
+    "I": {
+      "item": "ic2_120:iron_plate"
+    },
+    "M": {
+      "item": "ic2_120:electric_motor"
+    },
+    "R": {
+      "item": "ic2_120:reinforced_glass"
+    }
+  },
+  "pattern": [
+    "GAG",
+    "MIM",
+    "CRC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:uu_scanner"
+  }
+}

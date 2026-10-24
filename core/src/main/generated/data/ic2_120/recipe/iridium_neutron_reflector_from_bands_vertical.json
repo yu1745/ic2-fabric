@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "D": {
+      "item": "ic2_120:dense_copper_plate"
+    },
+    "I": {
+      "item": "ic2_120:iridium"
+    },
+    "R": {
+      "item": "ic2_120:thick_neutron_reflector"
+    }
+  },
+  "pattern": [
+    "RDR",
+    "RIR",
+    "RDR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:iridium_neutron_reflector"
+  }
+}

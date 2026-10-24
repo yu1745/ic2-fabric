@@ -1,7 +1,0 @@
-{
-  "replace": false,
-  "values": [
-    "#c:raw_materials/iron",
-    "#forge:raw_materials/iron"
-  ]
-}

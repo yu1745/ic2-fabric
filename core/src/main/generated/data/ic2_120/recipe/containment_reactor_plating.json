@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:alloy"
+    },
+    "P": {
+      "item": "ic2_120:reactor_plating"
+    }
+  },
+  "pattern": [
+    "   ",
+    "   ",
+    "PAA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:containment_reactor_plating"
+  }
+}

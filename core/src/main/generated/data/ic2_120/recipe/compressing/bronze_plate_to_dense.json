@@ -1,12 +1,3 @@
 {
-  "type": "ic2_120:compressing",
-  "container_return": {},
-  "ingredient": {
-    "tag": "ic2_120:compat/plates/bronze"
-  },
-  "input_count": 9,
-  "result": {
-    "count": 1,
-    "id": "ic2_120:dense_bronze_plate"
-  }
+  "type": "ic2_120:compressing"
 }

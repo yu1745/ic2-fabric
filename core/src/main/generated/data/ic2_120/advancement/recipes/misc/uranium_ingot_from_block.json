@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:uranium_ingot_from_block"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_uranium_block": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:uranium_block"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_uranium_block"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:uranium_ingot_from_block"
+    ]
+  }
+}

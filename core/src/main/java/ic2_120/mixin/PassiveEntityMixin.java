@@ -41,7 +41,7 @@ public class PassiveEntityMixin {
     /**
      * 仅阻止 tickMovement 内部把幼崽年龄自然推进到 0；手动 growUp/setBaby(false) 不受影响。
      */
-    @Inject(method = "setBreedingAge", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "setAge", at = @At("HEAD"), cancellable = true)
     private void ic2AnimalmatronPreventNaturalGrowth(int age, CallbackInfo ci) {
         if (!this.ic2_120$blockingNaturalGrowth) {
             return;

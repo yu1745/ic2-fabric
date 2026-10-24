@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_iron_crank_handle": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:iron_crank_handle"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:steel_crank_handle"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_iron_crank_handle"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:steel_crank_handle"
+    ]
+  }
+}

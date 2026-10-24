@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_coal_fuel_dust": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:coal_fuel_dust"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:coal_dust_from_coal_fuel_dust"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_coal_fuel_dust"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:coal_dust_from_coal_fuel_dust"
+    ]
+  }
+}

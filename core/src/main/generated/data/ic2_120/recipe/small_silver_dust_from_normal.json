@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "ic2_120:compat/dusts/silver"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "ic2_120:small_silver_dust"
+  }
+}

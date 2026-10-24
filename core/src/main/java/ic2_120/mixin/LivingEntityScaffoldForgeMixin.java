@@ -13,10 +13,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class LivingEntityScaffoldForgeMixin {
 
     @Redirect(
-        method = "applyClimbingSpeed",
+        method = "handleOnClimbable",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/block/BlockState;isScaffolding(Lnet/minecraft/entity/LivingEntity;)Z",
+            target = "Lnet/minecraft/world/level/block/state/BlockState;isScaffolding(Lnet/minecraft/world/entity/LivingEntity;)Z",
             remap = false
         ),
         require = 0

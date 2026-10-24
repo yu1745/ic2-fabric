@@ -1,36 +1,35 @@
 package ic2_120.mixin;
 
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * 当生物被拴绳动能发生机的隐形盔甲架拴住时，
  * 取消拴绳的拉扯和跟随效果，允许生物自由跑动。
  * 同时保留兜底逻辑：超过 20 格自动断开拴绳。
+ *
+ * 1.21.1 把原 Mob.updateLeash 的每 tick 拴绳逻辑合并进了
+ * Leashable.tickLeash 静态方法，改为在其头部拦截。
  */
-@Mixin(PathfinderMob.class)
-public class PathAwareEntityMixin {
+@Mixin(Leashable.class)
+public interface PathAwareEntityMixin {
 
-    /**
-     * 在 super.updateLeash() 之后、拉扯逻辑之前注入。
-     * 如果持有者是隐形无重力盔甲架（动能发生机的锚点），则只做距离兜底检查后跳过原方法。
-     */
     @Inject(
-        method = "updateLeash",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/entity/mob/Mob;updateLeash()V",
-            shift = At.Shift.AFTER
-        ),
+        method = "tickLeash",
+        at = @At("HEAD"),
         cancellable = true
     )
-    private void ic2$skipLeashPullingForKineticGenerator(CallbackInfo ci) {
-        PathfinderMob self = (PathfinderMob) (Object) this;
+    private static void ic2$skipLeashPullingForKineticGenerator(Entity entity, CallbackInfo ci) {
+        if (!(entity instanceof PathfinderMob self)) {
+            return;
+        }
         Entity holdingEntity = self.getLeashHolder();
 
         if (holdingEntity instanceof ArmorStand armorStand
@@ -44,4 +43,22 @@ public class PathAwareEntityMixin {
             ci.cancel();
         }
     }
+
+    /**
+     * 区块重新加载时的另一条路径：
+     * readLeashNbt() → Leashable.setLeashedTo() → stopRiding()
+     * 原版 setLeashedTo 在绑定拴绳时会强制让骑乘中的生物下车，
+     * 此处拦截：当持有者是盔甲架（即动能发生机的锚点）时跳过下车。
+     */
+    @Redirect(
+        method = "setLeashedTo(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Z)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;stopRiding()V")
+    )
+    private static void ic2$keepRidingOnLeashAttach(Entity entity) {
+        if (((Leashable) entity).getLeashHolder() instanceof ArmorStand) {
+            return;
+        }
+        entity.stopRiding();
+    }
+
 }

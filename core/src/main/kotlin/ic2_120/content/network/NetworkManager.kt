@@ -130,6 +130,7 @@ object NetworkManager {
         s2c.register(ReactorLayoutLockPacket.ID, ReactorLayoutLockPacket.CODEC)
         s2c.register(SemifluidGeneratorFuelStatePacket.ID, SemifluidGeneratorFuelStatePacket.CODEC)
         s2c.register(ConfigSyncChunkPayload.ID, ConfigSyncChunkPayload.CODEC)
+        s2c.register(ScannerResultPacket.ID, ScannerResultPacket.CODEC)
 
         // ---- C2S 接收器 ----
         ServerPlayNetworking.registerGlobalReceiver(ToggleNightVisionGogglesPayload.ID) { _, context ->

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": {
+      "tag": "ic2_120:compat/plates/iron"
+    },
+    "X": {
+      "item": "ic2_120:mox_fuel_rod"
+    }
+  },
+  "pattern": [
+    "XFX"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:dual_mox_fuel_rod"
+  }
+}
