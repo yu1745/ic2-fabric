@@ -42,7 +42,7 @@ class NeutronFabricatorBlock : MachineBlock() {
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, NeutronFabricatorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, NeutronFabricatorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): MenuProvider? =
         world.getBlockEntity(pos) as? MenuProvider

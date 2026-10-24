@@ -31,7 +31,7 @@ data class AnimalGrowthData(
      */
     fun toNbt(): CompoundTag {
         val nbt = CompoundTag()
-        nbt.putUuid("UUID", uuid)
+        nbt.putUUID("UUID", uuid)
         nbt.putInt("FoodConsumed", foodConsumed)
         nbt.putBoolean("BreedUnlocked", breedUnlocked)
         nbt.putBoolean("CanBreed", canBreed)
@@ -48,7 +48,7 @@ data class AnimalGrowthData(
          */
         fun fromNbt(nbt: CompoundTag): AnimalGrowthData {
             return AnimalGrowthData(
-                uuid = nbt.getUuid("UUID"),
+                uuid = nbt.getUUID("UUID"),
                 foodConsumed = nbt.getInt("FoodConsumed"),
                 breedUnlocked = nbt.getBoolean("BreedUnlocked"),
                 canBreed = nbt.getBoolean("CanBreed"),

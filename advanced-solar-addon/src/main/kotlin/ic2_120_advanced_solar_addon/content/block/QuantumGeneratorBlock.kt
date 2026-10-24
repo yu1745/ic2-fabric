@@ -1,5 +1,9 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.core.HolderLookup
 import ic2_120_advanced_solar_addon.content.sync.QuantumGeneratorSync
 import ic2_120_advanced_solar_addon.content.screen.QuantumGeneratorScreenHandler
@@ -24,7 +28,6 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.MenuProvider
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
@@ -55,7 +58,7 @@ class QuantumGeneratorBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, QuantumGeneratorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, QuantumGeneratorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
@@ -72,7 +75,7 @@ class QuantumGeneratorBlock : MachineBlock() {
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
         super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     companion object {
@@ -85,7 +88,7 @@ class QuantumGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(QuantumGeneratorBlockEntity::class.type(), pos, state),
-    IGenerator, ExtendedScreenHandlerFactory {
+    IGenerator, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     companion object {
         const val DEFAULT_ENERGY_MAC = 512
@@ -173,9 +176,11 @@ class QuantumGeneratorBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         QuantumGeneratorScreenHandler(syncId, playerInventory, ContainerLevelAccess.create(world!!, pos), syncedData)
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.getContainerSize())
+        return buf
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {

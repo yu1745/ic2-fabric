@@ -1,5 +1,14 @@
 package ic2_120.content.recipes
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
+import net.minecraft.core.registries.Registries
+
 import ic2_120.Ic2_120
 import ic2_120.content.block.CreativeGeneratorBlock
 import ic2_120.content.block.DeepslateLeadOreBlock
@@ -38,7 +47,6 @@ import net.minecraft.advancements.critereon.EnchantmentPredicate
 import net.minecraft.advancements.critereon.ItemPredicate
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.core.HolderLookup
 import net.minecraft.resources.ResourceLocation
 import java.util.concurrent.CompletableFuture
 
@@ -51,11 +59,11 @@ import java.util.concurrent.CompletableFuture
  */
 class ModBlockLootTableProvider(
     output: FabricDataOutput,
-    registryLookup: CompletableFuture<HolderLookup.WrapperLookup>
+    registryLookup: CompletableFuture<HolderLookup.HolderLookup.Provider>
 ) : FabricBlockLootTableProvider(output, registryLookup) {
 
-    private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
-        .items(
+    private val wrenchPredicateBuilder = ItemPredicate.Builder.item()
+        .of(
             BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "wrench")),
             BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_wrench"))
         )
@@ -78,7 +86,7 @@ class ModBlockLootTableProvider(
                 block is DeepslateTinOreBlock -> addCustomOreDrop(block, RawTin::class.instance())
                 block is DeepslateUraniumOreBlock -> addCustomOreDrop(block, RawUranium::class.instance())
                 block is RubberLeavesBlock -> addDrop(block, rubberLeavesLootTable(block))
-                id == reinforcedDoorId -> addDrop(block, doorDrops(block))
+                id == reinforcedDoorId -> add(block, createDoorTable(block))
                 else -> addDrop(block)
             }
         }
@@ -88,21 +96,21 @@ class ModBlockLootTableProvider(
         val blockItem = block.asItem()
         val casingItem = block.getCasingDrop()
 
-        val wrenchConditionBuilder = MatchTool.builder(wrenchPredicateBuilder)
-        val notWrenchConditionBuilder = InvertedLootItemCondition.builder(wrenchConditionBuilder)
+        val wrenchConditionBuilder = MatchTool.toolMatches(wrenchPredicateBuilder)
+        val notWrenchConditionBuilder = InvertedLootItemCondition.inverts(wrenchConditionBuilder)
 
-        return LootTable.builder()
+        return LootTable.lootTable()
             .pool(
-                LootPool.builder()
-                    .rolls(ConstantValue.create(1f))
-                    .conditionally(wrenchConditionBuilder)
-                    .setValue(LootItem.builder(blockItem).apply(ApplyExplosionDecay.builder()))
+                LootPool.lootPool()
+                    .setRolls(ConstantValue.exactly(1f))
+                    .when(wrenchConditionBuilder)
+                    .add(LootItem.lootTableItem(blockItem).apply(ApplyExplosionDecay.explosionDecay()))
             )
             .pool(
-                LootPool.builder()
-                    .rolls(ConstantValue.create(1f))
-                    .conditionally(notWrenchConditionBuilder)
-                    .setValue(LootItem.builder(casingItem).apply(ApplyExplosionDecay.builder()))
+                LootPool.lootPool()
+                    .setRolls(ConstantValue.exactly(1f))
+                    .when(notWrenchConditionBuilder)
+                    .add(LootItem.lootTableItem(casingItem).apply(ApplyExplosionDecay.explosionDecay()))
             )
     }
 
@@ -112,12 +120,11 @@ class ModBlockLootTableProvider(
      * count + Binomial(fortune+0, 0.2) → 时运0=1, 时运1≈1.2, 时运2≈1.4, 时运3≈1.6
      */
     private fun addCustomOreDrop(block: net.minecraft.world.level.block.Block, dropItem: net.minecraft.world.item.Item) {
-        val lookup: HolderLookup.WrapperLookup = registryLookup
-        val enchantmentLookup = lookup.getWrapperOrThrow(Registries.ENCHANTMENT)
+        val enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT)
         val fortuneEntry = enchantmentLookup.getOrThrow(Enchantments.FORTUNE)
-        addDrop(block, dropsWithSilkTouch(block,
-            applyExplosionDecay(dropItem, LootItem.builder(dropItem)
-                .apply(ApplyBonusCount.binomialWithBonusCount(fortuneEntry, 0.2f, 0))
+        add(block, createSilkTouchDispatchTable(block,
+            applyExplosionDecay(dropItem, LootItem.lootTableItem(dropItem)
+                .apply(ApplyBonusCount.addUniformBinomial(fortuneEntry, 0.2f, 0))
             )
         ))
     }
@@ -138,32 +145,39 @@ class ModBlockLootTableProvider(
         val leafItem = block.asItem()
         val saplingItem = RubberSaplingBlock::class.instance()
 
-        val silkTouchOrShears = AnyOfCondition.builder(
-            MatchTool.builder(ItemPredicate.Builder.create().items(Items.SHEARS)),
-            MatchTool.builder(
-                ItemPredicate.Builder.create()
-                    .enchantment(EnchantmentPredicate(Enchantments.SILK_TOUCH, MinMaxBounds.IntRange.atLeast(1)))
+        val enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT)
+        val silkTouchOrShears = AnyOfCondition.anyOf(
+            MatchTool.toolMatches(ItemPredicate.Builder.item().of(Items.SHEARS)),
+            MatchTool.toolMatches(
+                ItemPredicate.Builder.item()
+                    .withSubPredicate(net.minecraft.advancements.critereon.ItemSubPredicates.ENCHANTMENTS,
+                        net.minecraft.advancements.critereon.ItemEnchantmentsPredicate.enchantments(
+                            listOf(
+                                EnchantmentPredicate(enchantmentLookup.getOrThrow(Enchantments.SILK_TOUCH), MinMaxBounds.IntRange.atLeast(1))
+                            )
+                        )
+                    )
             )
         )
-        val boundLeaf = LootItemBlockStatePropertyCondition.builder(block)
-            .properties(StatePropertiesPredicate.Builder.create().exactMatch(RubberLeavesBlock.RUBBER_SAPLING_DROP, true))
-        val notSilkTouchOrShears = InvertedLootItemCondition.builder(silkTouchOrShears)
+        val boundLeaf = LootItemBlockStatePropertyCondition.hasBlockStateProperties(block)
+            .setProperties(StatePropertiesPredicate.Builder.properties().exactMatch(RubberLeavesBlock.RUBBER_SAPLING_DROP, true))
+        val notSilkTouchOrShears = InvertedLootItemCondition.inverts(silkTouchOrShears)
 
-        return LootTable.builder()
+        return LootTable.lootTable()
             // 剪刀/精准采集 → 掉树叶本身
             .pool(
-                LootPool.builder()
-                    .rolls(ConstantValue.create(1f))
-                    .conditionally(silkTouchOrShears)
-                    .setValue(addSurvivesExplosionCondition(block, LootItem.builder(leafItem)))
+                LootPool.lootPool()
+                    .setRolls(ConstantValue.exactly(1f))
+                    .when(silkTouchOrShears)
+                    .add(addSurvivesExplosionCondition(block, LootItem.lootTableItem(leafItem)))
             )
             // 保底绑定叶 → 必掉 1 个树苗（世界生成/树苗生长时由 bindLeaves 写入方块状态，运行时可判定）
             .pool(
-                LootPool.builder()
-                    .rolls(ConstantValue.create(1f))
-                    .conditionally(notSilkTouchOrShears)
-                    .conditionally(boundLeaf)
-                    .setValue(LootItem.builder(saplingItem))
+                LootPool.lootPool()
+                    .setRolls(ConstantValue.exactly(1f))
+                    .when(notSilkTouchOrShears)
+                    .when(boundLeaf)
+                    .add(LootItem.lootTableItem(saplingItem))
             )
     }
 }

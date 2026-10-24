@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
@@ -50,7 +54,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
@@ -76,7 +79,7 @@ class FluidHeatExchangerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, ic2_120.content.upgrade.IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, ic2_120.content.upgrade.IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = FluidHeatExchangerBlock.ACTIVE
 
@@ -161,14 +164,14 @@ class FluidHeatExchangerBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = buildList {
             add(ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }))
             for (idx in SLOT_EXCHANGER_INDICES) {
-                add(ItemInsertRoute(intArrayOf(idx), matcher = { isValid(idx, it) }, maxPerSlot = 1))
+                add(ItemInsertRoute(intArrayOf(idx), matcher = { canPlaceItem(idx, it) }, maxPerSlot = 1))
             }
-            add(ItemInsertRoute(intArrayOf(SLOT_INPUT_FILLED_CONTAINER), matcher = { isValid(SLOT_INPUT_FILLED_CONTAINER, it) }))
-            add(ItemInsertRoute(intArrayOf(SLOT_OUTPUT_EMPTY_CONTAINER), matcher = { isValid(SLOT_OUTPUT_EMPTY_CONTAINER, it) }))
+            add(ItemInsertRoute(intArrayOf(SLOT_INPUT_FILLED_CONTAINER), matcher = { canPlaceItem(SLOT_INPUT_FILLED_CONTAINER, it) }))
+            add(ItemInsertRoute(intArrayOf(SLOT_OUTPUT_EMPTY_CONTAINER), matcher = { canPlaceItem(SLOT_OUTPUT_EMPTY_CONTAINER, it) }))
         },
         // 热传导器槽（SLOT_EXCHANGER_0..9）为永不消耗的永久配置组件，仅 GUI 可取，
         // 不纳入物流抽出范围（避免被管道/漏斗静默抽空导致停机）；仍保留放入路由用于自动化初始化。
@@ -407,18 +410,18 @@ class FluidHeatExchangerBlockEntity(
 
     override fun getInventory(): Container = this
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
     override fun setChanged() {
         super.setChanged()
     }
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         val isExchangerSlot = slot in SLOT_EXCHANGER_0..SLOT_EXCHANGER_9
         val isUpgradeSlot = slot in SLOT_UPGRADE_0..SLOT_UPGRADE_2
 
@@ -442,8 +445,8 @@ class FluidHeatExchangerBlockEntity(
     private fun fheMatchesInputFilledContainer(stack: ItemStack): Boolean = when {
         stack.item == Items.LAVA_BUCKET -> true
         stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-        BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "lava_cell") -> true
-        BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "hot_coolant_cell") -> true
+        BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "lava_cell") -> true
+        BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "hot_coolant_cell") -> true
         stack.item is FluidCellItem -> {
             val fluid = stack.getFluidCellVariant()?.fluid
             fluid == Fluids.LAVA || fluid == Fluids.FLOWING_LAVA ||
@@ -454,10 +457,10 @@ class FluidHeatExchangerBlockEntity(
 
     private fun fheMatchesOutputEmptyContainer(stack: ItemStack): Boolean =
         stack.item == Items.BUCKET ||
-            BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
+            BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
             (stack.item is FluidCellItem && stack.isFluidCellEmpty())
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot in SLOT_EXCHANGER_INDICES -> stack.item == heatConductorItem
         slot in SLOT_UPGRADE_INDICES -> stack.item is IUpgradeItem
@@ -468,9 +471,11 @@ class FluidHeatExchangerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.liquid_heat_exchanger")
@@ -487,7 +492,7 @@ class FluidHeatExchangerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
 
         bufferedHeat = nbt.getLong(NBT_BUFFERED_HEAT).coerceAtLeast(0L)
@@ -504,7 +509,7 @@ class FluidHeatExchangerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
 
         nbt.putLong(NBT_BUFFERED_HEAT, bufferedHeat)
@@ -597,21 +602,21 @@ class FluidHeatExchangerBlockEntity(
     }
 
     private fun handleInputFluidContainers() {
-        val input = getStack(SLOT_INPUT_FILLED_CONTAINER)
+        val input = getItem(SLOT_INPUT_FILLED_CONTAINER)
         if (input.isEmpty) return
 
         val parsed = resolveInputContainer(input) ?: return
         if (inputTankInternal.getTankCapacity() - inputTankInternal.getStoredAmount() < FluidConstants.BUCKET) return
 
-        val emptyOutput = getStack(SLOT_INPUT_EMPTY_CONTAINER)
+        val emptyOutput = getItem(SLOT_INPUT_EMPTY_CONTAINER)
         if (!canMergeIntoSlot(emptyOutput, parsed.emptyContainer)) return
 
         val inserted = inputTankInternal.insertInternal(FluidConstants.BUCKET, parsed.fluid)
         if (inserted < FluidConstants.BUCKET) return
 
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_INPUT_FILLED_CONTAINER, ItemStack.EMPTY)
-        if (emptyOutput.isEmpty) setStack(SLOT_INPUT_EMPTY_CONTAINER, parsed.emptyContainer.copy())
+        if (input.isEmpty) setItem(SLOT_INPUT_FILLED_CONTAINER, ItemStack.EMPTY)
+        if (emptyOutput.isEmpty) setItem(SLOT_INPUT_EMPTY_CONTAINER, parsed.emptyContainer.copy())
         else emptyOutput.grow(1)
         setChanged()
     }
@@ -619,21 +624,21 @@ class FluidHeatExchangerBlockEntity(
     private fun fillOutputFluidContainers() {
         if (outputTankInternal.getStoredAmount() < FluidConstants.BUCKET) return
 
-        val emptyInput = getStack(SLOT_OUTPUT_EMPTY_CONTAINER)
+        val emptyInput = getItem(SLOT_OUTPUT_EMPTY_CONTAINER)
         if (emptyInput.isEmpty) return
 
         val fluid = outputTankInternal.variant.fluid
         val filled = resolveOutputFilledContainer(emptyInput, fluid) ?: return
 
-        val filledOutput = getStack(SLOT_OUTPUT_FILLED_CONTAINER)
+        val filledOutput = getItem(SLOT_OUTPUT_FILLED_CONTAINER)
         if (!canMergeIntoSlot(filledOutput, filled)) return
 
         val consumed = outputTankInternal.consumeInternal(FluidConstants.BUCKET)
         if (consumed < FluidConstants.BUCKET) return
 
         emptyInput.shrink(1)
-        if (emptyInput.isEmpty) setStack(SLOT_OUTPUT_EMPTY_CONTAINER, ItemStack.EMPTY)
-        if (filledOutput.isEmpty) setStack(SLOT_OUTPUT_FILLED_CONTAINER, filled.copy())
+        if (emptyInput.isEmpty) setItem(SLOT_OUTPUT_EMPTY_CONTAINER, ItemStack.EMPTY)
+        if (filledOutput.isEmpty) setItem(SLOT_OUTPUT_FILLED_CONTAINER, filled.copy())
         else filledOutput.grow(1)
         setChanged()
     }
@@ -680,7 +685,7 @@ class FluidHeatExchangerBlockEntity(
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
+        return current.isEmpty || (ItemStack.isSameItemSameComponents(current, toInsert) && current.count < current.maxStackSize)
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
@@ -717,7 +722,7 @@ class FluidHeatExchangerBlockEntity(
         val raw = nbt.getString(key)
         if (raw.isNullOrBlank()) return null
         val id = ResourceLocation.tryParse(raw) ?: return null
-        if (!BuiltInRegistries.FLUID.containsId(id)) return null
+        if (!BuiltInRegistries.FLUID.containsKey(id)) return null
         return BuiltInRegistries.FLUID.get(id)
     }
 
@@ -726,7 +731,7 @@ class FluidHeatExchangerBlockEntity(
             nbt.remove(key)
             return
         }
-        nbt.putString(key, BuiltInRegistries.FLUID.getId(fluid).toString())
+        nbt.putString(key, BuiltInRegistries.FLUID.getKey(fluid).toString())
     }
 
     private data class InputContainerInfo(

@@ -1,5 +1,7 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -50,9 +52,11 @@ import ic2_120.registry.annotation.RecipeProvider
 class NuclearReactorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
 
     init {
-        defaultState = stateManager.defaultBlockState
-            .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
-            .setValue(ACTIVE, false)
+        registerDefaultState(
+            stateDefinition.any()
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
+                .setValue(ACTIVE, false)
+        )
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -72,7 +76,7 @@ class NuclearReactorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, NuclearReactorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, NuclearReactorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -87,7 +91,7 @@ class NuclearReactorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun neighborUpdate(
+    override fun neighborChanged(
         state: BlockState,
         world: Level,
         pos: BlockPos,
@@ -99,14 +103,14 @@ class NuclearReactorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
             val be = world.getBlockEntity(pos) as? NuclearReactorBlockEntity
             be?.dropOverflowItems(world, pos)
         }
-        super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
+        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
     }
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val generator = GeneratorBlock::class.item()
             val denseLeadPlate = ic2_120.content.item.DenseLeadPlate::class.instance()
             val advancedCircuit = ic2_120.content.item.AdvancedCircuit::class.instance()

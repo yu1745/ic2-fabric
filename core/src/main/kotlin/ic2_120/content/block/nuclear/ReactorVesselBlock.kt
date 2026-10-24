@@ -19,7 +19,6 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
-import java.util.function.Consumer
 import ic2_120.content.recipes.ModTags
 
 /**
@@ -30,7 +29,7 @@ class ReactorVesselBlock(settings: BlockBehaviour.Properties = ReactorShellBlock
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val leadPlate = LeadPlate::class.instance()
             if (leadPlate != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)

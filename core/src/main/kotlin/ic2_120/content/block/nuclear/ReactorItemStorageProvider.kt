@@ -55,10 +55,10 @@ private class ReactorItemStorage(
         var movedTotal = 0L
 
         // 反应堆物品不可堆叠，只放入空槽
-        for (slot in 0 until reactor.size()) {
+        for (slot in 0 until reactor.getContainerSize()) {
             if (movedTotal >= maxAmount) break
-            if (!reactor.isValid(slot, probe)) continue
-            if (!reactor.getStack(slot).isEmpty) continue
+            if (!reactor.canPlaceItem(slot, probe)) continue
+            if (!reactor.getItem(slot).isEmpty) continue
 
             // 布局锁定：空槽不允许插入，只允许与锁定类型匹配的物品
             if (reactor.layoutLocked) {
@@ -68,7 +68,7 @@ private class ReactorItemStorage(
             }
 
             updateSnapshots(transaction)
-            reactor.setStack(slot, probe.copy())
+            reactor.setItem(slot, probe.copy())
             movedTotal += 1L
         }
 
@@ -82,14 +82,14 @@ private class ReactorItemStorage(
         var remaining = maxAmount
         var extractedTotal = 0L
 
-        for (slot in 0 until reactor.size()) {
+        for (slot in 0 until reactor.getContainerSize()) {
             if (remaining <= 0L) break
-            val stack = reactor.getStack(slot)
+            val stack = reactor.getItem(slot)
             if (stack.isEmpty) continue
             if (ItemVariant.of(stack) != resource) continue
 
             updateSnapshots(transaction)
-            reactor.setStack(slot, ItemStack.EMPTY)
+            reactor.setItem(slot, ItemStack.EMPTY)
             remaining -= 1L
             extractedTotal += 1L
         }
@@ -99,16 +99,16 @@ private class ReactorItemStorage(
 
     override fun iterator(): MutableIterator<StorageView<ItemVariant>> {
         val views = mutableListOf<StorageView<ItemVariant>>()
-        for (slot in 0 until reactor.size()) {
-            val stack = reactor.getStack(slot)
+        for (slot in 0 until reactor.getContainerSize()) {
+            val stack = reactor.getItem(slot)
             if (stack.isEmpty) continue
             views.add(object : StorageView<ItemVariant> {
-                override fun getResource(): ItemVariant = ItemVariant.of(reactor.getStack(slot))
+                override fun getResource(): ItemVariant = ItemVariant.of(reactor.getItem(slot))
                 override fun getAmount(): Long = 1L
                 override fun getCapacity(): Long = 1L
                 override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
                     this@ReactorItemStorage.extract(resource, maxAmount, transaction)
-                override fun isResourceBlank(): Boolean = reactor.getStack(slot).isEmpty
+                override fun isResourceBlank(): Boolean = reactor.getItem(slot).isEmpty
             })
         }
         return views.iterator()

@@ -41,10 +41,10 @@ class ComposeDebugBlock : BaseEntityBlock(
     BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).strength(-1.0f, 6000000.0f)
 ) {
     companion object {
-        val DEBUG_CODEC: MapCodec<ComposeDebugBlock> = Block.createCodec { error("ComposeDebugBlock cannot be deserialized from JSON") }
+        val DEBUG_CODEC: MapCodec<ComposeDebugBlock> = BlockBehaviour.simpleCodec { error("ComposeDebugBlock cannot be deserialized from JSON") }
     }
 
-    override fun getCodec(): MapCodec<out BaseEntityBlock> = DEBUG_CODEC
+    override fun codec(): MapCodec<out BaseEntityBlock> = DEBUG_CODEC
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return ComposeDebugBlockEntity(pos, state)
@@ -83,7 +83,7 @@ class ComposeDebugBlockEntity(
 
     override fun createMenu(
         syncId: Int,
-        playerInventory: net.minecraft.world.entity.player.Container,
+        playerInventory: net.minecraft.world.entity.player.Inventory,
         player: net.minecraft.world.entity.player.Player?
     ): net.minecraft.world.inventory.AbstractContainerMenu =
         ic2_120.content.screen.ComposeDebugScreenHandler(syncId, playerInventory)

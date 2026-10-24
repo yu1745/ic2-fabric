@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -36,7 +38,8 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
@@ -55,18 +58,18 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, KineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, KineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
-        world: BlockGetter?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: TooltipContext
+        type: TooltipFlag
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
         tooltip.add(Component.translatable("tooltip.ic2_120.kinetic_generator.ratio").withStyle(ChatFormatting.GRAY))
     }
 
@@ -92,7 +95,7 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val generator = GeneratorBlock::class.item()
             val motor = ElectricMotor::class.instance()
             val crank = IronCrankHandle::class.instance()

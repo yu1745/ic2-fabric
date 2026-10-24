@@ -38,12 +38,12 @@ object ElectricHeatGeneratorJadeProvider : IBlockComponentProvider, IServerDataP
         data.putLong("generatedHeat", be.sync.getSyncedGeneratedHeat().coerceAtLeast(0L))
         data.putInt("coilCount", be.getCoilCount())
         data.putBoolean("redstoneInverted", be.redstoneInverted)
-        data.putBoolean("redstonePowered", world.isReceivingRedstonePower(pos))
+        data.putBoolean("redstonePowered", world.hasNeighborSignal(pos))
         // 复用机器自身使用的判定逻辑，保证与运行行为完全一致
         data.putBoolean("redstoneAllowsRun", RedstoneControlComponent.canRun(world, pos, be))
     }
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (!accessor.serverData.contains("eu")) return
         val data = accessor.serverData
 

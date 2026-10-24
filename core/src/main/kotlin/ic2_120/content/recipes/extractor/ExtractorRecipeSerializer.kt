@@ -1,5 +1,8 @@
 package ic2_120.content.recipes.extractor
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.recipes.RecipeCodecBridge
 
 import net.minecraft.network.codec.StreamCodec
@@ -21,25 +24,24 @@ import net.minecraft.util.GsonHelper
 @ModMachineRecipe(id = "extracting", recipeClass = ExtractorRecipe::class)
 object ExtractorRecipeSerializer : RecipeSerializer<ExtractorRecipe> {
     private fun fromJson(id: ResourceLocation, json: JsonObject): ExtractorRecipe {
-        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
-        val result = GsonHelper.getObject(json, "result")
-        val itemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
+        val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
+        val result = json.getAsJsonObject("result")
+        val itemId = ResourceLocation.parse(result.get("item").asString)
         val item = BuiltInRegistries.ITEM.get(itemId)
-        val count = GsonHelper.getInt(result, "count", 1)
-        return ExtractorRecipe(id, ingredient, ItemStack(item, count))
+        val count = (if (result.has("count")) result.get("count").asInt else 1)
+        return ExtractorRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, ItemStack(item, count))
     }
 
     private fun read(buf: RegistryFriendlyByteBuf): ExtractorRecipe {
         val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
-        val output = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
-        return ExtractorRecipe(id, ingredient, output)
+        val output = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
+        return ExtractorRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, output)
     }
 
-    private fun write(buf: FriendlyByteBuf, recipe: ExtractorRecipe) {
+    private fun write(buf: RegistryFriendlyByteBuf, recipe: ExtractorRecipe) {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
-        bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
     }
-}
 
     override fun codec(): MapCodec<ExtractorRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:extracting",
@@ -49,3 +51,4 @@ object ExtractorRecipeSerializer : RecipeSerializer<ExtractorRecipe> {
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, ExtractorRecipe> =
         StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })
+}

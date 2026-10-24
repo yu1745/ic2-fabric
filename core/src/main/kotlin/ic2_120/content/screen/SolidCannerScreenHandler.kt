@@ -73,15 +73,15 @@ class SolidCannerScreenHandler(
             when {
                 index == SLOT_OUTPUT_INDEX -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index == SLOT_DISCHARGING_INDEX -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
@@ -95,7 +95,7 @@ class SolidCannerScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -104,7 +104,7 @@ class SolidCannerScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is SolidCannerBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0

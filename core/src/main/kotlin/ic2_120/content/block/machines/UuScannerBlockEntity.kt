@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -36,7 +40,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -52,7 +55,7 @@ class UuScannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty = UuScannerBlock.ACTIVE
     override val tier: Int = UuScannerSync.UU_SCANNER_TIER
@@ -72,9 +75,9 @@ class UuScannerBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) }),
+            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { canPlaceItem(SLOT_INPUT, it) }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_CRYSTAL), matcher = { it.isEmpty || isCrystalMemory(it) })
         ),
@@ -106,11 +109,11 @@ class UuScannerBlockEntity(
 
     constructor(pos: BlockPos, state: BlockState) : this(UuScannerBlockEntity::class.type(), pos, state)
 
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         val previousId = if (slot == SLOT_INPUT) BuiltInRegistries.ITEM.getId(inventory[slot].item).toString() else ""
         inventory[slot] = stack
@@ -127,20 +130,22 @@ class UuScannerBlockEntity(
 
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem
         SLOT_DISCHARGING -> !stack.isEmpty && (stack.item is IBatteryItem || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust)
         SLOT_CRYSTAL -> stack.isEmpty || isCrystalMemory(stack)
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.uu_scanner")
@@ -150,7 +155,7 @@ class UuScannerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(UuScannerSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -160,7 +165,7 @@ class UuScannerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(UuScannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putString(NBT_LAST_COMPLETED_ITEM, lastCompletedItemId)
@@ -180,7 +185,7 @@ class UuScannerBlockEntity(
         val world = world ?: return
 
         // 优先存入水晶
-        val crystalStack = getStack(SLOT_CRYSTAL)
+        val crystalStack = getItem(SLOT_CRYSTAL)
         if (isCrystalMemory(crystalStack)) {
             crystalStack.setUuTemplate(template)
         } else {
@@ -213,7 +218,7 @@ class UuScannerBlockEntity(
         }
 
         val storage = findUniqueAdjacentPatternStorage(world, pos)
-        val useCrystal = storage == null && isCrystalMemory(getStack(SLOT_CRYSTAL))
+        val useCrystal = storage == null && isCrystalMemory(getItem(SLOT_CRYSTAL))
         if (storage == null && !useCrystal) {
             sync.progress = 0
             sync.currentCostUb = 0
@@ -223,7 +228,7 @@ class UuScannerBlockEntity(
             return
         }
 
-        val input = getStack(SLOT_INPUT)
+        val input = getItem(SLOT_INPUT)
         if (input.isEmpty) {
             sync.progress = 0
             sync.currentCostUb = 0
@@ -245,7 +250,7 @@ class UuScannerBlockEntity(
         }
 
         sync.currentCostUb = template.uuCostUb
-        sync.cachedItemRawId = BuiltInRegistries.ITEM.getRawId(input.item)
+        sync.cachedItemRawId = BuiltInRegistries.ITEM.getId(input.item)
 
         val need = ceil(UuScannerSync.ENERGY_PER_TICK.toDouble()).toLong().coerceAtLeast(1L)
         if (sync.consumeEnergy(need) > 0L) {
@@ -256,7 +261,7 @@ class UuScannerBlockEntity(
                 // 扫描完成 → 模板缓存至内置缓存位
                 cachedTemplate = template
                 input.shrink(1)
-                if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
+                if (input.isEmpty) setItem(SLOT_INPUT, ItemStack.EMPTY)
                 sync.progress = 0
                 sync.status = UuScannerSync.STATUS_COMPLETE
             }
@@ -282,5 +287,5 @@ class UuScannerBlockEntity(
     }
 
     private fun isCrystalMemory(stack: ItemStack): Boolean =
-        !stack.isEmpty && BuiltInRegistries.ITEM.getId(stack.item) == crystalMemoryId
+        !stack.isEmpty && BuiltInRegistries.ITEM.getKey(stack.item) == crystalMemoryId
 }

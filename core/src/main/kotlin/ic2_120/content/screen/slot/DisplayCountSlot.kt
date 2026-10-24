@@ -16,8 +16,8 @@ class DisplayCountSlot(
     private val displayCount: Int = 1
 ) : PredicateSlot(inventory, index, x, y, spec) {
 
-    override fun getStack(): ItemStack {
-        val stack = inventory.getStack(index)
+    override fun getItem(): ItemStack {
+        val stack = container.getItem(index)
         if (stack.isEmpty || stack.count <= displayCount) return stack
         val copy = stack.copy()
         copy.count = displayCount
@@ -25,24 +25,24 @@ class DisplayCountSlot(
     }
 
     /**
-     * 使用真实库存数量计算剩余空间，避免 getStack() 返回假 count=1
+     * 使用真实库存数量计算剩余空间，避免 getItem() 返回假 count=1
      * 导致 Vanilla 误判槽位有空位而放入超出上限的物品。
      */
-    override fun insertStack(stack: ItemStack, count: Int): ItemStack {
-        if (stack.isEmpty || !canInsert(stack)) return stack
-        val realStack = inventory.getStack(index)
-        val slotMax = getMaxItemCount()
+    override fun safeInsert(stack: ItemStack, count: Int): ItemStack {
+        if (stack.isEmpty || !mayPlace(stack)) return stack
+        val realStack = container.getItem(index)
+        val slotMax = getMaxStackSize()
         val currentCount = realStack.count
         val space = slotMax - currentCount
         if (space <= 0) return stack
         val i = minOf(minOf(count, stack.count), space)
         if (i <= 0) return stack
         if (realStack.isEmpty) {
-            this.setStack(stack.split(i))
-        } else if (ItemStack.canCombine(realStack, stack)) {
+            this.set(stack.split(i))
+        } else if (ItemStack.isSameItemSameComponents(realStack, stack)) {
             stack.shrink(i)
             realStack.grow(i)
-            this.setStack(realStack)
+            this.set(realStack)
         }
         return stack
     }

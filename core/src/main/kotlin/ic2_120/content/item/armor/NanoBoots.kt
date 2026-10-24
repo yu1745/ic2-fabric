@@ -15,9 +15,9 @@ import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import java.util.function.Consumer
 
 /**
  * 纳米靴子 (Nano Boots)
@@ -36,11 +36,11 @@ import java.util.function.Consumer
  * - 能量从所有纳米装备均匀扣除
  */
 @ModItem(name = "nano_boots", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoBoots : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.BOOTS, Item.Properties().maxStackSize(1)) {
+class NanoBoots : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.BOOTS, Item.Properties().stacksTo(1)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = CarbonPlate::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             if (plate == Items.AIR || crystal == Items.AIR) return
@@ -58,8 +58,8 @@ class NanoBoots : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.BOO
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendHoverText(stack, context, tooltip, type)
                 val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
         tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).withStyle(ChatFormatting.GRAY))
     }

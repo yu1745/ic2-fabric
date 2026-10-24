@@ -94,7 +94,7 @@ class GeneratorScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -103,7 +103,7 @@ class GeneratorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is GeneratorBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
@@ -118,7 +118,7 @@ class GeneratorScreenHandler(
 
         private val SLOT_SPEC_FALLBACK_FUEL = SlotSpec(
             canInsert = { stack ->
-                !stack.isEmpty && ((net.fabricmc.fabric.api.registry.FuelRegistry.INSTANCE.getValue(stack.item) ?: 0) > 0)
+                !stack.isEmpty && ((net.fabricmc.fabric.api.registry.FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0)
             }
         )
         private val SLOT_SPEC_FALLBACK_BATTERY = SlotSpec(

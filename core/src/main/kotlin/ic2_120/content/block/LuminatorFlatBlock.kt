@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -18,6 +20,7 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import com.mojang.serialization.MapCodec
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.shapes.CollisionContext
@@ -54,13 +57,15 @@ import ic2_120.registry.annotation.RecipeProvider
 class LuminatorFlatBlock : BaseEntityBlock(
     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
         .strength(5.0f, 6.0f)
-        .luminance { state -> if (state.getValue(ACTIVE)) 15 else 0 }
+        .lightLevel { state -> if (state.getValue(ACTIVE)) 15 else 0 }
 ) {
 
     init {
-        defaultState = stateManager.defaultBlockState
-            .setValue(BlockStateProperties.FACING, Direction.NORTH)
-            .setValue(ACTIVE, false)
+        registerDefaultState(
+            stateDefinition.any()
+                .setValue(BlockStateProperties.FACING, Direction.NORTH)
+                .setValue(ACTIVE, false)
+        )
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -69,10 +74,10 @@ class LuminatorFlatBlock : BaseEntityBlock(
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
-        val side = ctx.side
+        val side = ctx.clickedFace
         // 侧面：发光朝向房间内部，用 opposite；顶底：发光朝向点击面，用 side（与 blockstate 模型旋转对应）
         val facing = if (side.axis == Direction.Axis.Y) side else side.opposite
-        return defaultState.setValue(BlockStateProperties.FACING, facing)
+        return defaultBlockState.setValue(BlockStateProperties.FACING, facing)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
@@ -84,14 +89,16 @@ class LuminatorFlatBlock : BaseEntityBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, LuminatorFlatBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, LuminatorFlatBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
+
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { LuminatorFlatBlock() }
 
     override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getOutlineShape(
+    override fun getShape(
         state: BlockState,
         world: BlockGetter,
         pos: BlockPos,
@@ -130,7 +137,7 @@ class LuminatorFlatBlock : BaseEntityBlock(
         private val SHAPE_DOWN = Shapes.box(0.0, 1.0 - THICK, 0.0, 1.0, 1.0, 1.0)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val tinCable = TinCableBlock::class.item()
             val ironCasing = IronCasing::class.instance()

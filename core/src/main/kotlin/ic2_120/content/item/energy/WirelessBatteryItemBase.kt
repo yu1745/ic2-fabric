@@ -58,10 +58,10 @@ abstract class WirelessBatteryItemBase(
         var charged = 0L
 
         val inventory = player.inventory
-        for (i in 0 until inventory.size()) {
+        for (i in 0 until inventory.getContainerSize()) {
             if (remaining <= 0) break
 
-            val stack = inventory.getStack(i)
+            val stack = inventory.getItem(i)
             if (stack.isEmpty) continue
             if (stack.item === this) continue
 

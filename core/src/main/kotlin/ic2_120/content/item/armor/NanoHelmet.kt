@@ -1,5 +1,7 @@
 package ic2_120.content.item.armor
 
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.compat.isClient
 
 import ic2_120.Ic2_120
@@ -24,6 +26,7 @@ import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
 import net.minecraft.world.level.Level
@@ -52,7 +55,7 @@ import java.util.function.Consumer
  * - 能量从所有纳米装备均匀扣除
  */
 @ModItem(name = "nano_helmet", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, Item.Properties().maxStackSize(1)) {
+class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, Item.Properties().stacksTo(1)) {
 
     companion object {
         private const val NIGHT_VISION_DURATION = 220
@@ -108,7 +111,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         if (energy <= 0) {
             setEnergy(stack, 0)
             nbt.putBoolean(NIGHT_VISION_KEY, false)
-            player.removeStatusEffect(MobEffects.NIGHT_VISION)
+            player.removeEffect(MobEffects.NIGHT_VISION)
             return
         }
 
@@ -120,7 +123,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
             if (energy < toConsume) {
                 setEnergy(stack, 0)
                 nbt.putBoolean(NIGHT_VISION_KEY, false)
-                player.removeStatusEffect(MobEffects.NIGHT_VISION)
+                player.removeEffect(MobEffects.NIGHT_VISION)
                 return
             }
             setEnergy(stack, energy - toConsume)
@@ -128,24 +131,24 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         nbt.putDouble(NV_REMAINDER_KEY, remainder - toConsume)
 
         // 光线检测（复用 NightVisionGoggles 逻辑）
-        val brightness = world.getLightLevel(player.blockPos)
+        val brightness = world.getMaxLocalRawBrightness(player.blockPosition())
         if (brightness >= 8) {
-            player.removeStatusEffect(MobEffects.NIGHT_VISION)
-            val blind = player.getStatusEffect(MobEffects.BLINDNESS)
+            player.removeEffect(MobEffects.NIGHT_VISION)
+            val blind = player.getEffect(MobEffects.BLINDNESS)
             if (blind == null || blind.duration <= 0) {
-                player.addStatusEffect(
+                player.addEffect(
                     MobEffectInstance(MobEffects.BLINDNESS, BLINDNESS_DURATION, 0, true, false, true)
                 )
             }
         } else {
-            player.addStatusEffect(
+            player.addEffect(
                 MobEffectInstance(MobEffects.NIGHT_VISION, NIGHT_VISION_DURATION, 0, true, false, true)
             )
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendHoverText(stack, context, tooltip, type)
         val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
 

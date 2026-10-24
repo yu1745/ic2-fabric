@@ -14,7 +14,7 @@ class SelectTemplatePayload(val pos: BlockPos, val index: Int) : CustomPacketPay
     companion object {
         val ID = CustomPacketPayload.Type<SelectTemplatePayload>(Ic2_120.id("select_template"))
         val CODEC: StreamCodec<FriendlyByteBuf, SelectTemplatePayload> = StreamCodec.of(
-            { value, buf ->
+            { buf, value ->
                 buf.writeBlockPos(value.pos)
                 buf.writeVarInt(value.index)
             },

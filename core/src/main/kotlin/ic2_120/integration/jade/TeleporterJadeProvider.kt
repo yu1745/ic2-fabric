@@ -32,20 +32,20 @@ object TeleporterJadeProvider : IBlockComponentProvider, IServerDataProvider<Blo
             data.putString("targetDim", be.targetDimension)
         }
         data.putBoolean("hasMfe", be.hasAdjacentMfeOrMfsu(world, pos))
-        val thisDim = world.registryKey.value.toString()
+        val thisDim = world.dimension().location.toString()
         data.putBoolean("sameDim", target != null && thisDim == be.targetDimension)
         @Suppress("DEPRECATION")
-        data.putBoolean("chunkLoaded", target != null && world.isChunkLoaded(target))
+        data.putBoolean("chunkLoaded", target != null && world.isLoaded(target))
         val targetBe = target?.let { world.getBlockEntity(it) as? TeleporterBlockEntity }
         data.putBoolean("targetBeValid", targetBe != null)
         data.putBoolean("targetBeCooldown", targetBe?.getTeleportCooldown()?.let { it > 0 } ?: false)
         data.putBoolean("charging", be.isCharging())
-        data.putBoolean("redstonePowered", world.isReceivingRedstonePower(pos))
+        data.putBoolean("redstonePowered", world.hasNeighborSignal(pos))
         val box = be.getActivationBox(pos)
-        data.putBoolean("entityInRange", !world.getOtherEntities(null, box) { it.isAlive && !it.hasVehicle() && !it.hasPassengers() }.isEmpty())
+        data.putBoolean("entityInRange", !world.getEntities(null, box) { it.isAlive && !it.isPassenger() && !it.isVehicle() }.isEmpty())
     }
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (!accessor.serverData.contains("mfeEnergy")) return
         val data = accessor.serverData
 

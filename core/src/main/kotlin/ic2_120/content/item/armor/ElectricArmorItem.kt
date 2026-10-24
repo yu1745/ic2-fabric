@@ -1,9 +1,14 @@
 package ic2_120.content.item.armor
 
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.content.item.energy.IElectricTool
+import net.minecraft.core.Holder
 import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.ArmorMaterial
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 
 /**
@@ -33,10 +38,10 @@ import net.minecraft.network.chat.Component
  * - 能量不足时回退到普通护甲效果
  */
 abstract class ElectricArmorItem(
-    material: ArmorMaterial,
+    material: Holder<ArmorMaterial>,
     type: Type,
-    settings: FabricItemSettings
-) : ArmorItem(material, type, settings.maxDamage(-1)), IElectricTool {
+    settings: Item.Properties
+) : ArmorItem(material, type, settings.durability(-1)), IElectricTool {
 
     // ========== IElectricTool 实现 ==========
 
@@ -44,7 +49,7 @@ abstract class ElectricArmorItem(
         stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY)
 
     override fun setEnergy(stack: ItemStack, energy: Long) {
-        stack.orCreateNbt.putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity))
+        stack.orCreateNbt = stack.orCreateNbt.apply { putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity)) }
     }
 
     // ========== 防止原版耐久消耗 ==========
@@ -56,7 +61,7 @@ abstract class ElectricArmorItem(
      * 会在每次受击时同时消耗原版耐久度，导致护甲在耐久耗尽时消失，
      * 即使 EU 能量充足。详见 [ic2_120.mixin.PlayerEntityMixin]。
      */
-    override fun isDamageable(): Boolean = false
+    override fun isDamageable(stack: ItemStack): Boolean = false
 
     // ========== 抽象方法 ==========
 
@@ -79,8 +84,13 @@ abstract class ElectricArmorItem(
     override fun getBarColor(stack: ItemStack): Int =
         getEnergyBarColor(stack)
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(
+        stack: ItemStack,
+        context: Item.TooltipContext,
+        tooltip: MutableList<Component>,
+        type: TooltipFlag
+    ) {
+        super.appendHoverText(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 }

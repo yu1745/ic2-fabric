@@ -32,15 +32,15 @@ class BatteryDischargerComponent(
      */
     fun tick(maxDemand: Long): Long {
         // 红石转化：无视 canDischargeNow / maxDemand
-        val stack = inventory.getStack(batterySlot)
+        val stack = inventory.getItem(batterySlot)
         if (!stack.isEmpty && stack.item === Items.REDSTONE) {
             stack.shrink(1)
-            inventory.setStack(batterySlot, stack)
+            inventory.setItem(batterySlot, stack)
             return REDSTONE_EU_PER_ITEM
         }
         if (!stack.isEmpty && stack.item is EnergiumDust) {
             stack.shrink(1)
-            inventory.setStack(batterySlot, stack)
+            inventory.setItem(batterySlot, stack)
             return ENERGIUM_DUST_EU_PER_ITEM
         }
 
@@ -63,7 +63,7 @@ class BatteryDischargerComponent(
         val discharged = battery.discharge(stack, requested).coerceIn(0L, requested)
         if (discharged <= 0L) return 0L
 
-        inventory.setStack(batterySlot, stack)
+        inventory.setItem(batterySlot, stack)
         return discharged
     }
 }

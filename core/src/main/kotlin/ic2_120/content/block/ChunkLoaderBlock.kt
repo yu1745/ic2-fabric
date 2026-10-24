@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -17,6 +19,7 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.data.recipes.ShapedRecipeBuilder
+import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.resources.ResourceLocation
@@ -32,7 +35,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -52,7 +54,7 @@ class ChunkLoaderBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, ChunkLoaderBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, ChunkLoaderBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
@@ -73,18 +75,18 @@ class ChunkLoaderBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.`is`(newState.block) && !moved) {
             (world.getBlockEntity(pos) as? ChunkLoaderBlockEntity)?.releaseChunks()
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tinPlate = ic2_120.content.item.TinPlate::class.instance()
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()

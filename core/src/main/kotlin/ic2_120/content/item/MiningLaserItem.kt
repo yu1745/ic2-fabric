@@ -50,7 +50,7 @@ import ic2_120.getCustomData
  */
 @ModItem(name = "mining_laser", tab = CreativeTab.IC2_TOOLS)
 class MiningLaserItem : Item(
-    Item.Properties().maxStackSize(1)
+    Item.Properties().stacksTo(1)
 ), IElectricTool {
 
     companion object {
@@ -84,7 +84,7 @@ class MiningLaserItem : Item(
             val crystal = EnergyCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             if (alloy == Items.AIR || crystal == Items.AIR || advCircuit == Items.AIR) return
-            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, MiningLaserItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, MiningLaserItem::class.instance(), 1)
                 .pattern("REE")
                 .pattern("AAC")
                 .pattern(" AA")
@@ -110,11 +110,11 @@ class MiningLaserItem : Item(
         if (world.isClient || entity !is ServerPlayer) return
         val player = entity
         val uuid = player.uuid
-        if (player.mainHandStack.item !is MiningLaserItem) {
+        if (player.mainHandItem.item !is MiningLaserItem) {
             hadMiningLaserInMainLastTick[uuid] = false
             return
         }
-        if (stack !== player.mainHandStack) return
+        if (stack !== player.mainHandItem) return
 
         val hadBefore = hadMiningLaserInMainLastTick.getOrDefault(uuid, false)
         if (!hadBefore) {
@@ -141,7 +141,7 @@ class MiningLaserItem : Item(
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(hand)
+        val stack = user.getItemInHand(player.usedItemHand)
 
         // 客户端在按住模式键切模式时仍可能发来 use；与切模式包同 tick 的这一次不发射（见 [MiningLaserServerSuppress]）
         if (!world.isClient) {
@@ -176,8 +176,8 @@ class MiningLaserItem : Item(
                 val forward = Vec3(fwdX, fwdY, fwdZ)
                 // 右手向量：forward × up（竖直看时退化为用 X 轴做参考）
                 val upRef = if (Math.abs(forward.y) > 0.99) Vec3(1.0, 0.0, 0.0) else Vec3(0.0, 1.0, 0.0)
-                val right = forward.crossProduct(upRef).normalize()
-                val perpUp = right.crossProduct(forward).normalize()
+                val right = forward.cross(upRef).normalize()
+                val perpUp = right.cross(forward).normalize()
 
                 var idx = 0
                 for (row in 0 until rows) {
@@ -185,7 +185,7 @@ class MiningLaserItem : Item(
                         if (idx >= count) break
                         val dRight = (col - (cols - 1) / 2.0) * spread / cols.coerceAtLeast(1)
                         val dUp = (row - (rows - 1) / 2.0) * spread / rows.coerceAtLeast(1)
-                        val offset = right.multiply(dRight).add(perpUp.multiply(dUp))
+                        val offset = right.scale(dRight).add(perpUp.scale(dUp))
                         spawnProjectile(world, user, pitch, yaw, mode, offset)
                         idx++
                     }
@@ -221,13 +221,13 @@ class MiningLaserItem : Item(
     // ========== Tooltip ==========
     // 模式、按键与说明由客户端 [ic2_120.client.MiningLaserTooltipHandler] 追加
 
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
         tooltip: MutableList<Component>,
         type: TooltipFlag
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 

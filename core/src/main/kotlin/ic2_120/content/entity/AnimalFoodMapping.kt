@@ -40,7 +40,7 @@ object AnimalFoodMapping {
      */
     @JvmStatic
     fun getFoodForAnimal(entity: AgeableMob): List<Item> {
-        val entityId = BuiltInRegistries.ENTITY_TYPE.getId(entity.type)
+        val entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.type)
         return FOOD_MAP[entityId] ?: emptyList()
     }
 
@@ -57,7 +57,7 @@ object AnimalFoodMapping {
      */
     @JvmStatic
     fun isManagedAnimal(entity: AgeableMob): Boolean {
-        val entityId = BuiltInRegistries.ENTITY_TYPE.getId(entity.type)
+        val entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.type)
         return FOOD_MAP.containsKey(entityId)
     }
 

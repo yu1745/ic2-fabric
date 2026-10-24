@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -22,7 +24,6 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
-import java.util.function.Consumer
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -53,7 +54,7 @@ class ElectricFurnaceBlock : MachineBlock(defaultMachineSettings() .noOcclusion(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, ElectricFurnaceBlockEntity::class.type()) { world1, pos, state, be -> be.tick(world1, pos, state) }
+        else validateTicker(type, ElectricFurnaceBlockEntity::class.type()) { world1, pos, state, be -> be.tick(world1, pos, state) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
@@ -77,7 +78,7 @@ class ElectricFurnaceBlock : MachineBlock(defaultMachineSettings() .noOcclusion(
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val circuit = Circuit::class.instance()
             val ironFurnace = IronFurnaceBlock::class.item()
             if (circuit != Items.AIR && ironFurnace != Items.AIR) {

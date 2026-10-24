@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -47,20 +49,20 @@ import java.util.function.Consumer
 /** 耐火砖（Refractory Bricks） */
 class RefractoryBricksBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS).strength(2.0f, 10.0f)) {
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
-        super.onBlockAdded(state, world, pos, oldState, notify)
+    override fun onPlace(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+        super.onPlace(state, world, pos, oldState, notify)
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        super.onStateReplaced(state, world, pos, newState, moved)
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        super.onRemove(state, world, pos, newState, moved)
         if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, RefractoryBricksBlock::class.item(), 8)
                 .pattern("BBB")
                 .pattern("BCB")
@@ -79,14 +81,14 @@ class CokeKilnBlock : MachineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.B
     override fun getCasingDrop() = asItem()
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
-        super.onBlockAdded(state, world, pos, oldState, notify)
+    override fun onPlace(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+        super.onPlace(state, world, pos, oldState, notify)
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        super.onStateReplaced(state, world, pos, newState, moved)
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        super.onRemove(state, world, pos, newState, moved)
         if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
@@ -99,7 +101,7 @@ class CokeKilnBlock : MachineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.B
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, CokeKilnBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, CokeKilnBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -114,7 +116,7 @@ class CokeKilnBlock : MachineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.B
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, CokeKilnBlock::class.item(), 1)
                 .pattern("RRR")
@@ -131,14 +133,14 @@ class CokeKilnBlock : MachineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.B
 /** 焦炉炉篦（Coke Kiln Grate） */
 class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3.0f, 10.0f)) {
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
-        super.onBlockAdded(state, world, pos, oldState, notify)
+    override fun onPlace(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+        super.onPlace(state, world, pos, oldState, notify)
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        super.onStateReplaced(state, world, pos, newState, moved)
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        super.onRemove(state, world, pos, newState, moved)
         if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
@@ -152,12 +154,12 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
         builder.add(FACING)
     }
 
-    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState = defaultState.setValue(FACING, Direction.DOWN)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState = defaultBlockState().setValue(FACING, Direction.DOWN)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
-        val storage = FluidStorage.SIDED.find(world, pos, hit.side) ?: FluidStorage.SIDED.find(world, pos, null)
+        val storage = FluidStorage.SIDED.find(world, pos, hit.direction) ?: FluidStorage.SIDED.find(world, pos, null)
         if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
             return InteractionResult.SUCCESS
         }
@@ -168,7 +170,7 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
         val FACING: DirectionProperty = DirectionProperty.create("facing")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, CokeKilnGrateBlock::class.item(), 1)
                 .pattern("III")
@@ -182,17 +184,17 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
     }
 
     init {
-        defaultState = stateManager.defaultBlockState.setValue(FACING, Direction.DOWN)
+        registerDefaultState(stateDefinition.any()().setValue(FACING, Direction.DOWN))
     }
 }
 
 @ModBlock(name = "coke_kiln_hatch", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "steam")
 /** 焦炉窑口（Coke Kiln Hatch） */
 class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS).strength(3.0f, 10.0f)) {
-    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState = defaultState.setValue(FACING, Direction.UP)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState = defaultBlockState().setValue(FACING, Direction.UP)
 
     init {
-        defaultState = stateManager.defaultBlockState.setValue(FACING, Direction.UP)
+        registerDefaultState(stateDefinition.any()().setValue(FACING, Direction.UP))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -201,14 +203,14 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
-        super.onBlockAdded(state, world, pos, oldState, notify)
+    override fun onPlace(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+        super.onPlace(state, world, pos, oldState, notify)
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        super.onStateReplaced(state, world, pos, newState, moved)
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        super.onRemove(state, world, pos, newState, moved)
         if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
@@ -216,7 +218,7 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         val ok = isValidCokeKilnStructure(world, pos)
-        player.sendMessage(
+        player.displayClientMessage(
             if (ok) Component.translatable("message.ic2_120.coke_kiln.structure_ok")
             else Component.translatable("message.ic2_120.coke_kiln.structure_invalid"),
             true
@@ -228,7 +230,7 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
         val FACING: DirectionProperty = DirectionProperty.create("facing")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, CokeKilnHatchBlock::class.item(), 1)
                 .pattern("RRR")
@@ -267,7 +269,7 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
                         if (dy == -2 && dx == 0 && dz == 0) {
                             val state = world.getBlockState(p)
                             if (!state.`is`(CokeKilnGrateBlock::class.instance())) return false
-                            if (state.getOrEmpty(CokeKilnGrateBlock.FACING).orElse(Direction.DOWN) != Direction.DOWN) return false
+                            if (state.getOptional(CokeKilnGrateBlock.FACING).orElse(Direction.DOWN) != Direction.DOWN) return false
                             continue
                         }
 

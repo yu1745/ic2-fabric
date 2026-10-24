@@ -8,6 +8,7 @@ import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
@@ -287,47 +288,17 @@ object CentrifugeRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            CentrifugeRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "centrifuging/${entry.name}"),
-                input = entry.input,
-                inputCount = entry.inputCount,
-                minHeat = entry.minHeat,
-                outputs = entry.outputs
-            ).also(exporter::accept)
+            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "centrifuging/${entry.name}")
+            val recipe = CentrifugeRecipe(
+                recipeId,
+                entry.input.toIngredient(),
+                entry.inputCount,
+                entry.minHeat,
+                entry.outputs.map { ItemStack(it.item, it.count) }
+            )
+            exporter.accept(recipeId, recipe, null)
         }
-    }
-
-    private class CentrifugeRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: IngredientInput,
-        private val inputCount: Int,
-        private val minHeat: Int,
-        private val outputs: List<OutputEntry>
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(CentrifugeRecipe::class)}")
-            json.add("ingredient", input.toJson())
-            json.addProperty("input_count", inputCount)
-            json.addProperty("min_heat", minHeat)
-
-            val resultsArray = JsonArray()
-            outputs.forEach { output ->
-                val resultObj = JsonObject()
-                resultObj.addProperty("item", BuiltInRegistries.ITEM.getId(output.item).toString())
-                resultObj.addProperty("count", output.count)
-                resultsArray.add(resultObj)
-            }
-            json.add("results", resultsArray)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(CentrifugeRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

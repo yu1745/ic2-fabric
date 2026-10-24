@@ -1,5 +1,9 @@
 package ic2_120.content.block
 
+import com.mojang.serialization.MapCodec
+
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -55,12 +59,14 @@ import java.util.function.Consumer
 class UvLampBlock : BaseEntityBlock(
     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
         .strength(5.0f, 6.0f)
-        .luminance { state -> if (state.getValue(ACTIVE)) 15 else 0 }
+        .lightLevel { state -> if (state.getValue(ACTIVE)) 15 else 0 }
 ) {
     init {
-        defaultState = stateManager.defaultBlockState
-            .setValue(BlockStateProperties.FACING, Direction.NORTH)
-            .setValue(ACTIVE, false)
+        registerDefaultState(
+            stateDefinition.any()
+                .setValue(BlockStateProperties.FACING, Direction.NORTH)
+                .setValue(ACTIVE, false)
+        )
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -68,10 +74,12 @@ class UvLampBlock : BaseEntityBlock(
         builder.add(BlockStateProperties.FACING, ACTIVE)
     }
 
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { UvLampBlock() }
+
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
-        val side = ctx.side
+        val side = ctx.clickedFace
         val facing = if (side.axis == Direction.Axis.Y) side else side.opposite
-        return defaultState.setValue(BlockStateProperties.FACING, facing)
+        return defaultBlockState.setValue(BlockStateProperties.FACING, facing)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
@@ -83,14 +91,14 @@ class UvLampBlock : BaseEntityBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, UvLampBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, UvLampBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
     override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getOutlineShape(
+    override fun getShape(
         state: BlockState,
         world: BlockGetter,
         pos: BlockPos,
@@ -106,15 +114,15 @@ class UvLampBlock : BaseEntityBlock(
     ): VoxelShape = lampShape(state.getValue(BlockStateProperties.FACING))
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult, hand: InteractionHand): InteractionResult {
         if (!world.isClient) {
-            getMenuProvider(state, world, pos)?.let(player::openHandledScreen)
+            getMenuProvider(state, world, pos)?.let { player.openMenu(it) }
         }
         return InteractionResult.SUCCESS
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(
+    override fun onRemove(
         state: BlockState,
         world: Level,
         pos: BlockPos,
@@ -124,10 +132,10 @@ class UvLampBlock : BaseEntityBlock(
         if (!world.isClient && !state.`is`(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
             if (be is Container) {
-                Containers.spawn(world, pos, be)
+                Containers.dropContents(world, pos, be)
             }
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
     private fun lampShape(facing: Direction): VoxelShape = when (facing) {

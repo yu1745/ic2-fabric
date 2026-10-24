@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -37,7 +39,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 
 @ModBlock(name = "fermenter", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -52,7 +53,7 @@ class FermenterBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, FermenterBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, FermenterBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -67,9 +68,9 @@ class FermenterBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            val storage = FluidStorage.SIDED.find(world, pos, hit.side)
+            val storage = FluidStorage.SIDED.find(world, pos, hit.direction)
                 ?: FluidStorage.SIDED.find(world, pos, null)
-            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, InteractionHand.MAIN_HAND)) {
                 return InteractionResult.SUCCESS
             }
             getMenuProvider(state, world, pos)?.let { factory ->
@@ -83,7 +84,7 @@ class FermenterBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val emptyCell = EmptyCell::class.instance()
             val ironCasing = IronCasing::class.instance()
             val heatConductor = HeatConductor::class.instance()

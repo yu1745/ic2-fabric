@@ -1,21 +1,27 @@
 package ic2_120.content.recipes
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
+import net.minecraft.core.registries.Registries
+
 import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.HolderLookup
 import net.minecraft.tags.TagKey
 import net.minecraft.resources.ResourceLocation
 import java.util.concurrent.CompletableFuture
 
 class ModFluidTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<HolderLookup.WrapperLookup>,
+    registriesFuture: CompletableFuture<HolderLookup.Provider>,
 ) : FabricTagProvider.FluidTagProvider(output, registriesFuture) {
 
-    override fun configure(registries: HolderLookup.WrapperLookup) {
+    override fun configure(registries: HolderLookup.Provider) {
         registerCommonFluidTags()
         registerBiofuelEquivalent("semifluid_generator/biofuel_equivalent")
         registerCreosoteEquivalent("semifluid_generator/creosote_equivalent")
@@ -118,16 +124,16 @@ class ModFluidTagProvider(
     }
 
     private fun ic2Fluid(path: String): TagKey<Fluid> =
-        TagKey.of(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("ic2_120", path))
+        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("ic2_120", path))
 
     private fun cFluid(path: String): TagKey<Fluid> =
-        TagKey.of(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("c", path))
+        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("c", path))
 
     private fun forgeFluid(path: String): TagKey<Fluid> =
-        TagKey.of(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("forge", path))
+        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("forge", path))
 
     private fun compatFluid(path: String): TagKey<Fluid> =
-        TagKey.of(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
+        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
 
     private fun registerFluidPair(path: String, still: Fluid, flowing: Fluid) {
         getOrCreateTagBuilder(cFluid(path))

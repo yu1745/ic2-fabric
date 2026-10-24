@@ -60,8 +60,8 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     /** 导线当前负载（本 tick 内已传输的能量），仅用于 Jade 显示。不影响实际能量传输逻辑。 */
     var cableLoad: Long by FilteredValue(20)
 
-    override fun setWorld(world: Level) {
-        super.setWorld(world)
+    override fun setLevel(world: Level) {
+        super.setLevel(world)
         if (!world.isClient) {
             EnergyNetworkManager.queueNetworkBuild(world, pos)
         }
@@ -93,8 +93,8 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         localEnergy = nbt.getLong(NBT_ENERGY)
-        configuredLimit = if (nbt.hasProperty(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
-        splitterThreshold = if (nbt.hasProperty(NBT_SPLITTER_THRESHOLD)) {
+        configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
+        splitterThreshold = if (nbt.contains(NBT_SPLITTER_THRESHOLD)) {
             nbt.getInt(NBT_SPLITTER_THRESHOLD).coerceIn(MIN_SPLITTER_THRESHOLD, MAX_SPLITTER_THRESHOLD)
         } else {
             DEFAULT_SPLITTER_THRESHOLD

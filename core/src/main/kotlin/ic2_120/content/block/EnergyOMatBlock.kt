@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -32,7 +34,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 
 /**
  * 能源交易机方块。
@@ -51,7 +52,7 @@ class EnergyOMatBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, EnergyOMatBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, EnergyOMatBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
@@ -75,7 +76,7 @@ class EnergyOMatBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR) {

@@ -7,6 +7,7 @@ import ic2_120.content.recipes.ModMachineRecipes
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import java.util.function.Consumer
@@ -120,45 +121,16 @@ object OreWashingRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            OreWashingRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "ore_washing/${entry.name}"),
-                input = entry.input,
-                outputs = entry.outputs,
-                waterConsumptionDroplets = entry.waterConsumptionDroplets
-            ).also(exporter::accept)
+            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "ore_washing/${entry.name}")
+            val recipe = OreWashingRecipe(
+                recipeId,
+                entry.input.toIngredient(),
+                entry.outputs.map { ItemStack(it.item, it.count) },
+                entry.waterConsumptionDroplets
+            )
+            exporter.accept(recipeId, recipe, null)
         }
-    }
-
-    private class OreWashingRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: IngredientInput,
-        private val outputs: List<OutputItem>,
-        private val waterConsumptionDroplets: Long
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(OreWashingRecipe::class)}")
-            json.add("ingredient", input.toJson())
-
-            val outputsArray = JsonArray()
-            outputs.forEach { output ->
-                val outputObj = JsonObject()
-                outputObj.addProperty("item", BuiltInRegistries.ITEM.getId(output.item).toString())
-                outputObj.addProperty("count", output.count)
-                outputsArray.add(outputObj)
-            }
-            json.add("outputs", outputsArray)
-
-            json.addProperty("water_consumption_mb", waterConsumptionDroplets)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(OreWashingRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

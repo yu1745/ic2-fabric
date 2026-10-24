@@ -7,7 +7,7 @@ import net.minecraft.world.level.Level
 
 fun findAdjacentPatternStorages(world: Level, pos: BlockPos): List<PatternStorageBlockEntity> =
     Direction.entries.mapNotNull { side ->
-        world.getBlockEntity(pos.offset(side)) as? PatternStorageBlockEntity
+        world.getBlockEntity(pos.relative(side)) as? PatternStorageBlockEntity
     }
 
 fun findUniqueAdjacentPatternStorage(world: Level, pos: BlockPos): PatternStorageBlockEntity? {

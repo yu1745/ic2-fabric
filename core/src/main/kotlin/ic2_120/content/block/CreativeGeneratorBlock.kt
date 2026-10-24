@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.world.level.block.entity.BlockEntityType
 
 import ic2_120.compat.isClient
@@ -33,7 +35,7 @@ import net.minecraft.world.level.Level
 class CreativeGeneratorBlock : MachineBlock(
     BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
         .strength(2.0f, 3600000.0f)
-        .sounds(SoundType.METAL)
+        .sound(SoundType.METAL)
          .noOcclusion() // 3D 模型不填满整格：关闭对相邻方块的面剔除
 ) {
 
@@ -46,7 +48,7 @@ class CreativeGeneratorBlock : MachineBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, CreativeGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, CreativeGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -64,7 +66,7 @@ class CreativeGeneratorBlock : MachineBlock(
     class CreativeGeneratorBlockItem(
         block: net.minecraft.world.level.block.Block,
         @Suppress("UNUSED_PARAMETER") settings: Item.Properties
-    ) : BlockItem(block, Item.Properties().fireproof())
+    ) : BlockItem(block, Item.Properties().ignitedByLava())
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")

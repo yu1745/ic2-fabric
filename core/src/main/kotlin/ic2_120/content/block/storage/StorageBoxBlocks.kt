@@ -1,5 +1,7 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.orCreateNbt
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.data.recipes.RecipeProvider.has
@@ -28,7 +30,7 @@ import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.entity.BlockEntity
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.entity.player.Player
@@ -64,7 +66,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
      * 储物箱物品禁止堆叠：内容物保存在 BlockEntityTag NBT 中，堆叠会丢失/复制内容。
      * 所有储物箱子类通过父类链继承该设置。
      */
-    class StorageBoxBlockItem(block: Block, settings: Item.Properties) : BlockItem(block, settings.maxStackSize(1))
+    class StorageBoxBlockItem(block: Block, settings: Item.Properties) : BlockItem(block, settings.stacksTo(1))
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return StorageBoxBlockEntity(pos, state)
@@ -79,15 +81,16 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
      * 添加物品提示信息
      */
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         world: BlockGetter?,
         tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
 
-        val blockEntityTag = stack.getSubNbt("BlockEntityTag")
+        // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
+        val blockEntityTag = stack.orCreateNbt.getCompound("BlockEntityTag")
         if (blockEntityTag == null || !blockEntityTag.contains("Container")) {
             tooltip.add(Component.literal("物品数量: 0").withStyle(ChatFormatting.GRAY))
             return
@@ -139,7 +142,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
      * 方块被替换/破坏时掉落带有物品栏的物品（类似潜影盒）
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.`is`(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is StorageBoxBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
@@ -147,7 +150,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
                 val itemStack = ItemStack(this.asItem())
                 val nbt = blockEntity.saveWithFullMetadata()
                 if (!nbt.isEmpty) {
-                    itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+                    itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
                 }
 
                 // 掉落物品
@@ -159,19 +162,19 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
                         pos.z.toDouble() + 0.5,
                         itemStack
                     )
-                    itemEntity.setToDefaultPickupDelay()
+                    itemEntity.setDefaultPickUpDelay()
                     world.addFreshEntity(itemEntity)
                 }
             }
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
-    override fun onBreak(world: Level, pos: BlockPos, state: BlockState, player: Player) {
-        if (!world.isClient && player.abilities.creativeMode) {
+    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player) {
+        if (!world.isClient && player.abilities.instabuild) {
             (world.getBlockEntity(pos) as? StorageBoxBlockEntity)?.shouldDropOnBreak = false
         }
-        super.onBreak(world, pos, state, player)
+        super.playerWillDestroy(world, pos, state, player)
     }
 
     override fun onStacksDropped(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
@@ -182,13 +185,13 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
      * 获取掉落的物品（包含 BlockEntity NBT 数据）- 用于创造模式拾取
      */
     override fun getPickStack(world: net.minecraft.world.level.BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
-        val itemStack = super.getPickStack(world, pos, state)
+        val itemStack = super.getCloneItemStack(world, pos, state)
         val blockEntity = world.getBlockEntity(pos)
 
         if (blockEntity is StorageBoxBlockEntity) {
             val nbt = blockEntity.saveWithFullMetadata()
             if (!nbt.isEmpty) {
-                itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+                itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
             }
         }
 
@@ -230,7 +233,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
 class WoodenStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).strength(2.5f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val log = Items.OAK_LOG
             val plank = Items.OAK_PLANKS
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoodenStorageBoxBlock::class.item(), 1)
@@ -252,7 +255,7 @@ class WoodenStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCo
 class BronzeStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = BronzePlate::class.instance()
             val casing = BronzeCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -276,7 +279,7 @@ class BronzeStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCo
 class IronStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = IronPlate::class.instance()
             val casing = IronCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -300,7 +303,7 @@ class IronStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy
 class SteelStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = SteelPlate::class.instance()
             val casing = SteelCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -324,7 +327,7 @@ class SteelStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCop
 class IridiumStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(6.0f, 8.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val iridium = IridiumPlate::class.instance()
             val steel = SteelPlate::class.instance()
             if (iridium != Items.AIR && steel != Items.AIR) {

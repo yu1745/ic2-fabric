@@ -87,7 +87,7 @@ class SteamKineticGeneratorScreenHandler(
                     if (!moveItemStackTo(s, PLAYER_INV_START, PLAYER_INV_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (s.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+            if (s.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
             if (s.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, s)
         }
@@ -95,7 +95,7 @@ class SteamKineticGeneratorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is SteamKineticGeneratorBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)

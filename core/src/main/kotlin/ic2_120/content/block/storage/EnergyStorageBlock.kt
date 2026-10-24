@@ -1,5 +1,7 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.compat.stack
 
 import ic2_120.compat.isClient
@@ -10,10 +12,11 @@ import ic2_120.content.item.ICreativeFullVariant
 import ic2_120.content.sync.EnergyStorageSync
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Item
@@ -46,10 +49,10 @@ abstract class EnergyStorageBlock(
     abstract override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity?
 
     /** 红石模式输出（原版 IC2 7 档模式，默认 0 = 不输出；详见 BE.cycleRedstoneMode）。 */
-    override fun emitsRedstonePower(state: BlockState): Boolean = config.emitRedstoneWhenNotFull
+    override fun isSignalSource(state: BlockState): Boolean = config.emitRedstoneWhenNotFull
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getWeakRedstonePower(
+    override fun getSignal(
         state: BlockState,
         world: BlockGetter,
         pos: BlockPos,
@@ -61,7 +64,7 @@ abstract class EnergyStorageBlock(
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult, hand: InteractionHand): InteractionResult {
         if (!world.isClient) {
             getMenuProvider(state, world, pos)?.let { factory ->
                 player.openMenu(factory)
@@ -82,16 +85,18 @@ abstract class EnergyStorageBlock(
        protected val config: EnergyStorageConfig
     ) : BlockItem(block, settings), ICreativeFullVariant {
         private fun getStoredEnergy(stack: ItemStack): Long {
-            if (stack.nbt?.getBoolean(NBT_FULL) == true) return config.capacity
-            val blockEntityTag = stack.getSubNbt(NBT_BLOCK_ENTITY_TAG) ?: return 0L
+            // TODO(1.21.1): 1.21.1 ItemStack 无 getTag/getSubTag，改走 CUSTOM_DATA 组件。
+            val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return 0L
+            if (nbt.getBoolean(NBT_FULL)) return config.capacity
+            val blockEntityTag = nbt.getCompound(NBT_BLOCK_ENTITY_TAG)
             return blockEntityTag.getLong(EnergyStorageSync.NBT_ENERGY_STORED).coerceIn(0L, config.capacity)
         }
 
         override fun place(context: BlockPlaceContext): InteractionResult {
             val result = super.place(context)
-            if (result.isAccepted && !context.world.isClient) {
-                val nbt = context.stack.nbt ?: return result
-                val be = context.world.getBlockEntity(context.blockPos) as? EnergyStorageBlockEntity ?: return result
+            if (result.consumesAction() && !context.level.isClientSide) {
+                val nbt = context.itemInHand.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return result
+                val be = context.level.getBlockEntity(context.clickedPos) as? EnergyStorageBlockEntity ?: return result
                 val blockEntityTag = nbt.getCompound(NBT_BLOCK_ENTITY_TAG)
                 if (!blockEntityTag.isEmpty && blockEntityTag.contains(EnergyStorageSync.NBT_ENERGY_STORED)) {
                     val stored = blockEntityTag.getLong(EnergyStorageSync.NBT_ENERGY_STORED).coerceIn(0L, config.capacity)
@@ -106,19 +111,14 @@ abstract class EnergyStorageBlock(
         }
 
         override fun getName(stack: ItemStack): net.minecraft.network.chat.Component =
-            if (stack.nbt?.getBoolean(NBT_FULL) == true)
+            if (stack.get(DataComponents.CUSTOM_DATA)?.copyTag()?.getBoolean(NBT_FULL) == true)
                 net.minecraft.network.chat.Component.translatable(translationKeyFull)
             else
                 super.getName(stack)
 
         @Environment(EnvType.CLIENT)
-        override fun appendTooltip(
-            stack: ItemStack,
-            world: Level?,
-            tooltip: MutableList<Component>,
-            context: TooltipContext
-        ) {
-            super.appendTooltip(stack, context, tooltip, type)
+        override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+            super.appendHoverText(stack, context, tooltip, type)
             val stored = getStoredEnergy(stack)
             tooltip.add(Component.literal("能量: %,d / %,d EU".format(stored, config.capacity)).withStyle(ChatFormatting.GRAY))
         }
@@ -142,7 +142,7 @@ abstract class EnergyStorageBlock(
         protected abstract val translationKeyFull: String
 
         override fun createFullVariant(): ItemStack {
-            return ItemStack(this).also { it.orCreateNbt.putBoolean(NBT_FULL, true) }
+            return ItemStack(this).also { it.orCreateNbt = it.orCreateNbt.apply { putBoolean(NBT_FULL, true) } }
         }
     }
 }

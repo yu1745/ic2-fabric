@@ -47,7 +47,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     SimpleWaterloggedBlock {
 
     init {
-        defaultState = stateManager.defaultBlockState
+        registerDefaultState(stateDefinition.any())
             .setValue(BlockStateProperties.WATERLOGGED, false)
             .setValue(NORTH, false)
             .setValue(SOUTH, false)
@@ -65,11 +65,11 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
-        val world = ctx.world
-        val pos = ctx.blockPos
+        val world = ctx.level
+        val pos = ctx.pos
         val fluidState = world.getFluidState(pos)
-        return defaultState
-            .setValue(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+        return defaultBlockState()
+            .setValue(BlockStateProperties.WATERLOGGED, fluidState.getType() == Fluids.WATER)
             .setValue(NORTH, canConnect(world, pos, Direction.NORTH))
             .setValue(SOUTH, canConnect(world, pos, Direction.SOUTH))
             .setValue(EAST, canConnect(world, pos, Direction.EAST))
@@ -79,7 +79,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getStateForNeighborUpdate(
+    override fun updateShape(
         state: BlockState,
         direction: Direction,
         neighborState: BlockState,
@@ -89,7 +89,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     ): BlockState {
         // 与原版含水方块一致：含水时调度水 tick，不在这里反推 WATERLOGGED。
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         val property = propertyFor(direction)
         val previousConnected = state.getValue(property)
@@ -102,7 +102,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getFluidState(state: BlockState): FluidState =
-        if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
+        if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultFluidState()
 
     // 流动水通过 LiquidBlockContainer.tryFillWithFluid 含水；需显式实现（与栅栏等原版方块一致）。
     override fun canFillWithFluid(world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
@@ -114,10 +114,10 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
         state: BlockState,
         fluidState: FluidState
     ): Boolean {
-        if (!canFillWithFluid(world, pos, state, fluidState.fluid)) return false
+        if (!canFillWithFluid(world, pos, state, fluidState.getType())) return false
         if (!state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.NOTIFY_ALL)
-            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL)
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         return true
     }
@@ -145,11 +145,11 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     // ── 生命周期 ────────────────────────────────────────────────
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!state.`is`(newState.block)) {
             EnergyNetworkManager.invalidateAt(world, pos)
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
     // ── BlockEntity / Ticker ────────────────────────────────────
@@ -200,14 +200,14 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
         val east = Shapes.box(max, min, min, 1.0, max, max)
         val down = Shapes.box(min, 0.0, min, max, min, max)
         val up = Shapes.box(min, max, min, max, 1.0, max)
-        return stateManager.states.associateWith { state ->
+        return stateDefinition.states.associateWith { state ->
             var shape = center
-            if (state.getValue(NORTH)) shape = Shapes.union(shape, north)
-            if (state.getValue(SOUTH)) shape = Shapes.union(shape, south)
-            if (state.getValue(WEST)) shape = Shapes.union(shape, west)
-            if (state.getValue(EAST)) shape = Shapes.union(shape, east)
-            if (state.getValue(DOWN)) shape = Shapes.union(shape, down)
-            if (state.getValue(UP)) shape = Shapes.union(shape, up)
+            if (state.getValue(NORTH)) shape = Shapes.or(shape, north)
+            if (state.getValue(SOUTH)) shape = Shapes.or(shape, south)
+            if (state.getValue(WEST)) shape = Shapes.or(shape, west)
+            if (state.getValue(EAST)) shape = Shapes.or(shape, east)
+            if (state.getValue(DOWN)) shape = Shapes.or(shape, down)
+            if (state.getValue(UP)) shape = Shapes.or(shape, up)
             shape
         }
     }
@@ -221,7 +221,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     ): VoxelShape = shapeCache[state]!!
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getOutlineShape(
+    override fun getShape(
         state: BlockState,
         world: BlockGetter,
         pos: BlockPos,
@@ -248,7 +248,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
         protected fun defaultSettings(): BlockBehaviour.Properties =
             BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)
                 .strength(0.5f)
-                .noCollision()
+                .noCollission()
 
         fun propertyFor(direction: Direction): BooleanProperty = when (direction) {
             Direction.NORTH -> NORTH

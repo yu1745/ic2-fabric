@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.NbtOps
 import net.minecraft.core.BlockPos
 
 @ModBlockEntity(block = CokeKilnGrateBlock::class)
@@ -84,7 +85,7 @@ class CokeKilnGrateBlockEntity(
     constructor(pos: BlockPos, state: BlockState) : this(CokeKilnGrateBlockEntity::class.type(), pos, state)
 
     fun getStoredAmount(): Long = creosoteTank.amount
-    fun getStoredFluidRawId(): Int = if (creosoteTank.variant.isBlank) -1 else net.minecraft.core.registries.BuiltInRegistries.FLUID.getRawId(creosoteTank.variant.fluid)
+    fun getStoredFluidRawId(): Int = if (creosoteTank.variant.isBlank) -1 else net.minecraft.core.registries.BuiltInRegistries.FLUID.getId(creosoteTank.variant.fluid)
 
     fun canAcceptDroplets(amount: Long): Boolean = amount > 0 && (TANK_CAPACITY - creosoteTank.amount) >= amount
 
@@ -106,7 +107,8 @@ class CokeKilnGrateBlockEntity(
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
         val tankNbt = CompoundTag()
-        tankNbt.put("Variant", creosoteTank.variant.toNbt())
+        // TODO(1.21.1): fabric transfer API 1.21 移除了 FluidVariant.toNbt/fromNbt，改走 CODEC + NbtOps
+        tankNbt.put("Variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, creosoteTank.variant).result().orElseGet { CompoundTag() })
         tankNbt.putLong("Amount", creosoteTank.amount)
         nbt.put(NBT_TANK, tankNbt)
     }
@@ -115,7 +117,7 @@ class CokeKilnGrateBlockEntity(
         super.loadAdditional(nbt, lookup)
         val tankNbt = nbt.getCompound(NBT_TANK)
         if (!tankNbt.isEmpty) {
-            creosoteTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("Variant"))
+            creosoteTank.variant = FluidVariant.CODEC.parse(NbtOps.INSTANCE, tankNbt.getCompound("Variant")).result().orElse(FluidVariant.blank())
             creosoteTank.amount = tankNbt.getLong("Amount").coerceIn(0L, TANK_CAPACITY)
         }
     }

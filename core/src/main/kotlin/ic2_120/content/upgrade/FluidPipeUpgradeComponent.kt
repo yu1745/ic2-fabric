@@ -1,5 +1,8 @@
 package ic2_120.content.upgrade
 
+import net.minecraft.core.component.DataComponents
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.compat.time
 
 import ic2_120.content.fluid.ModFluids
@@ -47,10 +50,10 @@ object FluidPipeUpgradeComponent {
 
         val cached = applyCache[inventory]
         if (cached != null && cached.stacks.size == upgradeSlotIndices.size &&
-            upgradeSlotIndices.indices.all { i -> ItemStack.areEqual(cached.stacks[i], inventory.getStack(upgradeSlotIndices[i])) }
+            upgradeSlotIndices.indices.all { i -> ItemStack.matches(cached.stacks[i], inventory.getItem(upgradeSlotIndices[i])) }
         ) return
 
-        val snapshots = Array(upgradeSlotIndices.size) { i -> inventory.getStack(upgradeSlotIndices[i]).copy() }
+        val snapshots = Array(upgradeSlotIndices.size) { i -> inventory.getItem(upgradeSlotIndices[i]).copy() }
 
         var provider = false
         var receiver = false
@@ -91,11 +94,11 @@ object FluidPipeUpgradeComponent {
     }
 
     fun readFilter(stack: ItemStack): Fluid? {
-        val nbt = stack.nbt ?: return null
+        val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return null
         val raw = nbt.getString(NBT_FILTER)
         if (raw.isNullOrBlank()) return null
         val id = ResourceLocation.tryParse(raw) ?: return null
-        return if (BuiltInRegistries.FLUID.containsId(id)) BuiltInRegistries.FLUID.get(id) else null
+        return if (BuiltInRegistries.FLUID.containsKey(id)) BuiltInRegistries.FLUID.get(id) else null
     }
 
     fun writeFilter(stack: ItemStack, fluid: Fluid?) {
@@ -104,7 +107,7 @@ object FluidPipeUpgradeComponent {
             nbt.remove(NBT_FILTER)
             return
         }
-        val id = BuiltInRegistries.FLUID.getId(fluid)
+        val id = BuiltInRegistries.FLUID.getKey(fluid)
         if (id.path != "empty") {
             nbt.putString(NBT_FILTER, id.toString())
         } else {
@@ -113,8 +116,8 @@ object FluidPipeUpgradeComponent {
     }
 
     fun readDirections(stack: ItemStack): Set<Direction> {
-        val nbt = stack.nbt ?: return emptySet()
-        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.STRING_TYPE.toInt())
+        val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return emptySet()
+        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.TAG_STRING.toInt())
         if (list.isEmpty()) return emptySet()
         return list.mapNotNull { Direction.byName(it.asString()) }.toSet()
     }
@@ -127,7 +130,7 @@ object FluidPipeUpgradeComponent {
         }
         val list = net.minecraft.nbt.ListTag()
         for (side in sides) {
-            list.add(net.minecraft.nbt.NbtString.of(side.name.lowercase()))
+            list.add(net.minecraft.nbt.StringTag.of(side.name.lowercase()))
         }
         nbt.put(NBT_DIRECTIONS, list)
     }
@@ -159,7 +162,7 @@ object FluidPipeUpgradeComponent {
         val start = Math.floorMod(world.time, dirs.size.toLong()).toInt()
         for (i in 0 until dirs.size) {
             val dir = dirs[(start + i) % dirs.size]
-            val neighbor = FluidStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
+            val neighbor = FluidStorage.SIDED.find(world, pos.relative(dir), dir.opposite) ?: continue
             val resource = tank.variant
             if (filter != null && resource.fluid != filter) continue
             if (tank.amount <= 0L) break
@@ -215,7 +218,7 @@ object FluidPipeUpgradeComponent {
         val start = Math.floorMod(world.time, dirs.size.toLong()).toInt()
         for (i in 0 until dirs.size) {
             val dir = dirs[(start + i) % dirs.size]
-            val neighborPos = pos.offset(dir)
+            val neighborPos = pos.relative(dir)
             val neighbor = FluidStorage.SIDED.find(world, neighborPos, dir.opposite) ?: continue
             if (!neighbor.supportsExtraction()) continue
 

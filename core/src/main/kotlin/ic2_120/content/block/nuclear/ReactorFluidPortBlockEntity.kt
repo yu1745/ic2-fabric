@@ -1,9 +1,12 @@
+package ic2_120.content.block.nuclear
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
-
-﻿package ic2_120.content.block.nuclear
-
 import net.minecraft.core.HolderLookup
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
@@ -28,7 +31,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.ContainerData
@@ -50,7 +52,7 @@ class ReactorFluidPortBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     // 次构造函数：仅接受 pos 和 state，自动获取 type
     constructor(pos: BlockPos, state: BlockState) : this(
@@ -76,7 +78,7 @@ class ReactorFluidPortBlockEntity(
         override fun set(index: Int, value: Int) {
             data[index] = value
         }
-        override fun size(): Int = data.size
+        override fun getCount(): Int = data.size
     }
 
     companion object {
@@ -114,15 +116,15 @@ class ReactorFluidPortBlockEntity(
     override val routedItemStorage get() = itemStorage
 
     // Container 实现
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         setChanged()
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
@@ -133,7 +135,7 @@ class ReactorFluidPortBlockEntity(
         for (dx in -2..2) {
             for (dy in -2..2) {
                 for (dz in -2..2) {
-                    val be = w.getBlockEntity(pos.add(dx, dy, dz))
+                    val be = w.getBlockEntity(pos.offset(dx, dy, dz))
                     if (be is NuclearReactorBlockEntity) return be
                 }
             }
@@ -150,9 +152,11 @@ class ReactorFluidPortBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.reactor_fluid_port")
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(propertyDelegate.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(propertyDelegate.getCount())
+        return buf
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu? {
@@ -168,12 +172,12 @@ class ReactorFluidPortBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
     }
 
     fun tick(world: Level, pos: BlockPos, state: BlockState) {

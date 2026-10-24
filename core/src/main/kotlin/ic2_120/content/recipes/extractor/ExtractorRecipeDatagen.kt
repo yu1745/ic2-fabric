@@ -9,6 +9,7 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
@@ -59,39 +60,15 @@ object ExtractorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            ExtractorRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "extracting/${entry.name}"),
-                input = entry.input,
-                outputItem = entry.output,
-                outputCount = entry.count
-            ).also(exporter::accept)
+            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "extracting/${entry.name}")
+            val recipe = ExtractorRecipe(
+                recipeId,
+                entry.input.toIngredient(),
+                ItemStack(entry.output, entry.count)
+            )
+            exporter.accept(recipeId, recipe, null)
         }
-    }
-
-    private class ExtractorRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: IngredientInput,
-        private val outputItem: Item,
-        private val outputCount: Int
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(ExtractorRecipe::class)}")
-            json.add("ingredient", input.toJson())
-
-            val result = JsonObject()
-            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(ExtractorRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

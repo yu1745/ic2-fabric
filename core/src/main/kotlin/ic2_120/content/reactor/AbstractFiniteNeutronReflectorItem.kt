@@ -77,8 +77,8 @@ abstract class AbstractFiniteNeutronReflectorItem(
         return (13.0 * frac).toInt().coerceIn(0, 13)
     }
 
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendHoverText(stack, context, tooltip, type)
         if (!isDepleted(stack)) {
             tooltip.add(
                 Component.translatable("tooltip.ic2_120.neutron_reflector_pulses", remainingPulses(stack))

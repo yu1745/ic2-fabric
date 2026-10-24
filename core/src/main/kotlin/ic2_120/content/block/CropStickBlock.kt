@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -64,14 +66,14 @@ import net.minecraft.world.level.LevelReader
 )
 class CropStickBlock : BaseEntityBlock(
     BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)
-        .breakInstantly()
-        .noCollision()
+        .instabreak()
+        .noCollission()
          .noOcclusion()
 ) {
     override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 
     init {
-        defaultState = stateManager.defaultBlockState.setValue(CROSSING_BASE, false)
+        registerDefaultState(stateDefinition.any()().setValue(CROSSING_BASE, false))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -80,7 +82,7 @@ class CropStickBlock : BaseEntityBlock(
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState =
-        defaultState.setValue(CROSSING_BASE, false)
+        defaultBlockState().setValue(CROSSING_BASE, false)
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         CropStickBlockEntity(pos, state)
@@ -91,16 +93,16 @@ class CropStickBlock : BaseEntityBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, CropStickBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, CropStickBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun canPlaceAt(state: BlockState, world: LevelReader, pos: BlockPos): Boolean {
-        val below = world.getBlockState(pos.down())
+    override fun canSurvive(state: BlockState, world: LevelReader, pos: BlockPos): Boolean {
+        val below = world.getBlockState(pos.below())
         return below.block is FarmBlock
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getStateForNeighborUpdate(
+    override fun updateShape(
         state: BlockState,
         direction: Direction,
         neighborState: BlockState,
@@ -109,21 +111,21 @@ class CropStickBlock : BaseEntityBlock(
         neighborPos: BlockPos
     ): BlockState {
         if (!canPlaceAt(state, world, pos)) {
-            return Blocks.AIR.defaultBlockState
+            return Blocks.AIR.defaultBlockState()
         }
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
+        return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(hand)
-        val isCreative = player.abilities.creativeMode
+        val stack = player.getItemInHand(player.usedItemHand)
+        val isCreative = player.abilities.instabuild
 
         // 放置第二根作物架：变为杂交底座
         if (!state.getValue(CROSSING_BASE) && stack.item == this.asItem()) {
             if (!isCreative) stack.shrink(1)
-            world.setBlock(pos, state.setValue(CROSSING_BASE, true), Block.NOTIFY_ALL)
+            world.setBlock(pos, state.setValue(CROSSING_BASE, true), Block.UPDATE_ALL)
             return InteractionResult.SUCCESS
         }
 
@@ -134,7 +136,7 @@ class CropStickBlock : BaseEntityBlock(
                 if (cropType != null) {
                     val stats = CropSeedData.readStats(stack)
                     val cropState = CropBlock.defaultCropState(cropType, 0)
-                    world.setBlock(pos, cropState, Block.NOTIFY_ALL)
+                    world.setBlock(pos, cropState, Block.UPDATE_ALL)
                     val be = world.getBlockEntity(pos) as? CropBlockEntity
                     be?.stats = stats
                     be?.scanLevel = CropSeedData.readScanLevel(stack)
@@ -147,7 +149,7 @@ class CropStickBlock : BaseEntityBlock(
             val cropType = CropSystem.baseSeed(stack.item)
             if (cropType != null) {
                 val cropState = CropBlock.defaultCropState(cropType, 0)
-                world.setBlock(pos, cropState, Block.NOTIFY_ALL)
+                world.setBlock(pos, cropState, Block.UPDATE_ALL)
                 val be = world.getBlockEntity(pos) as? CropBlockEntity
                 be?.stats = CropStats(1, 1, 1)
                 be?.scanLevel = 0
@@ -159,8 +161,8 @@ class CropStickBlock : BaseEntityBlock(
 
         // 右键空手可拆除杂交底座并返还一根作物架
         if (state.getValue(CROSSING_BASE) && stack.isEmpty) {
-            world.setBlock(pos, state.setValue(CROSSING_BASE, false), Block.NOTIFY_ALL)
-            Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), this.asItem().defaultStack)
+            world.setBlock(pos, state.setValue(CROSSING_BASE, false), Block.UPDATE_ALL)
+            Containers.dropItemStack(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), this.asItem().defaultInstance)
             return InteractionResult.SUCCESS
         }
 
@@ -177,7 +179,7 @@ class CropStickBlock : BaseEntityBlock(
             if (stickBe?.hasWeedExProtection(random) == true) return
             // IC2: 空作物架有极低概率自发长出杂草。
             if (random.nextInt(100) == 0) {
-                world.setBlock(pos, CropBlock.defaultCropState(CropType.WEED, 0), Block.NOTIFY_ALL)
+                world.setBlock(pos, CropBlock.defaultCropState(CropType.WEED, 0), Block.UPDATE_ALL)
                 val be = world.getBlockEntity(pos) as? CropBlockEntity
                 be?.stats = CropStats(1, 1, 1)
                 be?.scanLevel = 0
@@ -234,7 +236,7 @@ class CropStickBlock : BaseEntityBlock(
         val avgRes = (sources.sumOf { it.stats.resistance } / count + random.nextInt(1 + 2 * count) - count).coerceIn(0, 31)
 
         val state = CropBlock.defaultCropState(child, 0)
-        world.setBlock(pos, state, Block.NOTIFY_ALL)
+        world.setBlock(pos, state, Block.UPDATE_ALL)
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return true
         be.stats = CropStats(avgGrowth, avgGain, avgRes)
         be.scanLevel = 0
@@ -261,7 +263,7 @@ class CropStickBlock : BaseEntityBlock(
         if (chance < random.nextInt(16)) return false
 
         val state = CropBlock.defaultCropState(parentType, 0)
-        world.setBlock(pos, state, Block.NOTIFY_ALL)
+        world.setBlock(pos, state, Block.UPDATE_ALL)
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return true
         be.stats = CropStats(
             growth = parent.stats.growth.coerceAtLeast(0),
@@ -277,10 +279,10 @@ class CropStickBlock : BaseEntityBlock(
         val CROSSING_BASE: BooleanProperty = BooleanProperty.create("crossing_base")
         private val HORIZONTAL_DIRS = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
 
-        fun defaultStickState(): BlockState = CropStickBlock::class.instance().defaultBlockState.setValue(CROSSING_BASE, false)
+        fun defaultStickState(): BlockState = CropStickBlock::class.instance().defaultBlockState().setValue(CROSSING_BASE, false)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CropStickBlock::class.item(), 2)
                 .pattern("   ")
                 .pattern("S S")

@@ -32,17 +32,17 @@ open class ScrapBoxItem : Item(Item.Properties()) {
         val reward = getRandomDrop(world.random)
 
         // 给予玩家物品
-        if (!user.inventory.safeInsert(reward.copy())) {
+        if (!user.inventory.add(reward.copy())) {
             // 如果背包满了，就丢在地上
-            user.spawnAtLocation(reward, false)
+            user.spawnAtLocation(reward, 0f)
         }
 
         // 消耗废料箱
         stack.shrink(1)
 
         // 发送消息
-        user.sendMessage(
-            Component.translatable("item.ic2_120.scrap_box.opened", reward.toHoverableText()),
+        user.displayClientMessage(
+            Component.translatable("item.ic2_120.scrap_box.opened", reward.displayName),
             true
         )
 
@@ -114,7 +114,7 @@ open class ScrapBoxItem : Item(Item.Properties()) {
          * 根据权重随机获取一个物品
          */
         fun getRandomDrop(random: RandomSource): ItemStack {
-            val roll = random.nextBetween(1, TOTAL_WEIGHT)
+            val roll = random.nextIntBetweenInclusive(1, TOTAL_WEIGHT)
             var currentWeight = 0
 
             for ((item, weight) in REWARD_POOL) {

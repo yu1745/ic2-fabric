@@ -36,7 +36,7 @@ class QuantumSaber : SwordItem(
     QuantumSaberMaterial,
     0,
     -2.4f,
-    Item.Properties().maxStackSize(1)
+    Item.Properties().stacksTo(1)
 ), IElectricTool {
 
     companion object {
@@ -49,7 +49,7 @@ class QuantumSaber : SwordItem(
         private const val DAMAGE_INACTIVE_TOTAL = 5.0
         private const val DAMAGE_ACTIVE_TOTAL = 31.0
 
-        fun isActive(stack: ItemStack): Boolean = stack.orCreateNbt.getBoolean(NBT_ACTIVE)
+        fun isActive(stack: ItemStack): Boolean = stack.orCreateNbt = stack.orCreateNbt.apply { getBoolean(NBT_ACTIVE) }
 
         fun toggleActive(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
@@ -137,13 +137,13 @@ class QuantumSaber : SwordItem(
         return true
     }
 
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         world: net.minecraft.world.level.Level?,
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         val key = if (isActive(stack))
             "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.active"

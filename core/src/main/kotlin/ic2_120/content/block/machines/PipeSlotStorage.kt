@@ -22,16 +22,16 @@ class PipeSlotStorage(
         inventory[slotIndex] = stack
     }
 
-    override fun getCapacity(variant: ItemVariant): Int = if (variant.`is`(pipeItem())) capacity else 0
+    override fun getCapacity(variant: ItemVariant): Int = if (variant.isOf(pipeItem())) capacity else 0
 
     override fun canInsert(variant: ItemVariant): Boolean {
-        if (!variant.`is`(pipeItem())) return false
+        if (!variant.isOf(pipeItem())) return false
         val current = getStack()
         if (current.isEmpty) return true
         return current.count < capacity
     }
 
-    override fun canExtract(variant: ItemVariant): Boolean = variant.`is`(pipeItem()) && !getStack().isEmpty
+    override fun canExtract(variant: ItemVariant): Boolean = variant.isOf(pipeItem()) && !getStack().isEmpty
 
     override fun onFinalCommit() {
         setChanged()

@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -32,7 +36,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
@@ -56,7 +59,7 @@ class SolarGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SolarGeneratorBlock.ACTIVE
 
@@ -78,9 +81,9 @@ class SolarGeneratorBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { isValid(BATTERY_SLOT, it) }, maxPerSlot = 1)
+            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { canPlaceItem(BATTERY_SLOT, it) }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(BATTERY_SLOT),
         setChanged = { setChanged() }
@@ -116,16 +119,16 @@ class SolarGeneratorBlockEntity(
 
     override fun getInventory(): Container = this
 
-    override fun size(): Int = 1
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = 1
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == BATTERY_SLOT && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         setChanged()
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
@@ -138,11 +141,13 @@ class SolarGeneratorBlockEntity(
         }
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = canPlaceInSlot(slot, stack)
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = canPlaceInSlot(slot, stack)
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solar_generator")
@@ -159,7 +164,7 @@ class SolarGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(SolarGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, SolarGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -168,7 +173,7 @@ class SolarGeneratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(SolarGeneratorSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -207,7 +212,7 @@ class SolarGeneratorBlockEntity(
     private fun canGenerate(world: Level, pos: BlockPos): Boolean {
         if (world.isClient) return false
 
-        return when (world.registryKey) {
+        return when (world.dimension()) {
             // 末地永远白天、无天气变化，仅检查天空可见性即可
             Level.END -> hasSkyAccess(world, pos)
             // 主世界需要白天、无雨雪、天空可见
@@ -215,7 +220,7 @@ class SolarGeneratorBlockEntity(
                 // 下雨或下雪不发电
                 if (world.isRaining) return false
                 // 白天 6:20~17:45
-                val time = world.timeOfDay % 24000
+                val time = world.dayTime % 24000
                 if (time < DAY_START_TICK || time > DAY_END_TICK) return false
                 // 正上方无非透明方块遮挡
                 hasSkyAccess(world, pos)
@@ -228,12 +233,12 @@ class SolarGeneratorBlockEntity(
      * 检查正上方是否有天空可见（无非透明方块遮挡）。
      */
     private fun hasSkyAccess(world: Level, basePos: BlockPos): Boolean {
-        val topY = world.topY
+        val topY = world.maxBuildHeight
         var y = basePos.y + 1
         while (y < topY) {
             val pos = BlockPos(basePos.x, y, basePos.z)
             val blockState = world.getBlockState(pos)
-            if (blockState.isOpaqueFullCube(world, pos)) return false
+            if (blockState.isSolidRender(world, pos)) return false
             y++
         }
         return true

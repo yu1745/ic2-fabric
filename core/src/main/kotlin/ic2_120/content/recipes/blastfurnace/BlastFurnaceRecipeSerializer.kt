@@ -1,5 +1,8 @@
 package ic2_120.content.recipes.blastfurnace
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.recipes.RecipeCodecBridge
 
 import net.minecraft.network.codec.StreamCodec
@@ -32,37 +35,36 @@ import net.minecraft.util.GsonHelper
 @ModMachineRecipe(id = "blast_furnacing", recipeClass = BlastFurnaceRecipe::class)
 object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
     private fun fromJson(id: ResourceLocation, json: JsonObject): BlastFurnaceRecipe {
-        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
+        val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
 
-        val steelOutputJson = GsonHelper.getObject(json, "steel_output")
-        val steelItemId = ResourceLocation.parse(GsonHelper.getString(steelOutputJson, "item"))
-        val steelItem = BuiltInRegistries.ITEM.getValue(steelItemId)
-        val steelCount = GsonHelper.getInt(steelOutputJson, "count", 1)
+        val steelOutputJson = json.getAsJsonObject("steel_output")
+        val steelItemId = ResourceLocation.parse(steelOutputJson.get("item").asString)
+        val steelItem = BuiltInRegistries.ITEM.get(steelItemId)
+        val steelCount = (if (steelOutputJson.has("count")) steelOutputJson.get("count").asInt else 1)
         val steelOutput = ItemStack(steelItem, steelCount)
 
-        val slagOutputJson = GsonHelper.getObject(json, "slag_output")
-        val slagItemId = ResourceLocation.parse(GsonHelper.getString(slagOutputJson, "item"))
-        val slagItem = BuiltInRegistries.ITEM.getValue(slagItemId)
-        val slagCount = GsonHelper.getInt(slagOutputJson, "count", 1)
+        val slagOutputJson = json.getAsJsonObject("slag_output")
+        val slagItemId = ResourceLocation.parse(slagOutputJson.get("item").asString)
+        val slagItem = BuiltInRegistries.ITEM.get(slagItemId)
+        val slagCount = (if (slagOutputJson.has("count")) slagOutputJson.get("count").asInt else 1)
         val slagOutput = ItemStack(slagItem, slagCount)
 
-        return BlastFurnaceRecipe(id, ingredient, steelOutput, slagOutput)
+        return BlastFurnaceRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, steelOutput, slagOutput)
     }
 
     private fun read(buf: RegistryFriendlyByteBuf): BlastFurnaceRecipe {
         val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
-        val steelOutput = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
-        val slagOutput = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
+        val steelOutput = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
+        val slagOutput = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
 
-        return BlastFurnaceRecipe(id, ingredient, steelOutput, slagOutput)
+        return BlastFurnaceRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, steelOutput, slagOutput)
     }
 
-    private fun write(buf: FriendlyByteBuf, recipe: BlastFurnaceRecipe) {
+    private fun write(buf: RegistryFriendlyByteBuf, recipe: BlastFurnaceRecipe) {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
-        bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.steelOutput.copy())
-        bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.slagOutput.copy())
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.steelOutput.copy())
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.slagOutput.copy())
     }
-}
 
     override fun codec(): MapCodec<BlastFurnaceRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:blast_furnacing",
@@ -72,3 +74,4 @@ object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BlastFurnaceRecipe> =
         StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })
+}

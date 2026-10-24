@@ -7,14 +7,14 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
 
 fun ItemStack.getCustomData(): CompoundTag? =
-    this.getValue(DataComponents.CUSTOM_DATA)?.copyNbt()
+    this.get(DataComponents.CUSTOM_DATA)?.copyTag()
 
 fun ItemStack.getOrCreateCustomData(): CompoundTag {
-    return this.getValue(DataComponents.CUSTOM_DATA)?.copyNbt() ?: CompoundTag()
+    return this.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: CompoundTag()
 }
 
 inline fun ItemStack.editCustomData(editor: (CompoundTag) -> Unit) {
-    val nbt = this.getValue(DataComponents.CUSTOM_DATA)?.copyNbt() ?: CompoundTag()
+    val nbt = this.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: CompoundTag()
     editor(nbt)
     this.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt))
 }

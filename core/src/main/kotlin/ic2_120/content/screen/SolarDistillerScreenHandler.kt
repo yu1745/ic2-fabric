@@ -96,14 +96,14 @@ class SolarDistillerScreenHandler(
             }
         }
 
-        if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+        if (inSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
         if (inSlot.count == stack.count) return ItemStack.EMPTY
         slot.onTake(player, inSlot)
         return stack
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is SolarDistillerBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)

@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -49,7 +51,7 @@ class MagnetizerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, MagnetizerBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, MagnetizerBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -70,7 +72,7 @@ class MagnetizerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)?.setValue(BlockStateProperties.POWERED, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun neighborUpdate(
+    override fun neighborChanged(
         state: BlockState,
         world: Level,
         pos: BlockPos,
@@ -79,19 +81,19 @@ class MagnetizerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         notify: Boolean
     ) {
         if (!world.isClient) {
-            val powered = world.isReceivingRedstonePower(pos)
+            val powered = world.hasNeighborSignal(pos)
             if (state.getValue(BlockStateProperties.POWERED) != powered) {
-                world.setBlock(pos, state.setValue(BlockStateProperties.POWERED, powered))
+                world.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.POWERED, powered))
             }
         }
-        super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
+        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
     }
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val machine = MachineCasingBlock::class.item()
             val ironFence = IronFenceBlock::class.item()
             if (machine != Items.AIR && ironFence != Items.AIR) {

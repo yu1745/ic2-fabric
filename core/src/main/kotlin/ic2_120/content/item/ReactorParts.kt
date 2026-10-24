@@ -1,5 +1,6 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
 import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.AbstractFiniteNeutronReflectorItem
 import ic2_120.content.reactor.AbstractReactorComponent
@@ -35,7 +36,7 @@ private object CondensatorRepairRecipe {
             .requires(condensator)
             .requires(repairItem)
             .unlockedBy(
-                FabricRecipeProvider.has(condensator),
+                FabricRecipeProvider.getHasName(condensator),
                 FabricRecipeProvider.has(condensator)
             )
             .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "${condensator.toString().replace(':','_')}_repair_with_${repairItem.toString().replace(':','_')}"))
@@ -173,7 +174,7 @@ class ReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(), 10_000)
                 .pattern(" T ")
                 .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
                 .define('C', CoolantCell::class.instance())
-                .unlockedBy(FabricRecipeProvider.has(TinPlate::class.instance()), FabricRecipeProvider.has(TinPlate::class.instance()))
+                .unlockedBy(FabricRecipeProvider.getHasName(TinPlate::class.instance()), FabricRecipeProvider.has(TinPlate::class.instance()))
                 .save(exporter)
         }
     }
@@ -191,7 +192,7 @@ class TripleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(), 3
                 .pattern("TTT")
                 .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
                 .define('C', ReactorCoolantCellItem::class.instance())
-                .unlockedBy(FabricRecipeProvider.has(ReactorCoolantCellItem::class.instance()), FabricRecipeProvider.has(ReactorCoolantCellItem::class.instance()))
+                .unlockedBy(FabricRecipeProvider.getHasName(ReactorCoolantCellItem::class.instance()), FabricRecipeProvider.has(ReactorCoolantCellItem::class.instance()))
                 .save(exporter)
         }
     }
@@ -210,7 +211,7 @@ class SextupleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(),
                 .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
                 .define('S', TripleReactorCoolantCellItem::class.instance())
                 .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
-                .unlockedBy(FabricRecipeProvider.has(TripleReactorCoolantCellItem::class.instance()), FabricRecipeProvider.has(TripleReactorCoolantCellItem::class.instance()))
+                .unlockedBy(FabricRecipeProvider.getHasName(TripleReactorCoolantCellItem::class.instance()), FabricRecipeProvider.has(TripleReactorCoolantCellItem::class.instance()))
                 .save(exporter)
         }
     }
@@ -230,7 +231,7 @@ class ReactorPlatingItem : AbstractReactorComponent(Item.Properties()) {
                 .pattern("A")
                 .define('L', Ingredient.of(ModTags.Compat.Items.PLATES_LEAD))
                 .define('A', Alloy::class.instance())
-                .unlockedBy(FabricRecipeProvider.has(LeadPlate::class.instance()), FabricRecipeProvider.has(LeadPlate::class.instance()))
+                .unlockedBy(FabricRecipeProvider.getHasName(LeadPlate::class.instance()), FabricRecipeProvider.has(LeadPlate::class.instance()))
                 .save(exporter)
         }
     }
@@ -259,7 +260,7 @@ class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Properties()) {
                 .pattern("CCC")
                 .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
                 .define('P', ReactorPlatingItem::class.instance())
-                .unlockedBy(FabricRecipeProvider.has(ReactorPlatingItem::class.instance()), FabricRecipeProvider.has(ReactorPlatingItem::class.instance()))
+                .unlockedBy(FabricRecipeProvider.getHasName(ReactorPlatingItem::class.instance()), FabricRecipeProvider.has(ReactorPlatingItem::class.instance()))
                 .save(exporter)
         }
     }
@@ -288,7 +289,7 @@ class ContainmentReactorPlatingItem : Item(Item.Properties()) {
                 .define('P', plating)
                 .define('A', alloy)
                 .unlockedBy(
-                    FabricRecipeProvider.has(plating),
+                    FabricRecipeProvider.getHasName(plating),
                     FabricRecipeProvider.has(plating)
                 )
                 .save(exporter)
@@ -310,7 +311,7 @@ class NeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Properties(
                 .define('C', CoalDust::class.instance())
                 .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
                 .unlockedBy(
-                    FabricRecipeProvider.has(CopperPlate::class.instance()),
+                    FabricRecipeProvider.getHasName(CopperPlate::class.instance()),
                     FabricRecipeProvider.has(CopperPlate::class.instance())
                 )
                 .save(exporter)
@@ -331,7 +332,7 @@ class ThickNeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Proper
                 .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
                 .define('R', NeutronReflectorItem::class.instance())
                 .unlockedBy(
-                    FabricRecipeProvider.has(NeutronReflectorItem::class.instance()),
+                    FabricRecipeProvider.getHasName(NeutronReflectorItem::class.instance()),
                     FabricRecipeProvider.has(NeutronReflectorItem::class.instance())
                 )
                 .save(exporter)
@@ -347,7 +348,7 @@ class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Properties()) 
             val thick = ThickNeutronReflectorItem::class.instance()
             val denseCu = DenseCopperPlate::class.instance()
             val iridium = IridiumPlate::class.instance()
-            val hasThick = FabricRecipeProvider.has(thick)
+            val hasThick = FabricRecipeProvider.getHasName(thick)
             val unlockThick = FabricRecipeProvider.has(thick)
 
             // RRR / DID / RRR
@@ -402,7 +403,7 @@ class RshCondensatorItem : CondensatorItem(Item.Properties(), 20_000) {
                 .define('R', Items.REDSTONE)
                 .define('V', HeatVentItem::class.instance())
                 .define('H', HeatExchangerItem::class.instance())
-                .unlockedBy(FabricRecipeProvider.has(Items.REDSTONE), FabricRecipeProvider.has(Items.REDSTONE))
+                .unlockedBy(FabricRecipeProvider.getHasName(Items.REDSTONE), FabricRecipeProvider.has(Items.REDSTONE))
                 .save(exporter)
 
             // 修复配方：红石冷凝器 + 红石 = 修复的冷凝器
@@ -432,7 +433,7 @@ class LzhCondensatorItem : CondensatorItem(Item.Properties(), 100_000) {
                 .define('L', RshCondensatorItem::class.instance())
                 .define('C', Items.LAPIS_BLOCK)
                 .define('H', ReactorHeatExchangerItem::class.instance())
-                .unlockedBy(FabricRecipeProvider.has(RshCondensatorItem::class.instance()), FabricRecipeProvider.has(RshCondensatorItem::class.instance()))
+                .unlockedBy(FabricRecipeProvider.getHasName(RshCondensatorItem::class.instance()), FabricRecipeProvider.has(RshCondensatorItem::class.instance()))
                 .save(exporter)
 
             // 修复配方：青金石冷凝器 + 红石

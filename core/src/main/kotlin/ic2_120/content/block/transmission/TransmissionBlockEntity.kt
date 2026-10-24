@@ -55,8 +55,8 @@ class TransmissionBlockEntity(
         setChanged()
         val world = world as? ServerLevel ?: return
         val state = world.getBlockState(pos)
-        world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-        world.chunkSource.markForUpdate(pos)
+        world.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS)
+        world.chunkSource.blockChanged(pos)
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
@@ -69,9 +69,9 @@ class TransmissionBlockEntity(
         nbt.putInt("CurrentKu", currentKu)
     }
 
-    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
+    override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveWithoutMetadata(lookup)
 
-    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
+    override fun getUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 
     fun tick(world: net.minecraft.world.level.Level) {
         if (world.isClient) return

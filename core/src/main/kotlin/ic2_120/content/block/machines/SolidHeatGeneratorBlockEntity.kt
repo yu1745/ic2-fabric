@@ -1,9 +1,15 @@
-import ic2_120.compat.pos
-import ic2_120.compat.world
-
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
+import ic2_120.compat.pos
+import ic2_120.compat.world
 import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.screen.SolidHeatGeneratorScreenHandler
 import ic2_120.content.sync.SolidHeatGeneratorSync
@@ -26,7 +32,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.network.chat.Component
 import net.minecraft.core.NonNullList
@@ -44,7 +49,7 @@ class SolidHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SolidHeatGeneratorBlock.ACTIVE
 
@@ -62,9 +67,9 @@ class SolidHeatGeneratorBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(intArrayOf(SLOT_FUEL), matcher = { isValid(SLOT_FUEL, it) })
+            ItemInsertRoute(intArrayOf(SLOT_FUEL), matcher = { canPlaceItem(SLOT_FUEL, it) })
         ),
         extractSlots = intArrayOf(SLOT_FUEL, SLOT_OUTPUT),
         setChanged = { setChanged() }
@@ -83,9 +88,11 @@ class SolidHeatGeneratorBlockEntity(
         state
     )
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solid_heat_generator")
@@ -100,26 +107,26 @@ class SolidHeatGeneratorBlockEntity(
         )
 
     override fun getInventory(): Container = this
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: net.minecraft.world.entity.player.Player): Boolean = Container.stillValidBlockEntity(this, player)
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         setChanged()
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_FUEL -> !stack.isEmpty && getFuelTimeForSolidHeat(stack) > 0
         else -> false
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         burnTime = nbt.getInt("BurnTime").coerceAtLeast(0)
         burnTotal = nbt.getInt("BurnTotal").coerceAtLeast(0)
@@ -129,7 +136,7 @@ class SolidHeatGeneratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt("BurnTime", burnTime)
         nbt.putInt("BurnTotal", burnTotal)
@@ -137,13 +144,13 @@ class SolidHeatGeneratorBlockEntity(
 
     override fun generateHeat(world: Level, pos: BlockPos, state: BlockState): Long {
         if (burnTime <= 0) {
-            val fuel = getStack(SLOT_FUEL)
+            val fuel = getItem(SLOT_FUEL)
             val fuelTicks = getFuelTimeForSolidHeat(fuel)
             if (!fuel.isEmpty && fuelTicks > 0) {
                 burnTime = fuelTicks
                 burnTotal = fuelTicks
                 fuel.shrink(1)
-                if (fuel.isEmpty) setStack(SLOT_FUEL, ItemStack.EMPTY)
+                if (fuel.isEmpty) setItem(SLOT_FUEL, ItemStack.EMPTY)
                 setChanged()
             }
         }
@@ -178,7 +185,7 @@ class SolidHeatGeneratorBlockEntity(
             item == Items.CHARCOAL ||
             item == net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "coke"))
         if (!isSupported) return 0
-        val furnaceTicks = FuelRegistry.INSTANCE.getValue(Item) ?: return 0
+        val furnaceTicks = FuelRegistry.INSTANCE.get(item) ?: return 0
         return (furnaceTicks / SOLID_HEAT_BURN_DIVISOR).coerceAtLeast(1)
     }
 }

@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -18,7 +23,6 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.UUID
-import net.minecraft.core.HolderLookup
 
 /**
  * 机器 BlockEntity 基类
@@ -36,7 +40,7 @@ abstract class MachineBlockEntity(
 ) : BlockEntity(type, pos, state), ITieredMachine, IOwned {
 
     /** Per-instance startup phase prevents all loaded machines dirtying the same tick. */
-    private val initialDirtyDelayTicks = kotlin.random.RandomSource.nextLong(1L, DIRTY_INTERVAL_TICKS + 1L)
+    private val initialDirtyDelayTicks = kotlin.random.Random.nextLong(1L, DIRTY_INTERVAL_TICKS + 1L)
     private var nextDirtyTick = Long.MIN_VALUE
 
     /**
@@ -58,9 +62,9 @@ abstract class MachineBlockEntity(
 
     override var ownerUuid: UUID? = null
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        ownerUuid = if (nbt.containsUuid(NBT_OWNER_UUID)) nbt.getUuid(NBT_OWNER_UUID) else null
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ownerUuid = if (nbt.hasUUID(NBT_OWNER_UUID)) nbt.getUUID(NBT_OWNER_UUID) else null
         if (this is ITransformerUpgradeSupport) {
             // voltageTierBonus 是瞬态字段，正常由每 tick 的 TransformerUpgradeComponent.apply 写入；
             // 此处立即从存档恢复，消除「BE 已加载但尚未首次 tick（bonus=0）」窗口：
@@ -97,9 +101,9 @@ abstract class MachineBlockEntity(
         super.setChanged()
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        ownerUuid?.let { nbt.putUuid(NBT_OWNER_UUID, it) }
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ownerUuid?.let { nbt.putUUID(NBT_OWNER_UUID, it) }
         if (this is ITransformerUpgradeSupport) {
             // 持久化高压升级加成，作为 readNbt 扫描之外的纵深防御（升级在区块卸载期间不会变化，
             // 存档值恒等于正确值；加载时仍优先按 "Items" 现扫，避免「插入升级后、下次 tick 前存档」的陈旧值）。

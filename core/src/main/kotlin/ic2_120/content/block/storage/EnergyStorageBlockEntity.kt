@@ -1,12 +1,20 @@
+package ic2_120.content.block.storage
+
+import net.minecraft.core.registries.BuiltInRegistries
+
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 import ic2_120.compat.cachedState
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
-
-﻿package ic2_120.content.block.storage
-
-import net.minecraft.core.HolderLookup
 import ic2_120.content.block.*
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.EnergyStorageSync
@@ -36,7 +44,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
@@ -56,7 +63,7 @@ abstract class EnergyStorageBlockEntity(
     pos: BlockPos,
     state: BlockState,
     val config: EnergyStorageConfig
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory, ITieredMachine {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf>, ITieredMachine {
 
     override val tier: Int get() = config.tier
 
@@ -70,7 +77,7 @@ abstract class EnergyStorageBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = buildList {
             add(
                 ItemInsertRoute(intArrayOf(CHARGE_SLOT), matcher = { stack ->
@@ -103,8 +110,8 @@ abstract class EnergyStorageBlockEntity(
         syncedData,
         {
             world?.getBlockState(pos)?.let { state ->
-                state.getOrEmpty(BlockStateProperties.FACING)
-                    .orElse(state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
+                state.getOptional(BlockStateProperties.FACING)
+                    .orElse(state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
             } ?: Direction.NORTH
         },
         { world?.time },
@@ -132,20 +139,20 @@ abstract class EnergyStorageBlockEntity(
         canChargeNow = { true }
     )
 
-    override fun size(): Int = config.slotCount
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = config.slotCount
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         setChanged()
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         if (slot == DISCHARGE_SLOT) {
             return when (val item = stack.item) {
@@ -157,11 +164,13 @@ abstract class EnergyStorageBlockEntity(
         return (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        buf.writeVarInt(config.slotCount)
-        buf.writeBoolean(config.useEquipmentSlots)
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(config.slotCount)
+            buf.writeBoolean(config.useEquipmentSlots)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable(containerTranslationKey)
@@ -170,7 +179,7 @@ abstract class EnergyStorageBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
         val blockId = BuiltInRegistries.BLOCK.getId(world!!.getBlockState(pos).block)
-        val screenHandlerType = BuiltInRegistries.SCREEN_HANDLER.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
+        val screenHandlerType = BuiltInRegistries.MENU.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
             ?: error("AbstractContainerMenu type not found for $blockId")
         @Suppress("UNCHECKED_CAST")
         return ic2_120.content.screen.EnergyStorageScreenHandler(
@@ -217,12 +226,12 @@ abstract class EnergyStorageBlockEntity(
         sync.redstoneMode = mode.coerceIn(0, 6)
         setChanged()
         // 输出电平可能随模式变化，立即刷新邻居
-        world?.updateNeighborsAlways(pos, cachedState.block)
+        world?.updateNeighborsAt(pos, cachedState.block)
         // 原版行为：切换时聊天栏提示当前模式名
         world?.let { w ->
-            val players = w.getNonSpectatingEntities(Player::class.java, net.minecraft.world.phys.AABB(pos).expand(8.0))
+            val players = w.getNonSpectatingEntities(Player::class.java, net.minecraft.world.phys.AABB(pos).inflate(8.0))
             for (p in players) {
-                p.sendMessage(Component.translatable("gui.ic2_120.eu_storage.redstone_mode$redstoneMode"), true)
+                p.displayClientMessage(Component.translatable("gui.ic2_120.eu_storage.redstone_mode$redstoneMode"), true)
             }
         }
     }
@@ -266,7 +275,7 @@ abstract class EnergyStorageBlockEntity(
            val emit = emitsRedstoneNow
            if (emit != lastRedstoneEmit) {
                lastRedstoneEmit = emit
-               world.updateNeighborsAlways(pos, state.block)
+               world.updateNeighborsAt(pos, state.block)
            }
        }
 
@@ -313,7 +322,7 @@ abstract class EnergyStorageBlockEntity(
        val current = world.getBlockState(pos)
        if (!current.contains(EnergyStorageBlock.ACTIVE)) return
        if (current.getValue(EnergyStorageBlock.ACTIVE) == active) return
-       world.setBlock(pos, current.setValue(EnergyStorageBlock.ACTIVE, active), Block.NOTIFY_LISTENERS)
+       world.setBlock(pos, current.setValue(EnergyStorageBlock.ACTIVE, active), Block.UPDATE_CLIENTS)
    }
 
     // ============== Concrete BlockEntities ==============

@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -18,7 +23,6 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import net.minecraft.core.HolderLookup
 
 /**
  * 日光灯方块实体。无 GUI，100 EU 缓存，仅消耗 EU 发光。
@@ -48,15 +52,15 @@ class LuminatorFlatBlockEntity(
         state
     )
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(LuminatorSync.NBT_ENERGY_STORED))
         cycleTicks = nbt.getInt("CycleTicks")
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(LuminatorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("CycleTicks", cycleTicks)
@@ -86,7 +90,7 @@ class LuminatorFlatBlockEntity(
     }
     private fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         if (state.getValue(LuminatorFlatBlock.ACTIVE) != active) {
-            world.setBlock(pos, state.setValue(LuminatorFlatBlock.ACTIVE, active))
+            world.setBlockAndUpdate(pos, state.setValue(LuminatorFlatBlock.ACTIVE, active))
         }
     }
 }

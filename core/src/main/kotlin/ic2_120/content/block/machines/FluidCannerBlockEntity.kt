@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -55,7 +61,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -78,7 +83,7 @@ class FluidCannerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = FluidCannerBlock.ACTIVE
 
@@ -107,6 +112,23 @@ class FluidCannerBlockEntity(
     private var energyDebtF = 0f
 
     companion object {
+
+        // fabric 1.21.1：FluidVariant.fromNbt/toNbt 已移除，用 CODEC + NbtOps 桥接
+        fun encodeFluidVariant(variant: net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant): net.minecraft.nbt.CompoundTag {
+            val tag = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.CODEC
+                .encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, variant)
+                .getOrThrow()
+            return if (tag is net.minecraft.nbt.CompoundTag) tag else net.minecraft.nbt.CompoundTag()
+        }
+
+        fun decodeFluidVariant(tag: net.minecraft.nbt.CompoundTag): net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant {
+            if (tag.isEmpty) return net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.blank()
+            return net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.CODEC
+                .parse(net.minecraft.nbt.NbtOps.INSTANCE, tag)
+                .result()
+                .orElse(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.blank())
+        }
+
         const val SLOT_INPUT_FILLED = 0   // 满流体容器（水桶、满单元等）
         const val SLOT_INPUT_EMPTY = 1   // 空容器（空单元、桶）
         const val SLOT_OUTPUT = 2
@@ -136,7 +158,7 @@ class FluidCannerBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1),
@@ -187,9 +209,9 @@ class FluidCannerBlockEntity(
 
     constructor(pos: BlockPos, state: BlockState) : this(FluidCannerBlockEntity::class.type(), pos, state)
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
@@ -197,12 +219,12 @@ class FluidCannerBlockEntity(
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_FILLED -> !stack.isEmpty && stack.item !is IBatteryItem && isFilledFluidContainer(stack)
         SLOT_INPUT_EMPTY -> !stack.isEmpty && stack.item !is IBatteryItem && isEmptyFluidContainerForBottler(stack)
         SLOT_OUTPUT -> false
@@ -210,9 +232,11 @@ class FluidCannerBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.fluid_canner")
@@ -235,7 +259,7 @@ class FluidCannerBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
-        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(fluidTag)
+        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else decodeFluidVariant(fluidTag)
         syncTankState()
     }
 
@@ -248,7 +272,7 @@ class FluidCannerBlockEntity(
         nbt.putFloat("EnergyDebt", energyDebtF)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
-            nbt.put(NBT_FLUID_VARIANT, tankInternal.variant.toNbt())
+            nbt.put(NBT_FLUID_VARIANT, tankInternal.encodeFluidVariant(variant))
         }
     }
 
@@ -261,7 +285,7 @@ class FluidCannerBlockEntity(
     private fun syncTankState() {
         sync.fluidAmount = tankInternal.amount.toInt().coerceAtLeast(0)
         sync.fluidCapacity = TANK_CAPACITY.toInt()
-        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(tankInternal.variant.fluid)
+        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getId(tankInternal.variant.fluid)
     }
 
     /** 重置全部进度状态（操作不可用时调用）。 */
@@ -297,9 +321,9 @@ class FluidCannerBlockEntity(
         adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
-        val filled = getStack(SLOT_INPUT_FILLED)
-        val empty = getStack(SLOT_INPUT_EMPTY)
-        val outputSlot = getStack(SLOT_OUTPUT)
+        val filled = getItem(SLOT_INPUT_FILLED)
+        val empty = getItem(SLOT_INPUT_EMPTY)
+        val outputSlot = getItem(SLOT_OUTPUT)
 
         val isFluidContainer = isFluidContainer(filled)
 
@@ -389,7 +413,7 @@ class FluidCannerBlockEntity(
         val variant = tankInternal.variant
         if (container.isEmpty || variant.isBlank || tankInternal.amount <= 0L) return null
         @Suppress("DEPRECATION")
-        val ctx = ContainerItemContext.withInitial(container.copyWithCount(1))
+        val ctx = ContainerItemContext.withConstant(container.copyWithCount(1))
         val storage = ctx.find(FluidStorage.ITEM) ?: return null
         if (!storage.supportsInsertion()) return null
 
@@ -398,22 +422,22 @@ class FluidCannerBlockEntity(
             if (inserted <= 0L) return null
             val result = ctx.itemVariant.toStack(1)
             val fullAfterFill = storage.insert(variant, 1L, tx) == 0L
-            if (fullAfterFill && !canAcceptOutput(getStack(SLOT_OUTPUT), result)) return null
+            if (fullAfterFill && !canAcceptOutput(getItem(SLOT_OUTPUT), result)) return null
             return ContainerFillPlan(inserted, result, fullAfterFill)
         }
     }
 
     private fun canAcceptOutput(outputSlot: ItemStack, result: ItemStack): Boolean {
         if (outputSlot.isEmpty) return true
-        return ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= result.maxStackSize
+        return ItemStack.isSameItem(outputSlot, result) && outputSlot.count + result.count <= result.maxStackSize
     }
 
     private fun completePourOut() {
-        val filled = getStack(SLOT_INPUT_FILLED)
-        val outputSlot = getStack(SLOT_OUTPUT)
+        val filled = getItem(SLOT_INPUT_FILLED)
+        val outputSlot = getItem(SLOT_OUTPUT)
         Transaction.openOuter().use { tx ->
             @Suppress("DEPRECATION")
-            val ctx = ContainerItemContext.withInitial(filled.copyWithCount(1))
+            val ctx = ContainerItemContext.withConstant(filled.copyWithCount(1))
             val itemStorage = ctx.find(FluidStorage.ITEM) ?: return@use
             for (view in itemStorage) {
                 if (view.amount < FluidConstants.BUCKET || view.resource.isBlank) continue
@@ -426,8 +450,8 @@ class FluidCannerBlockEntity(
                 tx.commit()
 
                 filled.shrink(1)
-                if (filled.isEmpty) setStack(SLOT_INPUT_FILLED, ItemStack.EMPTY)
-                if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, emptyResult)
+                if (filled.isEmpty) setItem(SLOT_INPUT_FILLED, ItemStack.EMPTY)
+                if (outputSlot.isEmpty) setItem(SLOT_OUTPUT, emptyResult)
                 else outputSlot.grow(emptyResult.count)
                 syncTankState()
                 return
@@ -436,27 +460,27 @@ class FluidCannerBlockEntity(
     }
 
     private fun completeFill(slot: Int) {
-        val container = getStack(slot)
+        val container = getItem(slot)
         val plan = planContainerFill(container) ?: return
         val variant = tankInternal.variant
         Transaction.openOuter().use { tx ->
             @Suppress("DEPRECATION")
-            val ctx = ContainerItemContext.withInitial(container.copyWithCount(1))
+            val ctx = ContainerItemContext.withConstant(container.copyWithCount(1))
             val storage = ctx.find(FluidStorage.ITEM) ?: return@use
             if (storage.insert(variant, plan.amount, tx) != plan.amount) return@use
             if (tankInternal.extract(variant, plan.amount, tx) != plan.amount) return@use
             val result = ctx.itemVariant.toStack(1)
-            if (plan.fullAfterFill && !canAcceptOutput(getStack(SLOT_OUTPUT), result)) return@use
+            if (plan.fullAfterFill && !canAcceptOutput(getItem(SLOT_OUTPUT), result)) return@use
             tx.commit()
 
             container.shrink(1)
-            if (container.isEmpty) setStack(slot, ItemStack.EMPTY)
+            if (container.isEmpty) setItem(slot, ItemStack.EMPTY)
             if (plan.fullAfterFill) {
-                val output = getStack(SLOT_OUTPUT)
-                if (output.isEmpty) setStack(SLOT_OUTPUT, result)
+                val output = getItem(SLOT_OUTPUT)
+                if (output.isEmpty) setItem(SLOT_OUTPUT, result)
                 else output.grow(result.count)
             } else {
-                setStack(slot, result)
+                setItem(slot, result)
             }
             lastOperationPourOut = false
             syncTankState()

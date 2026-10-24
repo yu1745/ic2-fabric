@@ -95,7 +95,7 @@ class SolarPanelScreenHandler(
                 // Machine charge slots -> player inventory
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, machineSlotCount, hotbarEnd, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onTake(stackInSlot, stack)
                 }
                 // Player inventory -> machine (via RoutedItemStorage routes)
                 index in machineSlotCount until hotbarEnd -> {

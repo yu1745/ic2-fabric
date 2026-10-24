@@ -33,7 +33,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
 import ic2_120.registry.id
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -47,7 +46,7 @@ class ReactorChamberBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         for (dir in Direction.values()) {
-            val neighborPos = pos.offset(dir)
+            val neighborPos = pos.relative(dir)
             val neighborState = world.getBlockState(neighborPos)
             if (neighborState.block is NuclearReactorBlock) {
                 val be = world.getBlockEntity(neighborPos)
@@ -78,7 +77,7 @@ class ReactorChamberBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val machine = MachineCasingBlock::class.item()
             val leadPlate = ic2_120.content.item.LeadPlate::class.instance()
             if (machine != Items.AIR && leadPlate != Items.AIR) {

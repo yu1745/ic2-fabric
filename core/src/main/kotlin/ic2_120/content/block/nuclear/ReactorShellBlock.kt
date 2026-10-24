@@ -37,12 +37,12 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Properties = shellSett
 
         fun shellSettings(): BlockBehaviour.Properties =
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
-                .sounds(SoundType.GLASS) .noOcclusion()
-                .solidBlock { _, _, _ -> false }.suffocates { _, _, _ -> false }.blockVision { _, _, _ -> false }
+                .sound(SoundType.GLASS) .noOcclusion()
+                .solidBlock { _, _, _ -> false }.isSuffocating { _, _, _ -> false }.isViewBlocking { _, _, _ -> false }
     }
 
     init {
-        defaultState = CONNECT.values.fold(defaultState) { st, prop -> st.setValue(prop, false) }
+        registerDefaultState(CONNECT.values.fold(defaultBlockState()) { st, prop -> st.setValue(prop, false) })
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -53,16 +53,16 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Properties = shellSett
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
         var state = super.getStateForPlacement(ctx) ?: return null
         for ((dir, prop) in CONNECT) {
-            state = state.setValue(prop, connects(ctx.world.getBlockState(ctx.blockPos.offset(dir))))
+            state = state.setValue(prop, connects(ctx.level.getBlockState(ctx.pos.offset(dir))))
         }
         return state
     }
 
     @Deprecated("Deprecated in Java")
-    override fun getStateForNeighborUpdate(
+    override fun updateShape(
         state: BlockState, direction: Direction, neighborState: BlockState,
         world: LevelAccessor, pos: BlockPos, neighborPos: BlockPos,
-    ): BlockState = super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
+    ): BlockState = super.updateShape(state, direction, neighborState, world, pos, neighborPos)
         .let { if (it.block === this) it.setValue(CONNECT.getValue(direction), connects(neighborState)) else it }
 
     private fun connects(neighbor: BlockState): Boolean =

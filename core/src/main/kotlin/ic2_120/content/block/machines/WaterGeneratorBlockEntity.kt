@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -48,7 +52,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -76,7 +79,7 @@ class WaterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
@@ -138,11 +141,11 @@ class WaterGeneratorBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { isValid(BATTERY_SLOT, it) }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(FUEL_SLOT), matcher = { isValid(FUEL_SLOT, it) })
+            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { canPlaceItem(BATTERY_SLOT, it) }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(FUEL_SLOT), matcher = { canPlaceItem(FUEL_SLOT, it) })
         ),
         extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT, BATTERY_SLOT, *SLOT_UPGRADE_INDICES),
         setChanged = { setChanged() }
@@ -248,28 +251,28 @@ class WaterGeneratorBlockEntity(
         pos,
         state
     ) {
-        tickOffset = random.nextBetween(0, WATER_CHECK_INTERVAL - 1)
+        tickOffset = random.nextInt(0, (WATER_CHECK_INTERVAL - 1) + 1)
     }
 
     override fun getInventory(): Container = this
 
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
 
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
 
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
 
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == BATTERY_SLOT && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         setChanged()
     }
 
-    override fun clear() {
+    override fun clearContent() {
         inventory.clear()
     }
 
@@ -285,7 +288,7 @@ class WaterGeneratorBlockEntity(
         }
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == FUEL_SLOT -> stack.isWaterFuel()
         slot == EMPTY_CONTAINER_SLOT -> false
@@ -296,11 +299,11 @@ class WaterGeneratorBlockEntity(
 
     private fun tryInsertEmptyContainer(emptyStack: ItemStack): Boolean {
         if (emptyStack.isEmpty) return false
-        val current = getStack(EMPTY_CONTAINER_SLOT)
+        val current = getItem(EMPTY_CONTAINER_SLOT)
         return if (current.isEmpty) {
-            setStack(EMPTY_CONTAINER_SLOT, emptyStack.copy())
+            setItem(EMPTY_CONTAINER_SLOT, emptyStack.copy())
             true
-        } else if (ItemStack.canCombine(current, emptyStack)) {
+        } else if (ItemStack.isSameItemSameComponents(current, emptyStack)) {
             val toAdd = minOf(emptyStack.count, current.maxStackSize - current.count)
             if (toAdd > 0) {
                 current.grow(toAdd)
@@ -310,9 +313,11 @@ class WaterGeneratorBlockEntity(
         } else false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.water_generator")
@@ -329,7 +334,7 @@ class WaterGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(WaterGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, WaterGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -342,7 +347,7 @@ class WaterGeneratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(WaterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.amount)
@@ -400,7 +405,7 @@ class WaterGeneratorBlockEntity(
 
         // 燃料槽：水桶、水单元、通用流体单元（NBT 为水）倒入水罐（必须在发电之后处理，否则会干扰发电）
         // 水罐仅 1 桶容量，必须等水罐空才能倒入整桶
-        val fuelStack = getStack(FUEL_SLOT)
+        val fuelStack = getItem(FUEL_SLOT)
         val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
         val canAcceptFullBucket = waterTankInternal.amount <= 0L
         when {
@@ -410,7 +415,7 @@ class WaterGeneratorBlockEntity(
                     val emptyBucket = ItemStack(Items.BUCKET)
                     if (tryInsertEmptyContainer(emptyBucket)) {
                         fuelStack.shrink(1)
-                        if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
+                        if (fuelStack.isEmpty) setItem(FUEL_SLOT, ItemStack.EMPTY)
                         setChanged()
                     }
                 }
@@ -421,7 +426,7 @@ class WaterGeneratorBlockEntity(
                     val emptyCellStack = ItemStack(emptyCell)
                     if (tryInsertEmptyContainer(emptyCellStack)) {
                         fuelStack.shrink(1)
-                        if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
+                        if (fuelStack.isEmpty) setItem(FUEL_SLOT, ItemStack.EMPTY)
                         setChanged()
                     }
                 }
@@ -448,7 +453,7 @@ class WaterGeneratorBlockEntity(
                 for (z in (center.z - 1)..(center.z + 1)) {
                     if (x == center.x && y == center.y && z == center.z) continue
                     val p = BlockPos(x, y, z)
-                    if (world.isInBuildLimit(p)) {
+                    if (!world.isOutsideBuildHeight(p)) {
                         val blockState = world.getBlockState(p)
                         if (blockState.`is`(Blocks.WATER)) {
                             count++

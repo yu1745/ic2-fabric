@@ -1,10 +1,17 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
 
-import net.minecraft.core.HolderLookup
 import ic2_120.content.block.CokeKilnBlock
 import ic2_120.content.block.CokeKilnHatchBlock
 import ic2_120.content.screen.CokeKilnScreenHandler
@@ -30,7 +37,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.ItemTags
 import net.minecraft.resources.ResourceLocation
@@ -48,7 +54,7 @@ class CokeKilnBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     companion object {
         private const val SLOT_INPUT = 0
@@ -61,7 +67,7 @@ class CokeKilnBlockEntity(
             for (dx in -2..2) {
                 for (dy in -2..2) {
                     for (dz in -2..2) {
-                        val p = origin.add(dx, dy, dz)
+                        val p = origin.offset(dx, dy, dz)
                         val be = world.getBlockEntity(p) as? CokeKilnBlockEntity ?: continue
                         be.markStructureDirty()
                     }
@@ -77,7 +83,7 @@ class CokeKilnBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { getRecipe(it) != null })
         ),
@@ -109,7 +115,7 @@ class CokeKilnBlockEntity(
             sync.fluidAmount = grateBe.getStoredAmount().toInt()
             sync.fluidRawId = grateBe.getStoredFluidRawId()
         }
-        val recipe = getRecipe(getStack(SLOT_INPUT))
+        val recipe = getRecipe(getItem(SLOT_INPUT))
         if (recipe == null || !cachedStructureValid || !canOutput(recipe) || !hasTankSpace(recipe)) {
             progress = 0
             sync.progress = 0
@@ -119,20 +125,22 @@ class CokeKilnBlockEntity(
         if (progress < PROCESS_TICKS) return
         progress = 0
         sync.progress = 0
-        val input = getStack(SLOT_INPUT)
+        val input = getItem(SLOT_INPUT)
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
-        val out = getStack(SLOT_OUTPUT)
-        if (out.isEmpty) setStack(SLOT_OUTPUT, recipe.output.copy())
+        if (input.isEmpty) setItem(SLOT_INPUT, ItemStack.EMPTY)
+        val out = getItem(SLOT_OUTPUT)
+        if (out.isEmpty) setItem(SLOT_OUTPUT, recipe.output.copy())
         else out.grow(recipe.output.count)
         val grate = getCachedGrateEntity(world) ?: return
         grate.insertDroplets(recipe.creosoteMb * FluidConstants.BUCKET / 1000L)
         setChanged()
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.coke_kiln")
@@ -142,31 +150,31 @@ class CokeKilnBlockEntity(
 
     fun tryInteractItem(player: Player, hand: InteractionHand): InteractionResult {
         val handStack = player.getItemInHand(hand)
-        val out = getStack(SLOT_OUTPUT)
+        val out = getItem(SLOT_OUTPUT)
         if (!out.isEmpty) {
             if (handStack.isEmpty) {
-                player.setStackInHand(hand, out.copy())
-                setStack(SLOT_OUTPUT, ItemStack.EMPTY)
+                player.setItemInHand(hand, out.copy())
+                setItem(SLOT_OUTPUT, ItemStack.EMPTY)
                 return InteractionResult.SUCCESS
             }
-            if (ItemStack.canCombine(handStack, out) && handStack.count + out.count <= handStack.maxStackSize) {
+            if (ItemStack.isSameItemSameComponents(handStack, out) && handStack.count + out.count <= handStack.maxStackSize) {
                 handStack.grow(out.count)
-                setStack(SLOT_OUTPUT, ItemStack.EMPTY)
+                setItem(SLOT_OUTPUT, ItemStack.EMPTY)
                 return InteractionResult.SUCCESS
             }
         }
         if (!handStack.isEmpty && getRecipe(handStack) != null) {
-            val inSlot = getStack(SLOT_INPUT)
+            val inSlot = getItem(SLOT_INPUT)
             if (inSlot.isEmpty) {
                 val moved = handStack.copy()
                 moved.count = 1
-                setStack(SLOT_INPUT, moved)
-                if (!player.abilities.creativeMode) handStack.shrink(1)
+                setItem(SLOT_INPUT, moved)
+                if (!player.abilities.instabuild) handStack.shrink(1)
                 return InteractionResult.SUCCESS
             }
         }
         val center = findKilnCenter(world ?: return InteractionResult.PASS, pos)
-        player.sendMessage(
+        player.displayClientMessage(
             Component.translatable(
                 if (center != null) "message.ic2_120.coke_kiln.structure_ok" else "message.ic2_120.coke_kiln.structure_invalid"
             ),
@@ -177,16 +185,16 @@ class CokeKilnBlockEntity(
 
     private fun getRecipe(input: ItemStack): Recipe? {
         if (input.isEmpty) return null
-        if (input.isIn(ItemTags.LOGS)) return Recipe(ItemStack(Items.CHARCOAL), 250)
+        if (input.`is`(ItemTags.LOGS)) return Recipe(ItemStack(Items.CHARCOAL), 250)
         if (input.`is`(Items.COAL)) return Recipe(ItemStack(Coke::class.instance()), 500)
         if (input.`is`(peatOreItem)) return Recipe(ItemStack(Items.COAL), 125)
         return null
     }
 
     private fun canOutput(recipe: Recipe): Boolean {
-        val out = getStack(SLOT_OUTPUT)
+        val out = getItem(SLOT_OUTPUT)
         if (out.isEmpty) return true
-        return ItemStack.canCombine(out, recipe.output) && out.count + recipe.output.count <= out.maxStackSize
+        return ItemStack.isSameItemSameComponents(out, recipe.output) && out.count + recipe.output.count <= out.maxStackSize
     }
 
     private fun hasTankSpace(recipe: Recipe): Boolean {
@@ -200,9 +208,9 @@ class CokeKilnBlockEntity(
     }
 
     private fun findKilnCenter(world: Level, kilnPos: BlockPos): BlockPos? {
-        for (dir in Direction.Type.HORIZONTAL) {
-            val center = kilnPos.offset(dir)
-            val hatchPos = center.up()
+        for (dir in Direction.Plane.HORIZONTAL) {
+            val center = kilnPos.relative(dir)
+            val hatchPos = center.above()
             if (world.getBlockState(hatchPos).block is CokeKilnHatchBlock &&
                 CokeKilnHatchBlock.isValidCokeKilnStructure(world, hatchPos)
             ) {
@@ -221,8 +229,8 @@ class CokeKilnBlockEntity(
             cachedGratePos = null
             return
         }
-        cachedStructureValid = CokeKilnHatchBlock.isValidCokeKilnStructure(world, center.up())
-        cachedGratePos = if (cachedStructureValid) center.down() else null
+        cachedStructureValid = CokeKilnHatchBlock.isValidCokeKilnStructure(world, center.above())
+        cachedGratePos = if (cachedStructureValid) center.below() else null
     }
 
     private fun getCachedGrateEntity(world: Level): CokeKilnGrateBlockEntity? {
@@ -230,20 +238,20 @@ class CokeKilnBlockEntity(
         return world.getBlockEntity(gratePos) as? CokeKilnGrateBlockEntity
     }
 
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
     }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> getRecipe(stack) != null
         SLOT_OUTPUT -> false
         else -> false
@@ -251,14 +259,14 @@ class CokeKilnBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         nbt.putInt(NBT_PROGRESS, progress)
         syncedData.writeNbt(nbt)
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         progress = nbt.getInt(NBT_PROGRESS)
         syncedData.readNbt(nbt)
         sync.progress = progress

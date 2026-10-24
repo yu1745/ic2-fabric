@@ -25,32 +25,32 @@ class RubberTreeFoliagePlacer(
     height: Int
 ) : BlobFoliagePlacer(radius, offset, height) {
 
-    override fun getType(): FoliagePlacerType<*> = ModWorldgen.RUBBER_TREE_FOLIAGE_PLACER_TYPE
+    override fun type(): FoliagePlacerType<*> = ModWorldgen.RUBBER_TREE_FOLIAGE_PLACER_TYPE
 
-    override fun generate(
+    override fun createFoliage(
         world: LevelSimulatedReader,
-        placer: FoliagePlacer.BlockPlacer,
+        placer: FoliagePlacer.FoliageSetter,
         random: RandomSource,
         config: TreeConfiguration,
         trunkHeight: Int,
-        treeNode: FoliagePlacer.TreeNode,
+        foliageAttachment: FoliagePlacer.FoliageAttachment,
         foliageHeight: Int,
         radius: Int,
         offset: Int
     ) {
-        val center = treeNode.center
+        val center = foliageAttachment.pos()
         val collected = LinkedHashMap<BlockPos, BlockState>()
 
-        val collectingPlacer = object : FoliagePlacer.BlockPlacer {
-            override fun placeBlock(pos: BlockPos, state: BlockState) {
-                collected[pos.toImmutable()] = state
+        val collectingPlacer = object : FoliagePlacer.FoliageSetter {
+            override fun set(pos: BlockPos, state: BlockState) {
+                collected[pos.immutable()] = state
             }
 
-            override fun hasPlacedBlock(pos: BlockPos): Boolean = collected.containsKey(pos)
+            override fun isSet(pos: BlockPos): Boolean = collected.containsKey(pos)
         }
 
         // 先按白桦（blob）逻辑生成到缓存
-        super.generate(world, collectingPlacer, random, config, trunkHeight, treeNode, foliageHeight, radius, offset)
+        super.createFoliage(world, collectingPlacer, random, config, trunkHeight, foliageAttachment, foliageHeight, radius, offset)
 
         val ys = collected.keys.asSequence().map { it.y }.distinct().sortedDescending().toList()
         if (ys.isEmpty()) return
@@ -71,15 +71,15 @@ class RubberTreeFoliagePlacer(
                 }
             }
             placed++
-            placer.placeBlock(pos, state)
+            placer.set(pos, state)
         }
 
         // 确保顶两层中心叶子存在
         for (y in topYs) {
             val centerPos = BlockPos(center.x, y, center.z)
-            if (!placer.hasPlacedBlock(centerPos) && TreeFeature.canReplace(world, centerPos)) {
+            if (!placer.isSet(centerPos) && TreeFeature.validTreePos(world, centerPos)) {
                 forced++
-                placer.placeBlock(centerPos, config.foliageProvider.get(random, centerPos))
+                placer.set(centerPos, config.foliageProvider.getState(random, centerPos))
             }
         }
 
@@ -102,7 +102,7 @@ class RubberTreeFoliagePlacer(
         private val logger = LoggerFactory.getLogger("ic2_120/RubberTreeFoliagePlacer")
 
         val CODEC: MapCodec<RubberTreeFoliagePlacer> = RecordCodecBuilder.mapCodec { instance ->
-            fillFoliagePlacerFields(instance).and(
+            foliagePlacerParts(instance).and(
                 Codec.INT.fieldOf("height").forGetter { it.height }
             ).apply(instance) { radius, offset, height ->
                 RubberTreeFoliagePlacer(radius, offset, height)

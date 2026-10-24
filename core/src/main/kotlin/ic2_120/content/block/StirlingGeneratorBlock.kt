@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -40,7 +42,8 @@ import net.minecraft.world.level.Level
 import ic2_120.registry.annotation.RecipeProvider
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
 import net.minecraft.world.level.BlockGetter
@@ -58,7 +61,7 @@ class StirlingGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusio
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, StirlingGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, StirlingGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -71,13 +74,13 @@ class StirlingGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusio
         super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
-        world: BlockGetter?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: TooltipContext
+        type: TooltipFlag
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
         tooltip.add(Component.translatable("tooltip.ic2_120.stirling_generator.ratio").withStyle(ChatFormatting.GRAY))
         tooltip.add(Component.translatable("tooltip.ic2_120.stirling_generator.max_output").withStyle(ChatFormatting.GRAY))
     }
@@ -96,7 +99,7 @@ class StirlingGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusio
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val generator = GeneratorBlock::class.item()
             val ironCasing = IronCasing::class.instance()
             val heatConductor = HeatConductor::class.instance()

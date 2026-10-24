@@ -38,17 +38,18 @@ class SteamGeneratorScreenHandler(
     override fun quickMoveStack(player: Player, index: Int): ItemStack = ItemStack.EMPTY
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is SteamGeneratorBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? SteamGeneratorBlockEntity ?: return@get
-            val event = BUTTON_EVENTS.getOrNull(id) ?: return@get
+        context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? SteamGeneratorBlockEntity ?: return@evaluate false
+            val event = BUTTON_EVENTS.getOrNull(id) ?: return@evaluate false
             be.onNetworkEvent(event)
             be.setChanged()
+            true
         }, false)
         return true
     }

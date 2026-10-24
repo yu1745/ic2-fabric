@@ -23,7 +23,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.entity.player.Player
@@ -70,30 +70,31 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            getMenuProvider(state, world, pos)?.let(player::openHandledScreen)
+            getMenuProvider(state, world, pos)?.let { player.openMenu(it) }
         }
         return InteractionResult.SUCCESS
     }
 
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         world: BlockGetter?,
         tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
-        val blockEntityTag = stack.getSubNbt("BlockEntityTag")
+        super.appendHoverText(stack, context, tooltip, type)
+        // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
+        val blockEntityTag = stack.orCreateNbt.getCompound("BlockEntityTag")
         val templateCount = blockEntityTag?.getList("UuTemplates", 10)?.size ?: 0
         tooltip.add(Component.literal("模板数量: $templateCount").withStyle(ChatFormatting.GRAY))
     }
 
     override fun getPickStack(world: BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
-        val itemStack = super.getPickStack(world, pos, state)
+        val itemStack = super.getCloneItemStack(world, pos, state)
         val blockEntity = world.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
         val nbt = blockEntity.saveWithoutMetadata()
         if (!nbt.isEmpty) {
-            itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+            itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
         }
         return itemStack
     }
@@ -102,7 +103,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
     override fun onStacksDropped(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
         super.onStacksDropped(state, world, pos, tool, dropExperience)
         val be = world.getBlockEntity(pos) as? Container ?: return
-        Containers.spawn(world, pos, be)
+        Containers.dropContents(world, pos, be)
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
@@ -110,7 +111,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val crystalMemory = CrystalMemory::class.instance()
             val reinforcedStone = ReinforcedStoneBlock::class.item()

@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -30,7 +34,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -55,7 +58,7 @@ class RtGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = RtGeneratorBlock.ACTIVE
 
@@ -110,23 +113,23 @@ class RtGeneratorBlockEntity(
 
     override fun getInventory(): Container = this
 
-    override fun size(): Int = 6
+    override fun getContainerSize(): Int = 6
 
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
 
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
 
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot in FUEL_SLOT_START..FUEL_SLOT_END && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         setChanged()
     }
 
-    override fun clear() {
+    override fun clearContent() {
         inventory.clear()
     }
 
@@ -139,11 +142,13 @@ class RtGeneratorBlockEntity(
 
     /** 统计燃料槽中靶丸数量 */
     fun countPelletSlots(): Int =
-        (FUEL_SLOT_START..FUEL_SLOT_END).count { !getStack(it).isEmpty }
+        (FUEL_SLOT_START..FUEL_SLOT_END).count { !getItem(it).isEmpty }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("container.ic2_120.rt_generator")
@@ -160,7 +165,7 @@ class RtGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(RtGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, RtGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -169,7 +174,7 @@ class RtGeneratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(RtGeneratorSync.NBT_ENERGY_STORED, sync.amount)
     }

@@ -45,7 +45,7 @@ class SpringBlock : Block(
     }
 
     init {
-        defaultState = stateManager.defaultBlockState.setValue(SPRING_TYPE, SpringType.WATER)
+        registerDefaultState(stateManager.defaultBlockState.setValue(SPRING_TYPE, SpringType.WATER))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {

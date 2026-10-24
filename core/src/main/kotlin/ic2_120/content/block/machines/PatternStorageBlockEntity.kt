@@ -1,9 +1,12 @@
+package ic2_120.content.block.machines
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
-
-﻿package ic2_120.content.block.machines
-
 import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.content.block.PatternStorageBlock
@@ -31,7 +34,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
@@ -49,7 +51,7 @@ class PatternStorageBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     companion object {
         const val SLOT_CRYSTAL = 0
@@ -62,7 +64,7 @@ class PatternStorageBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_CRYSTAL), matcher = { it.isEmpty || isCrystalMemory(it) })
         ),
@@ -93,7 +95,7 @@ class PatternStorageBlockEntity(
      * 自动回落到模板列表中选中的配方。
      */
     fun getSelectedTemplate(): UuTemplateEntry? {
-        val crystal = getStack(SLOT_CRYSTAL)
+        val crystal = getItem(SLOT_CRYSTAL)
         if (isCrystalMemory(crystal)) {
             crystal.getUuTemplate()?.let { return it }
         }
@@ -121,14 +123,14 @@ class PatternStorageBlockEntity(
     }
 
     fun importTemplateFromCrystal(): Boolean {
-        val stack = getStack(SLOT_CRYSTAL)
+        val stack = getItem(SLOT_CRYSTAL)
         if (!isCrystalMemory(stack)) return false
         val template = stack.getUuTemplate() ?: return false
         return addOrSelectTemplate(template)
     }
 
     fun exportSelectedTemplateToCrystal(): Boolean {
-        val stack = getStack(SLOT_CRYSTAL)
+        val stack = getItem(SLOT_CRYSTAL)
         if (!isCrystalMemory(stack)) return false
         // 写入按钮语义不变：把模板列表中选中的配方写入水晶（不受水晶优先规则影响）
         val template = templates.getOrNull(selectedTemplateIndex) ?: return false
@@ -156,33 +158,35 @@ class PatternStorageBlockEntity(
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
-            world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
+            world.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS)
+            (world as? ServerLevel)?.chunkSource?.blockChanged(pos)
         }
     }
 
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_CRYSTAL -> stack.isEmpty || isCrystalMemory(stack)
         else -> false
     }
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = if (slot == SLOT_CRYSTAL && !isCrystalMemory(stack)) ItemStack.EMPTY else stack
         if (inventory[slot].count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) inventory[slot].count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         markDirtyAndSync()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(0)
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(0)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.pattern_storage")
@@ -192,7 +196,7 @@ class PatternStorageBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         templates.clear()
         templates += decodeUuTemplateList(nbt.getList(UU_TEMPLATE_LIST_NBT_KEY, 10))
         selectedTemplateIndex = nbt.getInt(NBT_SELECTED_INDEX)
@@ -203,15 +207,15 @@ class PatternStorageBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         nbt.put(UU_TEMPLATE_LIST_NBT_KEY, encodeUuTemplateList(templates))
         nbt.putInt(NBT_SELECTED_INDEX, selectedTemplateIndex)
     }
 
-    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
+    override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveWithFullMetadata(lookup)
 
-    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
+    override fun getUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 
     private fun isCrystalMemory(stack: ItemStack): Boolean =
-        !stack.isEmpty && BuiltInRegistries.ITEM.getId(stack.item) == crystalMemoryId
+        !stack.isEmpty && BuiltInRegistries.ITEM.getKey(stack.item) == crystalMemoryId
 }

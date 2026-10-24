@@ -32,7 +32,7 @@ object EnergyNetworkManager {
      * first cable tick.
      */
     fun queueNetworkBuild(world: Level, pos: BlockPos) {
-        pendingBuilds.getOrPut(world.registryKey) { mutableSetOf() }.add(pos.asLong())
+        pendingBuilds.getOrPut(world.dimension()) { mutableSetOf() }.add(pos.asLong())
     }
 
     /**
@@ -42,7 +42,7 @@ object EnergyNetworkManager {
      * the actual work internally.
      */
     fun tickAll(world: Level) {
-        pendingBuilds.remove(world.registryKey)?.forEach { posLong ->
+        pendingBuilds.remove(world.dimension())?.forEach { posLong ->
             val pos = BlockPos.fromLong(posLong)
             if (world.getBlockState(pos).block is BaseCableBlock) {
                 getOrCreateNetwork(world, pos)
@@ -52,12 +52,12 @@ object EnergyNetworkManager {
         // Snapshot by network count, not cable count. A network can invalidate
         // itself while ticking (for example when an under-tier cable burns),
         // so iterating the mutable registry directly is unsafe.
-        val networks = worldNetworks[world.registryKey]?.toList() ?: return
+        val networks = worldNetworks[world.dimension()]?.toList() ?: return
         for (network in networks) network.tickIfNeeded(world)
     }
 
     private fun mapFor(world: Level): MutableMap<Long, EnergyNetwork> =
-        worldPosToNetwork.getOrPut(world.registryKey) { mutableMapOf() }
+        worldPosToNetwork.getOrPut(world.dimension()) { mutableMapOf() }
 
     /** 获取 [pos] 所在电网；不存在时 BFS 构建。 */
     fun getOrCreateNetwork(world: Level, pos: BlockPos): EnergyNetwork {
@@ -77,7 +77,7 @@ object EnergyNetworkManager {
     ): EnergyNetwork {
         val network = EnergyNetwork()
         network.damageTickOffset =
-            world.random.nextBetween(0, EnergyNetwork.damageIntervalTicks - 1) // 0–x 秒随机偏移，错开不同电网的伤害时机
+            world.random.nextIntBetweenInclusive(0, EnergyNetwork.damageIntervalTicks - 1) // 0–x 秒随机偏移，错开不同电网的伤害时机
         val visited = mutableSetOf<Long>()
         val queue = ArrayDeque<BlockPos>()
         val absorbedNetworks = mutableSetOf<EnergyNetwork>()
@@ -124,7 +124,7 @@ object EnergyNetworkManager {
         }
 
         network.energy = network.energy.coerceAtMost(network.capacity)
-        val networks = worldNetworks.getOrPut(world.registryKey) { mutableSetOf() }
+        val networks = worldNetworks.getOrPut(world.dimension()) { mutableSetOf() }
         networks.removeAll(absorbedNetworks)
         networks.add(network)
         logger.debug("构建电网：{} 根导线，容量 {}，能量 {}", network.cables.size, network.capacity, network.energy)
@@ -137,9 +137,9 @@ object EnergyNetworkManager {
      * 剩余导线会在下次 tick 惰性重建新电网。
      */
     fun invalidateAt(world: Level, pos: BlockPos) {
-        val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
+        val posToNetwork = worldPosToNetwork[world.dimension()] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
-        worldNetworks[world.registryKey]?.remove(network)
+        worldNetworks[world.dimension()]?.remove(network)
         distributeEnergyToEntities(world, network)
         for (cablePosLong in network.cables) {
             posToNetwork.remove(cablePosLong)
@@ -153,7 +153,7 @@ object EnergyNetworkManager {
 
     /** 连接边界变化（如相邻机器放置/移除）时，让所在电网刷新拓扑缓存。 */
     fun invalidateConnectionCachesAt(world: Level, pos: BlockPos) {
-        val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
+        val posToNetwork = worldPosToNetwork[world.dimension()] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
         network.invalidateConnectionCaches()
     }
@@ -174,8 +174,8 @@ object EnergyNetworkManager {
 
     /** 世界卸载时仅清理该维度缓存，避免误伤其他维度电网。 */
     fun onWorldUnload(world: Level) {
-        worldPosToNetwork.remove(world.registryKey)
-        worldNetworks.remove(world.registryKey)
-        pendingBuilds.remove(world.registryKey)
+        worldPosToNetwork.remove(world.dimension())
+        worldNetworks.remove(world.dimension())
+        pendingBuilds.remove(world.dimension())
     }
 }

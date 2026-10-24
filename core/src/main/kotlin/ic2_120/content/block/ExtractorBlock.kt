@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.world.level.block.entity.BlockEntityType
 
 import ic2_120.compat.isClient
@@ -32,7 +34,6 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import ic2_120.registry.id
-import java.util.function.Consumer
 
 /**
  * 提取机方块。消耗电力从粘性树脂、橡胶原木、橡胶树苗等提取橡胶。
@@ -51,7 +52,7 @@ class ExtractorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, ExtractorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, ExtractorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
@@ -75,7 +76,7 @@ class ExtractorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 机器本身合成配方
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()

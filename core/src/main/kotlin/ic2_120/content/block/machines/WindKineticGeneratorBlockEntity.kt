@@ -1,5 +1,14 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -31,11 +40,9 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.HolderLookup
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
@@ -114,7 +121,7 @@ class WindKineticGeneratorBlockEntity(
         }
 
         fun worldGustFactor(world: Level, pos: BlockPos): Double {
-            val worldKey = world.registryKey.value.toString()
+            val worldKey = world.dimension().value.toString()
             val chunkPos = ChunkPos(pos)
             val chunkKey = chunkPos.toLong()
             val byChunk = gustByWorldAndChunk.getOrPut(worldKey) { HashMap() }
@@ -200,7 +207,7 @@ class WindKineticGeneratorBlockEntity(
     override fun canOutputKuTo(side: Direction): Boolean {
         val world = world ?: return false
         val state = world.getBlockState(pos)
-        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
         // 风轮在前，动能端口在背。
         return side == facing.opposite
     }
@@ -238,8 +245,8 @@ class WindKineticGeneratorBlockEntity(
         return ((rotor.maxDamage - rotor.damage).toDouble() - remainder).coerceAtLeast(0.0) / TICKS_PER_HOUR
     }
 
-    fun onUse(player: Player, hand: InteractionHand): InteractionResult {
-        val held = player.getItemInHand(hand)
+    fun useWithoutItem(player: Player, hand: InteractionHand): InteractionResult {
+        val held = player.getItemInHand(player.usedItemHand)
         val rotor = inventory[ROTOR_SLOT]
 
         // 空手右键取出转子
@@ -248,7 +255,7 @@ class WindKineticGeneratorBlockEntity(
             val extracted = rotor.copy()
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
             markDirtyAndSync()
-            if (!player.giveItemStack(extracted)) {
+            if (!player.getInventory().add(extracted)) {
                 player.spawnAtLocation(extracted, false)
             }
             return InteractionResult.SUCCESS
@@ -263,7 +270,7 @@ class WindKineticGeneratorBlockEntity(
         val inserted = held.copy()
         inserted.count = 1
         inventory[ROTOR_SLOT] = inserted
-        if (!player.abilities.creativeMode) {
+        if (!player.abilities.instabuild) {
             held.shrink(1)
         }
         markDirtyAndSync()
@@ -271,12 +278,12 @@ class WindKineticGeneratorBlockEntity(
     }
 
     private fun isAllowedRotor(stack: ItemStack): Boolean {
-        val id = BuiltInRegistries.ITEM.getId(stack.item)
-        return ALLOWED_ROTORS.contains(id.path)
+        val id = BuiltInRegistries.ITEM.getKey(stack.item)
+        return id != null && ALLOWED_ROTORS.contains(id.path)
     }
 
     override fun getRotorRadius(stack: ItemStack): Float {
-        return when (BuiltInRegistries.ITEM.getId(stack.item).path) {
+        return when (BuiltInRegistries.ITEM.getKey(stack.item)!!.path) {
             "wooden_rotor" -> 2.0f
             "bronze_rotor" -> 3.0f
             "iron_rotor" -> 3.0f
@@ -287,7 +294,7 @@ class WindKineticGeneratorBlockEntity(
     }
 
     private fun getRotorMultiplier(stack: ItemStack): Int {
-        return when (BuiltInRegistries.ITEM.getId(stack.item).path) {
+        return when (BuiltInRegistries.ITEM.getKey(stack.item)!!.path) {
             "wooden_rotor" -> 1
             "bronze_rotor" -> 2
             "iron_rotor" -> 2
@@ -330,7 +337,7 @@ class WindKineticGeneratorBlockEntity(
 
         if (world.isClient) return
 
-        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         // 碰撞检测仍按连续旋转角度进行；显示角度在卡住后固定为常量，避免再求“精确卡住角度”。
         val currentAngle: Float = if (isStuck) {
@@ -430,7 +437,7 @@ class WindKineticGeneratorBlockEntity(
             return true
         }
 
-        rotor.damage += wear
+        rotor.damageValue += wear
         rotor.editCustomData { nbt ->
             if (remainder > 0.0) {
                 nbt.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder)
@@ -583,7 +590,7 @@ class WindKineticGeneratorBlockEntity(
                     val otherRotor = other.getRotorStack()
                     if (otherRotor.isEmpty) continue
 
-                    val otherFacing = world.getBlockState(mutablePos).getOrEmpty(BlockStateProperties.HORIZONTAL_FACING)
+                    val otherFacing = world.getBlockState(mutablePos).getOptional(BlockStateProperties.HORIZONTAL_FACING)
                         .orElse(Direction.NORTH)
                     if (otherFacing.axis != axis) continue
 
@@ -652,16 +659,16 @@ class WindKineticGeneratorBlockEntity(
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
-            world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
+            world.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS)
             (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
         }
     }
 
-    override fun size(): Int = 1
+    override fun getContainerSize(): Int = 1
 
     override fun isEmpty(): Boolean = inventory[ROTOR_SLOT].isEmpty
 
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
     override fun removeItem(slot: Int, amount: Int): ItemStack {
         val result = ContainerHelper.removeItem(inventory, slot, amount)
@@ -679,7 +686,7 @@ class WindKineticGeneratorBlockEntity(
         return result
     }
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot != ROTOR_SLOT) return
         if (stack.isEmpty) {
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
@@ -691,14 +698,14 @@ class WindKineticGeneratorBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun clear() {
+    override fun clearContent() {
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
         markDirtyAndSync()
     }
 
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.HolderLookup.Provider) {
         super.readNbt(nbt, lookup)
         // ContainerHelper.readNbt 不会在 nbt 中缺失该槽位时自动清空旧值，先清槽避免客户端残留渲染状态
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
@@ -706,20 +713,20 @@ class WindKineticGeneratorBlockEntity(
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.HolderLookup.Provider) {
         super.writeNbt(nbt, lookup)
         ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(lookup: HolderLookup.WrapperLookup): CompoundTag = createNbt(lookup)
+    override fun toInitialChunkDataNbt(lookup: HolderLookup.HolderLookup.Provider): CompoundTag = createNbt(lookup)
 
     override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+        buf.writeVarInt(syncedData.size)
         return buf
     }
 

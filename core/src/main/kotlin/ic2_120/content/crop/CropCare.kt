@@ -32,7 +32,7 @@ object CropCareService {
         for (x in -r..r) {
             for (y in -1..1) {
                 for (z in -r..r) {
-                    val pos = center.add(x, y, z)
+                    val pos = center.offset(x, y, z)
                     val be = world.getBlockEntity(pos) as? CropCareTarget ?: continue
                     result.touched++
                     if (ops.fertilizer > 0) result.fertilizerUsed += be.applyFertilizer(ops.fertilizer, simulate = false)

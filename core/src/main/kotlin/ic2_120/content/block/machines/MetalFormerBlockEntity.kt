@@ -1,12 +1,19 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
 
-import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.content.recipes.metalformer.MetalFormerRecipe
@@ -47,7 +54,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.network.chat.Component
 import net.minecraft.core.NonNullList
@@ -61,7 +67,7 @@ class MetalFormerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = MetalFormerBlock.ACTIVE
 
@@ -100,7 +106,7 @@ class MetalFormerBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isRecipeInput(it) }),
@@ -135,9 +141,9 @@ class MetalFormerBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) {
             stack.count = 1
         }
@@ -148,7 +154,7 @@ class MetalFormerBlockEntity(
 
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() {
         super.setChanged()
@@ -156,7 +162,7 @@ class MetalFormerBlockEntity(
 
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecipeInput(stack)
         SLOT_OUTPUT -> false
         SLOT_DISCHARGING -> isBatteryItem(stack) || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust
@@ -164,9 +170,11 @@ class MetalFormerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.metal_former")
@@ -183,7 +191,7 @@ class MetalFormerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MetalFormerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -199,7 +207,7 @@ class MetalFormerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MetalFormerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -243,7 +251,7 @@ class MetalFormerBlockEntity(
         // 从放电槽提取能量
         extractFromDischargingSlot()
 
-        val input = getStack(SLOT_INPUT)
+        val input = getItem(SLOT_INPUT)
         if (input.isEmpty) {
             resetProgress()
             setActiveState(world, pos, state, false)
@@ -260,10 +268,10 @@ class MetalFormerBlockEntity(
             return
         }
 
-        val outputSlot = getStack(SLOT_OUTPUT)
+        val outputSlot = getItem(SLOT_OUTPUT)
         val maxStack = result.maxStackSize
         val canAccept = outputSlot.isEmpty() ||
-                (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
+                (ItemStack.isSameItem(outputSlot, result) && outputSlot.count + result.count <= maxStack)
 
         if (!canAccept) {
             resetProgress()
@@ -277,7 +285,7 @@ class MetalFormerBlockEntity(
             input.shrink(1)
 
             // 输出结果
-            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
+            if (outputSlot.isEmpty()) setItem(SLOT_OUTPUT, result.copy())
             else outputSlot.grow(result.count)
 
             progressF = 0f
@@ -350,9 +358,10 @@ class MetalFormerBlockEntity(
         // 通过 RecipeManager 查找配方
         val recipeManager = world.recipeManager ?: return null
         val recipeInput = MetalFormerRecipe.Input(input)
-        val recipe = recipeManager.listAllOfType(getRecipeType<MetalFormerRecipe>())
-            .filterIsInstance(recipeType.java)
-            .firstOrNull { it.matches(recipeInput, world) }
+        // TODO(1.21.1): getAllRecipesFor 返回 RecipeHolder，需 .value 取配方本体。
+        val recipe = recipeManager.getAllRecipesFor(getRecipeType<MetalFormerRecipe>())
+            .map { it.value }
+            .firstOrNull { recipeType.isInstance(it) && it.matches(recipeInput, world) }
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedQueryItem = input.item
         cachedQueryMode = mode
@@ -366,8 +375,8 @@ class MetalFormerBlockEntity(
         val currentWorld = world ?: return true
         val input = MetalFormerRecipe.Input(stack.copyWithCount(1))
         val found = currentWorld.recipeManager
-            .listAllOfType(getRecipeType<MetalFormerRecipe>())
-            .any { it.matches(input, currentWorld) }
+            .getAllRecipesFor(getRecipeType<MetalFormerRecipe>())
+            .any { it.value.matches(input, currentWorld) }
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found

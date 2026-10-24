@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.registries.Registries
+
+import net.minecraft.core.registries.Registries
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -71,7 +75,7 @@ class TeslaCoilBlockEntity(
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         shotCooldown = nbt.getInt("ShotCooldown")
-        lastHitTargetUuid = if (nbt.contains("LastHitTarget")) nbt.getUuid("LastHitTarget") else null
+        lastHitTargetUuid = if (nbt.contains("LastHitTarget")) nbt.getUUID("LastHitTarget") else null
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
@@ -79,7 +83,7 @@ class TeslaCoilBlockEntity(
         syncedData.writeNbt(nbt)
         nbt.putLong(TeslaCoilSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("ShotCooldown", shotCooldown)
-        if (lastHitTargetUuid != null) nbt.putUuid("LastHitTarget", lastHitTargetUuid!!)
+        if (lastHitTargetUuid != null) nbt.putUUID("LastHitTarget", lastHitTargetUuid!!)
     }
 
     fun tick(world: Level, pos: BlockPos, state: BlockState) {
@@ -128,7 +132,7 @@ class TeslaCoilBlockEntity(
             center.x + range, center.y + range, center.z + range
         )
 
-        val targets = world.getEntitiesByClass(
+        val targets = world.getEntitiesOfClass(
             LivingEntity::class.java,
             box
         ) { e -> e.isAlive && !e.isSpectator }
@@ -144,7 +148,7 @@ class TeslaCoilBlockEntity(
             val damageAmount = if (isRepeatTarget) 10.5f else 24f
             val damageSource = createTeslaDamageSource(serverWorld)
 
-            target.damage(damageSource, damageAmount)
+            target.hurt(damageSource, damageAmount)
             damageArmorDurability(world, target, 4, 6)
 
             val lightning = EntityType.LIGHTNING_BOLT.create(serverWorld)
@@ -166,19 +170,19 @@ class TeslaCoilBlockEntity(
     }
 
     private fun createTeslaDamageSource(world: ServerLevel): DamageSource {
-        val registry = world.registryManager.getValue(egistries.DAMAGE_TYPE)
-        val key = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "tesla_coil"))
+        val registry = world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
+        val key = ResourceKey.create(RRegistries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "tesla_coil"))
         val entry = registry.getEntry(key).orElseThrow { IllegalStateException("Tesla coil damage type not registered") }
         return DamageSource(entry)
     }
 
     private fun damageArmorDurability(world: Level, entity: LivingEntity, min: Int, max: Int) {
-        val amount = if (min >= max) min else world.random.nextBetween(min, max)
+        val amount = if (min >= max) min else world.random.nextIntBetweenInclusive(min, max)
         for (slot in EquipmentSlot.entries) {
             if (slot.type != EquipmentSlot.Type.ARMOR) continue
             val stack = entity.getItemBySlot(slot)
             if (!stack.isEmpty && stack.item is ArmorItem) {
-                stack.damage(amount, entity) { it.sendEquipmentBreakStatus(slot) }
+                stack.hurt(amount, entity) { it.sendEquipmentBreakStatus(slot) }
             }
         }
     }

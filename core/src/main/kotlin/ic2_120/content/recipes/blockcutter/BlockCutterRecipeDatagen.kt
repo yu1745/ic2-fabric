@@ -7,6 +7,7 @@ import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
@@ -43,7 +44,7 @@ object BlockCutterRecipeDatagen {
         Entry("stone_to_slab", IngredientInput.item(Items.STONE), 1, 1.5f, Items.STONE_SLAB, 9),
         Entry("cobblestone_to_slab", IngredientInput.item(Items.COBBLESTONE), 1, 2.0f, Items.COBBLESTONE_SLAB, 9),
         Entry("sandstone_to_slab", IngredientInput.item(Items.SANDSTONE), 1, 0.8f, Items.SANDSTONE_SLAB, 9),
-        Entry("cut_sandstone_to_slab", IngredientInput.item(Items.CUT_SANDSTONE), 1, 0.8f, Items.CUT_SANDSTONE_SLAB, 9),
+        Entry("cut_sandstone_to_slab", IngredientInput.item(Items.CUT_SANDSTONE), 1, 0.8f, Items.CUT_STANDSTONE_SLAB, 9),
         Entry("smooth_sandstone_to_slab", IngredientInput.item(Items.SMOOTH_SANDSTONE), 1, 0.8f, Items.SMOOTH_SANDSTONE_SLAB, 9),
         Entry("red_sandstone_to_slab", IngredientInput.item(Items.RED_SANDSTONE), 1, 0.8f, Items.RED_SANDSTONE_SLAB, 9),
         Entry("cut_red_sandstone_to_slab", IngredientInput.item(Items.CUT_RED_SANDSTONE), 1, 0.8f, Items.CUT_RED_SANDSTONE_SLAB, 9),
@@ -138,45 +139,17 @@ object BlockCutterRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            BlockCutterRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "cutting/${entry.name}"),
-                input = entry.input,
-                inputCount = entry.inputCount,
-                materialHardness = entry.materialHardness,
-                outputItem = entry.output,
-                outputCount = entry.count
-            ).also(exporter::accept)
+            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "cutting/${entry.name}")
+            val recipe = BlockCutterRecipe(
+                recipeId,
+                entry.input.toIngredient(),
+                entry.inputCount,
+                entry.materialHardness,
+                ItemStack(entry.output, entry.count)
+            )
+            exporter.accept(recipeId, recipe, null)
         }
-    }
-
-    private class BlockCutterRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: IngredientInput,
-        private val inputCount: Int,
-        private val materialHardness: Float,
-        private val outputItem: Item,
-        private val outputCount: Int
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(BlockCutterRecipe::class)}")
-            json.add("ingredient", input.toJson())
-            json.addProperty("input_count", inputCount)
-            json.addProperty("material_hardness", materialHardness)
-
-            val result = JsonObject()
-            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(BlockCutterRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

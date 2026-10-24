@@ -33,9 +33,9 @@ fun ItemStack.getSemifluidFuelFluid(): Fluid? {
 /** 判断物品是否为半流质发电机燃料。 */
 fun ItemStack.isSemifluidFuel(): Boolean {
     val fluid = getSemifluidFuelFluid() ?: return false
-    // Fluid.isIn(TagKey) 与 Fluid.getRegistryEntry() 在 1.20.1 均已 @Deprecated，
+    // Fluid.`is`(TagKey) 与 Fluid.getRegistryEntry() 在 1.20.1 均已 @Deprecated，
     // 改用未废弃的 FluidState.isIn（其内部委托 Holder.isIn）。
-    val state = fluid.defaultBlockState
-    return state.isIn(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) ||
-        state.isIn(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT)
+    val state = fluid.defaultFluidState()
+    return state.`is`(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) ||
+        state.`is`(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT)
 }

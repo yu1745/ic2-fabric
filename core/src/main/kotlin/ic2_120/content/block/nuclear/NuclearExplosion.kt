@@ -203,7 +203,7 @@ class NuclearExplosion private constructor(
         while (remaining > 0) {
             rx += dx; ry += dy; rz += dz
 
-            if (ry < world.bottomY.toDouble() || ry > world.topY.toDouble()) break
+            if (ry < world.minBuildHeight.toDouble() || ry > world.maxBuildHeight.toDouble()) break
 
             mutablePos.set(rx.toInt(), ry.toInt(), rz.toInt())
             val state = world.getBlockState(mutablePos)
@@ -223,7 +223,7 @@ class NuclearExplosion private constructor(
 
             // 非空气加入摧毁
             if (!isAir) {
-                affectedSet.add(mutablePos.toImmutable())
+                affectedSet.add(mutablePos.immutable())
 
                 // 高抗性 → 产子射线
                 if (absorption > 10.0 && subBudget > 0) {
@@ -259,7 +259,7 @@ class NuclearExplosion private constructor(
         var remaining = initialPower
         while (remaining > 0) {
             rx += dx; ry += dy; rz += dz
-            if (ry < world.bottomY.toDouble() || ry > world.topY.toDouble()) break
+            if (ry < world.minBuildHeight.toDouble() || ry > world.maxBuildHeight.toDouble()) break
             mutablePos.set(rx.toInt(), ry.toInt(), rz.toInt())
             val state = world.getBlockState(mutablePos)
             val block = state.block
@@ -272,7 +272,7 @@ class NuclearExplosion private constructor(
             if (!isAir && isProtected(mutablePos)) break
             if (absorption > remaining) break
             remaining -= absorption
-            if (!isAir) affectedSet.add(mutablePos.toImmutable())
+            if (!isAir) affectedSet.add(mutablePos.immutable())
         }
     }
 
@@ -289,7 +289,7 @@ class NuclearExplosion private constructor(
         world.playSound(null, soundPos.x, soundPos.y, soundPos.z,
             SoundEvents.ENTITY_GENERIC_EXPLODE, SoundSource.BLOCKS,
             4.0f, (1.0f + (world.random.nextFloat() - 0.5f) * 0.4f) * 0.7f)
-        world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
+        world.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
             centerX, centerY, centerZ, 1, 0.0, 0.0, 0.0, 0.0)
 
         // 立即施加实体伤害
@@ -309,7 +309,7 @@ class NuclearExplosion private constructor(
             val pos = blocksToDestroy[destroyIndex]
             val state = world.getBlockState(pos)
             if (!state.isAir()) {
-                world.setBlock(pos, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL or Block.FORCE_STATE)
+                world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL or Block.UPDATE_KNOWN_SHAPE)
                 state.block.onDestroyedByExplosion(world, pos, null)
             }
             destroyIndex++
@@ -335,7 +335,7 @@ class NuclearExplosion private constructor(
             centerX + q, centerY + q, centerZ + q
         )
 
-        for (entity in world.getEntitiesByClass(LivingEntity::class.java, box) { true }) {
+        for (entity in world.getEntitiesOfClass(LivingEntity::class.java, box) { true }) {
             val dist = entity.pos.distanceTo(Vec3(centerX, centerY, centerZ))
             val w = dist / q
             if (w > 1.0) continue
@@ -345,7 +345,7 @@ class NuclearExplosion private constructor(
             val ac = (1.0 - w) * exposure
             val damage = (((ac * ac + ac) / 2.0) * 7.0 * q + 1.0).toFloat()
 
-            if (damage > 0f) entity.damage(damageSource, damage)
+            if (damage > 0f) entity.hurt(damageSource, damage)
 
             val dir = Vec3(centerX, centerY, centerZ).relativize(entity.pos).normalize()
             entity.addVelocity(dir.x * exposure, dir.y * exposure, dir.z * exposure)

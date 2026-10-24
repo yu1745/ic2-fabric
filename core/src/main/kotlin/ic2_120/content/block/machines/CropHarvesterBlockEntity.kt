@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -44,7 +48,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.network.chat.Component
@@ -67,7 +70,7 @@ class CropHarvesterBlockEntity(
     IEjectorUpgradeSupport,
     ITransformerUpgradeSupport,
     IOverclockerUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CropHarvesterBlock.ACTIVE
     override val tier: Int = CROP_HARVESTER_TIER
@@ -77,14 +80,14 @@ class CropHarvesterBlockEntity(
     override var speedMultiplier: Float = 1f
     override var energyMultiplier: Float = 1f
 
-    private var workOffset: Int = random.nextBetween(0, WORK_INTERVAL_TICKS - 1)
+    private var workOffset: Int = random.nextInt(0, (WORK_INTERVAL_TICKS - 1) + 1)
 
     private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         // 升级格仅在 insertRoutes（玩家 GUI 可放可取），不在 extractSlots：物流/自动化不可抽走升级卡（同 Macerator 等标准机器模式）。
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -119,23 +122,23 @@ class CropHarvesterBlockEntity(
     constructor(pos: BlockPos, state: BlockState) : this(CropHarvesterBlockEntity::class.type(), pos, state)
 
     override fun getInventory(): Container = this
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
     override fun setChanged() = super.setChanged()
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         SLOT_CONTENT_INDICES.contains(slot) -> false
         slot == SLOT_DISCHARGING -> (stack.item is IBatteryItem || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust)
@@ -143,9 +146,11 @@ class CropHarvesterBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.crop_harvester")
@@ -162,15 +167,15 @@ class CropHarvesterBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CropHarvesterSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        scanX = if (nbt.hasProperty(NBT_SCAN_X)) nbt.getInt(NBT_SCAN_X).coerceIn(SCAN_X_MIN, SCAN_X_MAX) else SCAN_X_MIN
-        scanY = if (nbt.hasProperty(NBT_SCAN_Y)) nbt.getInt(NBT_SCAN_Y).coerceIn(SCAN_Y_MIN, SCAN_Y_MAX) else SCAN_Y_MIN
-        scanZ = if (nbt.hasProperty(NBT_SCAN_Z)) nbt.getInt(NBT_SCAN_Z).coerceIn(SCAN_Z_MIN, SCAN_Z_MAX) else SCAN_Z_MIN
+        scanX = if (nbt.contains(NBT_SCAN_X)) nbt.getInt(NBT_SCAN_X).coerceIn(SCAN_X_MIN, SCAN_X_MAX) else SCAN_X_MIN
+        scanY = if (nbt.contains(NBT_SCAN_Y)) nbt.getInt(NBT_SCAN_Y).coerceIn(SCAN_Y_MIN, SCAN_Y_MAX) else SCAN_Y_MIN
+        scanZ = if (nbt.contains(NBT_SCAN_Z)) nbt.getInt(NBT_SCAN_Z).coerceIn(SCAN_Z_MIN, SCAN_Z_MAX) else SCAN_Z_MIN
         sync.scanX = scanX
         sync.scanY = scanY
         sync.scanZ = scanZ
@@ -179,7 +184,7 @@ class CropHarvesterBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropHarvesterSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_SCAN_X, scanX)
@@ -232,7 +237,7 @@ class CropHarvesterBlockEntity(
         while (steps < SCAN_STEPS_PER_TICK) {
             advanceScanCursor()
             steps++
-            val p = pos.add(scanX, scanY, scanZ)
+            val p = pos.offset(scanX, scanY, scanZ)
             val candidate = world.getBlockEntity(p) as? CropBlockEntity ?: continue
             targetPos = p
             be = candidate
@@ -253,17 +258,17 @@ class CropHarvesterBlockEntity(
             world.setBlock(
                 targetPos,
                 cropState.setValue(CropBlock.AGE, result.ageAfterHarvest.coerceIn(0, 7)),
-                net.minecraft.world.level.block.Block.NOTIFY_ALL
+                net.minecraft.world.level.block.Block.UPDATE_ALL
             )
         } else {
-            world.setBlock(targetPos, CropStickBlock.defaultStickState(), net.minecraft.world.level.block.Block.NOTIFY_ALL)
+            world.setBlock(targetPos, CropStickBlock.defaultStickState(), net.minecraft.world.level.block.Block.UPDATE_ALL)
         }
 
         for (drop in result.drops) {
             if (drop.isEmpty) continue
             val remaining = insertIntoContentSlots(drop.copy())
             if (!remaining.isEmpty) {
-                Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), remaining)
+                Containers.dropItemStack(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), remaining)
             }
             sync.consumeEnergy(harvestCost)
             report.harvested++
@@ -290,7 +295,7 @@ class CropHarvesterBlockEntity(
 
     private fun isOutputFull(): Boolean {
         for (slot in SLOT_CONTENT_INDICES) {
-            val stack = getStack(slot)
+            val stack = getItem(slot)
             if (stack.isEmpty) return false
             val limit = minOf(stack.maxStackSize, net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE)
             if (stack.count < limit) return false
@@ -303,9 +308,9 @@ class CropHarvesterBlockEntity(
 
         for (slot in SLOT_CONTENT_INDICES) {
             if (remaining.isEmpty) break
-            val existing = getStack(slot)
+            val existing = getItem(slot)
             if (existing.isEmpty) continue
-            if (!ItemStack.canCombine(existing, remaining)) continue
+            if (!ItemStack.isSameItemSameComponents(existing, remaining)) continue
             val limit = minOf(existing.maxStackSize, net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE)
             val room = (limit - existing.count).coerceAtLeast(0)
             if (room <= 0) continue
@@ -316,13 +321,13 @@ class CropHarvesterBlockEntity(
 
         for (slot in SLOT_CONTENT_INDICES) {
             if (remaining.isEmpty) break
-            val existing = getStack(slot)
+            val existing = getItem(slot)
             if (!existing.isEmpty) continue
             val toInsert = minOf(remaining.count, net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE)
             if (toInsert <= 0) break
             val inserted = remaining.copy()
             inserted.count = toInsert
-            setStack(slot, inserted)
+            setItem(slot, inserted)
             remaining.shrink(toInsert)
         }
 

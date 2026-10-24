@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -31,7 +33,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 
 @ModBlock(name = "condenser", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "machine")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -46,7 +47,7 @@ class CondenserBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, CondenserBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, CondenserBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -72,7 +73,7 @@ class CondenserBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ironCasing = ic2_120.content.item.IronCasing::class.instance()
             val heatVent = ic2_120.content.item.HeatVentItem::class.instance()
             val ironIngot = net.minecraft.world.item.Items.IRON_INGOT

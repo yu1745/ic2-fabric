@@ -26,14 +26,20 @@ object RadiationHandler {
         tickCounter++
         if (tickCounter % 20 != 0) return
 
-        for (world in server.worlds) {
+        for (world in server.allLevels) {
             for (player in world.players) {
-                if (player.isDead) continue
+                if (player.isDeadOrDying) continue
                 if (isImmune(player)) continue
                 if (hasRadioactiveItem(player)) {
-                    player.addStatusEffect(
-                        MobEffectInstance(ModStatusEffects.RADIATION, 400, 0, true, true, true)
-                    )
+                    // TODO(1.21.1): 1.21.1 MobEffectInstance 需要 Holder<MobEffect>；
+                    // 直接按注册键取 registry holder，保证与原版效果查询的 holder 语义一致。
+                    BuiltInRegistries.MOB_EFFECT.getHolder(
+                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2", "radiation")
+                    ).ifPresent { holder ->
+                        player.addEffect(
+                            MobEffectInstance(holder, 400, 0, true, true, true)
+                        )
+                    }
                 }
             }
         }
@@ -52,7 +58,7 @@ object RadiationHandler {
 
         fun isHazmat(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is ArmorItem) return false
-            val id = BuiltInRegistries.ITEM.getId(stack.item)
+            val id = BuiltInRegistries.ITEM.getKey(stack.item)
             return "hazmat" in id.path || id.path == "rubber_boots"
         }
 
@@ -73,10 +79,10 @@ object RadiationHandler {
         }
 
         if (entity is Player) {
-            for (stack in entity.inventory.main) {
+            for (stack in entity.inventory.items) {
                 if (isRadioactiveItem(stack)) return true
             }
-            for (stack in entity.inventory.offHand) {
+            for (stack in entity.inventory.offhand) {
                 if (isRadioactiveItem(stack)) return true
             }
         }

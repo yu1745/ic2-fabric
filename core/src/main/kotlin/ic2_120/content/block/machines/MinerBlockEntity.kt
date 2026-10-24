@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -111,7 +115,7 @@ abstract class BaseMinerBlockEntity(
     private val advanced: Boolean
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IClaimSensitive, ExtendedScreenHandlerFactory {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IClaimSensitive, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty = BaseMinerBlock.ACTIVE
     override val soundConfig = MachineSoundConfig.operate("machine.miner.operate", 0.5f, 1.0f, 20)
@@ -202,12 +206,12 @@ abstract class BaseMinerBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory,
         { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        { slot, stack -> isValid(slot, stack) },
+        { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = buildList {
             add(ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = ::isAllowedUpgrade))
             add(ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isDischargeItem(it) }, maxPerSlot = 1))
-            add(ItemInsertRoute(intArrayOf(SLOT_SCANNER), matcher = { isValid(SLOT_SCANNER, it) }, maxPerSlot = 1))
-            add(ItemInsertRoute(intArrayOf(SLOT_DRILL), matcher = { isValid(SLOT_DRILL, it) }, maxPerSlot = 1))
+            add(ItemInsertRoute(intArrayOf(SLOT_SCANNER), matcher = { canPlaceItem(SLOT_SCANNER, it) }, maxPerSlot = 1))
+            add(ItemInsertRoute(intArrayOf(SLOT_DRILL), matcher = { canPlaceItem(SLOT_DRILL, it) }, maxPerSlot = 1))
             add(ItemInsertRoute(SLOT_ITEM_INDICES, matcher = { advanced || isNormalOutputItem(it) }, maxPerSlot = if (advanced) 1 else net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE))
             if (!advanced) {
                 add(ItemInsertRoute(intArrayOf(SLOT_PIPE), matcher = { it.item === MiningPipeBlock::class.item() }, maxPerSlot = PIPE_SLOT_MAX_COUNT))
@@ -247,15 +251,15 @@ abstract class BaseMinerBlockEntity(
     private fun isDischargeItem(stack: ItemStack) = !stack.isEmpty && (stack.item is IBatteryItem || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust)
     private fun isNormalOutputItem(stack: ItemStack) = !stack.isEmpty && stack.item !== MiningPipeBlock::class.item() && stack.item !is IUpgradeItem && stack.item !is Drill && stack.item !is DiamondDrill && stack.item !is IridiumDrill && stack.item !is OdScannerItem && stack.item !is AdvancedScannerItem && stack.item !is IBatteryItem
 
-    override fun size() = INVENTORY_SIZE
+    override fun getContainerSize() = INVENTORY_SIZE
     override fun isEmpty() = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int) = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int) = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun getMaxCountPerStack() = PIPE_SLOT_MAX_COUNT
     override fun removeItem(slot: Int, amount: Int) = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int) = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player) = Container.stillValidBlockEntity(this, player)
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         val max = when {
             slot == SLOT_PIPE -> PIPE_SLOT_MAX_COUNT
             slot == SLOT_SCANNER || slot == SLOT_DRILL || slot == SLOT_DISCHARGING -> 1
@@ -266,7 +270,7 @@ abstract class BaseMinerBlockEntity(
         inventory[slot] = stack
         setChanged()
     }
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_SCANNER -> stack.item is OdScannerItem || stack.item is AdvancedScannerItem
         SLOT_DRILL -> !advanced && (stack.item is Drill || stack.item is DiamondDrill || stack.item is IridiumDrill)
         SLOT_DISCHARGING -> isDischargeItem(stack)
@@ -281,11 +285,11 @@ abstract class BaseMinerBlockEntity(
         stack.item is EnergyStorageUpgrade || stack.item is TransformerUpgrade || stack.item is EjectorUpgrade || stack.item is PullingUpgrade || stack.item is FluidEjectorUpgrade || stack.item is FluidPullingUpgrade
     }
 
-    fun getPipeCount() = getStack(SLOT_PIPE).takeIf { it.item === MiningPipeBlock::class.item() }?.count ?: 0
+    fun getPipeCount() = getItem(SLOT_PIPE).takeIf { it.item === MiningPipeBlock::class.item() }?.count ?: 0
     fun insertPipesFromStack(stack: ItemStack, requestedAmount: Int = stack.count): Int {
         val move = minOf(requestedAmount, stack.count, PIPE_SLOT_MAX_COUNT - getPipeCount())
         if (move <= 0 || stack.item !== MiningPipeBlock::class.item()) return 0
-        val target = getStack(SLOT_PIPE)
+        val target = getItem(SLOT_PIPE)
         if (target.isEmpty) inventory[SLOT_PIPE] = ItemStack(MiningPipeBlock::class.item(), move) else target.grow(move)
         stack.shrink(move); setChanged(); return move
     }
@@ -293,7 +297,7 @@ abstract class BaseMinerBlockEntity(
         val moved = minOf(amount, getPipeCount())
         if (moved <= 0) return ItemStack.EMPTY
         val result = ItemStack(MiningPipeBlock::class.item(), moved)
-        removeStack(SLOT_PIPE, moved); return result
+        removeItem(SLOT_PIPE, moved); return result
     }
 
     override fun claimBlockedTargets(world: Level, pos: BlockPos, state: BlockState): List<BlockPos> {
@@ -306,7 +310,7 @@ abstract class BaseMinerBlockEntity(
         tickComponents()
         val server = world as? ServerLevel ?: return
         val working = if (resetWaitingForRedstone) {
-            val currentRedstone = server.isReceivingRedstonePower(pos)
+            val currentRedstone = server.hasNeighborSignal(pos)
             if (currentRedstone == redstoneStateAtReset) {
                 false
             } else {
@@ -344,7 +348,7 @@ abstract class BaseMinerBlockEntity(
         if (sync.amount > 0) drillCharger.tick()
     }
 
-    private fun scannerType(): ScannerType? = when (val item = getStack(SLOT_SCANNER).item) {
+    private fun scannerType(): ScannerType? = when (val item = getItem(SLOT_SCANNER).item) {
         is AdvancedScannerItem -> ScannerType.OV
         is OdScannerItem -> ScannerType.OD
         else -> null
@@ -359,9 +363,9 @@ abstract class BaseMinerBlockEntity(
     /** Process one vertical pipe level, then scan one horizontal layer. */
     private fun tickNormal(world: ServerLevel): Boolean {
         if (normalReachedBottom) return recoverNormalPipes(world)
-        val drill = getStack(SLOT_DRILL)
+        val drill = getItem(SLOT_DRILL)
         if (drill.isEmpty) return recoverNormalPipes(world)
-        val scanner = getStack(SLOT_SCANNER)
+        val scanner = getItem(SLOT_SCANNER)
         val type = scannerType() ?: return false
         if (advanced) return false
         var y = sync.cursorY.takeIf { it < pos.y } ?: (pos.y - 1).also { sync.cursorY = it }
@@ -378,7 +382,7 @@ abstract class BaseMinerBlockEntity(
             val pipeState = world.getBlockState(pipe)
             if (!pipeState.isAir) {
                 // 遇到不可破坏方块（基岩等）视为到底：不再钻穿，自动转入管道回收 (#26)
-                if (pipeState.getHardness(world, pipe) < 0f) {
+                if (pipeState.getDestroySpeed(world, pipe) < 0f) {
                     normalReachedBottom = true
                     setChanged()
                     return recoverNormalPipes(world)
@@ -389,7 +393,7 @@ abstract class BaseMinerBlockEntity(
             }
             if (getPipeCount() <= 0 || sync.amount < 3L) return false
             if (ClaimProtection.isProtected(world, pipe, ownerUuid)) return false
-            val placed = world.setBlock(pipe, MiningPipeBlock::class.instance().defaultBlockState, Block.NOTIFY_ALL)
+            val placed = world.setBlock(pipe, MiningPipeBlock::class.instance().defaultBlockState(), Block.UPDATE_ALL)
             if (!placed || world.getBlockState(pipe).block !is MiningPipeBlock) return false
             sync.consumeEnergy(3L)
             takePipes(1)
@@ -407,7 +411,7 @@ abstract class BaseMinerBlockEntity(
         val target = findNormalTarget(world, y, scanRange) ?: run {
             sync.cursorY = y - 1
             scanLevel = Int.MIN_VALUE
-            if (sync.cursorY < world.bottomY) {
+            if (sync.cursorY < world.minBuildHeight) {
                 normalReachedBottom = true
                 setChanged()
                 return recoverNormalPipes(world)
@@ -434,7 +438,7 @@ abstract class BaseMinerBlockEntity(
         if (advanced) return false
         val pipe = findDeepestNormalPipe(world) ?: run {
             // 管道全部收回：卸下钻头（或 GUI 重启）后复位到底标志，允许下一轮采矿
-            if (normalReachedBottom && getStack(SLOT_DRILL).isEmpty) {
+            if (normalReachedBottom && getItem(SLOT_DRILL).isEmpty) {
                 normalReachedBottom = false
                 setChanged()
             }
@@ -449,14 +453,14 @@ abstract class BaseMinerBlockEntity(
             return true
         }
         normalPipeRecoveryTicks = 0
-        world.setBlock(pipe, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
+        world.setBlock(pipe, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)
         insertPipesFromStack(ItemStack(MiningPipeBlock::class.item()), 1)
         return true
     }
 
     private fun findDeepestNormalPipe(world: ServerLevel): BlockPos? {
         // 自底向上回收：先拆最底部的管道（钻头端），列保持连续，不会出现隔空缺口 (#26)
-        for (y in world.bottomY until pos.y) {
+        for (y in world.minBuildHeight until pos.y) {
             val pipe = BlockPos(pos.x, y, pos.z)
             if (world.getBlockState(pipe).block is MiningPipeBlock) return pipe
         }
@@ -466,7 +470,7 @@ abstract class BaseMinerBlockEntity(
     private fun findNormalTarget(world: ServerLevel, y: Int, range: Int): BlockPos? {
         for (x in pos.x - range..pos.x + range) for (z in pos.z - range..pos.z + range) {
             val p = BlockPos(x, y, z); val state = world.getBlockState(p)
-            if (!state.isAir && state.getHardness(world, p) >= 0f && isOreLike(world, p, state) && canUseDrill(state)) return p
+            if (!state.isAir && state.getDestroySpeed(world, p) >= 0f && isOreLike(world, p, state) && canUseDrill(state)) return p
         }
         return null
     }
@@ -495,7 +499,7 @@ abstract class BaseMinerBlockEntity(
         val mode = when (drill.item) { is Drill -> 0; is DiamondDrill -> 1; is IridiumDrill -> 2; else -> return false }
         val targetState = world.getBlockState(target)
         // 不可破坏方块（基岩等）一律不挖：竖直下探与水平路径共用此守卫 (#26)
-        if (targetState.getHardness(world, target) < 0f) return false
+        if (targetState.getDestroySpeed(world, target) < 0f) return false
         val (euPerTick, duration, toolCost) = when (mode) { 0 -> Triple(60L, 20, 50L); 1 -> Triple(100L, 10, 80L); else -> Triple(800L, 5, 800L) }
         if (progressMode != mode) { progressMode = mode; sync.progressTicks = 0 }
         val depthCost = max(0, pos.y - target.y) * 2L
@@ -512,8 +516,8 @@ abstract class BaseMinerBlockEntity(
 
     /** Remote scan with a 20-tick work period; no pipe or drill is required. */
     private fun tickAdvanced(world: ServerLevel): Boolean {
-        if (world.isReceivingRedstonePower(pos) == hasRedstoneInverted()) return false
-        val scanner = getStack(SLOT_SCANNER); val type = scannerType() ?: return false
+        if (world.hasNeighborSignal(pos) == hasRedstoneInverted()) return false
+        val scanner = getItem(SLOT_SCANNER); val type = scannerType() ?: return false
         val scannerTool = scanner.item as? IElectricTool ?: return false
         // 超频耗能惩罚：1.6^n 计入单次扫描/单次开采成本（向上取整，整数 EU）
         val scanStepCost = ceil(ADVANCED_SCAN_STEP * energyMultiplier).toLong().coerceAtLeast(1L)
@@ -542,42 +546,42 @@ abstract class BaseMinerBlockEntity(
         return true
     }
 
-    private fun hasRedstoneInverted() = SLOT_UPGRADE_INDICES.any { getStack(it).item is RedstoneInverterUpgrade }
+    private fun hasRedstoneInverted() = SLOT_UPGRADE_INDICES.any { getItem(it).item is RedstoneInverterUpgrade }
     /** Count overclocker items including the full stack size in each upgrade slot. */
     private fun advanceAdvancedScan(range: Int): BlockPos? {
         val current = advancedScanPos ?: return null
         var x = current.x; var y = current.y; var z = current.z
         if (x < pos.x + range) x++ else if (z < pos.z + range) { x = pos.x - range; z++ } else { x = pos.x - range; z = pos.z - range; y-- }
-        val bottomY = world?.bottomY ?: return null
+        val bottomY = world?.minBuildHeight ?: return null
         if (y < bottomY) { advancedScanPos = BlockPos(x, y, z); return null }
         val result = BlockPos(x, y, z); advancedScanPos = result; sync.cursorX = x - pos.x; sync.cursorY = y; sync.cursorZ = z - pos.z; return result
     }
 
     private fun isOreLike(world: Level, target: BlockPos, state: BlockState): Boolean =
         state.block !is ic2_120.content.block.MachineBlock &&
-            (state.isIn(net.minecraft.tags.BlockTags.COAL_ORES) ||
-                state.isIn(net.minecraft.tags.BlockTags.COPPER_ORES) ||
-                state.isIn(net.minecraft.tags.BlockTags.DIAMOND_ORES) ||
-                state.isIn(net.minecraft.tags.BlockTags.EMERALD_ORES) ||
-                state.isIn(net.minecraft.tags.BlockTags.GOLD_ORES) ||
-                state.isIn(net.minecraft.tags.BlockTags.IRON_ORES) ||
-                state.isIn(net.minecraft.tags.BlockTags.LAPIS_ORES) ||
-                state.isIn(net.minecraft.tags.BlockTags.REDSTONE_ORES) ||
+            (state.`is`(net.minecraft.tags.BlockTags.COAL_ORES) ||
+                state.`is`(net.minecraft.tags.BlockTags.COPPER_ORES) ||
+                state.`is`(net.minecraft.tags.BlockTags.DIAMOND_ORES) ||
+                state.`is`(net.minecraft.tags.BlockTags.EMERALD_ORES) ||
+                state.`is`(net.minecraft.tags.BlockTags.GOLD_ORES) ||
+                state.`is`(net.minecraft.tags.BlockTags.IRON_ORES) ||
+                state.`is`(net.minecraft.tags.BlockTags.LAPIS_ORES) ||
+                state.`is`(net.minecraft.tags.BlockTags.REDSTONE_ORES) ||
                 state.`is`(net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS) ||
-                BuiltInRegistries.BLOCK.getId(state.block).path.contains("ore") ||
-                BuiltInRegistries.BLOCK.getId(state.block).path == "ancient_debris")
-    private fun canUseDrill(state: BlockState): Boolean = !state.isToolRequired || getLootTool(false).isSuitableFor(state)
+                BuiltInRegistries.BLOCK.getKey(state.block)!!.path.contains("ore") ||
+                BuiltInRegistries.BLOCK.getKey(state.block)!!.path == "ancient_debris")
+    private fun canUseDrill(state: BlockState): Boolean = !state.requiresCorrectToolForDrops() || getLootTool(false).isCorrectToolForDrops(state)
     private fun canMineAdvanced(world: ServerLevel, target: BlockPos, state: BlockState): Boolean {
-        if (!state.fluidState.isEmpty || state.getHardness(world, target) < 0f) return false
+        if (!state.fluidState.isEmpty || state.getDestroySpeed(world, target) < 0f) return false
         // IC2 OreValues excludes ordinary tile-entity blocks (machines, chests, etc.).
         if (state.block is ic2_120.content.block.MachineBlock || world.getBlockEntity(target) != null) return false
-        val drops = Block.getDroppedStacks(state, world, target, world.getBlockEntity(target), null, getLootTool(sync.silkTouch != 0))
+        val drops = Block.getDrops(state, world, target, world.getBlockEntity(target), null, getLootTool(sync.silkTouch != 0))
         if (drops.isEmpty()) return false
-        val filters = SLOT_ITEM_INDICES.map { getStack(it) }.filter { !it.isEmpty }.toList()
+        val filters = SLOT_ITEM_INDICES.map { getItem(it) }.filter { !it.isEmpty }.toList()
         val blockStack = state.block.asItem().takeUnless { it === Items.AIR }?.let(::ItemStack)
         val matchesFilter = { filter: ItemStack ->
-            (blockStack != null && ItemStack.canCombine(blockStack, filter)) ||
-                drops.any { drop -> ItemStack.canCombine(drop, filter) }
+            (blockStack != null && ItemStack.isSameItemSameComponents(blockStack, filter)) ||
+                drops.any { drop -> ItemStack.isSameItemSameComponents(drop, filter) }
         }
         // 原矿和掉落材料都可以作为过滤条件；黑名单为空 = 不排除任何目标，白名单为空 = 没有允许目标。
         if (filters.isEmpty()) return sync.mode != 0
@@ -586,7 +590,7 @@ abstract class BaseMinerBlockEntity(
     }
 
     private fun getLootTool(silk: Boolean): ItemStack {
-        val drill = getStack(SLOT_DRILL).item
+        val drill = getItem(SLOT_DRILL).item
         val tool = if (advanced) ItemStack(Items.NETHERITE_PICKAXE) else when (drill) {
             is Drill -> ItemStack(Items.IRON_PICKAXE)
             is IridiumDrill -> ItemStack(Items.NETHERITE_PICKAXE)
@@ -598,13 +602,13 @@ abstract class BaseMinerBlockEntity(
     }
     private fun harvest(world: ServerLevel, target: BlockPos, tool: ItemStack) {
         if (ClaimProtection.isProtected(world, target, ownerUuid, ClaimProtection.EDIT_BLOCK)) return
-        val drops = Block.getDroppedStacks(world.getBlockState(target), world, target, world.getBlockEntity(target), null, tool)
-        val hasEjector = advanced && SLOT_UPGRADE_INDICES.any { getStack(it).item is EjectorUpgrade }
-        world.syncWorldEvent(2001, target, Block.getRawIdFromState(world.getBlockState(target)))
-        world.setBlock(target, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
+        val drops = Block.getDrops(world.getBlockState(target), world, target, world.getBlockEntity(target), null, tool)
+        val hasEjector = advanced && SLOT_UPGRADE_INDICES.any { getItem(it).item is EjectorUpgrade }
+        world.levelEvent(2001, target, Block.getId(world.getBlockState(target)))
+        world.setBlock(target, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)
         for (drop in drops) {
             if (advanced && !hasEjector) {
-                Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), drop)
+                Containers.dropItemStack(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), drop)
             } else {
                 insertDrop(drop)
             }
@@ -620,11 +624,11 @@ abstract class BaseMinerBlockEntity(
         var rest = stack.copy()
         for (slot in if (advanced) SLOT_OUTPUT_INDICES else SLOT_ITEM_INDICES) {
             if (rest.isEmpty) break
-            val current = getStack(slot)
-            if (current.isEmpty) { setStack(slot, rest); rest = ItemStack.EMPTY }
-            else if (ItemStack.canCombine(current, rest)) { val move = minOf(rest.count, current.maxStackSize - current.count); if (move > 0) { current.grow(move); rest.shrink(move) } }
+            val current = getItem(slot)
+            if (current.isEmpty) { setItem(slot, rest); rest = ItemStack.EMPTY }
+            else if (ItemStack.isSameItemSameComponents(current, rest)) { val move = minOf(rest.count, current.maxStackSize - current.count); if (move > 0) { current.grow(move); rest.shrink(move) } }
         }
-        if (!rest.isEmpty) Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), rest)
+        if (!rest.isEmpty) Containers.dropItemStack(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), rest)
     }
 
     fun getRenderDrillTarget(time: Long): BlockPos? = renderTarget?.takeIf { time - renderTargetTime <= 8 }
@@ -636,7 +640,7 @@ abstract class BaseMinerBlockEntity(
         advancedScanPos = null; advancedTarget = null
         normalReachedBottom = false
         resetWaitingForRedstone = advanced
-        redstoneStateAtReset = world?.isReceivingRedstonePower(pos) ?: false
+        redstoneStateAtReset = world?.hasNeighborSignal(pos) ?: false
         setChanged()
     }
     fun startPipeRecovery() { /* GUI compatibility; advanced mining does not use pipes. */ }
@@ -651,7 +655,7 @@ abstract class BaseMinerBlockEntity(
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.saveAdditional(nbt, lookup); ContainerHelper.saveAllItems(nbt, inventory); syncedData.writeNbt(nbt); writeMinerNbt(nbt) }
     override fun toInitialChunkDataNbt() = createNbt()
     override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) { buf.writeBlockPos(pos); buf.writeVarInt(syncedData.size()); buf.writeBoolean(advanced) }
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf { val buf = FriendlyByteBuf(Unpooled.buffer()); buf.writeBlockPos(pos); buf.writeVarInt(syncedData.size); buf.writeBoolean(advanced); return buf }
     override fun getDisplayName() = Component.translatable("block.ic2_120.$blockKey")
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?) = MinerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage, advanced)
 }

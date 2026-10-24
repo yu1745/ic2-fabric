@@ -342,7 +342,7 @@ class PumpBlockEntity(
             if (isInfiniteWater && fluid == Fluids.WATER) {
                 // 无限水源不动方块
             } else {
-                w.setBlock(dp, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
+                w.setBlock(dp, Blocks.AIR.defaultBlockState, Block.UPDATE_ALL)
                 totalPumped++
 
                 if (fluid == ModFluids.CRUDE_OIL_STILL) {
@@ -459,7 +459,7 @@ class PumpBlockEntity(
             val bp = BlockPos(pos.x, y, pos.z)
             if (w.getBlockState(bp).`is`(tubeBlock)) {
                 if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
-                w.setBlock(bp, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
+                w.setBlock(bp, Blocks.AIR.defaultBlockState, Block.UPDATE_ALL)
             } else break
         }
         for (y in pos.y - 1 downTo targetY + 1) {
@@ -467,12 +467,12 @@ class PumpBlockEntity(
             val bs = w.getBlockState(bp)
             if (bs.isAir || bs.`is`(tubeBlock)) {
                 if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
-                w.setBlock(bp, tubeBlock.defaultBlockState, Block.NOTIFY_ALL)
+                w.setBlock(bp, tubeBlock.defaultBlockState, Block.UPDATE_ALL)
             }
         }
     }
 
-    /** 管道清理移至 PumpBlock.onStateReplaced()，不在 markRemoved 中做 */
+    /** 管道清理移至 PumpBlock.onRemove()，不在 markRemoved 中做 */
     override fun markRemoved() {
         super.markRemoved()
     }

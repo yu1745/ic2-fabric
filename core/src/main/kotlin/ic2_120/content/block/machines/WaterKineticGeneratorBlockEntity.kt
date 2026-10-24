@@ -1,5 +1,14 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -30,11 +39,9 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.HolderLookup
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
@@ -137,7 +144,7 @@ class WaterKineticGeneratorBlockEntity(
     override fun canOutputKuTo(side: Direction): Boolean {
         val world = world ?: return false
         val state = world.getBlockState(pos)
-        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
         return side == facing.opposite
     }
 
@@ -176,8 +183,8 @@ class WaterKineticGeneratorBlockEntity(
         return remainingTicks / TICKS_PER_HOUR / BASE_WEAR_PER_TICK
     }
 
-    fun onUse(player: Player, hand: InteractionHand): InteractionResult {
-        val held = player.getItemInHand(hand)
+    fun useWithoutItem(player: Player, hand: InteractionHand): InteractionResult {
+        val held = player.getItemInHand(player.usedItemHand)
         val rotor = inventory[ROTOR_SLOT]
 
         if (held.isEmpty) {
@@ -185,7 +192,7 @@ class WaterKineticGeneratorBlockEntity(
             val extracted = rotor.copy()
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
             markDirtyAndSync()
-            if (!player.giveItemStack(extracted)) {
+            if (!player.getInventory().add(extracted)) {
                 player.spawnAtLocation(extracted, false)
             }
             return InteractionResult.SUCCESS
@@ -198,7 +205,7 @@ class WaterKineticGeneratorBlockEntity(
         val inserted = held.copy()
         inserted.count = 1
         inventory[ROTOR_SLOT] = inserted
-        if (!player.abilities.creativeMode) {
+        if (!player.abilities.instabuild) {
             held.shrink(1)
         }
         markDirtyAndSync()
@@ -211,7 +218,7 @@ class WaterKineticGeneratorBlockEntity(
     }
 
     override fun getRotorRadius(stack: ItemStack): Float {
-        return when (BuiltInRegistries.ITEM.getId(stack.item).path) {
+        return when (BuiltInRegistries.ITEM.getKey(stack.item)!!.path) {
             "wooden_rotor" -> 1.0f
             "bronze_rotor" -> 1.5f
             "iron_rotor" -> 1.5f
@@ -222,7 +229,7 @@ class WaterKineticGeneratorBlockEntity(
     }
 
     private fun getRotorMultiplier(stack: ItemStack): Int {
-        return when (BuiltInRegistries.ITEM.getId(stack.item).path) {
+        return when (BuiltInRegistries.ITEM.getKey(stack.item)!!.path) {
             "wooden_rotor" -> 1
             "bronze_rotor" -> 2
             "iron_rotor" -> 2
@@ -258,7 +265,7 @@ class WaterKineticGeneratorBlockEntity(
 
         if (world.isClient) return
 
-        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         val currentAngle: Float = if (isStuck) {
             stuckAngle
@@ -440,7 +447,7 @@ class WaterKineticGeneratorBlockEntity(
             return true
         }
 
-        rotor.damage += wear
+        rotor.damageValue += wear
         rotor.editCustomData { nbt ->
             if (remainder > 0.0) {
                 nbt.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder)
@@ -578,7 +585,7 @@ class WaterKineticGeneratorBlockEntity(
                     if (otherRadius <= 0f) continue
 
                     val otherState = world.getBlockState(mutablePos)
-                    val otherFacing = otherState.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+                    val otherFacing = otherState.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
                     if (otherFacing.axis != axis) continue
 
                     val otherCenter = rotorCenter(mutablePos, otherFacing)
@@ -633,16 +640,16 @@ class WaterKineticGeneratorBlockEntity(
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
-            world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
+            world.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS)
             (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
         }
     }
 
-    override fun size(): Int = 1
+    override fun getContainerSize(): Int = 1
 
     override fun isEmpty(): Boolean = inventory[ROTOR_SLOT].isEmpty
 
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
     override fun removeItem(slot: Int, amount: Int): ItemStack {
         val result = ContainerHelper.removeItem(inventory, slot, amount)
@@ -660,7 +667,7 @@ class WaterKineticGeneratorBlockEntity(
         return result
     }
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot != ROTOR_SLOT) return
         if (stack.isEmpty) {
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
@@ -672,34 +679,34 @@ class WaterKineticGeneratorBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun clear() {
+    override fun clearContent() {
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
         markDirtyAndSync()
     }
 
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
+    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.HolderLookup.Provider) {
         super.readNbt(nbt, lookup)
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
         ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
+    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.HolderLookup.Provider) {
         super.writeNbt(nbt, lookup)
         ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(lookup: HolderLookup.WrapperLookup): CompoundTag = createNbt(lookup)
+    override fun toInitialChunkDataNbt(lookup: HolderLookup.HolderLookup.Provider): CompoundTag = createNbt(lookup)
 
     override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+        buf.writeVarInt(syncedData.size)
         return buf
     }
 

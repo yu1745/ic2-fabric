@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
@@ -23,7 +27,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.server.level.ServerPlayer
@@ -49,7 +52,7 @@ abstract class TradeOMatBlockEntityBase(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Container, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Container, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override fun getInventory(): Container = this
     override val tier: Int = 1
@@ -69,21 +72,21 @@ abstract class TradeOMatBlockEntityBase(
 
     var totalTrades: Int = 0
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_DEMAND, SLOT_OFFER -> true
         SLOT_INPUT -> matchesDemand(stack)
         SLOT_OUTPUT -> false
@@ -91,24 +94,26 @@ abstract class TradeOMatBlockEntityBase(
     }
 
     private fun matchesDemand(stack: ItemStack): Boolean {
-        val demand = getStack(SLOT_DEMAND)
+        val demand = getItem(SLOT_DEMAND)
         if (demand.isEmpty) return false
-        return ItemStack.areItemsEqual(demand, stack)
+        return ItemStack.isSameItem(demand, stack)
     }
 
     fun isOwner(player: Player): Boolean {
         val uuid = ownerUuid ?: return true
-        return player.uuid == uuid || player.hasPermissionLevel(2)
+        return player.uuid == uuid || player.hasPermissions(2)
     }
 
     /** 返回一个 ScreenHandlerFactory，携带 isOwner 标志。 */
-    fun getScreenHandlerFactory(player: Player): ExtendedScreenHandlerFactory {
+    fun getScreenHandlerFactory(player: Player): ExtendedScreenHandlerFactory<FriendlyByteBuf> {
         val owner = isOwner(player)
         val be = this
-        return object : ExtendedScreenHandlerFactory {
-            override fun writeScreenOpeningData(p: ServerPlayer, buf: FriendlyByteBuf) {
-                buf.writeBlockPos(pos)
-                buf.writeBoolean(owner)
+        return object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+            override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+                val buf = FriendlyByteBuf(Unpooled.buffer())
+                    buf.writeBlockPos(pos)
+                    buf.writeBoolean(owner)
+                return buf
             }
 
             override fun getDisplayName(): Component = be.getDisplayName()
@@ -125,21 +130,23 @@ abstract class TradeOMatBlockEntityBase(
         TradeOMatScreenHandler(syncId, playerInventory, this,
             ContainerLevelAccess.create(world!!, pos), player?.let { isOwner(it) } ?: false)
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeBoolean(isOwner(player))
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeBoolean(isOwner(player))
+        return buf
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         totalTrades = nbt.getInt(NBT_TOTAL_TRADES)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_TOTAL_TRADES, totalTrades)
     }
@@ -150,16 +157,16 @@ abstract class TradeOMatBlockEntityBase(
     }
 
     private fun tryTrade(world: Level, pos: BlockPos) {
-        val demand = getStack(SLOT_DEMAND)
-        val offer = getStack(SLOT_OFFER)
-        val input = getStack(SLOT_INPUT)
-        val output = getStack(SLOT_OUTPUT)
+        val demand = getItem(SLOT_DEMAND)
+        val offer = getItem(SLOT_OFFER)
+        val input = getItem(SLOT_INPUT)
+        val output = getItem(SLOT_OUTPUT)
 
         if (demand.isEmpty || offer.isEmpty || input.isEmpty) {
             setActiveState(world, pos, world.getBlockState(pos), false)
             return
         }
-        if (!ItemStack.areItemsEqual(demand, input) || input.count < demand.count) {
+        if (!ItemStack.isSameItem(demand, input) || input.count < demand.count) {
             setActiveState(world, pos, world.getBlockState(pos), false)
             return
         }
@@ -167,7 +174,7 @@ abstract class TradeOMatBlockEntityBase(
         val offerStack = offer.copy()
         if (output.isEmpty) {
             // ok
-        } else if (!ItemStack.areItemsEqual(output, offerStack) || output.count + offerStack.count > offerStack.maxStackSize) {
+        } else if (!ItemStack.isSameItem(output, offerStack) || output.count + offerStack.count > offerStack.maxStackSize) {
             setActiveState(world, pos, world.getBlockState(pos), false)
             return
         }
@@ -181,12 +188,12 @@ abstract class TradeOMatBlockEntityBase(
         }
 
         input.shrink(demand.count)
-        if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
+        if (input.isEmpty) setItem(SLOT_INPUT, ItemStack.EMPTY)
 
         val demandVariant = ItemVariant.of(demand)
         distributeToAdjacent(world, pos, demandVariant, demand.count.toLong())
 
-        if (output.isEmpty) setStack(SLOT_OUTPUT, offerStack.copy())
+        if (output.isEmpty) setItem(SLOT_OUTPUT, offerStack.copy())
         else output.grow(offerStack.count)
 
         totalTrades++
@@ -198,7 +205,7 @@ abstract class TradeOMatBlockEntityBase(
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
-            val storage = ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
+            val storage = ItemStorage.SIDED.find(world, pos.relative(dir), dir.opposite) ?: continue
             Transaction.openOuter().use { tx ->
                 val extracted = storage.extract(variant, remaining, tx)
                 if (extracted > 0) {
@@ -214,7 +221,7 @@ abstract class TradeOMatBlockEntityBase(
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
-            val storage = ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
+            val storage = ItemStorage.SIDED.find(world, pos.relative(dir), dir.opposite) ?: continue
             Transaction.openOuter().use { tx ->
                 val inserted = storage.insert(variant, remaining, tx)
                 if (inserted > 0) {

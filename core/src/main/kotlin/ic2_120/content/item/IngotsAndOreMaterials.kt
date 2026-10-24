@@ -39,8 +39,8 @@ private fun offerIngotSmelting(
     experience: Float = 0.1f,
     cookingTime: Int = 200
 ) {
-    SimpleCookingRecipeBuilder.createSmelting(
-        Ingredient.ofItems(input),
+    SimpleCookingRecipeBuilder.smelting(
+        Ingredient.of(input),
         RecipeCategory.MISC,
         output,
         experience,
@@ -66,7 +66,7 @@ class MixedMetalIngot : Item(Item.Properties()) {
                 .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
                 .define('B', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
                 .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
-                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, MixedMetalIngot::class.recipeId("from_plates"))
 
             // 配方2：钢锭 + 青铜锭 + 锡锭 = 合金锭
@@ -77,7 +77,7 @@ class MixedMetalIngot : Item(Item.Properties()) {
                 .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_STEEL))
                 .define('B', Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE))
                 .define('T', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
-                .unlockedBy(has(SteelIngot::class.instance()), has(SteelIngot::class.instance()))
+                .unlockedBy(getHasName(SteelIngot::class.instance()), has(SteelIngot::class.instance()))
                 .save(exporter, MixedMetalIngot::class.recipeId("from_ingots"))
         }
     }
@@ -91,7 +91,7 @@ class LeadIngot : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, LeadIngot::class.instance(), 9)
                 .requires(LeadBlock::class.instance())
-                .unlockedBy(has(LeadBlock::class.instance()), has(LeadBlock::class.instance()))
+                .unlockedBy(getHasName(LeadBlock::class.instance()), has(LeadBlock::class.instance()))
                 .save(exporter, LeadIngot::class.recipeId("from_block"))
 
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LeadBlock::class.instance(), 1)
@@ -99,7 +99,7 @@ class LeadIngot : Item(Item.Properties()) {
                 .pattern("III")
                 .pattern("III")
                 .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_LEAD))
-                .unlockedBy(has(LeadIngot::class.instance()), has(LeadIngot::class.instance()))
+                .unlockedBy(getHasName(LeadIngot::class.instance()), has(LeadIngot::class.instance()))
                 .save(exporter, LeadBlock::class.recipeId("from_ingot"))
 
             offerIngotSmelting(
@@ -144,7 +144,7 @@ class SilverIngot : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SilverIngot::class.instance(), 9)
                 .requires(SilverBlock::class.instance())
-                .unlockedBy(has(SilverBlock::class.instance()), has(SilverBlock::class.instance()))
+                .unlockedBy(getHasName(SilverBlock::class.instance()), has(SilverBlock::class.instance()))
                 .save(exporter, SilverIngot::class.recipeId("from_block"))
 
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SilverBlock::class.instance(), 1)
@@ -152,7 +152,7 @@ class SilverIngot : Item(Item.Properties()) {
                 .pattern("III")
                 .pattern("III")
                 .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_SILVER))
-                .unlockedBy(has(SilverIngot::class.instance()), has(SilverIngot::class.instance()))
+                .unlockedBy(getHasName(SilverIngot::class.instance()), has(SilverIngot::class.instance()))
                 .save(exporter, SilverBlock::class.recipeId("from_ingot"))
 
             offerIngotSmelting(
@@ -179,7 +179,7 @@ class SteelIngot : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SteelIngot::class.instance(), 9)
                 .requires(SteelBlock::class.instance())
-                .unlockedBy(has(SteelBlock::class.instance()), has(SteelBlock::class.instance()))
+                .unlockedBy(getHasName(SteelBlock::class.instance()), has(SteelBlock::class.instance()))
                 .save(exporter, SteelIngot::class.recipeId("from_block"))
 
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelBlock::class.instance(), 1)
@@ -187,7 +187,7 @@ class SteelIngot : Item(Item.Properties()) {
                 .pattern("III")
                 .pattern("III")
                 .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_STEEL))
-                .unlockedBy(has(SteelIngot::class.instance()), has(SteelIngot::class.instance()))
+                .unlockedBy(getHasName(SteelIngot::class.instance()), has(SteelIngot::class.instance()))
                 .save(exporter, SteelBlock::class.recipeId("from_ingot"))
         }
     }
@@ -206,7 +206,7 @@ class UraniumIngot : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, UraniumIngot::class.instance(), 9)
                 .requires(UraniumBlock::class.instance())
-                .unlockedBy(has(UraniumBlock::class.instance()), has(UraniumBlock::class.instance()))
+                .unlockedBy(getHasName(UraniumBlock::class.instance()), has(UraniumBlock::class.instance()))
                 .save(exporter, UraniumIngot::class.recipeId("from_block"))
 
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, UraniumBlock::class.instance(), 1)
@@ -214,7 +214,7 @@ class UraniumIngot : Item(Item.Properties()) {
                 .pattern("III")
                 .pattern("III")
                 .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_URANIUM))
-                .unlockedBy(has(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
+                .unlockedBy(getHasName(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
                 .save(exporter, UraniumBlock::class.recipeId("from_ingot"))
 
             offerIngotSmelting(

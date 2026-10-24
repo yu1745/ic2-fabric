@@ -38,7 +38,7 @@ class RedstoneEngineBlock : BaseEntityBlock(
     }
 
     init {
-        defaultState = stateManager.defaultBlockState.setValue(BlockStateProperties.FACING, Direction.UP)
+        registerDefaultState(stateManager.defaultBlockState.setValue(BlockStateProperties.FACING, Direction.UP))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -65,7 +65,7 @@ class RedstoneEngineBlock : BaseEntityBlock(
         }
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState {
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         return defaultState.setValue(BlockStateProperties.FACING, ctx.side.opposite)
     }
 
@@ -83,7 +83,7 @@ class RedstoneEngineBlock : BaseEntityBlock(
         return RenderShape.ENTITYBLOCK_ANIMATED
     }
 
-    override fun getOutlineShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: net.minecraft.world.phys.shapes.CollisionContext): VoxelShape {
+    override fun getShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: net.minecraft.world.phys.shapes.CollisionContext): VoxelShape {
         return SHAPE_ENGINE
     }
 

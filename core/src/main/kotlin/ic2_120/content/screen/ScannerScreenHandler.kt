@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import ic2_120.compat.stack
 
 import ic2_120.compat.isClient
@@ -49,7 +51,7 @@ class ScannerScreenHandler(
     init {
         addDataSlots(syncedData)
 
-        val stack = playerInventory.getStack(playerInventory.selectedSlot)
+        val stack = playerInventory.getItem(playerInventory.selected)
         val type = OdScannerItem.getScannerType(stack)
         val energy = IElectricTool.getEnergy(stack).toInt().coerceIn(0, Int.MAX_VALUE)
         val uses = OdScannerItem.getUsesRemaining(stack)
@@ -72,22 +74,22 @@ class ScannerScreenHandler(
     }
 
     private fun getSliderStack(): ItemStack? {
-        val stack = playerInventory.getStack(playerInventory.selectedSlot)
+        val stack = playerInventory.getItem(playerInventory.selected)
         return stack.takeIf { it.item is OdScannerItem || it.item is AdvancedScannerItem }
     }
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        val stack = player.mainHandStack
+        val stack = player.mainHandItem
         if (stack.item !is OdScannerItem && stack.item !is AdvancedScannerItem) return false
 
         if (id != BUTTON_ID_SCAN) return false
 
         val type = OdScannerItem.getScannerType(stack)
-        val rangeY = maxOf(1, player.blockPos.y - type.deepY)
+        val rangeY = maxOf(1, player.blockPosition().y - type.deepY)
         val energyCost = computeEnergyCost(type, rangeY)
 
         if (!sync.consumeEnergy(energyCost)) {
-            player.sendMessage(
+            player.displayClientMessage(
                 net.minecraft.network.chat.Component.translatable("message.ic2_120.scanner.no_energy")
                     .withStyle(net.minecraft.ChatFormatting.RED),
                 false
@@ -96,7 +98,7 @@ class ScannerScreenHandler(
         }
 
         if (!sync.consumeUse()) {
-            player.sendMessage(
+            player.displayClientMessage(
                 net.minecraft.network.chat.Component.translatable("message.ic2_120.scanner.no_uses")
                     .withStyle(net.minecraft.ChatFormatting.RED),
                 false
@@ -111,7 +113,7 @@ class ScannerScreenHandler(
 
         player.world.playSound(
             null,
-            player.blockPos,
+            player.blockPosition(),
             scannerUseSound,
             SoundSource.PLAYERS,
             1.0f,
@@ -140,22 +142,22 @@ class ScannerScreenHandler(
         val world = player.world
         if (world.isClient) return emptyList()
 
-        val center = player.blockPos
+        val center = player.blockPosition()
         val oreCounts = mutableMapOf<ResourceLocation, Int>()
 
-        val stack = player.mainHandStack
+        val stack = player.mainHandItem
         val type = OdScannerItem.getScannerType(stack)
         val radius = type.scanRadius
-        val minY = maxOf(world.bottomY, type.deepY)
+        val minY = maxOf(world.minBuildHeight, type.deepY)
         val maxY = center.y
 
         for (dx in -radius..radius) {
             for (dz in -radius..radius) {
                 for (y in minY..maxY) {
-                    val pos = center.add(dx, 0, dz).withY(y)
+                    val pos = center.add(dx, 0, dz).atY(y)
                     val state = world.getBlockState(pos)
                     if (state.isAir) continue
-                    val blockId = BuiltInRegistries.BLOCK.getId(state.block)
+                    val blockId = BuiltInRegistries.BLOCK.getKey(state.block) ?: continue
                     oreCounts[blockId] = oreCounts.getOrDefault(blockId, 0) + 1
                 }
             }
@@ -180,8 +182,8 @@ class ScannerScreenHandler(
             // 背包 → 快捷栏
             if (!moveItemStackTo(stack, PLAYER_INV_START + 27, invEnd, false)) ItemStack.EMPTY
             else {
-                slot.onQuickTransfer(stack, original)
-                if (stack.isEmpty) slot.stack = ItemStack.EMPTY
+                slot.onTake(player, original)
+                if (stack.isEmpty) slot.set(ItemStack.EMPTY)
                 else slot.setChanged()
                 original
             }
@@ -189,8 +191,8 @@ class ScannerScreenHandler(
             // 快捷栏 → 背包
             if (!moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_START + 27, false)) ItemStack.EMPTY
             else {
-                slot.onQuickTransfer(stack, original)
-                if (stack.isEmpty) slot.stack = ItemStack.EMPTY
+                slot.onTake(player, original)
+                if (stack.isEmpty) slot.set(ItemStack.EMPTY)
                 else slot.setChanged()
                 original
             }
@@ -237,7 +239,7 @@ class ScannerScreenHandler(
             val usesRemaining = buf.readVarInt()
             val maxUses = buf.readVarInt()
 
-            val context = ContainerLevelAccess.create(playerInventory.player.world, net.minecraft.core.BlockPos.ORIGIN)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), net.minecraft.core.BlockPos.ZERO)
 
             val handler = ScannerScreenHandler(syncId, playerInventory, context)
             handler.sync.init(energy, energyCapacity, usesRemaining, maxUses)

@@ -1,5 +1,9 @@
 package ic2_120.content.item.armor
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.compat.isClient
 
 import ic2_120.config.Ic2Config
@@ -62,7 +66,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_helmet", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.HELMET, Item.Properties().maxStackSize(1)) {
+class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.HELMET, Item.Properties().stacksTo(1)) {
 
     companion object {
         private const val FOOD_FILL_COST = 1000L
@@ -87,7 +91,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val glass = ReinforcedGlassBlock::class.item()
             val nano = NanoHelmet::class.instance()
             val adv = AdvancedCircuit::class.instance()
@@ -124,7 +128,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         var energy = getEnergy(stack)
 
         // 功能 1: 水下呼吸（复用 HazmatHelmet 逻辑）
-        if (player.isTouchingWater && player.air <= AIR_THRESHOLD) {
+        if (player.isInWater && player.air <= AIR_THRESHOLD) {
             val cooldown = nbt.getInt(AIR_CHECK_COOLDOWN_KEY)
             if (cooldown <= 0) {
                 if (consumeAirCellIfAvailable(player)) {
@@ -145,7 +149,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
                 if (toConsume > 0) {
                     if (energy < toConsume) {
                         nbt.putBoolean(NIGHT_VISION_KEY, false)
-                        player.removeStatusEffect(MobEffects.NIGHT_VISION)
+                        player.removeEffect(MobEffects.NIGHT_VISION)
                         energy = 0
                     } else {
                         energy -= toConsume
@@ -157,7 +161,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
                 nbt.putDouble(NV_REMAINDER_KEY, remainder - (if (toConsume > 0 && energy > 0) toConsume else 0))
             } else {
                 nbt.putBoolean(NIGHT_VISION_KEY, false)
-                player.removeStatusEffect(MobEffects.NIGHT_VISION)
+                player.removeEffect(MobEffects.NIGHT_VISION)
             }
         }
 
@@ -183,12 +187,12 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
             // 按效果类别动态覆盖所有负面效果（包括坚守者的 DARKNESS 以及模组效果）。
             val harmfulEffects = player.statusEffects
                 .filter {
-                    it.effectType.category == MobEffectCategory.HARMFUL ||
-                        it.effectType === ModStatusEffects.RADIATION
+                    it.effect.category == MobEffectCategory.HARMFUL ||
+                        it.effect === ModStatusEffects.RADIATION
                 }
             for (effect in harmfulEffects) {
                 if (energy < CURE_EFFECT_COST) break
-                player.removeStatusEffect(effect.effectType)
+                player.removeEffect(effect.effect)
                 energy -= CURE_EFFECT_COST
             }
         }
@@ -199,7 +203,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
     private fun consumeAirCellIfAvailable(player: Player): Boolean {
         val airCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "air_cell"))
         val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
-        val slot = player.inventory.main.find { !it.isEmpty && it.item === airCellItem }
+        val slot = player.inventory.items.find { !it.isEmpty && it.item === airCellItem }
         if (slot != null) {
             slot.shrink(1)
             val emptyCell = ItemStack(emptyCellItem)
@@ -214,7 +218,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
     private fun consumeFilledTinCanIfAvailable(player: Player): Boolean {
         val filledCanItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "filled_tin_can"))
         val emptyCanItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
-        val slot = player.inventory.main.find { !it.isEmpty && it.item === filledCanItem }
+        val slot = player.inventory.items.find { !it.isEmpty && it.item === filledCanItem }
         if (slot != null) {
             slot.shrink(1)
             val emptyCan = ItemStack(emptyCanItem)
@@ -227,19 +231,19 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
     }
 
     private fun applyNightVisionEffect(player: Player, world: Level) {
-        val brightness = world.getLightLevel(player.blockPos)
+        val brightness = world.getMaxLocalRawBrightness(player.blockPosition())
         if (brightness >= 8) {
-            player.removeStatusEffect(MobEffects.NIGHT_VISION)
+            player.removeEffect(MobEffects.NIGHT_VISION)
         } else {
-            player.addStatusEffect(
+            player.addEffect(
                 MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, true, false, true)
             )
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, context, tooltip, type)
-        val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
+    override fun appendHoverText(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
+        super.appendHoverText(stack, context, tooltip, type)
+        val nvEnabled = stack.orCreateNbt = stack.orCreateNbt.apply { getBoolean(NIGHT_VISION_KEY) }
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {

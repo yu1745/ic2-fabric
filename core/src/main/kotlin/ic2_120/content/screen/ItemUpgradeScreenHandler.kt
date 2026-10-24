@@ -43,7 +43,7 @@ class ItemUpgradeScreenHandler(
 ) : AbstractContainerMenu(ItemUpgradeScreenHandler::class.type(), syncId) {
 
     fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
-    val itemRawId: Int get() = propertyDelegate.getValue(PROP_ITEM)
+    val itemRawId: Int get() = propertyDelegate.get(PROP_ITEM)
     val filterSlotIndex: Int get() = FILTER_SLOT
 
     companion object {
@@ -64,8 +64,8 @@ class ItemUpgradeScreenHandler(
         addDataSlots(propertyDelegate)
 
         addSlot(object : Slot(filterInventory, FILTER_SLOT, 8, 35) {
-            override fun canInsert(stack: ItemStack): Boolean = false
-            override fun canTakeItems(playerEntity: Player): Boolean = false
+            override fun mayPlace(stack: ItemStack): Boolean = false
+            override fun mayPickup(playerEntity: Player): Boolean = false
         })
 
         for (row in 0 until 3) {
@@ -98,7 +98,7 @@ class ItemUpgradeScreenHandler(
         }
 
         refreshProperties()
-        sendContentUpdates()
+        broadcastChanges()
         return true
     }
 
@@ -108,17 +108,17 @@ class ItemUpgradeScreenHandler(
         val upgradeStack = playerInventory.player.getItemInHand(hand)
         if (upgradeStack.item !is ItemFilterUpgradeItem) return false
         val ghostStack = if (stack.isEmpty) ItemStack.EMPTY else stack.copy().also { it.count = 1 }
-        filterInventory.setStack(FILTER_SLOT, ghostStack)
+        filterInventory.setItem(FILTER_SLOT, ghostStack)
         EjectorUpgradeComponent.writeFilter(upgradeStack, ghostStack.item.takeUnless { ghostStack.isEmpty })
         playerInventory.setChanged()
         refreshProperties()
-        sendContentUpdates()
+        broadcastChanges()
         return true
     }
 
-    override fun onSlotClick(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
+    override fun clicked(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
         if (slotIndex == FILTER_SLOT && actionType == ClickType.PICKUP) {
-            val cursor = cursorStack
+            val cursor = carried
             if (cursor.isEmpty || button == 1) {
                 setItemFilter(FILTER_SLOT, ItemStack.EMPTY)
             } else if (setItemFilter(FILTER_SLOT, cursor)) {
@@ -126,7 +126,7 @@ class ItemUpgradeScreenHandler(
             }
             return
         }
-        super.onSlotClick(slotIndex, button, actionType, player)
+        super.clicked(slotIndex, button, actionType, player)
     }
 
     override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack {
@@ -139,10 +139,12 @@ class ItemUpgradeScreenHandler(
     }
 
     private fun returnCursorToInventory() {
-        val returning = cursorStack.copy()
+        val returning = carried.copy()
         if (returning.isEmpty) return
-        playerInventory.safeInsert(returning)
-        cursorStack = if (returning.isEmpty) ItemStack.EMPTY else returning
+        // TODO(1.21.1): mojmap placeItemBackInInventory 放不下会自动掉落且无返回值；
+        // 样本容器已被收走，光标清空即可。
+        playerInventory.placeItemBackInInventory(returning)
+        setCarried(ItemStack.EMPTY)
     }
 
     private fun refreshProperties() {
@@ -160,7 +162,7 @@ class ItemUpgradeScreenHandler(
         }
 
         val filter = EjectorUpgradeComponent.readFilter(upgradeStack)
-        filterInventory.setStack(FILTER_SLOT, filter?.defaultStack ?: ItemStack.EMPTY)
-        propertyDelegate.set(PROP_ITEM, if (filter != null) BuiltInRegistries.ITEM.getRawId(filter) else 0)
+        filterInventory.setItem(FILTER_SLOT, filter?.defaultInstance ?: ItemStack.EMPTY)
+        propertyDelegate.set(PROP_ITEM, if (filter != null) BuiltInRegistries.ITEM.getId(filter) else 0)
     }
 }

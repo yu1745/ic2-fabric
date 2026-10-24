@@ -1,5 +1,9 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.core.HolderLookup
 import ic2_120_advanced_solar_addon.content.sync.MolecularTransformerSync
 import ic2_120_advanced_solar_addon.content.screen.MolecularTransformerScreenHandler
@@ -15,7 +19,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.server.level.ServerPlayer
@@ -40,7 +43,7 @@ class MolecularTransformerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(MolecularTransformerBlockEntity::class.type(), pos, state),
-    Container, ITieredMachine, ExtendedScreenHandlerFactory {
+    Container, ITieredMachine, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     companion object {
         const val TIER = 10
@@ -94,15 +97,15 @@ class MolecularTransformerBlockEntity(
     override fun getInventory(): Container = this
 
     // Container
-    override fun size(): Int = inventory.size
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = inventory.size
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         setChanged()
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
@@ -217,7 +220,7 @@ class MolecularTransformerBlockEntity(
         return currentOutput.count + output.count <= currentOutput.maxStackSize
     }
 
-    // ExtendedScreenHandlerFactory
+    // ExtendedScreenHandlerFactory<FriendlyByteBuf>
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120_advanced_solar_addon.molecular_transformer")
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
@@ -228,9 +231,11 @@ class MolecularTransformerBlockEntity(
             itemStorage
         )
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.getContainerSize())
+        return buf
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {

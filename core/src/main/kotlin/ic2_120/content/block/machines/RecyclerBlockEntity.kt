@@ -1,12 +1,19 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
 
-import net.minecraft.core.HolderLookup
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.recipes.RecyclerRecipes
@@ -45,7 +52,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.network.chat.Component
@@ -55,7 +61,6 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import kotlin.random.RandomSource
 
 /**
  * ================================================================================
@@ -80,7 +85,7 @@ class RecyclerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = RecyclerBlock.ACTIVE
 
@@ -127,12 +132,12 @@ class RecyclerBlockEntity(
     }
 
     private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
-    private val cachedScrapItem by lazy { BuiltInRegistries.ITEM.getValue(SCRAP_ID) }
+    private val cachedScrapItem by lazy { BuiltInRegistries.ITEM.get(SCRAP_ID) }
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isRecyclerInput(it) }),
@@ -168,9 +173,9 @@ class RecyclerBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) {
             stack.count = 1
         }
@@ -181,7 +186,7 @@ class RecyclerBlockEntity(
 
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() {
         super.setChanged()
@@ -189,7 +194,7 @@ class RecyclerBlockEntity(
 
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecyclerInput(stack)
         SLOT_OUTPUT -> false
         SLOT_DISCHARGING -> isBatteryItem(stack) || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust
@@ -197,9 +202,11 @@ class RecyclerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.recycler")
@@ -216,7 +223,7 @@ class RecyclerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(RecyclerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -232,7 +239,7 @@ class RecyclerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(RecyclerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -265,7 +272,7 @@ class RecyclerBlockEntity(
         // 从电池槽提取能量
         extractFromDischargingSlot()
 
-        val input = getStack(SLOT_INPUT)
+        val input = getItem(SLOT_INPUT)
         if (input.isEmpty) {
             resetProgress()
             setActiveState(world, pos, state, false)
@@ -288,7 +295,7 @@ class RecyclerBlockEntity(
             sync.syncCurrentTickFlow()
             return
         }
-        val outputSlot = getStack(SLOT_OUTPUT)
+        val outputSlot = getItem(SLOT_OUTPUT)
         val canAcceptScrap = outputSlot.isEmpty ||
                 (outputSlot.item == scrapItem && outputSlot.count < outputSlot.maxStackSize)
 
@@ -304,11 +311,11 @@ class RecyclerBlockEntity(
             input.shrink(1)
 
             // 1/8 概率产出废料
-            val roll = RandomSource.nextInt(RecyclerSync.SCRAP_CHANCE_DENOMINATOR)
+            val roll = java.util.random.RandomGenerator.getDefault().nextInt(RecyclerSync.SCRAP_CHANCE_DENOMINATOR)
             if (roll < RecyclerSync.SCRAP_CHANCE_NUMERATOR) {
                 val newCount = outputSlot.count + 1
                 val scrapStack = ItemStack(scrapItem, newCount)
-                setStack(SLOT_OUTPUT, scrapStack)
+                setItem(SLOT_OUTPUT, scrapStack)
             }
 
             // 进度上限 50 已在工作路径封顶，完成即清零

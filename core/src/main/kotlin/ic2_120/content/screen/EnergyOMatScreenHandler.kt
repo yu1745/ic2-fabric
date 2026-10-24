@@ -39,7 +39,7 @@ class EnergyOMatScreenHandler(
 
     val sync = EnergyOMatSync(
         SyncedDataView(propertyDelegate),
-        getFacing = { context.get({ w, p -> w.getBlockState(p).getValue(BlockStateProperties.HORIZONTAL_FACING) }, Direction.NORTH) }
+        getFacing = { context.evaluate({ w, p -> w.getBlockState(p).getValue(BlockStateProperties.HORIZONTAL_FACING) }, Direction.NORTH) }
     )
 
     init {
@@ -67,8 +67,8 @@ class EnergyOMatScreenHandler(
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (!isOwner) return true
-        context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? EnergyOMatBlockEntity ?: return@get
+        context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? EnergyOMatBlockEntity ?: return@evaluate true
             val delta = when (id) {
                 BUTTON_OFFER_DOWN_BIG -> -100000
                 BUTTON_OFFER_DOWN_MID -> -10000
@@ -76,7 +76,7 @@ class EnergyOMatScreenHandler(
                 BUTTON_OFFER_UP_SMALL -> 1000
                 BUTTON_OFFER_UP_MID -> 10000
                 BUTTON_OFFER_UP_BIG -> 100000
-                else -> return@get
+                else -> return@evaluate true
             }
             be.adjustEuOffer(delta)
         }, true)
@@ -90,9 +90,9 @@ class EnergyOMatScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             if (index in MACHINE_SLOT_START..MACHINE_SLOT_END) {
-                if (!slot.canTakeItems(player)) return ItemStack.EMPTY
+                if (!slot.mayPickup(player)) return ItemStack.EMPTY
                 if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                slot.onQuickTransfer(stackInSlot, stack)
+                slot.onQuickCraft(stackInSlot, stack)
             } else {
                 if (!moveItemStackTo(stackInSlot, SLOT_INPUT_INDEX, SLOT_INPUT_INDEX + 1, false)) {
                     if (isOwner) {
@@ -108,7 +108,7 @@ class EnergyOMatScreenHandler(
                     // 机器槽全插不进时物品留在原位，下方 count 相等检查会返回 EMPTY。
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -117,7 +117,7 @@ class EnergyOMatScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is EnergyOMatBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -157,7 +157,7 @@ class EnergyOMatScreenHandler(
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val isOwner = buf.readBoolean()
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val blockInv = SimpleContainer(EnergyOMatBlockEntity.INVENTORY_SIZE)
             return EnergyOMatScreenHandler(syncId, playerInventory, blockInv, context, SimpleContainerData(propertyCount), isOwner)
         }

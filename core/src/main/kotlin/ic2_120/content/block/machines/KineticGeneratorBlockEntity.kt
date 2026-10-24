@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -26,13 +31,11 @@ import net.minecraft.world.Container
 import net.minecraft.nbt.CompoundTag
 
 import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
-import net.minecraft.core.HolderLookup
 import net.minecraft.network.FriendlyByteBuf
 import io.netty.buffer.Unpooled
 
@@ -77,7 +80,7 @@ class KineticGeneratorBlockEntity(
 
     override fun canInputKuFrom(side: Direction): Boolean {
         val world = world ?: return false
-        val facing = world.getBlockState(pos).getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = world.getBlockState(pos).getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
         // 正面为输入口。
         return side == facing
     }
@@ -162,7 +165,7 @@ class KineticGeneratorBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+        buf.writeVarInt(syncedData.size)
         return buf
     }
 
@@ -176,8 +179,8 @@ class KineticGeneratorBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(KineticGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, KineticGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -185,8 +188,8 @@ class KineticGeneratorBlockEntity(
         kuRemainder = nbt.getInt("KuRemainder").coerceIn(0, KineticGeneratorSync.KU_PER_EU - 1)
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(KineticGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("KuRemainder", kuRemainder.coerceIn(0, KineticGeneratorSync.KU_PER_EU - 1))

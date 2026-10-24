@@ -21,10 +21,10 @@ object FurnaceExperienceHelper {
     fun dropExperience(world: ServerLevel, pos: BlockPos, totalExperience: Float) {
         if (totalExperience <= 0f) return
         val intPart = Mth.floor(totalExperience)
-        val fracPart = Mth.fractionalPart(totalExperience)
+        val fracPart = Mth.frac(totalExperience)
         var amount = intPart
         if (fracPart != 0.0f && Math.random() < fracPart) amount++
-        if (amount > 0) ExperienceOrb.spawn(world, Vec3.ofCenter(pos), amount)
+        if (amount > 0) ExperienceOrb.award(world, Vec3.atCenterOf(pos), amount)
     }
 
     /**

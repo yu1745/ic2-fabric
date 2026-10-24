@@ -30,7 +30,7 @@ class PumpBlock : BaseEntityBlock(
 ), EntityBlock {
 
     init {
-        defaultState = stateManager.defaultBlockState
+        registerDefaultState(stateManager.defaultBlockState)
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {}
@@ -71,7 +71,7 @@ class PumpBlock : BaseEntityBlock(
     }
 
     @Suppress("DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         // BC TileMiner.onRemove: 方块被破坏时清除管道
         if (!state.`is`(newState.block) && !world.isClient) {
             val tubeBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("tube"))
@@ -86,6 +86,6 @@ class PumpBlock : BaseEntityBlock(
                 for (bp in planned) world.setBlock(bp, Blocks.AIR.defaultBlockState, 3)
             }
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 }

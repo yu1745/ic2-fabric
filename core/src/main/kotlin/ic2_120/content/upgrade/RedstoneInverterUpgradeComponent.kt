@@ -17,7 +17,7 @@ object RedstoneInverterUpgradeComponent {
 
     fun hasInverter(inventory: Container, upgradeSlotIndices: IntArray): Boolean {
         for (idx in upgradeSlotIndices) {
-            val stack = inventory.getStack(idx)
+            val stack = inventory.getItem(idx)
             if (!stack.isEmpty && stack.item is RedstoneInverterUpgrade) return true
         }
         return false

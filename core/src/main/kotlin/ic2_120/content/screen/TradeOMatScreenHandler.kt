@@ -72,9 +72,9 @@ class TradeOMatScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             if (index in MACHINE_SLOT_START..MACHINE_SLOT_END) {
-                if (!slot.canTakeItems(player)) return ItemStack.EMPTY
+                if (!slot.mayPickup(player)) return ItemStack.EMPTY
                 if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                slot.onQuickTransfer(stackInSlot, stack)
+                slot.onQuickCraft(stackInSlot, stack)
             } else {
                 if (!moveItemStackTo(stackInSlot, SLOT_INPUT_INDEX, SLOT_INPUT_INDEX + 1, false)) {
                     if (isOwner) {
@@ -87,7 +87,7 @@ class TradeOMatScreenHandler(
                     // 机器槽全插不进时物品留在原位，下方 count 相等检查会返回 EMPTY。
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -96,7 +96,7 @@ class TradeOMatScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is TradeOMatBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -139,7 +139,7 @@ class TradeOMatScreenHandler(
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): TradeOMatScreenHandler {
             val pos = buf.readBlockPos()
             val isOwner = buf.readBoolean()
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val blockInv = SimpleContainer(TradeOMatBlockEntityBase.INVENTORY_SIZE)
             return TradeOMatScreenHandler(syncId, playerInventory, blockInv, context, isOwner)
         }

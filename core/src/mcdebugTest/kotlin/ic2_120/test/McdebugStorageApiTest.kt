@@ -19,7 +19,7 @@ class McdebugStorageApiTest {
     private val TEAMREBORN_ENERGY = "teamreborn:energy"
 
     private fun assertHandle(handles: com.google.gson.JsonArray, handle: String, kind: String) {
-        val ok = (0 until handles.size()).any { i ->
+        val ok = (0 until handles.getContainerSize()).any { i ->
             val h = handles.getValue().asJsonObject
             h.get("handle").asString == handle && h.get("kind").asString == kind
         }
@@ -73,7 +73,7 @@ class McdebugStorageApiTest {
 
         val storage = ctx.api.storage.get(target, FABRIC_ITEM).asJsonObject
         val slots = storage.get("slots").asJsonArray
-        val inputSlot = (0 until slots.size()).firstOrNull { i ->
+        val inputSlot = (0 until slots.getContainerSize()).firstOrNull { i ->
             val s = slots.getValue().asJsonObject.get("stack").asJsonObject
             s.get("item").takeIf { it != null && !it.isJsonNull }?.asString == "minecraft:cobblestone"
         } ?: throw AssertionError("expected cobblestone in fabric:item slots: $slots")
@@ -95,7 +95,7 @@ class McdebugStorageApiTest {
 
         val storage = ctx.api.storage.get(target, FABRIC_FLUID).asJsonObject
         val tanks = storage.get("tanks").asJsonArray
-        val hasWater = (0 until tanks.size()).any { i ->
+        val hasWater = (0 until tanks.getContainerSize()).any { i ->
             val t = tanks.getValue().asJsonObject
             t.get("fluid").takeIf { it != null && !it.isJsonNull }?.asString == "minecraft:water" && t.get("amount").asLong == 81_000L
         }
@@ -115,8 +115,8 @@ class McdebugStorageApiTest {
         place(ctx, ctx.origin, "ic2_120:macerator")
         val opened = ctx.api.screen.openBlock(ctx.origin, player = "fake").asJsonObject
         assertEquals("ic2_120:macerator", opened.get("handlerType").asString)
-        assertEquals(43, opened.get("slots").asJsonArray.size())
-        assertTrue(opened.get("properties").asJsonArray.size() > 0, "expected macerator ContainerData values")
+        assertEquals(43, opened.get("slots").asJsonArray.getContainerSize())
+        assertTrue(opened.get("properties").asJsonArray.getContainerSize() > 0, "expected macerator ContainerData values")
 
         val afterQuickMove = ctx.api.screen.quickMove(opened.get("screenId").asString, 0).asJsonObject
         assertEquals(opened.get("screenId").asString, afterQuickMove.get("screenId").asString)

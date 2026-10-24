@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -49,7 +53,6 @@ import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -66,7 +69,7 @@ class InductionFurnaceBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
-    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
+    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf>, IValidInputItem {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = InductionFurnaceBlock.ACTIVE
 
@@ -107,7 +110,7 @@ class InductionFurnaceBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is EjectorUpgrade || it.item is PullingUpgrade }),
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is RedstoneInverterUpgrade }),
@@ -145,9 +148,9 @@ class InductionFurnaceBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) {
             stack.count = 1
         }
@@ -157,14 +160,14 @@ class InductionFurnaceBlockEntity(
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() {
         super.setChanged()
     }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_0, SLOT_INPUT_1 -> isSmeltingInput(stack)
         SLOT_OUTPUT_0, SLOT_OUTPUT_1 -> false
         SLOT_DISCHARGING -> isBatteryItem(stack) || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust
@@ -173,9 +176,11 @@ class InductionFurnaceBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.induction_furnace")
@@ -192,7 +197,7 @@ class InductionFurnaceBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(InductionFurnaceSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -202,7 +207,7 @@ class InductionFurnaceBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(InductionFurnaceSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
@@ -277,10 +282,10 @@ class InductionFurnaceBlockEntity(
         canOperateSlot(world, SLOT_INPUT_1, SLOT_OUTPUT_1)
 
     private fun canOperateSlot(world: Level, inputSlot: Int, outputSlot: Int): Boolean {
-        val input = getStack(inputSlot)
+        val input = getItem(inputSlot)
         if (input.isEmpty) return false
         val recipe = findSmeltingRecipe(world, input) ?: return false
-        return canAcceptOutput(getStack(outputSlot), recipe)
+        return canAcceptOutput(getItem(outputSlot), recipe)
     }
 
     /** Vanilla operate(): process both input/output pairs simultaneously (shared progress). */
@@ -290,14 +295,14 @@ class InductionFurnaceBlockEntity(
     }
 
     private fun operateSlot(world: Level, inputSlot: Int, outputSlot: Int) {
-        val input = getStack(inputSlot)
+        val input = getItem(inputSlot)
         if (input.isEmpty) return
         val recipe = findSmeltingRecipe(world, input) ?: return
-        val output = getStack(outputSlot)
+        val output = getItem(outputSlot)
         if (!canAcceptOutput(output, recipe)) return
         input.shrink(1)
         if (output.isEmpty) {
-            setStack(outputSlot, recipe.copy())
+            setItem(outputSlot, recipe.copy())
         } else {
             output.grow(recipe.count)
         }
@@ -313,9 +318,9 @@ class InductionFurnaceBlockEntity(
     private fun findSmeltingRecipe(world: Level, input: ItemStack): ItemStack? {
         if (input.isEmpty) return null
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedRecipeItem === input.item) return cachedRecipeOutput
-        val inv = SimpleContainer(1).apply { setStack(0, input) }
-        val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, world)
-        val result = if (match.isPresent) match.get().getOutput(world.registryManager).copy() else null
+        val inv = net.minecraft.world.item.crafting.SingleRecipeInput(input)
+        val match = world.recipeManager.getRecipeFor(RecipeType.SMELTING, inv, world)
+        val result = if (match.isPresent) match.get().value.getResultItem(world.registryAccess()).copy() else null
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
         cachedRecipeOutput = result
@@ -324,7 +329,7 @@ class InductionFurnaceBlockEntity(
 
     private fun canAcceptOutput(currentOutput: ItemStack, recipeOutput: ItemStack): Boolean {
         return currentOutput.isEmpty ||
-            (ItemStack.areItemsEqual(currentOutput, recipeOutput) &&
+            (ItemStack.isSameItem(currentOutput, recipeOutput) &&
                 currentOutput.count + recipeOutput.count <= currentOutput.maxStackSize)
     }
 
@@ -353,8 +358,8 @@ class InductionFurnaceBlockEntity(
         if (stack.isEmpty || isBatteryItem(stack)) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-        val inv = SimpleContainer(stack.copyWithCount(1))
-        val found = w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
+        val inv = net.minecraft.world.item.crafting.SingleRecipeInput(stack.copyWithCount(1))
+        val found = w.recipeManager.getRecipeFor(RecipeType.SMELTING, inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found

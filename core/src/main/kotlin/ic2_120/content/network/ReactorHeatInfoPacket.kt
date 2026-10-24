@@ -21,7 +21,7 @@ class ReactorHeatInfoPacket(val pos: BlockPos, val slotHeatInfo: Map<Int, SlotHe
     companion object {
         val ID = CustomPacketPayload.Type<ReactorHeatInfoPacket>(ResourceLocation.fromNamespaceAndPath("ic2_120", "reactor_heat_info"))
         val CODEC: StreamCodec<FriendlyByteBuf, ReactorHeatInfoPacket> = StreamCodec.of(
-            { value, buf -> write(value, buf) },
+            { buf, value -> write(value, buf) },
             { read(it) }
         )
 

@@ -1,5 +1,9 @@
 package ic2_120.content.item.armor
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.compat.isClient
 
 import ic2_120.compat.world
@@ -37,7 +41,7 @@ open class JetpackItem : ArmorItem(
     ModArmorMaterials.JETPACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
     // ArmorItem 会通过 maxDamageIfAbsent 自动注入材质耐久；-1 让 ItemStack.isDamageable() 返回 false。
-    Item.Properties().maxStackSize(1).maxDamage(-1)
+    Item.Properties().stacksTo(1).durability(-1)
 ), ICreativeFullVariant {
 
     companion object {
@@ -79,15 +83,15 @@ open class JetpackItem : ArmorItem(
 
         @JvmStatic
         fun getFuel(stack: ItemStack): Long =
-            stack.orCreateNbt.getLong(FUEL_KEY).coerceIn(0L, maxFuel)
+            stack.orCreateNbt = stack.orCreateNbt.apply { getLong(FUEL_KEY) }.coerceIn(0L, maxFuel)
 
         @JvmStatic
         fun setFuel(stack: ItemStack, fuel: Long) {
-            stack.orCreateNbt.putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel))
+            stack.orCreateNbt = stack.orCreateNbt.apply { putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel)) }
         }
 
         fun getFuelFluid(stack: ItemStack): net.minecraft.world.level.material.Fluid? {
-            val id = stack.nbt?.getString(FUEL_FLUID_KEY)
+            val id = stack.orCreateNbt.getString(FUEL_FLUID_KEY)
             if (!id.isNullOrBlank()) {
                 val fluid = net.minecraft.core.registries.BuiltInRegistries.FLUID.get(net.minecraft.resources.ResourceLocation.parse(id))
                 if (FluidFuelRegistry.isSupported(fluid)) return fluid
@@ -97,8 +101,8 @@ open class JetpackItem : ArmorItem(
         }
 
         fun setFuelFluid(stack: ItemStack, fluid: net.minecraft.world.level.material.Fluid?) {
-            if (fluid == null) stack.orCreateNbt.remove(FUEL_FLUID_KEY)
-            else stack.orCreateNbt.putString(FUEL_FLUID_KEY, net.minecraft.core.registries.BuiltInRegistries.FLUID.getId(fluid).toString())
+            if (fluid == null) stack.orCreateNbt = stack.orCreateNbt.apply { remove(FUEL_FLUID_KEY) }
+            else stack.orCreateNbt = stack.orCreateNbt.apply { putString(FUEL_FLUID_KEY, net.minecraft.core.registries.(BuiltInRegistries.FLUID.getKey(fluid)?.toString() ?: "?")) }
         }
 
         /**
@@ -125,13 +129,13 @@ open class JetpackItem : ArmorItem(
         }
     }
 
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         world: net.minecraft.world.level.Level?,
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
 
         val fuel = getFuel(stack)
         val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0
@@ -152,7 +156,7 @@ open class JetpackItem : ArmorItem(
             "${remainingSeconds.toInt()}秒"
         }
 
-        val fuelName = getFuelFluid(stack)?.let { net.minecraft.core.registries.BuiltInRegistries.FLUID.getId(it).toString() } ?: "无"
+        val fuelName = getFuelFluid(stack)?.let { net.minecraft.core.registries.(BuiltInRegistries.FLUID.getKey(it)?.toString() ?: "?") } ?: "无"
         tooltip.add(Component.literal("燃料: $fuelName %,d / %,d mB (%.1f%%)".format(fuelMb, maxFuelMb, ratio * 100)))
         tooltip.add(Component.literal("剩余飞行: $timeText").withStyle(ChatFormatting.GRAY))
     }
@@ -164,11 +168,11 @@ open class JetpackItem : ArmorItem(
     override fun isDamageable(): Boolean = false
 
     override fun useOn(context: UseOnContext): InteractionResult {
-        val world = context.world
+        val world = context.level
         val player = context.player ?: return InteractionResult.PASS
         if (world.isClient) return InteractionResult.SUCCESS
-        val hit = BlockHitResult(context.hitPos, context.side, context.blockPos, context.hitsInsideBlock())
-        val storage = FluidStorage.SIDED.find(world, hit.blockPos, hit.side)
+        val hit = BlockHitResult(context.location, context.direction, context.pos, context.hitsInsideBlock())
+        val storage = FluidStorage.SIDED.find(world, hit.blockPos, hit.direction)
         return if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, context.hand)) {
             InteractionResult.SUCCESS
         } else InteractionResult.PASS

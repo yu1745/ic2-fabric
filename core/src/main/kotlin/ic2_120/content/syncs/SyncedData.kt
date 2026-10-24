@@ -115,7 +115,7 @@ class SyncedData : ContainerData, SyncSchema {
         if (entries[index].value == value) return
         entries[index].value = value
     }
-    override fun size(): Int = entries.size
+    override fun getCount(): Int = entries.size
 
     fun readNbt(nbt: CompoundTag) {
         for (entry in entries) entry.value = nbt.getInt(entry.name)
@@ -139,8 +139,8 @@ class SyncedDataView(private val delegate: ContainerData) : SyncSchema {
         val indexLow = nextIndex++
         return object : ReadWriteProperty<Any?, Int> {
             override fun getValue(thisRef: Any?, property: KProperty<*>): Int {
-                val high = delegate.getValue(indexHigh)
-                val low = delegate.getValue(indexLow)
+                val high = delegate.get(indexHigh)
+                val low = delegate.get(indexLow)
                 return (high shl 16) or (low and 0xFFFF)
             }
             override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {

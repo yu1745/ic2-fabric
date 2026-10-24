@@ -67,7 +67,7 @@ class ScannerScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val stack = handler.playerInventory.getStack(handler.playerInventory.selectedSlot)
+        val stack = handler.playerInventory.getItem(handler.playerInventory.selectedSlot)
         val type = OdScannerItem.getScannerType(stack)
         val results = lastResults
 

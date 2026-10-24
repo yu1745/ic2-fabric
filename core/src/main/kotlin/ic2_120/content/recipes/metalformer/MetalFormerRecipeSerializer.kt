@@ -1,5 +1,8 @@
 package ic2_120.content.recipes.metalformer
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.recipes.RecipeCodecBridge
 
 import net.minecraft.network.codec.StreamCodec
@@ -24,15 +27,15 @@ import net.minecraft.util.GsonHelper
 @ModMachineRecipe(id = "metal_forming", recipeClass = MetalFormerRecipe::class)
 object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
     private fun fromJson(id: ResourceLocation, json: JsonObject): MetalFormerRecipe {
-        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
+        val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
 
-        val result = GsonHelper.getObject(json, "result")
-        val itemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
+        val result = json.getAsJsonObject("result")
+        val itemId = ResourceLocation.parse(result.get("item").asString)
         val item = BuiltInRegistries.ITEM.get(itemId)
-        val count = GsonHelper.getInt(result, "count", 1)
+        val count = (if (result.has("count")) result.get("count").asInt else 1)
         val output = ItemStack(item, count)
 
-        val mode = GsonHelper.getString(json, "mode", "rolling")
+        val mode = (if (json.has("mode")) json.get("mode").asString else "rolling")
 
         return when (mode?.lowercase()) {
             "cutting" -> CuttingRecipe(id, ingredient, output)
@@ -43,7 +46,7 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
 
     private fun read(buf: RegistryFriendlyByteBuf): MetalFormerRecipe {
         val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
-        val output = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
+        val output = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
         val mode = buf.readString()
 
         return when (mode) {
@@ -53,9 +56,9 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
         }
     }
 
-    private fun write(buf: FriendlyByteBuf, recipe: MetalFormerRecipe) {
+    private fun write(buf: RegistryFriendlyByteBuf, recipe: MetalFormerRecipe) {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
-        bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
 
         val mode = when (recipe) {
             is CuttingRecipe -> "cutting"
@@ -64,7 +67,6 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
         }
         buf.writeString(mode)
     }
-}
 
     override fun codec(): MapCodec<MetalFormerRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:metal_forming",
@@ -74,3 +76,4 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, MetalFormerRecipe> =
         StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })
+}

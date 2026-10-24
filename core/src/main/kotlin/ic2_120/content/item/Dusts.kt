@@ -25,7 +25,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class BronzeDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzeDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_BRONZE)).unlockedBy(
                     has(SmallBronzeDust::class.instance()), has(SmallBronzeDust::class.instance())
@@ -67,10 +67,10 @@ class ClayDust : Item(Item.Properties())
 class CoalDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 熔炉配方：湿煤粉加热成煤粉 (200 tick = 10秒)
             SimpleCookingRecipeBuilder.createSmelting(
-                net.minecraft.world.item.crafting.Ingredient.ofItems(CoalFuelDust::class.instance()),
+                net.minecraft.world.item.crafting.Ingredient.of(CoalFuelDust::class.instance()),
                 RecipeCategory.MISC,
                 CoalDust::class.instance(),
                 0.1f,
@@ -86,7 +86,7 @@ class CoalDust : Item(Item.Properties()) {
 class CoalFuelDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, CoalFuelDust::class.instance(), 1)
                 .requires(CoalDust::class.instance()).requires(Items.WATER_BUCKET)
                 .unlockedBy(has(CoalDust::class.instance()), has(CoalDust::class.instance()))
@@ -105,7 +105,7 @@ class CoalFuelDust : Item(Item.Properties()) {
 class CopperDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CopperDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_COPPER)).unlockedBy(
                     has(SmallCopperDust::class.instance()), has(SmallCopperDust::class.instance())
@@ -138,7 +138,7 @@ class DiamondDust : Item(Item.Properties())
 class EnergiumDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 交叉摆法：4个钻石粉 + 5个红石粉
             // R D R
             // D R D
@@ -159,7 +159,7 @@ class EnergiumDust : Item(Item.Properties()) {
 class GoldDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, GoldDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_GOLD)).unlockedBy(
                     has(SmallGoldDust::class.instance()), has(SmallGoldDust::class.instance())
@@ -188,7 +188,7 @@ class GoldDust : Item(Item.Properties()) {
 class IronDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_IRON)).unlockedBy(
                     has(SmallIronDust::class.instance()), has(SmallIronDust::class.instance())
@@ -217,7 +217,7 @@ class IronDust : Item(Item.Properties()) {
 class LapisDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LapisDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_LAPIS)).unlockedBy(
                     has(SmallLapisDust::class.instance()), has(SmallLapisDust::class.instance())
@@ -236,7 +236,7 @@ class LapisDust : Item(Item.Properties()) {
 class LeadDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LeadDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_LEAD)).unlockedBy(
                     has(SmallLeadDust::class.instance()), has(SmallLeadDust::class.instance())
@@ -265,7 +265,7 @@ class LeadDust : Item(Item.Properties()) {
 class LithiumDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LithiumDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_LITHIUM)).unlockedBy(
                     has(SmallLithiumDust::class.instance()), has(SmallLithiumDust::class.instance())
@@ -284,7 +284,7 @@ class LithiumDust : Item(Item.Properties()) {
 class ObsidianDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ObsidianDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_OBSIDIAN)).unlockedBy(
                     has(SmallObsidianDust::class.instance()),
@@ -308,7 +308,7 @@ class SiliconDioxideDust : Item(Item.Properties())
 class SilverDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SilverDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_SILVER)).unlockedBy(
                     has(SmallSilverDust::class.instance()), has(SmallSilverDust::class.instance())
@@ -341,7 +341,7 @@ class StoneDust : Item(Item.Properties())
 class SulfurDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SulfurDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_SULFUR)).unlockedBy(
                     has(SmallSulfurDust::class.instance()), has(SmallSulfurDust::class.instance())
@@ -360,7 +360,7 @@ class SulfurDust : Item(Item.Properties()) {
 class TinDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TinDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_TIN))
                 .unlockedBy(has(SmallTinDust::class.instance()), has(SmallTinDust::class.instance()))
@@ -389,7 +389,7 @@ class TinDust : Item(Item.Properties()) {
 class HydratedTinDust : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 锡粉 + 水桶 -> 氢氧化锡粉 (返回空桶)
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, HydratedTinDust::class.instance(), 1)
                 .requires(Ingredient.of(ModTags.Compat.Items.DUSTS_TIN)).requires(Items.WATER_BUCKET)

@@ -1,5 +1,8 @@
 package ic2_120.content.recipes.macerator
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.recipes.RecipeCodecBridge
 
 import net.minecraft.network.codec.StreamCodec
@@ -21,30 +24,29 @@ import net.minecraft.util.GsonHelper
 @ModMachineRecipe(id = "macerating", recipeClass = MaceratorRecipe::class)
 object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
     private fun fromJson(id: ResourceLocation, json: JsonObject): MaceratorRecipe {
-        val ingredientJson = GsonHelper.getObject(json, "ingredient")
-        val count = GsonHelper.getInt(ingredientJson, "count", 1)
+        val ingredientJson = json.getAsJsonObject("ingredient")
+        val count = (if (ingredientJson.has("count")) ingredientJson.get("count").asInt else 1)
         val ingredient = INGREDIENT_CODEC(ingredientJson)
 
-        val result = GsonHelper.getObject(json, "result")
-        val resultItemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
-        val resultItem = BuiltInRegistries.ITEM.getValue(resultItemId)
-        val resultCount = GsonHelper.getInt(result, "count", 1)
-        return MaceratorRecipe(id, ingredient, ItemStack(resultItem, resultCount), count)
+        val result = json.getAsJsonObject("result")
+        val resultItemId = ResourceLocation.parse(result.get("item").asString)
+        val resultItem = BuiltInRegistries.ITEM.get(resultItemId)
+        val resultCount = (if (result.has("count")) result.get("count").asInt else 1)
+        return MaceratorRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, ItemStack(resultItem, resultCount), count)
     }
 
     private fun read(buf: RegistryFriendlyByteBuf): MaceratorRecipe {
         val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
-        val output = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
+        val output = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
         val inputCount = buf.readVarInt()
-        return MaceratorRecipe(id, ingredient, output, inputCount)
+        return MaceratorRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, output, inputCount)
     }
 
-    private fun write(buf: FriendlyByteBuf, recipe: MaceratorRecipe) {
+    private fun write(buf: RegistryFriendlyByteBuf, recipe: MaceratorRecipe) {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
-        bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
         buf.writeVarInt(recipe.inputCount)
     }
-}
 
     override fun codec(): MapCodec<MaceratorRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:macerating",
@@ -54,3 +56,4 @@ object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, MaceratorRecipe> =
         StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })
+}

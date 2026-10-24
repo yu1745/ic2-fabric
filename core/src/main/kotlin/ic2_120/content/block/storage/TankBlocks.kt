@@ -1,5 +1,9 @@
 package ic2_120.content.block.storage
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.compat.orCreateNbt
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.data.recipes.RecipeProvider.has
@@ -31,7 +35,7 @@ import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.crafting.Ingredient
@@ -75,7 +79,7 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
         if (world.isClient) return InteractionResult.SUCCESS
 
         val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return InteractionResult.PASS
-        val storage = FluidStorage.SIDED.find(world, pos, hit.side)
+        val storage = FluidStorage.SIDED.find(world, pos, hit.direction)
         if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
             return InteractionResult.SUCCESS
         }
@@ -94,13 +98,13 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
         val nbt = CompoundTag()
         nbt.putLong(NBT_FLUID_AMOUNT, be.fluidAmount)
         if (!be.fluidVariant.isBlank) {
-            nbt.put(NBT_FLUID_VARIANT, be.fluidVariant.toNbt())
+            nbt.put(NBT_FLUID_VARIANT, encodeFluidVariant(be.fluidVariant))
         }
-        stack.orCreateNbt.put("BlockEntityTag", nbt)
+        stack.orCreateNbt = stack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
     }
 
     @Deprecated("override deprecated method", level = DeprecationLevel.WARNING)
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.`is`(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is TankBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
@@ -113,12 +117,12 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
                     pos.z.toDouble() + 0.5,
                     itemStack
                 )
-                itemEntity.setToDefaultPickupDelay()
+                itemEntity.setDefaultPickUpDelay()
                 world.addFreshEntity(itemEntity)
             }
         }
         @Suppress("DEPRECATION")
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
     @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
@@ -126,12 +130,12 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
         // 不调用 super，防止默认掉落行为
     }
 
-    override fun onBreak(world: Level, pos: BlockPos, state: BlockState, player: Player) {
+    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos)
             if (be is TankBlockEntity) {
-                val holdingWrench = ic2_120.content.WrenchHandler.isWrench(player.mainHandStack)
-                if (player.abilities.creativeMode) {
+                val holdingWrench = ic2_120.content.WrenchHandler.isWrench(player.mainHandItem)
+                if (player.abilities.instabuild) {
                     be.retainFluidPercent(0.0)
                     be.shouldDropOnBreak = false // 创造模式：不掉落
                 } else if (holdingWrench || player.canHarvest(state)) {
@@ -142,11 +146,11 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
                 }
             }
         }
-        super.onBreak(world, pos, state, player)
+        super.playerWillDestroy(world, pos, state, player)
     }
 
     override fun getPickStack(world: net.minecraft.world.level.BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
-        val itemStack = super.getPickStack(world, pos, state)
+        val itemStack = super.getCloneItemStack(world, pos, state)
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is TankBlockEntity) {
             applyTankBlockEntityNbt(itemStack, blockEntity)
@@ -170,24 +174,23 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
      * 手持物品提示：内部流体种类与储量（mB），与 [TankBlockEntity] 容量一致。
      */
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         world: BlockGetter?,
         tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
         val blockItem = stack.item as? BlockItem ?: return
         val block = blockItem.block
         if (block !is TankBlock) return
 
         val capMb = fluidCapacityMbForBlock(block)
-        val beTag = stack.getSubNbt("BlockEntityTag")
-        val amountRaw = beTag?.getLong(NBT_FLUID_AMOUNT) ?: 0L
-        val variantTag = beTag?.getCompound(NBT_FLUID_VARIANT)
-        val variant =
-            if (variantTag == null || variantTag.isEmpty) FluidVariant.blank()
-            else FluidVariant.fromNbt(variantTag)
+        // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
+        val beTag = stack.orCreateNbt.getCompound("BlockEntityTag")
+        val amountRaw = beTag.getLong(NBT_FLUID_AMOUNT)
+        val variantTag = beTag.getCompound(NBT_FLUID_VARIANT)
+        val variant = decodeFluidVariant(variantTag)
         val amountMb =
             amountRaw.toInt().coerceIn(0, capMb)
 
@@ -202,12 +205,29 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
     }
 
     companion object {
+
+        // fabric 1.21.1：FluidVariant.fromNbt/toNbt 已移除，用 CODEC + NbtOps 桥接
+        fun encodeFluidVariant(variant: net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant): net.minecraft.nbt.CompoundTag {
+            val tag = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.CODEC
+                .encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, variant)
+                .getOrThrow()
+            return if (tag is net.minecraft.nbt.CompoundTag) tag else net.minecraft.nbt.CompoundTag()
+        }
+
+        fun decodeFluidVariant(tag: net.minecraft.nbt.CompoundTag): net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant {
+            if (tag.isEmpty) return net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.blank()
+            return net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.CODEC
+                .parse(net.minecraft.nbt.NbtOps.INSTANCE, tag)
+                .result()
+                .orElse(net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.blank())
+        }
+
         private const val NBT_FLUID_AMOUNT = "FluidAmount"
         private const val NBT_FLUID_VARIANT = "FluidVariant"
 
         /** 与 [TankBlockEntity] 对应的容量（mB），用于 tooltip */
         private fun fluidCapacityMbForBlock(block: net.minecraft.world.level.block.Block): Int {
-            val path = BuiltInRegistries.BLOCK.getId(block).path
+            val path = BuiltInRegistries.BLOCK.getKey(block)!!.path
             return when (path) {
                 "steel_tank" -> TankBlockEntity.STEEL_CAPACITY_MB
                 "iridium_tank" -> TankBlockEntity.IRIDIUM_CAPACITY_MB
@@ -226,7 +246,7 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
 class BronzeTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = BronzePlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -250,7 +270,7 @@ class BronzeTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minec
 class IronTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = IronPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -274,7 +294,7 @@ class IronTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecra
 class SteelTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = SteelPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -298,7 +318,7 @@ class SteelTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecr
 class IridiumTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = IridiumPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {

@@ -1,9 +1,5 @@
 package ic2_120.content.entity
 
-import ic2_120.compat.isClient
-
-import ic2_120.compat.world
-
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.vehicle.Boat
@@ -25,21 +21,21 @@ abstract class Ic2BoatEntity(
 
     override fun tick() {
         super.tick()
-        if (world.isClient || !isTouchingWater) return
+        if (level().isClientSide || !isInWater) return
 
-        val velocity = velocity
+        val velocity = deltaMovement
         val adjusted = Vec3(velocity.x * waterDragMultiplier, velocity.y, velocity.z * waterDragMultiplier)
         val horizontalSpeed = sqrt(adjusted.x * adjusted.x + adjusted.z * adjusted.z)
         if (horizontalSpeed <= maxHorizontalSpeed || horizontalSpeed <= 1.0E-6) {
-            this.velocity = adjusted
+            this.deltaMovement = adjusted
             return
         }
 
         val scale = maxHorizontalSpeed / horizontalSpeed
-        this.velocity = Vec3(adjusted.x * scale, adjusted.y, adjusted.z * scale)
+        this.deltaMovement = Vec3(adjusted.x * scale, adjusted.y, adjusted.z * scale)
     }
 
-    override fun damage(source: DamageSource, amount: Float): Boolean {
-        return super.damage(source, amount * damageTakenMultiplier)
+    override fun hurt(source: DamageSource, amount: Float): Boolean {
+        return super.hurt(source, amount * damageTakenMultiplier)
     }
 }

@@ -6,8 +6,8 @@ import net.minecraft.resources.ResourceLocation
 
 object ModStatusEffects {
     val SOLAR_GENERATING: MobEffect
-        get() = BuiltInRegistries.STATUS_EFFECT.get(ResourceLocation.fromNamespaceAndPath("ic2", "solar_generating"))!!
+        get() = BuiltInRegistries.MOB_EFFECT.get(ResourceLocation.fromNamespaceAndPath("ic2", "solar_generating"))!!
 
     val RADIATION: MobEffect
-        get() = BuiltInRegistries.STATUS_EFFECT.get(ResourceLocation.fromNamespaceAndPath("ic2", "radiation"))!!
+        get() = BuiltInRegistries.MOB_EFFECT.get(ResourceLocation.fromNamespaceAndPath("ic2", "radiation"))!!
 }

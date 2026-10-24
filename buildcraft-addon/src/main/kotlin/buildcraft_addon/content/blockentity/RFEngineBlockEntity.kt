@@ -1,5 +1,9 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.core.HolderLookup
 import ic2_120.integration.ftbchunks.ClaimProtection
 
@@ -17,7 +21,6 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -52,7 +55,7 @@ class RFEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory, Container, IKineticMachinePort {
+) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory<FriendlyByteBuf>, Container, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         RFEngineBlockEntity::class.type(), pos, state
@@ -85,16 +88,18 @@ class RFEngineBlockEntity(
             else -> 0
         }
         override fun set(index: Int, value: Int) {}
-        override fun size(): Int = 2
+        override fun getContainerSize(): Int = 2
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
         return RFEngineScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(2)
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(2)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.buildcraft_addon.rf_engine")
@@ -102,9 +107,9 @@ class RFEngineBlockEntity(
     // === 升级栏位 ===
     private val upgradeInventory = NonNullList.withSize(4, ItemStack.EMPTY)
 
-    override fun size(): Int = 4
-    override fun getStack(slot: Int): ItemStack = upgradeInventory[slot]
-    override fun setStack(slot: Int, stack: ItemStack) { upgradeInventory[slot] = stack }
+    override fun getContainerSize(): Int = 4
+    override fun getItem(slot: Int): ItemStack = upgradeInventory[slot]
+    override fun setItem(slot: Int, stack: ItemStack) { upgradeInventory[slot] = stack }
     override fun removeItem(slot: Int, amount: Int): ItemStack = upgradeInventory[slot].split(amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack {
         val stack = upgradeInventory[slot]
@@ -112,7 +117,7 @@ class RFEngineBlockEntity(
         return stack
     }
     override fun isEmpty(): Boolean = upgradeInventory.all { it.isEmpty }
-    override fun clear() { upgradeInventory.fill(ItemStack.EMPTY) }
+    override fun clearContent() { upgradeInventory.fill(ItemStack.EMPTY) }
     override fun stillValid(player: Player): Boolean = true
 
     // === 热量 ===

@@ -1,12 +1,16 @@
 package ic2_120.content.recipes.orewashing
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.crafting.RecipeInput
-import net.minecraft.core.HolderLookup
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.level.Level
 
@@ -29,10 +33,10 @@ class OreWashingRecipe(
     }
 
     override fun matches(inventory: Input, world: Level): Boolean {
-        return ingredient.test(inventory.getStack(0))
+        return ingredient.test(inventory.getItem(0))
     }
 
-    override fun craft(inventory: Input, lookup: HolderLookup.WrapperLookup): ItemStack {
+    override fun assemble(inventory: Input, lookup: HolderLookup.Provider): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
 
@@ -40,13 +44,13 @@ class OreWashingRecipe(
 
     override fun getType(): RecipeType<*> = ic2_120.content.recipes.ModMachineRecipes.recipeType(OreWashingRecipe::class)
 
-    override fun fits(width: Int, height: Int): Boolean = true
+    override fun canCraftInDimensions(width: Int, height: Int): Boolean = true
 
-    override fun getResult(lookup: HolderLookup.WrapperLookup): ItemStack {
+    override fun getResultItem(lookup: HolderLookup.Provider): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
 
-    override fun getRemainder(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
+    override fun getRemainingItems(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
         return net.minecraft.core.NonNullList.withSize(1, ItemStack.EMPTY)
     }
 
@@ -59,17 +63,16 @@ class OreWashingRecipe(
      * 简单输入容器，仅包含单个物品栈用于配方匹配
      */
     class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.world.Container {
-        override fun getStack(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
-        override fun getStackInSlot(slot: Int): ItemStack = getStack(slot)
+        override fun getItem(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
 
-        override fun getSize(): Int = 1
         override fun size(): Int = 1
+        override fun getContainerSize(): Int = 1
 
         override fun isEmpty(): Boolean = inputStack.isEmpty
 
-        override fun clear() {}
+        override fun clearContent() {}
 
-        override fun setStack(slot: Int, stack: ItemStack) {}
+        override fun setItem(slot: Int, stack: ItemStack) {}
 
         override fun removeItemNoUpdate(slot: Int): ItemStack = ItemStack.EMPTY
 

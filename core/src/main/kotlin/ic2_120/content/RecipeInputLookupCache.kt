@@ -47,12 +47,12 @@ object RecipeInputLookupCache {
             epoch = cur
         }
         val table = tableFor(type)
-        val cached = table.getValue(tem)
+        val cached = table[item]
         if (cached != null) return cached
-        val probe = net.minecraft.world.SimpleContainer(net.minecraft.world.item.ItemStack(item, 1))
+        val probe = net.minecraft.world.item.crafting.SingleRecipeInput(net.minecraft.world.item.ItemStack(item, 1))
         @Suppress("UNCHECKED_CAST")
         val found = world.recipeManager
-            .getFirstMatch(type as RecipeType<net.minecraft.world.item.crafting.Recipe<net.minecraft.world.SimpleContainer>>, probe, world)
+            .getRecipeFor(type as RecipeType<net.minecraft.world.item.crafting.Recipe<net.minecraft.world.item.crafting.SingleRecipeInput>>, probe, world)
             .isPresent
         table.put(item, found)
         return found

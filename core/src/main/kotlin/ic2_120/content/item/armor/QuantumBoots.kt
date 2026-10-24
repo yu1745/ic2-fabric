@@ -1,5 +1,7 @@
 package ic2_120.content.item.armor
 
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.config.Ic2Config
 import ic2_120.content.item.IridiumPlate
 import ic2_120.content.item.ModArmorMaterials
@@ -17,9 +19,9 @@ import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import java.util.function.Consumer
 
 /**
  * 量子靴子 (Quantum Boots)
@@ -45,7 +47,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_boots", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.BOOTS, Item.Properties().maxStackSize(1)) {
+class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.BOOTS, Item.Properties().stacksTo(1)) {
 
     companion object {
         private const val SUPER_JUMP_KEY = "SuperJumpEnabled"
@@ -108,7 +110,7 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val iridium = IridiumPlate::class.instance()
             val nano = NanoBoots::class.instance()
             val rubber = RubberBoots::class.instance()
@@ -130,8 +132,8 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendHoverText(stack, context, tooltip, type)
         val jumpEnabled = stack.orCreateNbt.getBoolean(SUPER_JUMP_KEY)
         val energy = getEnergy(stack)
         val jumpCount = if (jumpEnergyCost > 0) energy / jumpEnergyCost else 0L

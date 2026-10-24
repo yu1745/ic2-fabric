@@ -1,5 +1,7 @@
 package ic2_120.content.worldgen
 
+import net.minecraft.core.registries.Registries
+
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications
@@ -22,7 +24,7 @@ object RubberTreeGeneration {
     private val logger = LoggerFactory.getLogger("ic2_120.rubber_tree")
 
     val RUBBER_TREE_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
+        ResourceKey.create(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
 
     fun register() {
         val config = Ic2Config.current.worldgen.rubberTree.normalized()
@@ -41,7 +43,7 @@ object RubberTreeGeneration {
         BiomeModifications.addFeature(
             BiomeSelectors.tag(RubberTreeBiomeTags.GENERATES_RUBBER_TREES),
             // 在原版树木的 VEGETAL_DECORATION 之前生成，避免橡胶树与其他树重叠。
-            GenerationStep.Feature.LOCAL_MODIFICATIONS,
+            GenerationStep.Decoration.LOCAL_MODIFICATIONS,
             RUBBER_TREE_PLACED_KEY
         )
     }

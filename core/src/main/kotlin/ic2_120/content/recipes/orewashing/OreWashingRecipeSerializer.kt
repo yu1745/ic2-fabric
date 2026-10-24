@@ -1,5 +1,8 @@
 package ic2_120.content.recipes.orewashing
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.recipes.RecipeCodecBridge
 
 import net.minecraft.network.codec.StreamCodec
@@ -37,22 +40,22 @@ import net.minecraft.util.GsonHelper
 @ModMachineRecipe(id = "ore_washing", recipeClass = OreWashingRecipe::class)
 object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
     private fun fromJson(id: ResourceLocation, json: JsonObject): OreWashingRecipe {
-        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
+        val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
 
-        val outputsArray = GsonHelper.getArray(json, "outputs")
+        val outputsArray = json.getAsJsonArray("outputs")
         val outputs = outputsArray.map { element ->
             val outputObj = element.asJsonObject
-            val itemId = ResourceLocation.parse(GsonHelper.getString(outputObj, "item"))
+            val itemId = ResourceLocation.parse(outputObj.get("item").asString)
             val item = BuiltInRegistries.ITEM.get(itemId)
-            val count = GsonHelper.getInt(outputObj, "count", 1)
+            val count = (if (outputObj.has("count")) outputObj.get("count").asInt else 1)
             ItemStack(item, count)
         }
 
         // 读取旧 mB 键并转为 droplets（兼容旧 JSON）
-        val waterMb = GsonHelper.getLong(json, "water_consumption_mb", 1000L)
+        val waterMb = (if (json.has("water_consumption_mb")) json.get("water_consumption_mb").asLong else 1000L)
         val waterConsumption = waterMb * net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET / 1000L
 
-        return OreWashingRecipe(id, ingredient, outputs, waterConsumption)
+        return OreWashingRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, outputs, waterConsumption)
     }
 
     private fun read(buf: RegistryFriendlyByteBuf): OreWashingRecipe {
@@ -60,25 +63,24 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
 
         val outputCount = buf.readVarInt()
         val outputs = (0 until outputCount).map {
-            bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
+            ItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
         }
 
         val waterConsumption = buf.readLong()
 
-        return OreWashingRecipe(id, ingredient, outputs, waterConsumption)
+        return OreWashingRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, outputs, waterConsumption)
     }
 
-    private fun write(buf: FriendlyByteBuf, recipe: OreWashingRecipe) {
+    private fun write(buf: RegistryFriendlyByteBuf, recipe: OreWashingRecipe) {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
 
         buf.writeVarInt(recipe.outputItems.size)
         recipe.outputItems.forEach { output ->
-            bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, output.copy())
+            ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, output.copy())
         }
 
         buf.writeLong(recipe.waterConsumptionDroplets)
     }
-}
 
     override fun codec(): MapCodec<OreWashingRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:ore_washing",
@@ -88,3 +90,4 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, OreWashingRecipe> =
         StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })
+}

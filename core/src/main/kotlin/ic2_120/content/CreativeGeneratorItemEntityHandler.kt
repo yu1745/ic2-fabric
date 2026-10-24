@@ -18,8 +18,8 @@ object CreativeGeneratorItemEntityHandler {
     fun register() {
         ServerEntityEvents.ENTITY_LOAD.register { entity, _ ->
             if (entity !is ItemEntity) return@register
-            if (BuiltInRegistries.ITEM.getId(entity.stack.item) != CREATIVE_GENERATOR_ID) return@register
-            entity.setNeverDespawn()
+            if (BuiltInRegistries.ITEM.getKey(entity.stack.item) != CREATIVE_GENERATOR_ID) return@register
+            entity.setUnlimitedLifetime()
             entity.isInvulnerable = true
         }
     }

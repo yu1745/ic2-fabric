@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -22,7 +26,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.level.ServerChunkCache
@@ -31,6 +34,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
+import net.minecraft.server.level.ChunkMap
 import net.minecraft.server.level.TicketType
 
 /**
@@ -43,7 +47,7 @@ class ChunkLoaderBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = ChunkLoaderBlock.ACTIVE
     override fun getInventory(): net.minecraft.world.Container? = null
@@ -61,9 +65,11 @@ class ChunkLoaderBlockEntity(
         ChunkLoaderBlockEntity::class.type(), pos, state
     )
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.chunk_loader")
@@ -133,19 +139,20 @@ class ChunkLoaderBlockEntity(
         nbt.putInt("ChunkBitmask2", sync.chunkBitmask2)
     }
 
-    override fun markRemoved() {
+    override fun setRemoved() {
         releaseChunks()
-        super.markRemoved()
+        super.setRemoved()
     }
 
     fun releaseChunks() {
         if (activeChunkPositions.isEmpty()) return
         val sw = world as? ServerLevel ?: return
-        val cm = sw.chunkSource ?: return
+        // 1.21.1：ticket API 在 ChunkMap.getDistanceManager() 上（ServerChunkCache 已不直接暴露）
+        val cm = sw.chunkSource.chunkMap.distanceManager
         for (chunkPos in activeChunkPositions) {
-            // ServerChunkCache.addTicket 的 radius=2 对应 ENTITY_TICKING 等级，
+            // FORCED_TICKET_LEVEL 对应 ENTITY_TICKING 等级，
             // 确保区块内的方块实体和实体逻辑在玩家离开后仍继续 tick。
-            cm.removeTicket(TicketType.FORCED, chunkPos, 2, chunkPos)
+            cm.removeTicket(TicketType.FORCED, chunkPos, ChunkMap.FORCED_TICKET_LEVEL, chunkPos)
         }
         activeChunkPositions = emptySet()
     }
@@ -173,15 +180,14 @@ class ChunkLoaderBlockEntity(
             val center = ChunkPos(pos)
             val needed = sync.getChunkPositions(center).toSet()
 
-            val sw = world as? ServerLevel
-            val cm = sw?.chunkSource
+            val cm = sw?.chunkSource?.chunkMap?.distanceManager
             if (cm != null) {
                 for (cp in needed - activeChunkPositions) {
-                    // radius=2 -> ENTITY_TICKING；radius=0 只有 FULL，不会 tick 方块实体。
-                    cm.addTicket(TicketType.FORCED, cp, 2, cp)
+                    // FORCED_TICKET_LEVEL -> ENTITY_TICKING；更高等级只有 FULL，不会 tick 方块实体。
+                    cm.addTicket(TicketType.FORCED, cp, ChunkMap.FORCED_TICKET_LEVEL, cp)
                 }
                 for (cp in activeChunkPositions - needed) {
-                    cm.removeTicket(TicketType.FORCED, cp, 2, cp)
+                    cm.removeTicket(TicketType.FORCED, cp, ChunkMap.FORCED_TICKET_LEVEL, cp)
                 }
                 activeChunkPositions = needed
             }

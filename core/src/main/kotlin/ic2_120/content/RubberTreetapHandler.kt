@@ -1,5 +1,7 @@
 package ic2_120.content
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -38,19 +40,19 @@ object RubberTreetapHandler {
 
     fun isTreetap(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        return BuiltInRegistries.ITEM.getId(stack.item) == TREETAP_ID
+        return BuiltInRegistries.ITEM.getKey(stack.item) == TREETAP_ID
     }
 
     fun isElectricTreetap(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        return BuiltInRegistries.ITEM.getId(stack.item) == ELECTRIC_TREETAP_ID
+        return BuiltInRegistries.ITEM.getKey(stack.item) == ELECTRIC_TREETAP_ID
     }
 
     fun isExtractor(stack: ItemStack): Boolean = isTreetap(stack) || isElectricTreetap(stack)
 
     fun register() {
         UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
-            val stack = player.getItemInHand(hand)
+            val stack = player.getItemInHand(player.usedItemHand)
             if (!isExtractor(stack)) return@register InteractionResult.PASS
 
             val pos = hitResult.blockPos
@@ -59,7 +61,7 @@ object RubberTreetapHandler {
 
             if (block !is RubberLogBlock) return@register InteractionResult.PASS
 
-            val face = hitResult.side
+            val face = hitResult.direction
             val faceState = block.getRubberState(state, face)
             if (faceState == RubberFaceState.NONE) return@register InteractionResult.PASS
 
@@ -93,7 +95,7 @@ object RubberTreetapHandler {
             }
 
             if (resinCount != null) {
-                val resin = BuiltInRegistries.ITEM.getValue(RESIN_ID)
+                val resin = BuiltInRegistries.ITEM.get(RESIN_ID)
                 val resinStack = ItemStack(resin, resinCount)
                 val spawnX = pos.x + 0.5 + face.offsetX * 0.6
                 val spawnY = pos.y + 0.5 + face.offsetY * 0.35
@@ -105,7 +107,7 @@ object RubberTreetapHandler {
                     face.offsetY * 0.04,
                     face.offsetZ * 0.08
                 )
-                itemEntity.setToDefaultPickupDelay()
+                itemEntity.setDefaultPickUpDelay()
                 world.addFreshEntity(itemEntity)
             }
 
@@ -122,7 +124,7 @@ object RubberTreetapHandler {
                     tool.setEnergy(stack, tool.getEnergy(stack) - EU_PER_USE)
                 }
                 isTreetap(stack) -> {
-                    stack.damage(1, player) { it.sendToolBreakStatus(hand) }
+                    stack.hurt(1, player) { it }
                 }
             }
 

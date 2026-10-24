@@ -1,7 +1,6 @@
 package ic2_120.content.recipes.solidcanner
 
 import ic2_120.content.recipes.ModMachineRecipes
-import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.Recipe
@@ -24,7 +23,7 @@ class SolidCannerRecipe(
     val slot1Ingredient: Ingredient,
     val slot1Count: Int,
     val output: ItemStack
-) : Recipe<SimpleContainer> {
+) : Recipe<SolidCannerRecipe.Input> {
 
     companion object {
         private var slot1Cache: Set<Ingredient>? = null
@@ -32,16 +31,20 @@ class SolidCannerRecipe(
         fun slot1Ingredients(world: net.minecraft.world.level.Level): Set<Ingredient> {
             slot1Cache?.let { return it }
             val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
-            val result: Set<Ingredient> = world.recipeManager.listAllOfType(recipeType).mapTo(mutableSetOf()) { it.slot1Ingredient }
+            // TODO(1.21.1): getAllRecipesFor 返回 RecipeHolder，需 .value 取配方本体。
+            @Suppress("UNCHECKED_CAST")
+            val result: Set<Ingredient> = world.recipeManager
+                .getAllRecipesFor(recipeType as net.minecraft.world.item.crafting.RecipeType<SolidCannerRecipe>)
+                .mapTo(mutableSetOf()) { it.value.slot1Ingredient }
             slot1Cache = result
             return result
         }
     }
 
-    override fun matches(inventory: SimpleContainer, world: Level): Boolean {
+    override fun matches(inventory: Input, world: Level): Boolean {
         if (inventory.size() < 2) return false
-        val slot0 = inventory.getStack(0)
-        val slot1 = inventory.getStack(1)
+        val slot0 = inventory.getItem(0)
+        val slot1 = inventory.getItem(1)
         if (slot0.isEmpty || slot1.isEmpty) return false
         if (slot0.count < slot0Count) return false
         if (!slot0Ingredient.test(slot0)) return false
@@ -50,17 +53,21 @@ class SolidCannerRecipe(
         return true
     }
 
-    override fun craft(inventory: SimpleContainer, registryManager: RegistryAccess): ItemStack {
+    override fun assemble(inventory: Input, lookup: net.minecraft.core.HolderLookup.Provider): ItemStack {
         return output.copy()
     }
 
-    override fun fits(width: Int, height: Int): Boolean = true
+    override fun canCraftInDimensions(width: Int, height: Int): Boolean = true
 
-    override fun getOutput(registryManager: RegistryAccess): ItemStack = output.copy()
-
-    override fun getId(): ResourceLocation = id
+    override fun getResultItem(lookup: net.minecraft.core.HolderLookup.Provider): ItemStack = output.copy()
 
     override fun getSerializer(): RecipeSerializer<*> = ModMachineRecipes.recipeSerializer(SolidCannerRecipe::class)
 
     override fun getType(): RecipeType<*> = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
+
+    /** 配方输入：锡罐 + 食物两槽（用 mojmap RecipeInput 取代 SimpleContainer）。 */
+    class Input(val tinCan: ItemStack, val food: ItemStack) : net.minecraft.world.item.crafting.RecipeInput {
+        override fun getItem(slot: Int): ItemStack = if (slot == 0) tinCan else food
+        override fun size(): Int = 2
+    }
 }

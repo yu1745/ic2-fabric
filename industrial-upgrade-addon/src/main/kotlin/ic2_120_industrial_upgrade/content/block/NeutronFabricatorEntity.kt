@@ -1,5 +1,9 @@
 package ic2_120_industrial_upgrade.content.block
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.core.HolderLookup
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.ITieredMachine
@@ -51,7 +55,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.Tag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
@@ -67,7 +70,7 @@ import net.minecraft.world.level.Level
 @ModBlockEntity(block = NeutronFabricatorBlock::class)
 class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     MachineBlockEntity(NeutronFabricatorBlockEntity::class.type(), pos, state),
-    ITieredMachine, ExtendedScreenHandlerFactory, Container, IRoutedSidedInventory,
+    ITieredMachine, ExtendedScreenHandlerFactory<FriendlyByteBuf>, Container, IRoutedSidedInventory,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport {
 
@@ -252,17 +255,17 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     override val routedItemStorage get() = itemStorage
 
     override fun getInventory(): Container = this
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) { inventory[slot] = stack; setChanged() }
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) { inventory[slot] = stack; setChanged() }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     /** 槽位校验：升级槽接受已注册且本机实现的升级（不含超频）；容器输入槽接受空桶/空单元 */
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         in SLOT_UPGRADE_INDICES -> stack.item is IUpgradeItem && stack.item !is OverclockerUpgrade
         SLOT_CONTAINER_INPUT -> isFillableContainer(stack)
         else -> false
@@ -347,7 +350,7 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     /** 把流体槽中的中子流体灌入容器输入槽的物品，产物进入容器输出槽 */
     private fun fillContainersFromTank() {
         if (tankInternal.getStoredAmount() < FluidConstants.BUCKET) return // 至少 1 桶才能灌桶
-        val input = getStack(SLOT_CONTAINER_INPUT)
+        val input = getItem(SLOT_CONTAINER_INPUT)
         if (input.isEmpty) return
 
         // 空桶需要 1 桶流体；空单元也按 1 桶计（与 core 物质制造机一致）
@@ -369,20 +372,20 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
         }
         if (result.isEmpty) return
 
-        val output = getStack(SLOT_CONTAINER_OUTPUT)
+        val output = getItem(SLOT_CONTAINER_OUTPUT)
         if (!canMergeIntoSlot(output, result)) return
 
         val drained = tankInternal.extractInternal(FluidConstants.BUCKET)
         if (drained < FluidConstants.BUCKET) return
 
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_CONTAINER_INPUT, ItemStack.EMPTY)
-        if (output.isEmpty) setStack(SLOT_CONTAINER_OUTPUT, result.copy())
+        if (input.isEmpty) setItem(SLOT_CONTAINER_INPUT, ItemStack.EMPTY)
+        if (output.isEmpty) setItem(SLOT_CONTAINER_OUTPUT, result.copy())
         else output.grow(result.count)
         setChanged()
     }
 
-    // ====== ExtendedScreenHandlerFactory ======
+    // ====== ExtendedScreenHandlerFactory<FriendlyByteBuf> ======
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120_industrial_upgrade.neutron_fabricator")
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
@@ -393,9 +396,11 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
             INVENTORY_SIZE
         )
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.getContainerSize())
+        return buf
     }
 
     // ====== NBT ======

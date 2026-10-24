@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -37,7 +39,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 
 @ModBlock(name = "electric_heat_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -51,7 +52,7 @@ class ElectricHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOccl
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, ElectricHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, ElectricHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -61,8 +62,8 @@ class ElectricHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOccl
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
-        defaultState
-            .setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing)
+        defaultBlockState()
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalDirection)
             .setValue(ACTIVE, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -79,7 +80,7 @@ class ElectricHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOccl
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val casing = IronCasing::class.instance()
             val battery = ReBatteryItem::class.instance()
             val circuit = Circuit::class.instance()

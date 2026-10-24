@@ -47,7 +47,7 @@ class ReactorStackTest {
         ctx.api.screen.setPlayerSlot(screenId, 9, stack)
         val snap = ctx.api.screen.snapshot(screenId).asJsonObject
         val slots = snap.get("slots").asJsonArray
-        val playerIdx = (0 until slots.size()).firstOrNull { i ->
+        val playerIdx = (0 until slots.getContainerSize()).firstOrNull { i ->
             val s = slots.getValue().asJsonObject
             s.get("item").takeIf { it != null && !it.isJsonNull }?.asString == CELL && s.get("count").asInt == 10
         } ?: throw AssertionError("expected seeded player slot to be visible in chest screen")

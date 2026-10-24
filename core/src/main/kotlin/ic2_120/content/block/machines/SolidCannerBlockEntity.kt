@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -53,7 +57,6 @@ import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.network.chat.Component
@@ -74,7 +77,7 @@ class SolidCannerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SolidCannerBlock.ACTIVE
 
@@ -114,7 +117,7 @@ class SolidCannerBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_TIN_CAN), matcher = { isContainerInput(it) }),
@@ -150,9 +153,9 @@ class SolidCannerBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
@@ -160,12 +163,12 @@ class SolidCannerBlockEntity(
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_TIN_CAN -> isContainerInput(stack)
         SLOT_FOOD -> isFoodInput(stack)
         SLOT_OUTPUT -> false
@@ -174,9 +177,11 @@ class SolidCannerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solid_canner")
@@ -186,7 +191,7 @@ class SolidCannerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(SolidCannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -201,7 +206,7 @@ class SolidCannerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(SolidCannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -231,8 +236,8 @@ class SolidCannerBlockEntity(
         adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
-        val tinCan = getStack(SLOT_TIN_CAN)
-        val food = getStack(SLOT_FOOD)
+        val tinCan = getItem(SLOT_TIN_CAN)
+        val food = getItem(SLOT_FOOD)
         if (tinCan.isEmpty || food.isEmpty) {
             resetProgress()
             setActiveState(world, pos, state, false)
@@ -253,8 +258,8 @@ class SolidCannerBlockEntity(
             result = recipe.output.copy()
             slot0InputCount = recipe.slot0Count
             slot1InputCount = recipe.slot1Count
-        } else if (tinCan.item is EmptyTinCanItem && food.item.foodComponent != null && food.item !is FilledTinCanItem) {
-            val canCount = food.item.foodComponent!!.hunger.coerceAtLeast(1)
+        } else if (tinCan.item is EmptyTinCanItem && food.has(net.minecraft.core.component.DataComponents.FOOD) && food.item !is FilledTinCanItem) {
+            val canCount = food.get(net.minecraft.core.component.DataComponents.FOOD)!!.nutrition.coerceAtLeast(1)
             result = ItemStack(FilledTinCanItem::class.instance(), canCount)
             slot0InputCount = canCount
             slot1InputCount = 1
@@ -272,10 +277,10 @@ class SolidCannerBlockEntity(
             return
         }
 
-        val outputSlot = getStack(SLOT_OUTPUT)
+        val outputSlot = getItem(SLOT_OUTPUT)
         val maxStack = result.maxStackSize
         val canAccept = outputSlot.isEmpty() ||
-            (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
+            (ItemStack.isSameItem(outputSlot, result) && outputSlot.count + result.count <= maxStack)
 
         if (!canAccept) {
             resetProgress()
@@ -287,7 +292,7 @@ class SolidCannerBlockEntity(
         if (progressF >= SolidCannerSync.PROGRESS_MAX) {
             tinCan.shrink(slot0InputCount)
             food.shrink(slot1InputCount)
-            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
+            if (outputSlot.isEmpty()) setItem(SLOT_OUTPUT, result.copy())
             else outputSlot.grow(result.count)
             progressF = 0f
             energyDebtF = 0f
@@ -342,8 +347,8 @@ class SolidCannerBlockEntity(
         food: ItemStack
     ): java.util.Optional<ic2_120.content.recipes.solidcanner.SolidCannerRecipe> {
         if (RecipeCacheEpoch.current() == cachedMatchEpoch && cachedCanItem === tinCan.item && cachedFoodItem === food.item) return cachedSolidCanningMatch!!
-        val recipeInventory = SimpleContainer(tinCan.copyWithCount(1), food.copyWithCount(1))
-        val match = world.recipeManager.getFirstMatch(getRecipeType<ic2_120.content.recipes.solidcanner.SolidCannerRecipe>(), recipeInventory, world)
+        val recipeInventory = SolidCannerRecipe.Input(tinCan.copyWithCount(1), food.copyWithCount(1))
+        val match = world.recipeManager.getRecipeFor(getRecipeType<ic2_120.content.recipes.solidcanner.SolidCannerRecipe>(), recipeInventory, world).map { it.value }
         cachedMatchEpoch = RecipeCacheEpoch.current()
         cachedCanItem = tinCan.item
         cachedFoodItem = food.item
@@ -361,5 +366,5 @@ class SolidCannerBlockEntity(
         !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
             stack.item !is FilledTinCanItem &&
             (world?.let { SolidCannerRecipe.slot1Ingredients(it).any { ing -> ing.test(stack) } } == true
-             || stack.item.foodComponent != null)
+             || stack.has(net.minecraft.core.component.DataComponents.FOOD))
 }

@@ -1,10 +1,13 @@
+package ic2_120.content.block.machines
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
-
-﻿package ic2_120.content.block.machines
-
 import net.minecraft.core.HolderLookup
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CropBlock
@@ -33,7 +36,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -54,14 +56,14 @@ class UvLampBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_UPGRADE), matcher = { it.item is IUpgradeItem }, maxPerSlot = MAX_OVERCLOCKERS)
         ),
@@ -76,36 +78,38 @@ class UvLampBlockEntity(
     val sync = UvLampSync(syncedData, { world?.time })
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
-    private var particleOffset: Int = random.nextBetween(0, PARTICLE_INTERVAL_TICKS - 1)
+    private var particleOffset: Int = random.nextInt(0, (PARTICLE_INTERVAL_TICKS - 1) + 1)
 
     constructor(pos: BlockPos, state: BlockState) : this(UvLampBlockEntity::class.type(), pos, state)
 
     // ========== Container ==========
 
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > MAX_OVERCLOCKERS) stack.count = MAX_OVERCLOCKERS
         setChanged()
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         return stack.item is IUpgradeItem
     }
 
     // ========== AbstractContainerMenu ==========
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.uv_lamp")
@@ -124,14 +128,14 @@ class UvLampBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(UvLampSync.NBT_ENERGY_STORED, sync.amount)
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(UvLampSync.NBT_ENERGY_STORED))
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -176,7 +180,7 @@ class UvLampBlockEntity(
 
     /** 统计升级槽中超频升级的数量（最大 MAX_OVERCLOCKERS） */
     fun getOverclockerCount(): Int {
-        val stack = getStack(SLOT_UPGRADE)
+        val stack = getItem(SLOT_UPGRADE)
         return if (!stack.isEmpty && stack.item is OverclockerUpgrade) {
             stack.count.coerceAtMost(MAX_OVERCLOCKERS)
         } else {
@@ -191,11 +195,11 @@ class UvLampBlockEntity(
             for (dy in -radius..radius) {
                 for (dz in -radius..radius) {
                     if (dx == 0 && dy == 0 && dz == 0) continue
-                    val cropPos = pos.add(dx, dy, dz)
+                    val cropPos = pos.offset(dx, dy, dz)
                     val be = world.getBlockEntity(cropPos)
                     if (be is CropBlockEntity) {
                         val cropState = world.getBlockState(cropPos)
-                        if (!cropState.contains(CropBlock.CROP_TYPE) || !cropState.contains(CropBlock.AGE)) continue
+                        if (!cropState.hasProperty(CropBlock.CROP_TYPE) || !cropState.hasProperty(CropBlock.AGE)) continue
                         val age = cropState.getValue(CropBlock.AGE)
                         val cropType = cropState.getValue(CropBlock.CROP_TYPE)
                         val maxAge = ic2_120.content.crop.CropSystem.maxAge(cropType)
@@ -217,11 +221,11 @@ class UvLampBlockEntity(
             for (dy in -radius..radius) {
                 for (dz in -radius..radius) {
                     if (dx == 0 && dy == 0 && dz == 0) continue
-                    val count = random.nextBetween(1, 3)
+                    val count = random.nextInt(1, (3) + 1)
                     val px = pos.x + dx + 0.5
                     val py = pos.y + dy + 0.5
                     val pz = pos.z + dz + 0.5
-                    world.spawnParticles(
+                    world.sendParticles(
                         ParticleTypes.PORTAL,
                         px, py, pz,
                         count,

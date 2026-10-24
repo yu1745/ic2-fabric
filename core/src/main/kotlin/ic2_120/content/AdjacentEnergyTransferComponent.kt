@@ -37,7 +37,7 @@ class AdjacentEnergyTransferComponent(
         private const val NEIGHBOR_VERIFY_INTERVAL = 20
     }
 
-    private val verifyPhase: Int = kotlin.random.RandomSource.nextInt(NEIGHBOR_VERIFY_INTERVAL)
+    private val verifyPhase: Int = kotlin.random.Random.nextInt(NEIGHBOR_VERIFY_INTERVAL)
 
     private data class NeighborStorageCache(
         var state: BlockState? = null,
@@ -59,7 +59,7 @@ class AdjacentEnergyTransferComponent(
         val dueVerify = Math.floorMod(nowTick + verifyPhase, NEIGHBOR_VERIFY_INTERVAL.toLong()) == 0L
 
         for (side in Direction.entries) {
-            val neighborPos = owner.pos.offset(side)
+            val neighborPos = owner.pos.relative(side)
             val cache = neighborStorageCache[side.ordinal] ?: NeighborStorageCache().also {
                 neighborStorageCache[side.ordinal] = it
             }
@@ -193,18 +193,18 @@ class AdjacentEnergyTransferComponent(
         val power = explosionPowerForOutputLevel(providerVoltage)
         if (ClaimProtection.isProtected(world, pos, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK) ||
             !ClaimProtection.explosionCubeAllowed(world, pos, power, null)) return
-        if (owner is Container) (owner as Container).clear()
-        world.breakBlock(pos, false)
+        if (owner is Container) (owner as Container).clearContent()
+        world.destroyBlock(pos, false, null, 512)
 
         if (world is ServerLevel) {
             val x = pos.x + 0.5
             val y = pos.y + 0.5
             val z = pos.z + 0.5
-            world.spawnParticles(ParticleTypes.LARGE_SMOKE, x, y, z, 12, 0.2, 0.2, 0.2, 0.02)
-            world.spawnParticles(ParticleTypes.FLAME, x, y, z, 6, 0.15, 0.15, 0.15, 0.01)
+            world.sendParticles(ParticleTypes.LARGE_SMOKE, x, y, z, 12, 0.2, 0.2, 0.2, 0.02)
+            world.sendParticles(ParticleTypes.FLAME, x, y, z, 6, 0.15, 0.15, 0.15, 0.01)
         }
 
-        world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, power, false, Level.ExplosionSourceType.BLOCK)
+        world.explode(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, power, false, Level.ExplosionInteraction.BLOCK)
     }
 
     private fun explosionPowerForOutputLevel(level: Int): Float {

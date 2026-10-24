@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -35,7 +37,6 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import ic2_120.registry.id
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -48,7 +49,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class RtGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
 
     init {
-        defaultState = stateManager.defaultBlockState.setValue(ACTIVE, false)
+        registerDefaultState(stateDefinition.defaultBlockState().setValue(ACTIVE, false))
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
@@ -60,7 +61,7 @@ class RtGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, RtGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, RtGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -86,7 +87,7 @@ class RtGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val generator = GeneratorBlock::class.item()
             val ironCasing = IronCasing::class.instance()
             val reactorChamber = ReactorChamberBlock::class.item()

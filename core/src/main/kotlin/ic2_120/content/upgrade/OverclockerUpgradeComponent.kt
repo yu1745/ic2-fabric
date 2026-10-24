@@ -43,7 +43,7 @@ object OverclockerUpgradeComponent {
     fun countOverclockers(inventory: Container, upgradeSlotIndices: IntArray): Int {
         var count = 0
         for (idx in upgradeSlotIndices) {
-            val stack = inventory.getStack(idx)
+            val stack = inventory.getItem(idx)
             if (!stack.isEmpty && stack.item is OverclockerUpgrade) {
                 count += stack.count
             }

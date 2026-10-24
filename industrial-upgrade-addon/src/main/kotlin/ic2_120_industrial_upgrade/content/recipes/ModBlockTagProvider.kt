@@ -11,10 +11,10 @@ import java.util.concurrent.CompletableFuture
 
 class ModBlockTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<HolderLookup.WrapperLookup>,
+    registriesFuture: CompletableFuture<HolderLookup.HolderLookup.Provider>,
 ) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
 
-    override fun configure(registries: HolderLookup.WrapperLookup) {
+    override fun configure(registries: HolderLookup.HolderLookup.Provider) {
         val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).setReplace(false)
         val ironToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).setReplace(false)
         val stoneToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL).setReplace(false)

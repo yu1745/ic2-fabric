@@ -48,7 +48,7 @@ class FluidHeatExchangerScreenHandler(
     val sync = FluidHeatExchangerSync(syncedView, heatFlow)
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
@@ -146,14 +146,14 @@ class FluidHeatExchangerScreenHandler(
             }
         }
 
-        if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+        if (inSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
         if (inSlot.count == stack.count) return ItemStack.EMPTY
         slot.onTake(player, inSlot)
         return stack
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is FluidHeatExchangerBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -175,7 +175,7 @@ class FluidHeatExchangerScreenHandler(
         private val EXCHANGER_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack ->
-                !stack.isEmpty && net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item) == net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "heat_conductor")
+                !stack.isEmpty && net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.item) == net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "heat_conductor")
             }
         )
 
@@ -184,8 +184,8 @@ class FluidHeatExchangerScreenHandler(
                 when {
                     stack.item == net.minecraft.world.item.Items.LAVA_BUCKET -> true
                     stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item) == net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "lava_cell") -> true
-                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item) == net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "hot_coolant_cell") -> true
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.item) == net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "lava_cell") -> true
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.item) == net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "hot_coolant_cell") -> true
                     stack.item is FluidCellItem -> {
                         val fluid = stack.getFluidCellVariant()?.fluid
                         fluid == net.minecraft.world.level.material.Fluids.LAVA ||
@@ -201,7 +201,7 @@ class FluidHeatExchangerScreenHandler(
         private val OUTPUT_EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
                 stack.item == net.minecraft.world.item.Items.BUCKET ||
-                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item) == net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.item) == net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
                     (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             }
         )

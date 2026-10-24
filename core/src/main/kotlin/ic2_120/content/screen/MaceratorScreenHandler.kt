@@ -87,7 +87,7 @@ class MaceratorScreenHandler(
                 // 机器内部槽位（输出/放电/升级/输入）→ 玩家物品栏
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 // 玩家物品栏 → 机器（通过 RoutedItemStorage 路由）
                 index in PLAYER_INV_START until HOTBAR_END -> {
@@ -111,7 +111,7 @@ class MaceratorScreenHandler(
                 }
             }
 
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -120,7 +120,7 @@ class MaceratorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is MaceratorBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0

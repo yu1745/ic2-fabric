@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
@@ -50,7 +54,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -75,7 +78,7 @@ class FermenterBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = FermenterBlock.ACTIVE
     override val tier: Int = 1
@@ -126,7 +129,7 @@ class FermenterBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is FluidEjectorUpgrade || it.item is FluidPullingUpgrade }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_FILLED_CONTAINER), matcher = { isBiomassFilledContainer(it) }),
@@ -333,15 +336,15 @@ class FermenterBlockEntity(
     )
 
     override fun getInventory(): Container = this
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_FILLED_CONTAINER -> isBiomassFilledContainer(stack)
         SLOT_INPUT_EMPTY_CONTAINER -> false
         SLOT_OUTPUT_EMPTY_CONTAINER -> isEmptyContainerForFermenter(stack)
@@ -355,15 +358,17 @@ class FermenterBlockEntity(
         super.setChanged()
     }
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.fermenter")
@@ -380,7 +385,7 @@ class FermenterBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         inputTankInternal.setStoredFluid(nbt.getLong(NBT_INPUT_TANK))
         outputTankInternal.setStoredFluid(nbt.getLong(NBT_OUTPUT_TANK))
@@ -390,7 +395,7 @@ class FermenterBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
@@ -461,7 +466,7 @@ class FermenterBlockEntity(
     }
 
     private fun handleInputBiomassContainers() {
-        val input = getStack(SLOT_INPUT_FILLED_CONTAINER)
+        val input = getItem(SLOT_INPUT_FILLED_CONTAINER)
         if (input.isEmpty) return
         if (inputTankInternal.getTankCapacity() - inputTankInternal.getStoredAmount() < FluidConstants.BUCKET) return
 
@@ -473,15 +478,15 @@ class FermenterBlockEntity(
         }
         if (emptyContainer.isEmpty) return
 
-        val emptyOutput = getStack(SLOT_INPUT_EMPTY_CONTAINER)
+        val emptyOutput = getItem(SLOT_INPUT_EMPTY_CONTAINER)
         if (!canMergeIntoSlot(emptyOutput, emptyContainer)) return
 
         val inserted = inputTankInternal.insertInternal(FluidConstants.BUCKET)
         if (inserted < FluidConstants.BUCKET) return
 
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_INPUT_FILLED_CONTAINER, ItemStack.EMPTY)
-        if (emptyOutput.isEmpty) setStack(SLOT_INPUT_EMPTY_CONTAINER, emptyContainer.copy())
+        if (input.isEmpty) setItem(SLOT_INPUT_FILLED_CONTAINER, ItemStack.EMPTY)
+        if (emptyOutput.isEmpty) setItem(SLOT_INPUT_EMPTY_CONTAINER, emptyContainer.copy())
         else emptyOutput.grow(1)
         setChanged()
     }
@@ -489,7 +494,7 @@ class FermenterBlockEntity(
     private fun fillOutputBiogasContainers() {
         if (outputTankInternal.getStoredAmount() < FluidConstants.BUCKET) return
 
-        val emptyInput = getStack(SLOT_OUTPUT_EMPTY_CONTAINER)
+        val emptyInput = getItem(SLOT_OUTPUT_EMPTY_CONTAINER)
         if (emptyInput.isEmpty) return
 
         val filled = when {
@@ -502,15 +507,15 @@ class FermenterBlockEntity(
         }
         if (filled.isEmpty) return
 
-        val filledOutput = getStack(SLOT_OUTPUT_FILLED_CONTAINER)
+        val filledOutput = getItem(SLOT_OUTPUT_FILLED_CONTAINER)
         if (!canMergeIntoSlot(filledOutput, filled)) return
 
         val consumed = outputTankInternal.consumeInternal(FluidConstants.BUCKET)
         if (consumed < FluidConstants.BUCKET) return
 
         emptyInput.shrink(1)
-        if (emptyInput.isEmpty) setStack(SLOT_OUTPUT_EMPTY_CONTAINER, ItemStack.EMPTY)
-        if (filledOutput.isEmpty) setStack(SLOT_OUTPUT_FILLED_CONTAINER, filled.copy())
+        if (emptyInput.isEmpty) setItem(SLOT_OUTPUT_EMPTY_CONTAINER, ItemStack.EMPTY)
+        if (filledOutput.isEmpty) setItem(SLOT_OUTPUT_FILLED_CONTAINER, filled.copy())
         else filledOutput.grow(1)
         setChanged()
     }
@@ -521,10 +526,10 @@ class FermenterBlockEntity(
 
     private fun tryProduceFertilizer() {
         val fertilizerStack = ItemStack(fertilizerItem, 1)
-        val currentOutput = getStack(SLOT_OUTPUT_FERTILIZER)
+        val currentOutput = getItem(SLOT_OUTPUT_FERTILIZER)
         if (!canMergeIntoSlot(currentOutput, fertilizerStack)) return
         sync.fertilizerProgress -= FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_DROPLETS
-        if (currentOutput.isEmpty) setStack(SLOT_OUTPUT_FERTILIZER, fertilizerStack.copy())
+        if (currentOutput.isEmpty) setItem(SLOT_OUTPUT_FERTILIZER, fertilizerStack.copy())
         else currentOutput.grow(1)
         setChanged()
     }
@@ -543,14 +548,14 @@ class FermenterBlockEntity(
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
+        return current.isEmpty || (ItemStack.isSameItemSameComponents(current, toInsert) && current.count < current.maxStackSize)
     }
 
     private fun isBiomassFilledContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         return when {
             stack.item == ModFluids.BIOMASS_BUCKET -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "biomass_cell") -> true
+            BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "biomass_cell") -> true
             stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid != null && isBiomass(fluid)
@@ -562,7 +567,7 @@ class FermenterBlockEntity(
     private fun isEmptyContainerForFermenter(stack: ItemStack): Boolean =
         !stack.isEmpty && (
             stack.item == Items.BUCKET ||
-                BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
+                BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
                 (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             )
 }

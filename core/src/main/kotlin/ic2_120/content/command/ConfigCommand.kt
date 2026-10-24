@@ -13,7 +13,7 @@ object ConfigCommand {
         CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback { dispatcher, _, _ ->
             dispatcher.register(
                 literal("ic2config")
-                    .requires { source -> source.hasPermissionLevel(2) }
+                    .requires { source -> source.hasPermission(2) }
                     .then(
                         literal("reload")
                             .executes { context ->
@@ -22,7 +22,7 @@ object ConfigCommand {
                                     Ic2Config.reloadOrThrow()
                                     val configJson = Ic2Config.prettyCurrentConfig()
                                     val replicationCostsJson = Ic2Config.prettyAllReplicationCosts()
-                                    for (player in source.server.playerList.playerList) {
+                                    for (player in source.server.playerList.players) {
                                         ConfigSyncHelper.sendToPlayer(player, ConfigSyncPacket.ID, configJson)
                                         ConfigSyncHelper.sendToPlayer(
                                             player,
@@ -30,7 +30,7 @@ object ConfigCommand {
                                             replicationCostsJson
                                         )
                                     }
-                                    source.sendFeedback(
+                                    source.sendSuccess(
                                         {
                                             Component.literal("ic2_120 config reloaded and synced to all players")
                                         },
@@ -38,7 +38,7 @@ object ConfigCommand {
                                     )
                                     Command.SINGLE_SUCCESS
                                 } catch (e: Exception) {
-                                    source.sendError(Component.literal("Failed to reload ic2_120 config: ${e.message}"))
+                                    source.sendFailure(Component.literal("Failed to reload ic2_120 config: ${e.message}"))
                                     0
                                 }
                             }

@@ -42,7 +42,7 @@ class FermenterScreenHandler(
     val sync = FermenterSync(SyncedDataView(propertyDelegate))
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
@@ -123,14 +123,14 @@ class FermenterScreenHandler(
             }
         }
 
-        if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+        if (inSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
         if (inSlot.count == stack.count) return ItemStack.EMPTY
         slot.onTake(player, inSlot)
         return stack
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is FermenterBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -155,7 +155,7 @@ class FermenterScreenHandler(
             canInsert = { stack ->
                 when {
                     stack.item == ModFluids.BIOMASS_BUCKET -> true
-                    BuiltInRegistries.ITEM.getId(stack.item) == biomassCellId -> true
+                    BuiltInRegistries.ITEM.getKey(stack.item) == biomassCellId -> true
                     stack.item is FluidCellItem -> {
                         val fluid = stack.getFluidCellVariant()?.fluid
                         fluid == ModFluids.BIOMASS_STILL || fluid == ModFluids.BIOMASS_FLOWING
@@ -168,7 +168,7 @@ class FermenterScreenHandler(
         private val OUTPUT_EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
                 stack.item == Items.BUCKET ||
-                    BuiltInRegistries.ITEM.getId(stack.item) == emptyCellId ||
+                    BuiltInRegistries.ITEM.getKey(stack.item) == emptyCellId ||
                     (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             }
         )

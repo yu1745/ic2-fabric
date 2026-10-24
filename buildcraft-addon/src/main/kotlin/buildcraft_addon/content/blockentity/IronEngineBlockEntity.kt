@@ -1,5 +1,9 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.core.HolderLookup
 import ic2_120.integration.ftbchunks.ClaimProtection
 
@@ -15,7 +19,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -48,7 +51,7 @@ class IronEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory, IKineticMachinePort {
+) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory<FriendlyByteBuf>, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         IronEngineBlockEntity::class.type(), pos, state
@@ -205,16 +208,18 @@ class IronEngineBlockEntity(
             else -> 0
         }
         override fun set(index: Int, value: Int) {}
-        override fun size(): Int = 4
+        override fun getContainerSize(): Int = 4
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
         return IronEngineScreenHandler(syncId, playerInventory, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(4)
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(4)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.buildcraft_addon.iron_engine")

@@ -107,7 +107,7 @@ object BcJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccess
         }
     }
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val kind = accessor.serverData.getString("kind")
         when (kind) {
             "redstone_engine", "stone_engine", "iron_engine", "rf_engine" -> {

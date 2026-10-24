@@ -19,7 +19,7 @@ class ReactorLayoutLockPacket(
             val lockedSlots = mutableMapOf<Int, Item>()
             for (i in 0 until size) {
                 val slot = buf.readVarInt()
-                val item = BuiltInRegistries.ITEM.get(buf.readIdentifier())
+                val item = BuiltInRegistries.ITEM.get(buf.readResourceLocation())
                 lockedSlots[slot] = item
             }
             return ReactorLayoutLockPacket(pos, lockedSlots)
@@ -30,7 +30,7 @@ class ReactorLayoutLockPacket(
             buf.writeVarInt(packet.lockedSlots.size)
             for ((slot, item) in packet.lockedSlots) {
                 buf.writeVarInt(slot)
-                buf.writeIdentifier(BuiltInRegistries.ITEM.getId(item))
+                buf.writeResourceLocation(BuiltInRegistries.ITEM.getKey(item))
             }
         }
     }

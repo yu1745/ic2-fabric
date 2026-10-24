@@ -31,7 +31,7 @@ abstract class HeatGeneratorBlockEntityBase(
     abstract val heatFlow: HeatFlowSync
 
     override fun getHeatTransferFace(): Direction {
-        return cachedState.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        return cachedState.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
     }
 
     /** 获取上一 tick 产生的热量（HU） */
@@ -55,7 +55,7 @@ abstract class HeatGeneratorBlockEntityBase(
         if (availableHu <= 0L) return 0L
         val world = world ?: return 0L
         val myFace = getHeatTransferFace()
-        val neighborPos = pos.offset(myFace)
+        val neighborPos = pos.relative(myFace)
         val neighbor = world.getBlockEntity(neighborPos) as? IHeatConsumer ?: return 0L
 
         // 推热给 facing 方向的相邻 IHeatConsumer，不要求双方 facing 相对。
@@ -70,7 +70,7 @@ abstract class HeatGeneratorBlockEntityBase(
     protected fun hasValidHeatConsumer(): Boolean {
         val world = world ?: return false
         val myFace = getHeatTransferFace()
-        val neighborPos = pos.offset(myFace)
+        val neighborPos = pos.relative(myFace)
         val neighbor = world.getBlockEntity(neighborPos) as? IHeatConsumer ?: return false
         return true
     }

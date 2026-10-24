@@ -25,13 +25,13 @@ import team.reborn.energy.api.EnergyStorage
 class EnergyDebugStickItem : Item(Item.Properties()) {
 
     override fun useOn(context: UseOnContext): InteractionResult {
-        val world = context.world
-        val pos = context.blockPos
+        val world = context.level
+        val pos = context.clickedPos
         val player = context.player ?: return InteractionResult.PASS
         if (world.isClient) return InteractionResult.SUCCESS
 
         // 先尝试被点击的面，再尝试六个方向
-        val directions = listOf(context.side) + Direction.values().toList()
+        val directions = listOf(context.clickedFace) + Direction.values().toList()
         var storage: EnergyStorage? = null
         for (dir in directions) {
             val found = EnergyStorage.SIDED.find(world, pos, dir)
@@ -42,7 +42,7 @@ class EnergyDebugStickItem : Item(Item.Properties()) {
         }
 
         if (storage == null) {
-            player.sendMessage(
+            player.displayClientMessage(
                 net.minecraft.network.chat.Component.translatable("message.ic2_120.energy_debug_stick.no_energy")
                     .withStyle(ChatFormatting.GRAY),
                 true
@@ -78,7 +78,7 @@ class EnergyDebugStickItem : Item(Item.Properties()) {
             maxInsertOnce,
             maxExtractOnce
         ).withStyle(ChatFormatting.GREEN)
-        player.sendMessage(msg, true)
+        player.displayClientMessage(msg, true)
 
         // 点击导线时额外显示电网等级与导线数
         if (world.getBlockState(pos).block is BaseCableBlock) {
@@ -88,7 +88,7 @@ class EnergyDebugStickItem : Item(Item.Properties()) {
                 network.outputLevel,
                 network.cables.size
             ).withStyle(ChatFormatting.AQUA)
-            player.sendMessage(networkMsg, true)
+            player.displayClientMessage(networkMsg, true)
         }
         return InteractionResult.SUCCESS
     }

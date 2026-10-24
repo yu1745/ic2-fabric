@@ -36,6 +36,6 @@ abstract class IndustrialSolarPanelBlock : MachineBlock() {
         builder.add(SOLAR_ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
         super.getStateForPlacement(ctx)?.setValue(SOLAR_ACTIVE, false)
 }

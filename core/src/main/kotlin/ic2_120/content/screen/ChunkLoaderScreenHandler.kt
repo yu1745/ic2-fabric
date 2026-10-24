@@ -27,8 +27,8 @@ class ChunkLoaderScreenHandler(
 
     /** 机器位置，客户端通过 [fromBuffer] 传入 */
     val machinePos: BlockPos = run {
-        val ref = object { var pos: BlockPos = BlockPos.ORIGIN }
-        context.get({ _, p -> ref.pos = p })
+        val ref = object { var pos: BlockPos = BlockPos.ZERO }
+        context.evaluate({ _, p -> ref.pos = p })
         ref.pos
     }
 
@@ -56,15 +56,15 @@ class ChunkLoaderScreenHandler(
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id < 0 || id >= ChunkLoaderSync.CHUNK_COUNT) return false
-        context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? ChunkLoaderBlockEntity ?: return@get
+        context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? ChunkLoaderBlockEntity ?: return@evaluate true
             be.toggleChunk(id)
         }, true)
         return true
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is ChunkLoaderBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0

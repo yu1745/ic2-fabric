@@ -118,13 +118,13 @@ class EnergyCrystalItem : BatteryItemBase(
     name = "energy_crystal", tier = 3, maxCapacity = 1_000_000, canChargeWireless = false
 ) {
     override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
-        val crystal = user.getItemInHand(hand)
+        val crystal = user.getItemInHand(player.usedItemHand)
         if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
 
         // 获取水晶当前电量
         val availableEnergy = getCurrentCharge(crystal)
         if (availableEnergy <= 0) {
-            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c能量水晶电量不足！", false), true)
+            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c能量水晶电量不足！"), true)
             return net.minecraft.world.InteractionResultHolder.fail(crystal)
         }
 
@@ -133,11 +133,11 @@ class EnergyCrystalItem : BatteryItemBase(
         var energyRemaining = availableEnergy
 
         // 遍历玩家主背包
-        for (slot in 0..<user.inventory.main.size) {
+        for (slot in 0..<user.inventory.items.size) {
             if (energyRemaining <= 0) break
 
             // 跳过当前手持的水晶
-            val stack = user.inventory.main[slot]
+            val stack = user.inventory.items[slot]
             if (stack.isEmpty || stack === crystal) continue
 
             // 检查物品是否可以被充电
@@ -191,7 +191,7 @@ class EnergyCrystalItem : BatteryItemBase(
         }
 
         // 遍历副手
-        val offhandStack = user.offHandStack
+        val offhandStack = user.offhandItem
         if (energyRemaining > 0 && !offhandStack.isEmpty && offhandStack.canBeCharged() && offhandStack !== crystal) {
             val targetBattery = offhandStack.item as? IBatteryItem
             val targetTool = offhandStack.item as? IElectricTool
@@ -218,12 +218,12 @@ class EnergyCrystalItem : BatteryItemBase(
             // 发送反馈消息
             val formattedEnergy = "%,d".format(usedEnergy)
             val percentUsed = (usedEnergy * 100 / maxCapacity).toInt()
-            user.sendMessage(
+            user.displayClientMessage(
                 net.minecraft.network.chat.Component.literal("§a已充能 $itemsCharged 件物品，消耗 §e$formattedEnergy EU§a (${percentUsed}%)"),
                 true
             )
         } else {
-            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！", false), true)
+            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！"), true)
         }
 
         return net.minecraft.world.InteractionResultHolder.success(crystal)
@@ -260,13 +260,13 @@ class LapotronCrystalItem : BatteryItemBase(
     }
 
     override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
-        val crystal = user.getItemInHand(hand)
+        val crystal = user.getItemInHand(player.usedItemHand)
         if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
 
         // 获取水晶当前电量
         val availableEnergy = getCurrentCharge(crystal)
         if (availableEnergy <= 0) {
-            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c蓝波顿水晶电量不足！", false), true)
+            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c蓝波顿水晶电量不足！"), true)
             return net.minecraft.world.InteractionResultHolder.fail(crystal)
         }
 
@@ -275,11 +275,11 @@ class LapotronCrystalItem : BatteryItemBase(
         var energyRemaining = availableEnergy
 
         // 遍历玩家主背包
-        for (slot in 0..<user.inventory.main.size) {
+        for (slot in 0..<user.inventory.items.size) {
             if (energyRemaining <= 0) break
 
             // 跳过当前手持的水晶
-            val stack = user.inventory.main[slot]
+            val stack = user.inventory.items[slot]
             if (stack.isEmpty || stack === crystal) continue
 
             // 检查物品是否可以被充电
@@ -333,7 +333,7 @@ class LapotronCrystalItem : BatteryItemBase(
         }
 
         // 遍历副手
-        val offhandStack = user.offHandStack
+        val offhandStack = user.offhandItem
         if (energyRemaining > 0 && !offhandStack.isEmpty && offhandStack.canBeCharged() && offhandStack !== crystal) {
             val targetBattery = offhandStack.item as? IBatteryItem
             val targetTool = offhandStack.item as? IElectricTool
@@ -360,12 +360,12 @@ class LapotronCrystalItem : BatteryItemBase(
             // 发送反馈消息
             val formattedEnergy = "%,d".format(usedEnergy)
             val percentUsed = (usedEnergy * 100 / maxCapacity).toInt()
-            user.sendMessage(
+            user.displayClientMessage(
                 net.minecraft.network.chat.Component.literal("§a已充能 $itemsCharged 件物品，消耗 §e$formattedEnergy EU§a (${percentUsed}%)"),
                 true
             )
         } else {
-            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！", false), true)
+            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！"), true)
         }
 
         return net.minecraft.world.InteractionResultHolder.success(crystal)
@@ -521,7 +521,7 @@ class SingleUseBatteryItem : BatteryItemBase(
     * 无 NBT 时返回满电量，有 NBT 时返回实际剩余电量。
     */
    override fun getCurrentCharge(stack: net.minecraft.world.item.ItemStack): Long {
-       if (!stack.hasNbt() || !stack.nbt!!.contains(BatteryItemBase.ENERGY_KEY)) return maxCapacity
+       if (!!stack.orCreateNbt.isEmpty || !stack.nbt!!.contains(BatteryItemBase.ENERGY_KEY)) return maxCapacity
        return super.getCurrentCharge(stack)
    }
 

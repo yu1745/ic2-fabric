@@ -41,7 +41,7 @@ object KineticConnectionRules {
 
     private fun bevelDirections(world: BlockGetter, pos: BlockPos): List<Direction> {
         val candidates = Direction.entries.filter { direction ->
-            val neighborPos = pos.offset(direction)
+            val neighborPos = pos.relative(direction)
             val neighborState = world.getBlockState(neighborPos)
             when {
                 isTransmissionNode(neighborState) -> canConnectFromDirection(neighborState, direction.opposite)

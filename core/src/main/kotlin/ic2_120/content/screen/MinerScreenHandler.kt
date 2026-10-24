@@ -130,14 +130,14 @@ class MinerScreenHandler(
     }
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? BaseMinerBlockEntity ?: return@get false
+        context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? BaseMinerBlockEntity ?: return@evaluate false
             when (id) {
                 BUTTON_TOGGLE_MODE -> if (isAdvanced) be.toggleMode()
                 BUTTON_TOGGLE_SILK -> if (isAdvanced) be.toggleSilkTouch()
                 BUTTON_RESTART -> be.restartScan()
                 BUTTON_RECOVER_PIPES -> be.startPipeRecovery()
-                else -> return@get false
+                else -> return@evaluate false
             }
             true
         }, false)
@@ -162,11 +162,11 @@ class MinerScreenHandler(
                         return ItemStack.EMPTY
                     }
                     if (!moved.isEmpty) miner.insertPipesFromStack(moved, moved.count)
-                    slot.onQuickTransfer(moved, stack)
+                    slot.onTake(player, moved)
                 }
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, playerSlotStart, slots.size, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index >= playerSlotStart -> {
                     val miner = getMinerBlockEntity()
@@ -184,24 +184,24 @@ class MinerScreenHandler(
                     if (!moveItemStackTo(stackInSlot, playerSlotStart, slots.size, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun onSlotClick(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
+    override fun clicked(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
         val pipeSlotIndex = beSlotToHandlerIndex[BaseMinerBlockEntity.SLOT_PIPE]
         if (slotIndex == pipeSlotIndex && actionType == ClickType.PICKUP) {
             val miner = getMinerBlockEntity()
             if (miner != null) {
-                val cursor = cursorStack
+                val cursor = carried
                 if (cursor.isEmpty) {
                     val takeAmount = if (button == 1) 1 else cursor.maxStackSize
                     val taken = miner.takePipes(takeAmount)
                     if (!taken.isEmpty) {
-                        cursorStack = taken
+                        carried = taken
                         sendContentUpdates()
                         return
                     }
@@ -214,11 +214,11 @@ class MinerScreenHandler(
                 }
             }
         }
-        super.onSlotClick(slotIndex, button, actionType, player)
+        super.clicked(slotIndex, button, actionType, player)
     }
 
     private fun getMinerBlockEntity(): BaseMinerBlockEntity? = try {
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             if (world.isClient) null else world.getBlockEntity(pos) as? BaseMinerBlockEntity
         }, null)
     } catch (_: NullPointerException) {
@@ -229,7 +229,7 @@ class MinerScreenHandler(
         get() = if (isAdvanced) 21 else 22
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is BaseMinerBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
@@ -246,7 +246,7 @@ class MinerScreenHandler(
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val isAdvanced = buf.readBoolean()
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val blockInv = SimpleContainer(BaseMinerBlockEntity.INVENTORY_SIZE)
             return MinerScreenHandler(syncId, playerInventory, blockInv, context, SimpleContainerData(propertyCount), isAdvanced = isAdvanced)
         }

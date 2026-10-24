@@ -58,7 +58,7 @@ class KineticNetwork {
         val providers = mutableMapOf<MachineEndpointKey, Endpoint>()
 
         for (boundary in topology.boundaries) {
-            val machinePos = BlockPos.fromLong(boundary.neighborPosLong)
+            val machinePos = BlockPos.of(boundary.neighborPosLong)
             val port = world.getBlockEntity(machinePos) as? IKineticMachinePort ?: continue
 
             if (port.canInputKuFrom(boundary.sideFromMachine)) {
@@ -221,7 +221,7 @@ class KineticNetwork {
         val boundaries = mutableListOf<BoundaryEdge>()
 
         for (nodePosLong in nodes) {
-            val pos = BlockPos.fromLong(nodePosLong)
+            val pos = BlockPos.of(nodePosLong)
             val state = world.getBlockState(pos)
             if (!KineticConnectionRules.isTransmissionNode(state)) continue
 
@@ -230,7 +230,7 @@ class KineticNetwork {
 
             val adjacent = neighbors.getOrPut(nodePosLong) { mutableListOf() }
             for (dir in KineticConnectionRules.nodeDirections(world, pos, state)) {
-                val neighborPos = pos.offset(dir)
+                val neighborPos = pos.relative(dir)
                 val neighborState = world.getBlockState(neighborPos)
                 if (KineticConnectionRules.isTransmissionNode(neighborState)) {
                     if (KineticConnectionRules.canConnectFromDirection(neighborState, dir.opposite)) {
@@ -263,7 +263,7 @@ class KineticNetwork {
         if (lastRenderedKu == clamped) return
         lastRenderedKu = clamped
         for (nodePosLong in nodes) {
-            val be = world.getBlockEntity(BlockPos.fromLong(nodePosLong)) as? TransmissionBlockEntity ?: continue
+            val be = world.getBlockEntity(BlockPos.of(nodePosLong)) as? TransmissionBlockEntity ?: continue
             be.setCurrentKu(clamped)
         }
     }

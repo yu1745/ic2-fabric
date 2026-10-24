@@ -17,7 +17,7 @@ object UuReplicationCommand {
         CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback { dispatcher, registryAccess, _ ->
             dispatcher.register(
                 literal("ic2uu")
-                    .requires { source -> source.hasPermissionLevel(2) }
+                    .requires { source -> source.hasPermission(2) }
                     // 设置命令（主手）: /ic2uu setmainhand <uu_cost>
                     .then(
                         literal("setmainhand")
@@ -25,17 +25,18 @@ object UuReplicationCommand {
                                 argument("uu_cost", IntegerArgumentType.integer(1))
                                     .executes { context ->
                                         val source = context.source
-                                        val player = source.player
-                                            ?: return@executes run {
-                                                source.sendError(Component.literal("此命令只能由玩家执行"))
-                                                0
-                                            }
+                                        val player = try {
+                                            source.playerOrException
+                                        } catch (e: Exception) {
+                                            source.sendFailure(Component.literal("此命令只能由玩家执行"))
+                                            return@executes 0
+                                        }
 
                                         val uuCost = IntegerArgumentType.getInteger(context, "uu_cost")
-                                        val mainHandStack = player.mainHandStack
+                                        val mainHandStack = player.mainHandItem
 
                                         if (mainHandStack.isEmpty) {
-                                            source.sendError(Component.literal("主手必须持有物品"))
+                                            source.sendFailure(Component.literal("主手必须持有物品"))
                                             return@executes 0
                                         }
 
@@ -45,7 +46,7 @@ object UuReplicationCommand {
                                         val success = Ic2Config.addOrUpdateReplicationCost(itemId, uuCost)
 
                                         if (success) {
-                                            source.sendFeedback(
+                                            source.sendSuccess(
                                                 {
                                                     Component.literal("")
                                                         .append(Component.literal("成功设置 ").withStyle(ChatFormatting.GREEN))
@@ -58,7 +59,7 @@ object UuReplicationCommand {
                                             )
                                             Command.SINGLE_SUCCESS
                                         } else {
-                                            source.sendError(Component.literal("保存配置失败，请查看服务器日志"))
+                                            source.sendFailure(Component.literal("保存配置失败，请查看服务器日志"))
                                             0
                                         }
                                     }
@@ -68,19 +69,19 @@ object UuReplicationCommand {
                     .then(
                         literal("set")
                             .then(
-                                argument("item", net.minecraft.command.argument.ItemStackArgumentType.itemStack(registryAccess))
+                                argument("item", net.minecraft.commands.arguments.item.ItemStackArgumentType.itemStack(registryAccess))
                                     .then(
                                         argument("uu_cost", IntegerArgumentType.integer(1))
                                             .executes { context ->
                                                 val source = context.source
-                                                val itemArg = net.minecraft.command.argument.ItemStackArgumentType.getItemStackArgument(context, "item")
-                                                val itemId = BuiltInRegistries.ITEM.getId(itemArg.item).toString()
+                                                val itemArg = net.minecraft.commands.arguments.item.ItemStackArgumentType.getItemStackArgument(context, "item")
+                                                val itemId = (BuiltInRegistries.ITEM.getKey(itemArg.item)?.toString() ?: "?")
                                                 val uuCost = IntegerArgumentType.getInteger(context, "uu_cost")
 
                                                 val success = Ic2Config.addOrUpdateReplicationCost(itemId, uuCost)
 
                                                 if (success) {
-                                                    source.sendFeedback(
+                                                    source.sendSuccess(
                                                         {
                                                             Component.literal("")
                                                                 .append(Component.literal("成功设置 ").withStyle(ChatFormatting.GREEN))
@@ -93,7 +94,7 @@ object UuReplicationCommand {
                                                     )
                                                     Command.SINGLE_SUCCESS
                                                 } else {
-                                                    source.sendError(Component.literal("保存配置失败，请查看服务器日志"))
+                                                    source.sendFailure(Component.literal("保存配置失败，请查看服务器日志"))
                                                     0
                                                 }
                                             }
@@ -105,16 +106,17 @@ object UuReplicationCommand {
                         literal("remove")
                             .executes { context ->
                                 val source = context.source
-                                val player = source.player
-                                    ?: return@executes run {
-                                        source.sendError(Component.literal("此命令只能由玩家执行"))
-                                        0
-                                    }
+                                val player = try {
+                                    source.playerOrException
+                                } catch (e: Exception) {
+                                    source.sendFailure(Component.literal("此命令只能由玩家执行"))
+                                    return@executes 0
+                                }
 
-                                val mainHandStack = player.mainHandStack
+                                val mainHandStack = player.mainHandItem
 
                                 if (mainHandStack.isEmpty) {
-                                    source.sendError(Component.literal("主手必须持有物品"))
+                                    source.sendFailure(Component.literal("主手必须持有物品"))
                                     return@executes 0
                                 }
 
@@ -125,7 +127,7 @@ object UuReplicationCommand {
                                 val success = Ic2Config.removeReplicationCost(itemId)
 
                                 if (success) {
-                                    source.sendFeedback(
+                                    source.sendSuccess(
                                         {
                                             Component.literal("")
                                                 .append(Component.literal("成功移除 ").withStyle(ChatFormatting.GREEN))
@@ -137,7 +139,7 @@ object UuReplicationCommand {
                                     )
                                     Command.SINGLE_SUCCESS
                                 } else {
-                                    source.sendError(Component.literal("该物品未配置UU复制成本或移除失败"))
+                                    source.sendFailure(Component.literal("该物品未配置UU复制成本或移除失败"))
                                     0
                                 }
                             }
@@ -147,16 +149,17 @@ object UuReplicationCommand {
                         literal("get")
                             .executes { context ->
                                 val source = context.source
-                                val player = source.player
-                                    ?: return@executes run {
-                                        source.sendError(Component.literal("此命令只能由玩家执行"))
-                                        0
-                                    }
+                                val player = try {
+                                    source.playerOrException
+                                } catch (e: Exception) {
+                                    source.sendFailure(Component.literal("此命令只能由玩家执行"))
+                                    return@executes 0
+                                }
 
-                                val mainHandStack = player.mainHandStack
+                                val mainHandStack = player.mainHandItem
 
                                 if (mainHandStack.isEmpty) {
-                                    source.sendError(Component.literal("主手必须持有物品"))
+                                    source.sendFailure(Component.literal("主手必须持有物品"))
                                     return@executes 0
                                 }
 
@@ -165,7 +168,7 @@ object UuReplicationCommand {
                                 val currentCost = Ic2Config.getReplicationCostUb(itemId)
 
                                 if (currentCost != null) {
-                                    source.sendFeedback(
+                                    source.sendSuccess(
                                         {
                                             Component.literal("")
                                                 .append(Component.literal("物品 ").withStyle(ChatFormatting.WHITE))
@@ -176,7 +179,7 @@ object UuReplicationCommand {
                                         false
                                     )
                                 } else {
-                                    source.sendFeedback(
+                                    source.sendSuccess(
                                         {
                                             Component.literal("")
                                                 .append(Component.literal("物品 ").withStyle(ChatFormatting.WHITE))
@@ -211,7 +214,7 @@ object UuReplicationCommand {
         val allCosts = Ic2Config.getAllReplicationCosts().toList().sortedBy { it.second }  // 按成本升序
 
         if (allCosts.isEmpty()) {
-            source.sendFeedback({ Component.literal("UU复制表为空").withStyle(ChatFormatting.YELLOW) }, false)
+            source.sendSuccess({ Component.literal("UU复制表为空").withStyle(ChatFormatting.YELLOW) }, false)
             return Command.SINGLE_SUCCESS
         }
 
@@ -225,7 +228,7 @@ object UuReplicationCommand {
         val startIndex = (actualPage - 1) * itemsPerPage
         val endIndex = minOf(startIndex + itemsPerPage, allCosts.size)
 
-        source.sendFeedback(
+        source.sendSuccess(
             {
                 Component.literal("")
                     .append(Component.literal("=== UU复制表 ").withStyle(ChatFormatting.GOLD))
@@ -234,7 +237,7 @@ object UuReplicationCommand {
             },
             false
         )
-        source.sendFeedback(
+        source.sendSuccess(
             {
                 Component.literal("")
                     .append(Component.literal("总计 ").withStyle(ChatFormatting.GRAY))
@@ -255,12 +258,12 @@ object UuReplicationCommand {
             val itemDisplay: Component = ResourceLocation.tryParse(itemId)?.let {
                 val item = BuiltInRegistries.ITEM.get(it)
                 if (item !== Items.AIR) {
-                    Component.translatable(item.translationKey)
+                    Component.translatable(item.descriptionId)
                         .withStyle(ChatFormatting.YELLOW)
                         .append(Component.literal(" ($itemId)").withStyle(ChatFormatting.DARK_GRAY))
                 } else null
             } ?: Component.literal(itemId).withStyle(ChatFormatting.WHITE)
-            source.sendFeedback(
+            source.sendSuccess(
                 {
                     Component.literal("")
                         .append(Component.literal("[$source2] ").withStyle(if (isWhitelist) ChatFormatting.YELLOW else ChatFormatting.GREEN))
@@ -273,7 +276,7 @@ object UuReplicationCommand {
         }
 
         if (actualPage < totalPages) {
-            source.sendFeedback(
+            source.sendSuccess(
                 { Component.literal("使用 /ic2uu list ${actualPage + 1} 查看下一页").withStyle(ChatFormatting.GRAY) },
                 false
             )

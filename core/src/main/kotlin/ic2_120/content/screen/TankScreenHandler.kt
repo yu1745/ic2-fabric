@@ -48,7 +48,7 @@ class TankScreenHandler(
             } else if (!moveItemStackTo(stack, 0, 27, false)) {
                 return ItemStack.EMPTY
             }
-            if (stack.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stack.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
         }
         return moved

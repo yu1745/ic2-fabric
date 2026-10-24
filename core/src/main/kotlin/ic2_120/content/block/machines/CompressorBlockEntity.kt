@@ -1,12 +1,19 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
 
-import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.content.recipes.compressor.CompressorRecipe
 import ic2_120.content.sync.CompressorSync
@@ -55,7 +62,6 @@ import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeManager
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -72,7 +78,7 @@ class CompressorBlockEntity(
     type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf>, IValidInputItem {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CompressorBlock.ACTIVE
 
@@ -120,7 +126,7 @@ class CompressorBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             // 注意：配方输入路由必须排在放电路由之前——能量水晶粉/红石粉同时是配方输入和放电燃料，
@@ -157,9 +163,9 @@ class CompressorBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) {
             stack.count = 1
         }
@@ -169,12 +175,12 @@ class CompressorBlockEntity(
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecipeInput(stack)
         SLOT_OUTPUT -> false
         SLOT_DISCHARGING -> isBatteryItem(stack) || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust
@@ -182,9 +188,11 @@ class CompressorBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.compressor")
@@ -194,7 +202,7 @@ class CompressorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CompressorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -206,19 +214,19 @@ class CompressorBlockEntity(
         }
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
         if (nbt.contains("pending_container_return")) {
-            pendingContainerReturn = ItemStack.fromNbt(nbt.getCompound("pending_container_return"))
+            pendingContainerReturn = ItemStack.parseOptional(lookup, nbt.getCompound("pending_container_return"))
         }
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CompressorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
         nbt.putFloat("EnergyDebt", energyDebtF)
         if (!pendingContainerReturn.isEmpty) {
-            nbt.put("pending_container_return", pendingContainerReturn.writeNbt(CompoundTag()))
+            nbt.put("pending_container_return", pendingContainerReturn.save(lookup, CompoundTag()))
         }
     }
 
@@ -250,12 +258,12 @@ class CompressorBlockEntity(
 
         // 先尝试输出缓存的容器返还
         if (!pendingContainerReturn.isEmpty) {
-            val outputSlot = getStack(SLOT_OUTPUT)
+            val outputSlot = getItem(SLOT_OUTPUT)
             if (outputSlot.isEmpty()) {
-                setStack(SLOT_OUTPUT, pendingContainerReturn.copy())
+                setItem(SLOT_OUTPUT, pendingContainerReturn.copy())
                 pendingContainerReturn = ItemStack.EMPTY
                 setChanged()
-            } else if (ItemStack.areItemsEqual(outputSlot, pendingContainerReturn) && outputSlot.count + pendingContainerReturn.count <= outputSlot.maxStackSize) {
+            } else if (ItemStack.isSameItem(outputSlot, pendingContainerReturn) && outputSlot.count + pendingContainerReturn.count <= outputSlot.maxStackSize) {
                 outputSlot.grow(pendingContainerReturn.count)
                 pendingContainerReturn = ItemStack.EMPTY
                 setChanged()
@@ -268,7 +276,7 @@ class CompressorBlockEntity(
             }
         }
 
-        val input = getStack(SLOT_INPUT)
+        val input = getItem(SLOT_INPUT)
         val recipe = getRecipe(world, input) ?: run {
             resetProgress()
             setActiveState(world, pos, state, false)
@@ -277,10 +285,10 @@ class CompressorBlockEntity(
         }
         val inputCount = recipe.inputCount
         val result = recipe.output
-        val outputSlot = getStack(SLOT_OUTPUT)
+        val outputSlot = getItem(SLOT_OUTPUT)
         val maxStack = result.maxStackSize
         val canAccept = outputSlot.isEmpty() ||
-            (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
+            (ItemStack.isSameItem(outputSlot, result) && outputSlot.count + result.count <= maxStack)
 
         if (!canAccept) {
             resetProgress()
@@ -291,7 +299,7 @@ class CompressorBlockEntity(
 
         if (progressF >= CompressorSync.PROGRESS_MAX) {
             input.shrink(inputCount)
-            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
+            if (outputSlot.isEmpty()) setItem(SLOT_OUTPUT, result.copy())
             else outputSlot.grow(result.count)
             // 容器返还：缓存到 pending，等输出槽空了再放入
             val container = recipe.containerReturn
@@ -351,10 +359,14 @@ class CompressorBlockEntity(
             if (cached != null && input.count >= cached.inputCount) return cached
             if (cached == null && input.count <= cachedRecipeQueryCount) return null
         }
-        val inventory = SimpleContainer(input)
+        // TODO(1.21.1): mojmap Recipe.getRecipeFor 需要 RecipeInput，SimpleContainer 不再满足约束。
+        val inventory = object : net.minecraft.world.item.crafting.RecipeInput {
+            override fun getItem(slot: Int): ItemStack = input
+            override fun size(): Int = 1
+        }
         val recipe = world.recipeManager
-            .getFirstMatch(getRecipeType<CompressorRecipe>(), inventory, world)
-            .orElse(null)
+            .getRecipeFor(getRecipeType<CompressorRecipe>(), inventory, world)
+            .orElse(null)?.value
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
         cachedRecipe = recipe
@@ -389,7 +401,7 @@ class CompressorBlockEntity(
     private fun extractWaterContainerRemainder(input: ItemStack): ItemStack? {
         if (input.isEmpty) return null
         @Suppress("DEPRECATION")
-        val ctx = ContainerItemContext.withInitial(input.copyWithCount(1))
+        val ctx = ContainerItemContext.withConstant(input.copyWithCount(1))
         val itemStorage = ctx.find(FluidStorage.ITEM) ?: return null
         for (view in itemStorage) {
             val resource = view.resource
@@ -419,8 +431,11 @@ class CompressorBlockEntity(
         if (stack.isEmpty || isBatteryItem(stack)) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-        val inv = SimpleContainer(stack.copyWithCount(stack.maxStackSize))
-        val found = w.recipeManager.getFirstMatch(getRecipeType<CompressorRecipe>(), inv, w).isPresent
+        val inv = object : net.minecraft.world.item.crafting.RecipeInput {
+            override fun getItem(slot: Int): ItemStack = stack.copyWithCount(stack.maxStackSize)
+            override fun size(): Int = 1
+        }
+        val found = w.recipeManager.getRecipeFor(getRecipeType<CompressorRecipe>(), inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found

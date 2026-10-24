@@ -40,13 +40,14 @@ object ModWorldgen {
         Registry.register(
             BuiltInRegistries.PLACEMENT_MODIFIER_TYPE,
             ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree_config_placement"),
-            PlacementModifierType { RubberTreeConfigPlacementModifier.CODEC }
+            // MapCodec 内联构造：不依赖 RubberTreePlacementModifiers.CODEC 的具体类型（Codec/MapCodec 迁移中）
+            PlacementModifierType { com.mojang.serialization.MapCodec.unit { RubberTreeConfigPlacementModifier() } }
         )
 
     val RUBBER_TREE_CONFIG_WATER_DEPTH_FILTER_TYPE: PlacementModifierType<RubberTreeConfigWaterDepthFilterPlacementModifier> =
         Registry.register(
             BuiltInRegistries.PLACEMENT_MODIFIER_TYPE,
             ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree_config_water_depth_filter"),
-            PlacementModifierType { RubberTreeConfigWaterDepthFilterPlacementModifier.CODEC }
+            PlacementModifierType { com.mojang.serialization.MapCodec.unit { RubberTreeConfigWaterDepthFilterPlacementModifier() } }
         )
 }

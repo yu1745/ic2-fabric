@@ -129,8 +129,8 @@ object Ic2_120 : ModInitializer {
         )
 
         // 焦炭作为固体燃料：燃烧时间为煤炭 2 倍（影响原版熔炉、铁炉、发电机等读取 FuelRegistry 的设备）
-        val coalBurnTicks = FuelRegistry.INSTANCE.getValue(tems.COAL) ?: 1600
-        BuiltInRegistries.ITEM.getOrEmpty(ResourceLocation.fromNamespaceAndPath(MOD_ID, "coke")).ifPresent { cokeItem ->
+        val coalBurnTicks = FuelRegistry.INSTANCE.get(Items.COAL) ?: 1600
+        BuiltInRegistries.ITEM.getOptional(ResourceLocation.fromNamespaceAndPath(MOD_ID, "coke")).ifPresent { cokeItem ->
             FuelRegistry.INSTANCE.add(cokeItem, coalBurnTicks * 2)
         }
 
@@ -193,7 +193,7 @@ object Ic2_120 : ModInitializer {
         // 统一处理喷气背包/电力喷气背包/量子胸甲飞行（服务端 tick）
         ServerTickEvents.END_SERVER_TICK.register { server ->
             serverTick++
-            for (world in server.worlds) {
+            for (world in server.allLevels) {
                 EnergyNetworkManager.tickAll(world)
             }
             FlightManager.tick(server)
@@ -220,7 +220,7 @@ object Ic2_120 : ModInitializer {
             if (seedBag != net.minecraft.world.item.Items.AIR) {
                 for (stack in initialSeeds) entries.addAfter(seedBag, stack)
             } else {
-                for (stack in initialSeeds) entries.add(stack)
+                for (stack in initialSeeds) entries.accept(stack)
             }
         }
 
@@ -232,7 +232,7 @@ object Ic2_120 : ModInitializer {
             if (painter != Items.AIR) {
                 for (stack in coloredPainters) entries.addAfter(painter, stack)
             } else {
-                for (stack in coloredPainters) entries.add(stack)
+                for (stack in coloredPainters) entries.accept(stack)
             }
         }
 

@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import ic2_120.compat.orCreateNbt
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.compat.isClient
@@ -59,26 +61,26 @@ import net.minecraft.world.level.gameevent.GameEvent
  * 按住 Alt 并右键切换单格 / 多格喷涂模式。
  */
 @ModItem(name = "foam_sprayer", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
-class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVariant {
+class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVariant {
 
     override fun useOn(context: UseOnContext): InteractionResult {
-        val world = context.world
+        val world = context.level
         val player = context.player ?: return InteractionResult.PASS
         val hand = context.hand
         if (world.isClient) return InteractionResult.SUCCESS
 
         val hit = BlockHitResult(
-            context.hitPos,
-            context.side,
-            context.blockPos,
+            context.location,
+            context.direction,
+            context.pos,
             context.hitsInsideBlock()
         )
-        val sided = FluidStorage.SIDED.find(world, hit.blockPos, hit.side)
+        val sided = FluidStorage.SIDED.find(world, hit.blockPos, hit.direction)
         if (sided != null && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
             return InteractionResult.SUCCESS
         }
 
-        val stack = player.getItemInHand(hand)
+        val stack = player.getItemInHand(player.usedItemHand)
         if (stack.item != this) return InteractionResult.PASS
 
         val placed = tryPlaceFoam(world, player, stack, hit)
@@ -110,22 +112,22 @@ class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVa
 
         fun getFluidAmount(stack: ItemStack): Long {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return 0L
-            return stack.nbt?.getLong(NBT_FLUID_DROPLETS)?.coerceIn(0L, CAPACITY_DROPLETS) ?: 0L
+            return stack.orCreateNbt.getLong(NBT_FLUID_DROPLETS).coerceIn(0L, CAPACITY_DROPLETS)
         }
 
         fun setFluidAmount(stack: ItemStack, amount: Long) {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return
             val v = amount.coerceIn(0L, CAPACITY_DROPLETS)
             if (v <= 0L) {
-                stack.orCreateNbt.remove(NBT_FLUID_DROPLETS)
+                stack.orCreateNbt = stack.orCreateNbt.apply { remove(NBT_FLUID_DROPLETS) }
             } else {
-                stack.orCreateNbt.putLong(NBT_FLUID_DROPLETS, v)
+                stack.orCreateNbt = stack.orCreateNbt.apply { putLong(NBT_FLUID_DROPLETS, v) }
             }
         }
 
         fun isMultiMode(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return false
-            return stack.orCreateNbt.getBoolean(NBT_MULTI_MODE)
+            return stack.orCreateNbt = stack.orCreateNbt.apply { getBoolean(NBT_MULTI_MODE) }
         }
 
         /** @return 切换后的模式：true = 多格 */
@@ -149,7 +151,7 @@ class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVa
          */
         private fun foamSprayAnchorPos(world: Level, hit: BlockHitResult): BlockPos =
             if (isAnyScaffold(world.getBlockState(hit.blockPos).block)) hit.blockPos
-            else hit.blockPos.offset(hit.side)
+            else hit.blockPos.offset(hit.direction)
 
         private fun isScaffold(block: Block): Boolean =
             block is WoodenScaffoldBlock ||
@@ -167,8 +169,8 @@ class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVa
             block is ReinforcedIronScaffoldBlock
 
     private fun tryPlaceFoam(world: Level, player: Player, stack: ItemStack, hit: BlockHitResult): Boolean {
-            val foamState = FoamBlock::class.instance().defaultBlockState
-            val reinforcedFoamState = ReinforcedFoamBlock::class.instance().defaultBlockState
+            val foamState = FoamBlock::class.instance().defaultBlockState()
+            val reinforcedFoamState = ReinforcedFoamBlock::class.instance().defaultBlockState()
             val cfPackStack = player.getItemBySlot(EquipmentSlot.CHEST)
             val useCfPack = cfPackStack.item is CfPack
 
@@ -177,13 +179,13 @@ class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVa
             } else {
                 getFluidAmount(stack)
             }
-            if (!player.abilities.creativeMode && budget < DROPLETS_PER_BLOCK) return false
+            if (!player.abilities.instabuild && budget < DROPLETS_PER_BLOCK) return false
 
             val multi = isMultiMode(stack)
             val positions = if (multi) {
                 val scaffoldAnchor = isAnyScaffold(world.getBlockState(hit.blockPos).block)
                 if (scaffoldAnchor) {
-                    val maxBlocks = if (player.abilities.creativeMode) {
+                    val maxBlocks = if (player.abilities.instabuild) {
                         SCAFFOLD_MULTI_MAX_BLOCKS
                     } else {
                         (budget / DROPLETS_PER_BLOCK).toInt()
@@ -196,48 +198,48 @@ class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVa
                 listOf(foamSprayAnchorPos(world, hit))
             }
 
-            val targets = positions.map { it.toImmutable() }.distinct()
+            val targets = positions.map { it.immutable() }.distinct()
             if (!ClaimProtection.allAllowed(world, targets, player, ClaimProtection.EDIT_BLOCK)) return false
 
             var placedAny = false
             for (pos in targets) {
-                if (!player.abilities.creativeMode && budget < DROPLETS_PER_BLOCK) break
+                if (!player.abilities.instabuild && budget < DROPLETS_PER_BLOCK) break
                 val stateAt = world.getBlockState(pos)
                 val placed = when {
                     isWoodScaffold(stateAt.block) -> {
                         // 原版喷枪会先按脚手架自身掉落表掉落，再替换为普通泡沫。
-                        Block.dropStacks(stateAt, world, pos)
-                        world.setBlock(pos, foamState, Block.NOTIFY_ALL)
+                        Block.dropResources(stateAt, world, pos)
+                        world.setBlock(pos, foamState, Block.UPDATE_ALL)
                     }
                     isReinforcedIronScaffold(stateAt.block) -> {
                         // 强化铁脚手架只额外掉落铁栅栏，随后变为强化泡沫。
                         Block.spawnAtLocation(world, pos, ItemStack(IronFenceBlock::class.item()))
-                        world.setBlock(pos, reinforcedFoamState, Block.NOTIFY_ALL)
+                        world.setBlock(pos, reinforcedFoamState, Block.UPDATE_ALL)
                     }
                     stateAt.block is IronScaffoldBlock ->
-                        world.setBlock(pos, reinforcedFoamState, Block.NOTIFY_ALL)
+                        world.setBlock(pos, reinforcedFoamState, Block.UPDATE_ALL)
                     canPlaceFoamAt(world, pos) ->
-                        world.setBlock(pos, foamState, Block.NOTIFY_ALL)
+                        world.setBlock(pos, foamState, Block.UPDATE_ALL)
                     else -> false
                 }
                 if (!placed) continue
                 placedAny = true
-                if (!player.abilities.creativeMode) {
+                if (!player.abilities.instabuild) {
                     budget -= DROPLETS_PER_BLOCK
                 }
             }
 
             if (placedAny) {
-                if (!player.abilities.creativeMode) {
+                if (!player.abilities.instabuild) {
                     if (useCfPack) {
                         CfPack.setFluidAmount(cfPackStack, budget)
                     } else {
                         setFluidAmount(stack, budget)
                     }
                 }
-                val soundPos = hit.blockPos.offset(hit.side)
-                world.playSound(null, soundPos, SoundEvents.BLOCK_WOOL_PLACE, SoundSource.BLOCKS, 0.55f, 0.95f + world.random.nextFloat() * 0.1f)
-                world.emitGameEvent(player, GameEvent.BLOCK_PLACE, soundPos)
+                val soundPos = hit.blockPos.offset(hit.direction)
+                world.playSound(null, soundPos, SoundEvents.WOOL_PLACE, SoundSource.BLOCKS, 0.55f, 0.95f + world.random.nextFloat() * 0.1f)
+                world.gameEvent(player, GameEvent.BLOCK_PLACE, soundPos)
             }
             return placedAny
         }
@@ -278,8 +280,8 @@ class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVa
          * 以点击面的外法向为轴，在半径 1–3 的球与半球交集内取候选格，并做随机镂空形成不规则边缘。
          */
         private fun buildMultiSprayPositions(world: Level, hit: BlockHitResult): List<BlockPos> {
-            val side = hit.side
-            val normal = side.vector
+            val side = hit.direction
+            val normal = side.location
             val center = foamSprayAnchorPos(world, hit)
             val r = world.random.nextInt(3) + 1
             val rSq = r * r
@@ -309,7 +311,7 @@ class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVa
         private const val SCAFFOLD_MULTI_MAX_BLOCKS = 256
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val iron = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             if (iron != Items.AIR && emptyCell != Items.AIR) {

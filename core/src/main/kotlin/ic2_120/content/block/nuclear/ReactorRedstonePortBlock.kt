@@ -1,5 +1,7 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -25,7 +27,6 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
-import java.util.function.Consumer
 
 /**
  * 反应堆红石接口。
@@ -43,13 +44,13 @@ class ReactorRedstonePortBlock(settings: BlockBehaviour.Properties = ReactorShel
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, ReactorRedstonePortBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, ReactorRedstonePortBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorRedstonePortBlock::class.item(), 1)

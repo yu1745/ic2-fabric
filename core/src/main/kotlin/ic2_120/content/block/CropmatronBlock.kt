@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -34,7 +36,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 
 @ModBlock(name = "cropmatron", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -49,7 +50,7 @@ class CropmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, CropmatronBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, CropmatronBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -64,7 +65,7 @@ class CropmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            getMenuProvider(state, world, pos)?.let(player::openHandledScreen)
+            getMenuProvider(state, world, pos)?.let(player::openMenu)
         }
         return InteractionResult.SUCCESS
     }
@@ -73,7 +74,7 @@ class CropmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()

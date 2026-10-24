@@ -28,16 +28,16 @@ object ChainsawHandler {
             if (stack.item !is Chainsaw || !Chainsaw.isShearEnabled(stack)) {
                 return@register InteractionResult.PASS
             }
-            if (entity !is Shearable || !entity.isShearable()) {
+            if (entity !is Shearable || !entity.readyForShearing()) {
                 return@register InteractionResult.PASS
             }
-            if (!world.isClient && ClaimProtection.isProtected(world, entity.blockPos, player, ClaimProtection.INTERACT_ENTITY)) {
+            if (!world.isClient && ClaimProtection.isProtected(world, entity.blockPosition(), player, ClaimProtection.INTERACT_ENTITY)) {
                 return@register InteractionResult.FAIL
             }
             if (world.isClient) return@register InteractionResult.SUCCESS
             if (!consumeUseEnergy(stack, player)) return@register InteractionResult.FAIL
 
-            entity.sheared(SoundSource.PLAYERS)
+            entity.shear(SoundSource.PLAYERS)
             InteractionResult.SUCCESS
         }
 
@@ -57,10 +57,13 @@ object ChainsawHandler {
 
             val blockEntity = world.getBlockEntity(pos)
             val shears = ItemStack(Items.SHEARS)
-            val broken = world.breakBlock(pos, false, player)
+            val broken = world.destroyBlock(pos, false, player, 512)
             if (!broken) return@register InteractionResult.FAIL
 
-            Block.dropStacks(state, world, pos, blockEntity, player, shears)
+            Block.getDrops(state, world, pos, blockEntity, player, shears).forEach { dropped ->
+                Block.popResource(world, pos, dropped)
+            }
+            state.spawnAfterBreak(world, pos, shears, true)
             consumeUseEnergy(stack, player)
             InteractionResult.SUCCESS
         }
@@ -78,13 +81,13 @@ object ChainsawHandler {
         player.isCreative || (stack.item as Chainsaw).getEnergy(stack) >= Chainsaw.ENERGY_PER_USE
 
     private fun isShearableBlock(state: BlockState): Boolean =
-        state.isIn(BlockTags.LEAVES) ||
+        state.`is`(BlockTags.LEAVES) ||
             state.`is`(Blocks.COBWEB) ||
-            state.`is`(Blocks.GRASS) ||
+            state.`is`(Blocks.SHORT_GRASS) ||
             state.`is`(Blocks.FERN) ||
             state.`is`(Blocks.DEAD_BUSH) ||
             state.`is`(Blocks.HANGING_ROOTS) ||
             state.`is`(Blocks.VINE) ||
             state.`is`(Blocks.TRIPWIRE) ||
-            state.isIn(BlockTags.WOOL)
+            state.`is`(BlockTags.WOOL)
 }

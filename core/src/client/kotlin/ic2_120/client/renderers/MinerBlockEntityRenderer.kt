@@ -27,7 +27,7 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         light: Int,
         overlay: Int
     ) {
-        val drill = entity.getStack(BaseMinerBlockEntity.SLOT_DRILL)
+        val drill = entity.getItem(BaseMinerBlockEntity.SLOT_DRILL)
         if (drill.isEmpty) return
 
         val world = entity.world ?: return

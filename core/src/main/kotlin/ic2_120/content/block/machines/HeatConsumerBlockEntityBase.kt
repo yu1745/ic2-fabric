@@ -19,7 +19,7 @@ abstract class HeatConsumerBlockEntityBase(
 ) : MachineBlockEntity(type, pos, state), IHeatConsumer {
 
     override fun getHeatTransferFace(): Direction {
-        return cachedState.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        return cachedState.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
     }
 
     final override fun receiveHeat(hu: Long, fromSide: Direction): Long {

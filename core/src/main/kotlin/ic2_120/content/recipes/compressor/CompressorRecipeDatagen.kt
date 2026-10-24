@@ -132,51 +132,17 @@ object CompressorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            CompressorRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "compressing/${entry.name}"),
-                input = entry.input,
-                inputCount = entry.inputCount,
-                outputItem = entry.output,
-                outputCount = entry.count,
-                containerReturn = entry.containerReturn
-            ).also(exporter::accept)
+            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "compressing/${entry.name}")
+            val recipe = CompressorRecipe(
+                recipeId,
+                entry.input.toIngredient(),
+                entry.inputCount,
+                ItemStack(entry.output, entry.count),
+                entry.containerReturn
+            )
+            exporter.accept(recipeId, recipe, null)
         }
-    }
-
-    private class CompressorRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: IngredientInput,
-        private val inputCount: Int,
-        private val outputItem: Item,
-        private val outputCount: Int,
-        private val containerReturn: ItemStack = ItemStack.EMPTY
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(CompressorRecipe::class)}")
-            json.add("ingredient", input.toJson())
-            json.addProperty("input_count", inputCount)
-
-            val result = JsonObject()
-            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-
-            if (!containerReturn.isEmpty) {
-                val container = JsonObject()
-                container.addProperty("item", BuiltInRegistries.ITEM.getId(containerReturn.item).toString())
-                container.addProperty("count", containerReturn.count)
-                json.add("container_return", container)
-            }
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(CompressorRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

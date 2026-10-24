@@ -1,7 +1,10 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.world.level.block.entity.BlockEntityType
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.compat.isClient
@@ -40,7 +43,7 @@ class WaterKineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOccl
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WaterKineticGeneratorBlock::class.item(), 1)
                 .pattern("S S")
                 .pattern(" C ")
@@ -48,7 +51,7 @@ class WaterKineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOccl
                 .define('S', ToolHandleIronItem::class.instance())
                 .define('C', MachineCasingBlock::class.instance())
                 .unlockedBy(
-                    has(MachineCasingBlock::class.instance()),
+                    getHasName(MachineCasingBlock::class.instance()),
                     has(MachineCasingBlock::class.instance())
                 )
                 .save(exporter, WaterKineticGeneratorBlock::class.id())
@@ -72,7 +75,7 @@ class WaterKineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOccl
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, WaterKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, WaterKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -81,7 +84,8 @@ class WaterKineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOccl
         val be = world.getBlockEntity(pos) as? WaterKineticGeneratorBlockEntity ?: return InteractionResult.PASS
         if (world.isClient) return InteractionResult.SUCCESS
 
-        val interaction = be.onUse(player, hand)
+        // TODO(1.21.1): useWithoutItem 不再携带 hand，保守取主手
+        val interaction = be.onUse(player, InteractionHand.MAIN_HAND)
         if (interaction != InteractionResult.PASS) return interaction
 
         player.openMenu(be)

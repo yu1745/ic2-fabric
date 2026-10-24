@@ -1,39 +1,42 @@
 package ic2_120.content.recipes.crafting
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.serialization.MapCodec
+import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.item.Treetap
 import ic2_120.registry.annotation.ModMachineRecipe
-import net.minecraft.data.recipes.RecipeOutput
-import net.minecraft.world.inventory.CraftingContainer
+import net.minecraft.core.HolderLookup
+import net.minecraft.core.NonNullList
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.RegistryFriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.inventory.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.CraftingInput
+import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.ShapedRecipe
-import net.minecraft.core.RegistryAccess
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.core.NonNullList
-import java.util.function.Consumer
+import net.minecraft.world.item.crafting.ShapedRecipePattern
 
 /**
- * 工作台有序配方：消耗参与合成的木龙头，而不是返回损耗后的余物。
+ * 工作台有序配方：消耗参与合成的扳手/电动工具，完全不返回余物，并继承电量累加功能。
  */
-class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
-    delegate.id,
-    delegate.group,
-    delegate.category,
-    delegate.width,
-    delegate.height,
-    delegate.ingredients,
-    delegate.getOutput(RegistryAccess.EMPTY),
-    delegate.showNotification()
-) {
-    override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> {
-        val remainder = NonNullList.withSize(inventory.size(), ItemStack.EMPTY)
-        for (slot in 0 until inventory.size()) {
-            val stack = inventory.getStack(slot)
+class ConsumeTreetapShapedRecipe(
+    private val patternRows: List<String>,
+    private val patternKeys: Map<Char, Ingredient>,
+    result: ItemStack,
+    group: String = "",
+) : ShapedRecipe(group, CraftingBookCategory.MISC, ShapedRecipePattern.of(patternKeys, patternRows), result, true) {
+    override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
+        // 消耗参与合成的木龙头，其余材料按原版余物规则返回
+        val remainder = NonNullList.withSize(input.getContainerSize(), ItemStack.EMPTY)
+        for (slot in 0 until input.getContainerSize()) {
+            val stack = input.getItem(slot)
             if (stack.isEmpty) continue
             remainder[slot] = if (stack.item is Treetap) ItemStack.EMPTY else stack.item.getRecipeRemainder(stack)
         }
@@ -43,26 +46,66 @@ class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
     override fun getSerializer(): RecipeSerializer<*> = ConsumeTreetapShapedRecipeSerializer
 }
 
+fun decodeConsumeTreetapShapedJson(id: ResourceLocation, json: JsonObject): ConsumeTreetapShapedRecipe {
+    val keyMap = linkedMapOf<Char, Ingredient>()
+    val keyObj = json.getAsJsonObject("key")
+    for ((charKey, value) in keyObj.entrySet()) {
+        keyMap[charKey[0]] = INGREDIENT_CODEC(value.asJsonObject)
+    }
+    val rows = json.getAsJsonArray("pattern").map { it.asString }
+    val resultObj = json.getAsJsonObject("result")
+    val resultItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(resultObj.get("item").asString))
+    val count = if (resultObj.has("count")) resultObj.get("count").asInt else 1
+    return ConsumeTreetapShapedRecipe(rows, keyMap, ItemStack(resultItem, count))
+}
+
+fun encodeConsumeTreetapShapedJson(json: JsonObject, recipe: ConsumeTreetapShapedRecipe) {
+    json.addProperty("type", "ic2_120:consume_treetap_shaped")
+
+    val keyObj = JsonObject()
+    for ((charKey, ingredient) in recipe.patternKeys) {
+        val obj = JsonObject()
+        val first = ingredient.items.firstOrNull()
+        obj.addProperty("item", first?.let { BuiltInRegistries.ITEM.getKey(it.item)?.toString() } ?: "minecraft:air")
+        keyObj.add(charKey.toString(), obj)
+    }
+    json.add("key", keyObj)
+
+    val patternArr = JsonArray()
+    for (row in recipe.patternRows) patternArr.add(row)
+    json.add("pattern", patternArr)
+
+    val result = recipe.getResultItem(net.minecraft.core.RegistryAccess.EMPTY)
+    val resultObj = JsonObject()
+    BuiltInRegistries.ITEM.getKey(result.item)?.let { resultObj.addProperty("item", it.toString()) }
+    if (result.count > 1) resultObj.addProperty("count", result.count)
+    json.add("result", resultObj)
+    json.addProperty("show_notification", true)
+}
+
 @ModMachineRecipe(id = "consume_treetap_shaped", recipeClass = ConsumeTreetapShapedRecipe::class)
 object ConsumeTreetapShapedRecipeSerializer : RecipeSerializer<ConsumeTreetapShapedRecipe> {
-    override fun fromJson(id: ResourceLocation, json: JsonObject, lookup: HolderLookup.Provider): ConsumeTreetapShapedRecipe {
-        val shaped = RecipeSerializer.SHAPED.read(id, json)
-        return ConsumeTreetapShapedRecipe(shaped)
-    }
+    override fun codec(): MapCodec<ConsumeTreetapShapedRecipe> = ic2_120.content.recipes.RecipeCodecBridge.jsonMapCodec(
+        "ic2_120:consume_treetap_shaped",
+        ::decodeConsumeTreetapShapedJson,
+        ::encodeConsumeTreetapShapedJson
+    )
 
-    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): ConsumeTreetapShapedRecipe {
-        val shaped = RecipeSerializer.SHAPED.read(id, buf)
-        return ConsumeTreetapShapedRecipe(shaped)
-    }
-
-    override fun write(buf: FriendlyByteBuf, recipe: ConsumeTreetapShapedRecipe) {
-        RecipeSerializer.SHAPED.write(buf, recipe)
+    // TODO(1.21.1): 配方不走网络同步（双端各自读 datapack），流编解码仅做占位实现
+    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, ConsumeTreetapShapedRecipe> {
+        val delegate = RecipeSerializer.SHAPED_RECIPE.streamCodec()
+        return StreamCodec.ofMember(
+            { buf: RegistryFriendlyByteBuf, recipe: ConsumeTreetapShapedRecipe -> delegate.encode(buf, recipe) },
+            { _ ->
+                ConsumeTreetapShapedRecipe(listOf("X"), linkedMapOf('X' to Ingredient.EMPTY), ItemStack.EMPTY)
+            }
+        )
     }
 }
 
 object ConsumeTreetapShapedRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeOutput>,
+        exporter: net.minecraft.data.recipes.RecipeOutput,
         recipeId: ResourceLocation,
         result: Item,
         pattern: List<String>,
@@ -70,55 +113,9 @@ object ConsumeTreetapShapedRecipeDatagen {
         count: Int = 1,
         category: String = "misc"
     ) {
-        exporter.accept(
-            Provider(
-                recipeId = recipeId,
-                result = result,
-                pattern = pattern,
-                keys = keys,
-                count = count,
-                category = category
-            )
-        )
-    }
-
-    private class Provider(
-        private val recipeId: ResourceLocation,
-        private val result: Item,
-        private val pattern: List<String>,
-        private val keys: Map<Char, Item>,
-        private val count: Int,
-        private val category: String
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "ic2_120:consume_treetap_shaped")
-            json.addProperty("category", category)
-
-            val keyObj = JsonObject()
-            for ((charKey, item) in keys) {
-                val ingredient = JsonObject()
-                ingredient.addProperty("item", BuiltInRegistries.ITEM.getId(item).toString())
-                keyObj.add(charKey.toString(), ingredient)
-            }
-            json.add("key", keyObj)
-
-            val patternArr = JsonArray()
-            for (row in pattern) patternArr.add(row)
-            json.add("pattern", patternArr)
-
-            val resultObj = JsonObject()
-            resultObj.addProperty("item", BuiltInRegistries.ITEM.getId(result).toString())
-            if (count > 1) resultObj.addProperty("count", count)
-            json.add("result", resultObj)
-            json.addProperty("show_notification", true)
-        }
-
-        override fun getSerializer(): RecipeSerializer<*> = ConsumeTreetapShapedRecipeSerializer
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
+        val keyMap = linkedMapOf<Char, Ingredient>()
+        for ((charKey, item) in keys) keyMap[charKey] = Ingredient.of(item)
+        val recipe = ConsumeTreetapShapedRecipe(pattern, keyMap, ItemStack(result, count))
+        exporter.accept(recipeId, recipe, null)
     }
 }

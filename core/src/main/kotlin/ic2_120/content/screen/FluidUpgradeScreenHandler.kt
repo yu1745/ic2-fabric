@@ -46,9 +46,9 @@ class FluidUpgradeScreenHandler(
     /** 方向是否激活 */
     fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
     /** 当前切换方向索引 */
-    val currentDirectionIndex: Int get() = propertyDelegate.getValue(PROP_DIR_INDEX)
+    val currentDirectionIndex: Int get() = propertyDelegate.get(PROP_DIR_INDEX)
     /** 流体的原始注册 ID（0=无过滤） */
-    val fluidRawId: Int get() = propertyDelegate.getValue(PROP_FLUID)
+    val fluidRawId: Int get() = propertyDelegate.get(PROP_FLUID)
 
     companion object {
         const val FILTER_SLOT = 0
@@ -71,8 +71,8 @@ class FluidUpgradeScreenHandler(
 
         // 幽灵过滤区始终为空，只接受 onSlotClick 中的流体样本选择。
         addSlot(object : Slot(SimpleContainer(FILTER_SLOT_COUNT), FILTER_SLOT, 8, 35) {
-            override fun canInsert(stack: ItemStack): Boolean = false
-            override fun canTakeItems(playerEntity: Player): Boolean = false
+            override fun mayPlace(stack: ItemStack): Boolean = false
+            override fun mayPickup(playerEntity: Player): Boolean = false
         })
 
         // 玩家背包
@@ -113,13 +113,13 @@ class FluidUpgradeScreenHandler(
         }
 
         refreshProperties()
-        sendContentUpdates()
+        broadcastChanges()
         return true
     }
 
-    override fun onSlotClick(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
+    override fun clicked(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
         if (slotIndex == FILTER_SLOT && actionType == ClickType.PICKUP) {
-            val cursor = cursorStack
+            val cursor = carried
             if (cursor.isEmpty || button == 1) {
                 clearFluidFilter()
             } else {
@@ -130,7 +130,7 @@ class FluidUpgradeScreenHandler(
             }
             return
         }
-        super.onSlotClick(slotIndex, button, actionType, player)
+        super.clicked(slotIndex, button, actionType, player)
     }
 
     /** 设置幽灵流体过滤器；JEI 拖放和真实容器取样共用。 */
@@ -139,7 +139,7 @@ class FluidUpgradeScreenHandler(
         if (upgradeStack.item !is FluidFilterUpgradeItem) return false
         FluidPipeUpgradeComponent.writeFilter(upgradeStack, fluid)
         refreshProperties()
-        sendContentUpdates()
+        broadcastChanges()
         return true
     }
 
@@ -148,7 +148,7 @@ class FluidUpgradeScreenHandler(
         if (upgradeStack.item !is FluidFilterUpgradeItem) return false
         FluidPipeUpgradeComponent.writeFilter(upgradeStack, null)
         refreshProperties()
-        sendContentUpdates()
+        broadcastChanges()
         return true
     }
 
@@ -161,10 +161,12 @@ class FluidUpgradeScreenHandler(
 
     /** 真实容器仅作为过滤样本；设置后放回背包，不占用过滤槽。 */
     private fun returnCursorToInventory() {
-        val returning = cursorStack.copy()
+        val returning = carried.copy()
         if (returning.isEmpty) return
-        playerInventory.safeInsert(returning)
-        cursorStack = if (returning.isEmpty) ItemStack.EMPTY else returning
+        // TODO(1.21.1): mojmap placeItemBackInInventory 放不下会自动掉落且无返回值；
+        // 样本容器已被收走，光标清空即可。
+        playerInventory.placeItemBackInInventory(returning)
+        setCarried(ItemStack.EMPTY)
     }
 
     /** 从升级物品中读取当前状态并写入 ContainerData。 */
@@ -183,6 +185,6 @@ class FluidUpgradeScreenHandler(
         }
 
         val filter = FluidPipeUpgradeComponent.readFilter(upgradeStack)
-        propertyDelegate.set(PROP_FLUID, if (filter != null) BuiltInRegistries.FLUID.getRawId(filter) else 0)
+        propertyDelegate.set(PROP_FLUID, if (filter != null) BuiltInRegistries.FLUID.getId(filter) else 0)
     }
 }

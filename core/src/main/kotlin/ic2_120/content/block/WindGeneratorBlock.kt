@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -16,7 +18,6 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.instance
 import ic2_120.registry.id
-import java.util.function.Consumer
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -55,7 +56,7 @@ class WindGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion())
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, WindGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, WindGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -81,7 +82,7 @@ class WindGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion())
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val generator = GeneratorBlock::class.item()
             if (generator != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WindGeneratorBlock::class.item(), 1)

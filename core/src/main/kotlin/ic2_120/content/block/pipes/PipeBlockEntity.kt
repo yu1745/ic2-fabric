@@ -1,10 +1,17 @@
 package ic2_120.content.block.pipes
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.cachedState
 import ic2_120.compat.pos
 import ic2_120.compat.world
 
-import net.minecraft.core.HolderLookup
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
@@ -15,7 +22,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
@@ -42,7 +48,7 @@ import net.minecraft.world.level.Level
         CarbonPumpAttachmentBlock::class
     ]
 )
-class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory {
+class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory<FriendlyByteBuf> {
     var network: PipeNetwork? = null
     var pipeLoad: Long = 0L
     var currentFluidId: String? = null
@@ -50,12 +56,12 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
     private var pumpFilterFluidId: String? = null
 
     fun isDisabled(direction: Direction): Boolean {
-        val bit = 1 shl direction.id
+        val bit = 1 shl direction.get3DDataValue()
         return (disabledMask and bit) != 0
     }
 
     fun toggleDisabled(direction: Direction): Boolean {
-        val bit = 1 shl direction.id
+        val bit = 1 shl direction.get3DDataValue()
         disabledMask = if ((disabledMask and bit) != 0) disabledMask and bit.inv() else disabledMask or bit
         setChanged()
         return (disabledMask and bit) != 0
@@ -69,21 +75,21 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
     fun pumpFilterFluid(): Fluid? {
         val raw = pumpFilterFluidId ?: return null
         val id = ResourceLocation.tryParse(raw) ?: return null
-        return if (BuiltInRegistries.FLUID.containsId(id)) BuiltInRegistries.FLUID.get(id) else null
+        return if (BuiltInRegistries.FLUID.containsKey(id)) BuiltInRegistries.FLUID.get(id) else null
     }
 
     fun isPumpAttachment(): Boolean = cachedState.block is PumpAttachmentBlock
 
     fun setPumpFilterFluid(fluid: Fluid) {
-        pumpFilterFluidId = BuiltInRegistries.FLUID.getId(fluid).toString()
+        pumpFilterFluidId = BuiltInRegistries.FLUID.getKey(fluid).toString()
         setChanged()
-        world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
+        world?.sendBlockUpdated(pos, cachedState, cachedState, Block.UPDATE_CLIENTS)
     }
 
     fun clearPumpFilter() {
         pumpFilterFluidId = null
         setChanged()
-        world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
+        world?.sendBlockUpdated(pos, cachedState, cachedState, Block.UPDATE_CLIENTS)
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
@@ -104,12 +110,14 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         }
     }
 
-    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
+    override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveWithoutMetadata(lookup)
 
-    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
+    override fun getUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.pump_attachment")

@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack
 /**
  * 机器输入合法性的轻量查询接口（P1 修正版核心）。
  *
- * 背景：PullingUpgradeComponent 试探候选物品时调用 `Container.isValid(slot, stack)`
+ * 背景：PullingUpgradeComponent 试探候选物品时调用 `Container.canPlaceItem(slot, stack)`
  * 需要为每个候选构造 ItemStack（variant.toStack(1) 分配）并走完整的多态验证链。
  * 对配方类机器（电炉/研磨机/压缩机等），验证的实质是「该 item 是否存在匹配配方」，
  * 这可以由 RecipeInputLookupCache 以 (RecipeType, Item) 布尔缓存作答，零分配。

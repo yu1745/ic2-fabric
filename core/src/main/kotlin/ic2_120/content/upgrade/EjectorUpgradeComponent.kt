@@ -1,5 +1,8 @@
 package ic2_120.content.upgrade
 
+import net.minecraft.core.component.DataComponents
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.compat.time
 
 import ic2_120.content.item.EjectorUpgrade
@@ -79,7 +82,7 @@ object EjectorUpgradeComponent {
         }
         for (dir in Direction.values()) {
             if (caches[dir.ordinal] == null) {
-                caches[dir.ordinal] = BlockApiCache.create(ItemStorage.SIDED, serverWorld, pos.offset(dir))
+                caches[dir.ordinal] = BlockApiCache.create(ItemStorage.SIDED, serverWorld, pos.relative(dir))
             }
         }
         return caches
@@ -141,7 +144,7 @@ object EjectorUpgradeComponent {
 
         val configs = mutableListOf<EjectorConfig>()
         for (idx in upgradeSlotIndices) {
-            val stack = inventory.getStack(idx)
+            val stack = inventory.getItem(idx)
             if (!stack.isEmpty && stack.item is EjectorUpgrade) {
                 configs.add(EjectorConfig(readFilter(stack), readDirections(stack), stack.count))
             }
@@ -160,7 +163,7 @@ object EjectorUpgradeComponent {
         if (active.isEmpty()) return false
 
         // 输出槽全空时无需弹出，跳过整个方向循环
-        if (outputSlotIndices.all { inventory.getStack(it).isEmpty }) return false
+        if (outputSlotIndices.all { inventory.getItem(it).isEmpty }) return false
 
         val caches = if (machine != null) neighborCaches(world, pos, machine) else null
 
@@ -175,7 +178,7 @@ object EjectorUpgradeComponent {
                     val target = if (caches != null) {
                         caches[dir.ordinal]?.find(dir.opposite)
                     } else {
-                        ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite)
+                        ItemStorage.SIDED.find(world, pos.relative(dir), dir.opposite)
                     } ?: continue
                     candidates.add(target)
                 }
@@ -191,7 +194,7 @@ object EjectorUpgradeComponent {
                     var remainingQuota = rate * rateScale
                     for (slotIndex in outputSlotIndices) {
                         if (remainingQuota <= 0) break
-                        val stack = inventory.getStack(slotIndex)
+                        val stack = inventory.getItem(slotIndex)
                         if (stack.isEmpty) continue
                         if (config.filter != null && stack.item != config.filter) continue
 
@@ -204,11 +207,11 @@ object EjectorUpgradeComponent {
                         didWork = true
                         val left = stack.count - moved.toInt()
                         if (left <= 0) {
-                            inventory.setStack(slotIndex, ItemStack.EMPTY)
+                            inventory.setItem(slotIndex, ItemStack.EMPTY)
                         } else {
                             val newStack = stack.copy()
                             newStack.count = left
-                            inventory.setStack(slotIndex, newStack)
+                            inventory.setItem(slotIndex, newStack)
                         }
                     }
                 }
@@ -221,11 +224,11 @@ object EjectorUpgradeComponent {
     }
 
     fun readFilter(stack: ItemStack): Item? {
-        val nbt = stack.nbt ?: return null
+        val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return null
         val raw = nbt.getString(NBT_ITEM_FILTER)
         if (raw.isNullOrBlank()) return null
         val id = ResourceLocation.tryParse(raw) ?: return null
-        return if (BuiltInRegistries.ITEM.containsId(id)) BuiltInRegistries.ITEM.get(id) else null
+        return if (BuiltInRegistries.ITEM.containsKey(id)) BuiltInRegistries.ITEM.get(id) else null
     }
 
     fun writeFilter(stack: ItemStack, item: Item?) {
@@ -234,7 +237,7 @@ object EjectorUpgradeComponent {
             nbt.remove(NBT_ITEM_FILTER)
             return
         }
-        val id = BuiltInRegistries.ITEM.getId(item)
+        val id = BuiltInRegistries.ITEM.getKey(item)
         if (id.path != "air") nbt.putString(NBT_ITEM_FILTER, id.toString())
         else nbt.remove(NBT_ITEM_FILTER)
     }
@@ -249,8 +252,8 @@ object EjectorUpgradeComponent {
 
     /** 空集合表示任意方向；同时兼容旧版本的单方向 NBT。 */
     fun readDirections(stack: ItemStack): Set<Direction> {
-        val nbt = stack.nbt ?: return emptySet()
-        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.STRING_TYPE.toInt())
+        val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return emptySet()
+        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.TAG_STRING.toInt())
         if (!list.isEmpty()) {
             return list.mapNotNull { Direction.byName(it.asString()) }.toSet()
         }
@@ -270,7 +273,7 @@ object EjectorUpgradeComponent {
         }
         val list = net.minecraft.nbt.ListTag()
         for (side in sides) {
-            list.add(net.minecraft.nbt.NbtString.of(side.name.lowercase()))
+            list.add(net.minecraft.nbt.StringTag.of(side.name.lowercase()))
         }
         nbt.put(NBT_DIRECTIONS, list)
     }

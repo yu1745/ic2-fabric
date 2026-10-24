@@ -8,6 +8,7 @@ import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
@@ -51,48 +52,16 @@ object BlastFurnaceRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            BlastFurnaceRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "blast_furnacing/${entry.name}"),
-                input = entry.input,
-                steelOutputItem = entry.steelOutput,
-                steelOutputCount = entry.steelCount,
-                slagOutputItem = entry.slagOutput,
-                slagOutputCount = entry.slagCount
-            ).also(exporter::accept)
+            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "blast_furnacing/${entry.name}")
+            val recipe = BlastFurnaceRecipe(
+                recipeId,
+                entry.input.toIngredient(),
+                ItemStack(entry.steelOutput, entry.steelCount),
+                ItemStack(entry.slagOutput, entry.slagCount)
+            )
+            exporter.accept(recipeId, recipe, null)
         }
-    }
-
-    private class BlastFurnaceRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: IngredientInput,
-        private val steelOutputItem: Item,
-        private val steelOutputCount: Int,
-        private val slagOutputItem: Item,
-        private val slagOutputCount: Int
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(BlastFurnaceRecipe::class)}")
-            json.add("ingredient", input.toJson())
-
-            val steelResult = JsonObject()
-            steelResult.addProperty("item", BuiltInRegistries.ITEM.getId(steelOutputItem).toString())
-            steelResult.addProperty("count", steelOutputCount)
-            json.add("steel_output", steelResult)
-
-            val slagResult = JsonObject()
-            slagResult.addProperty("item", BuiltInRegistries.ITEM.getId(slagOutputItem).toString())
-            slagResult.addProperty("count", slagOutputCount)
-            json.add("slag_output", slagResult)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(BlastFurnaceRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

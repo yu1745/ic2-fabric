@@ -1,5 +1,8 @@
 package ic2_120.content.recipes.blockcutter
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.recipes.RecipeCodecBridge
 
 import net.minecraft.network.codec.StreamCodec
@@ -33,33 +36,32 @@ import net.minecraft.util.GsonHelper
 @ModMachineRecipe(id = "cutting", recipeClass = BlockCutterRecipe::class)
 object BlockCutterRecipeSerializer : RecipeSerializer<BlockCutterRecipe> {
     private fun fromJson(id: ResourceLocation, json: JsonObject): BlockCutterRecipe {
-        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
-        val inputCount = GsonHelper.getInt(json, "input_count", 1)
-        val materialHardness = GsonHelper.getFloat(json, "material_hardness")
-        val result = GsonHelper.getObject(json, "result")
-        val itemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
+        val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
+        val inputCount = (if (json.has("input_count")) json.get("input_count").asInt else 1)
+        val materialHardness = json.get("material_hardness").asFloat
+        val result = json.getAsJsonObject("result")
+        val itemId = ResourceLocation.parse(result.get("item").asString)
         val item = BuiltInRegistries.ITEM.get(itemId)
-        val count = GsonHelper.getInt(result, "count", 1)
+        val count = (if (result.has("count")) result.get("count").asInt else 1)
 
-        return BlockCutterRecipe(id, ingredient, inputCount, materialHardness, ItemStack(item, count))
+        return BlockCutterRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, inputCount, materialHardness, ItemStack(item, count))
     }
 
     private fun read(buf: RegistryFriendlyByteBuf): BlockCutterRecipe {
         val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
         val inputCount = buf.readVarInt()
         val materialHardness = buf.readFloat()
-        val output = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
+        val output = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
 
-        return BlockCutterRecipe(id, ingredient, inputCount, materialHardness, output)
+        return BlockCutterRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, inputCount, materialHardness, output)
     }
 
-    private fun write(buf: FriendlyByteBuf, recipe: BlockCutterRecipe) {
+    private fun write(buf: RegistryFriendlyByteBuf, recipe: BlockCutterRecipe) {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
         buf.writeVarInt(recipe.inputCount)
         buf.writeFloat(recipe.materialHardness)
-        bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
     }
-}
 
     override fun codec(): MapCodec<BlockCutterRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:cutting",
@@ -69,3 +71,4 @@ object BlockCutterRecipeSerializer : RecipeSerializer<BlockCutterRecipe> {
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BlockCutterRecipe> =
         StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })
+}

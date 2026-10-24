@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import ic2_120.compat.isClient
 
 import com.mojang.serialization.MapCodec
@@ -40,10 +42,10 @@ abstract class MachineBlock(settings: BlockBehaviour.Properties = defaultMachine
         fun defaultMachineSettings(): BlockBehaviour.Properties =
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 
-        val MACHINE_CODEC: MapCodec<MachineBlock> = Block.createCodec { error("MachineBlock cannot be deserialized from JSON") }
+        val MACHINE_CODEC: MapCodec<MachineBlock> = Block.simpleCodec { error("MachineBlock cannot be deserialized from JSON") as MachineBlock }
     }
 
-    override fun getCodec(): MapCodec<out BaseEntityBlock> = MACHINE_CODEC
+    override fun codec(): MapCodec<out BaseEntityBlock> = MACHINE_CODEC
 
     /**
      * 非扳手拆卸时掉落的物品（默认基础机器外壳）。
@@ -53,7 +55,7 @@ abstract class MachineBlock(settings: BlockBehaviour.Properties = defaultMachine
         BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
-        defaultState = stateManager.defaultBlockState.setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
+        registerDefaultState(stateDefinition.any()().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
@@ -62,10 +64,10 @@ abstract class MachineBlock(settings: BlockBehaviour.Properties = defaultMachine
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
-        defaultState.setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing.opposite)
+        defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalDirection.opposite)
 
-    override fun onPlaced(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, stack: ItemStack) {
-        super.onPlaced(world, pos, state, placer, stack)
+    override fun setPlacedBy(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, stack: ItemStack) {
+        super.setPlacedBy(world, pos, state, placer, stack)
         if (placer is ServerPlayer) {
             (world.getBlockEntity(pos) as? IOwned)?.ownerUuid = placer.uuid
         }
@@ -78,14 +80,14 @@ abstract class MachineBlock(settings: BlockBehaviour.Properties = defaultMachine
      * 仅当方块被替换（如挖掉）且未被活塞推动时生效。
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.`is`(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
             if (be is Container) {
-                Containers.spawn(world, pos, be)
+                Containers.dropContents(world, pos, be)
             }
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
     /**
@@ -112,7 +114,7 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = def
         fun defaultMachineSettings(): BlockBehaviour.Properties =
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 
-        val DIRECTIONAL_CODEC: MapCodec<DirectionalMachineBlock> = Block.createCodec { error("DirectionalMachineBlock cannot be deserialized from JSON") }
+        val DIRECTIONAL_CODEC: MapCodec<DirectionalMachineBlock> = Block.simpleCodec { error("DirectionalMachineBlock cannot be deserialized from JSON") as DirectionalMachineBlock }
     }
 
     override fun getCodec(): MapCodec<out BaseEntityBlock> = DIRECTIONAL_CODEC
@@ -125,7 +127,7 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = def
         BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
-        defaultState = stateManager.defaultBlockState.setValue(BlockStateProperties.FACING, Direction.NORTH)
+        registerDefaultState(stateDefinition.any()().setValue(BlockStateProperties.FACING, Direction.NORTH))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
@@ -135,12 +137,12 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = def
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
         // 与原版发射器、木桶一致：正面朝向玩家，同时允许上下六面放置。
-        val facing = ctx.playerLookDirection.opposite
-        return defaultState.setValue(BlockStateProperties.FACING, facing)
+        val facing = ctx.nearestLookingDirection.opposite
+        return defaultBlockState().setValue(BlockStateProperties.FACING, facing)
     }
 
-    override fun onPlaced(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, stack: ItemStack) {
-        super.onPlaced(world, pos, state, placer, stack)
+    override fun setPlacedBy(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, stack: ItemStack) {
+        super.setPlacedBy(world, pos, state, placer, stack)
         if (placer is ServerPlayer) {
             (world.getBlockEntity(pos) as? IOwned)?.ownerUuid = placer.uuid
         }
@@ -153,14 +155,14 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = def
      * 仅当方块被替换（如挖掉）且未被活塞推动时生效。
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.`is`(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
             if (be is Container) {
-                Containers.spawn(world, pos, be)
+                Containers.dropContents(world, pos, be)
             }
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
     /**

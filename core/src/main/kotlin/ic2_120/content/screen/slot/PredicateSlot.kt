@@ -16,11 +16,11 @@ open class PredicateSlot(
     private val spec: SlotSpec
 ) : Slot(inventory, index, x, y) {
 
-    override fun canInsert(stack: ItemStack): Boolean = spec.canInsert(stack)
+    override fun mayPlace(stack: ItemStack): Boolean = spec.canInsert(stack)
 
-    override fun getMaxItemCount(): Int = spec.maxItemCount
+    override fun getMaxStackSize(): Int = spec.maxItemCount
 
-    override fun getMaxItemCount(existingStack: ItemStack): Int = spec.maxItemCount
+    override fun getMaxStackSize(stack: ItemStack): Int = spec.maxItemCount
 
-    override fun canTakeItems(playerEntity: Player): Boolean = spec.canTake(playerEntity)
+    override fun mayPickup(playerEntity: Player): Boolean = spec.canTake(playerEntity)
 }

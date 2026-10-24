@@ -42,14 +42,14 @@ class ReactorChamberBlockEntity(
         state
     )
 
-    override fun getMaxCountPerStack(): Int = 1
+    override fun getMaxStackSize(): Int = 1
 
     fun findAdjacentReactorPublic(): NuclearReactorBlockEntity? = findAdjacentReactor()
 
     private fun findAdjacentReactor(): NuclearReactorBlockEntity? {
         val world = world ?: return null
         for (dir in Direction.values()) {
-            val neighborPos = pos.offset(dir)
+            val neighborPos = pos.relative(dir)
             val neighborState = world.getBlockState(neighborPos)
             if (neighborState.block is NuclearReactorBlock) {
                 val be = world.getBlockEntity(neighborPos) as? NuclearReactorBlockEntity
@@ -79,22 +79,22 @@ class ReactorChamberBlockEntity(
     }
 
     // ========== Container 委托到中心反应堆 ==========
-    override fun size(): Int = findAdjacentReactor()?.size() ?: 0
-    override fun getStack(slot: Int): ItemStack = findAdjacentReactor()?.getStack(slot) ?: ItemStack.EMPTY
-    override fun setStack(slot: Int, stack: ItemStack) = findAdjacentReactor()?.setStack(slot, stack) ?: Unit
+    override fun getContainerSize(): Int = findAdjacentReactor()?.getContainerSize() ?: 0
+    override fun getItem(slot: Int): ItemStack = findAdjacentReactor()?.getItem(slot) ?: ItemStack.EMPTY
+    override fun setItem(slot: Int, stack: ItemStack) = findAdjacentReactor()?.setItem(slot, stack) ?: Unit
     override fun removeItem(slot: Int, amount: Int): ItemStack =
-        findAdjacentReactor()?.remove(slot, amount) ?: ItemStack.EMPTY
-    override fun removeItemNoUpdate(slot: Int): ItemStack = findAdjacentReactor()?.remove(slot) ?: ItemStack.EMPTY
-    override fun clear() = findAdjacentReactor()?.clear() ?: Unit
+        findAdjacentReactor()?.removeItem(slot, amount) ?: ItemStack.EMPTY
+    override fun removeItemNoUpdate(slot: Int): ItemStack = findAdjacentReactor()?.removeItemNoUpdate(slot) ?: ItemStack.EMPTY
+    override fun clearContent() = findAdjacentReactor()?.clearContent() ?: Unit
     override fun isEmpty(): Boolean = findAdjacentReactor()?.isEmpty() ?: true
     override fun setChanged() {
         findAdjacentReactor()?.setChanged()
         super.setChanged()
     }
-    override fun isValid(slot: Int, stack: ItemStack): Boolean =
-        findAdjacentReactor()?.isValid(slot, stack) ?: true
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean =
+        findAdjacentReactor()?.canPlaceItem(slot, stack) ?: true
     override fun stillValid(player: Player): Boolean =
-        findAdjacentReactor()?.canPlayerUse(player) ?: false
+        findAdjacentReactor()?.stillValid(player) ?: false
 
     companion object {
         const val CHAMBER_TIER = 5
@@ -106,7 +106,7 @@ class ReactorChamberBlockEntity(
             // 任意结构方块贴红石信号均可激活反应堆，guidebook 同承诺）
             if (!world.isClient) {
                 val reactor = be.findAdjacentReactor() ?: return
-                reactor.updateChamberRedstoneState(pos, world.isReceivingRedstonePower(pos))
+                reactor.updateChamberRedstoneState(pos, world.hasNeighborSignal(pos))
             }
         }
     }

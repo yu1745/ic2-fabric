@@ -49,12 +49,12 @@ class ContainmentBoxScreenHandler(
     }
 
     private fun createPlayerSlot(inventorySlot: Int, x: Int, y: Int): Slot {
-        if (hand != InteractionHand.MAIN_HAND || inventorySlot != playerInventory.selectedSlot) {
+        if (hand != InteractionHand.MAIN_HAND || inventorySlot != playerInventory.selected) {
             return Slot(playerInventory, inventorySlot, x, y)
         }
         return object : Slot(playerInventory, inventorySlot, x, y) {
-            override fun canInsert(stack: ItemStack): Boolean = false
-            override fun canTakeItems(playerEntity: Player): Boolean = false
+            override fun mayPlace(stack: ItemStack): Boolean = false
+            override fun mayPickup(playerEntity: Player): Boolean = false
         }
     }
 
@@ -76,11 +76,11 @@ class ContainmentBoxScreenHandler(
         return moved
     }
 
-    override fun stillValid(player: Player): Boolean = boxInventory.canPlayerUse(player)
+    override fun stillValid(player: Player): Boolean = boxInventory.stillValid(player)
 
-    override fun onClosed(player: Player) {
-        super.onClosed(player)
-        boxInventory.onClose(player)
+    override fun removed(player: Player) {
+        super.removed(player)
+        boxInventory.stopOpen(player)
     }
 
     companion object {

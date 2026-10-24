@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -45,7 +49,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -64,7 +67,7 @@ class SemifluidGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SemifluidGeneratorBlock.ACTIVE
 
@@ -123,11 +126,11 @@ class SemifluidGeneratorBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { isValid(BATTERY_SLOT, it) }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(FUEL_SLOT), matcher = { isValid(FUEL_SLOT, it) })
+            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { canPlaceItem(BATTERY_SLOT, it) }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(FUEL_SLOT), matcher = { canPlaceItem(FUEL_SLOT, it) })
         ),
         extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT, BATTERY_SLOT, *SLOT_UPGRADE_INDICES),
         setChanged = { setChanged() }
@@ -163,7 +166,7 @@ class SemifluidGeneratorBlockEntity(
 
         override fun onFinalCommit() {
             sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getRawId(variant.fluid) else -1
+            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getId(variant.fluid) else -1
             fuelColorDirty = true
             setChanged()
         }
@@ -176,7 +179,7 @@ class SemifluidGeneratorBlockEntity(
                 FluidVariant.blank()
             }
             sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getRawId(variant.fluid) else -1
+            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getId(variant.fluid) else -1
             fuelColorDirty = true
         }
 
@@ -192,7 +195,7 @@ class SemifluidGeneratorBlockEntity(
                 if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
                 tx.commit()
                 sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-                sync.fuelFluidRawId = BuiltInRegistries.FLUID.getRawId(variant.fluid)
+                sync.fuelFluidRawId = BuiltInRegistries.FLUID.getId(variant.fluid)
                 fuelColorDirty = true
                 actual
             }
@@ -208,7 +211,7 @@ class SemifluidGeneratorBlockEntity(
                 if (amount <= 0L) variant = FluidVariant.blank()
                 tx.commit()
                 sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-                sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getRawId(variant.fluid) else -1
+                sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) BuiltInRegistries.FLUID.getId(variant.fluid) else -1
                 fuelColorDirty = true
                 actual
             }
@@ -233,15 +236,15 @@ class SemifluidGeneratorBlockEntity(
     )
 
     override fun getInventory(): Container = this
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == BATTERY_SLOT && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         setChanged()
@@ -257,7 +260,7 @@ class SemifluidGeneratorBlockEntity(
         }
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == FUEL_SLOT -> stack.isSemifluidFuel()
         slot == EMPTY_CONTAINER_SLOT -> false
@@ -268,11 +271,11 @@ class SemifluidGeneratorBlockEntity(
 
     private fun tryInsertEmptyContainer(emptyStack: ItemStack): Boolean {
         if (emptyStack.isEmpty) return false
-        val current = getStack(EMPTY_CONTAINER_SLOT)
+        val current = getItem(EMPTY_CONTAINER_SLOT)
         return if (current.isEmpty) {
-            setStack(EMPTY_CONTAINER_SLOT, emptyStack.copy())
+            setItem(EMPTY_CONTAINER_SLOT, emptyStack.copy())
             true
-        } else if (ItemStack.canCombine(current, emptyStack)) {
+        } else if (ItemStack.isSameItemSameComponents(current, emptyStack)) {
             val toAdd = minOf(emptyStack.count, current.maxStackSize - current.count)
             if (toAdd > 0) {
                 current.grow(toAdd)
@@ -284,14 +287,16 @@ class SemifluidGeneratorBlockEntity(
 
     private fun canInsertEmptyContainer(emptyStack: ItemStack): Boolean {
         if (emptyStack.isEmpty) return false
-        val current = getStack(EMPTY_CONTAINER_SLOT)
+        val current = getItem(EMPTY_CONTAINER_SLOT)
         return if (current.isEmpty) true
-        else ItemStack.canCombine(current, emptyStack) && current.count + emptyStack.count <= current.maxStackSize
+        else ItemStack.isSameItemSameComponents(current, emptyStack) && current.count + emptyStack.count <= current.maxStackSize
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.semifluid_generator")
@@ -308,7 +313,7 @@ class SemifluidGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(SemifluidGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, SemifluidGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -321,12 +326,12 @@ class SemifluidGeneratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(SemifluidGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_FUEL_AMOUNT, fuelTankInternal.amount)
         if (fuelTankInternal.amount > 0L && !fuelTankInternal.variant.isBlank) {
-            nbt.putString("FuelFluid", BuiltInRegistries.FLUID.getId(fuelTankInternal.variant.fluid).toString())
+            nbt.putString("FuelFluid", BuiltInRegistries.FLUID.getKey(fuelTankInternal.variant.fluid).toString())
         }
     }
 
@@ -351,7 +356,7 @@ class SemifluidGeneratorBlockEntity(
             NetworkManager.sendSemifluidGeneratorFuelState(world as ServerLevel, pos, color)
         }
 
-        val fuelStack = getStack(FUEL_SLOT)
+        val fuelStack = getItem(FUEL_SLOT)
         // 油箱剩余空间不足 1 桶时跳过燃料处理，防止燃料单元被部分抽入后永不消耗（无限燃料 bug）
         val tankTotalCapacity = 8 * FluidConstants.BUCKET
         if (fuelTankInternal.amount <= tankTotalCapacity - FluidConstants.BUCKET) {
@@ -368,7 +373,7 @@ class SemifluidGeneratorBlockEntity(
                     val inserted = fuelTankInternal.tryInsertFuel(fuelFluid, FluidConstants.BUCKET)
                     if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyContainer)) {
                         fuelStack.shrink(1)
-                        if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
+                        if (fuelStack.isEmpty) setItem(FUEL_SLOT, ItemStack.EMPTY)
                         setChanged()
                     }
                 }

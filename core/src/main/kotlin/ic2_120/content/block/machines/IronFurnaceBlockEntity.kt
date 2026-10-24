@@ -1,10 +1,16 @@
+package ic2_120.content.block.machines
+
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
-
-﻿package ic2_120.content.block.machines
-
-import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.content.block.IronFurnaceBlock
 import ic2_120.content.screen.IronFurnaceScreenHandler
@@ -28,7 +34,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerLevel
@@ -52,7 +57,7 @@ class IronFurnaceBlockEntity(
     type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     private val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = IronFurnaceBlock.ACTIVE
 
@@ -85,7 +90,7 @@ class IronFurnaceBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isSmeltingInput(it) }),
             ItemInsertRoute(intArrayOf(SLOT_FUEL), matcher = { getFuelTime(it) > 0 })
@@ -105,25 +110,27 @@ class IronFurnaceBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun stillValid(player: Player): Boolean =
         Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = canPlaceInSlot(slot, stack)
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = canPlaceInSlot(slot, stack)
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component =
@@ -155,9 +162,9 @@ class IronFurnaceBlockEntity(
     fun tick(world: Level, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
-        val fuelItem = getStack(SLOT_FUEL)
-        val inputItem = getStack(SLOT_INPUT)
-        val outputItem = getStack(SLOT_OUTPUT)
+        val fuelItem = getItem(SLOT_FUEL)
+        val inputItem = getItem(SLOT_INPUT)
+        val outputItem = getItem(SLOT_OUTPUT)
 
         // 检查是否有有效的烧制配方
         val hasRecipe = !inputItem.isEmpty && smeltingRecipeFor(inputItem, world) != null
@@ -165,9 +172,9 @@ class IronFurnaceBlockEntity(
         // 检查输出槽是否可以接收物品
         val canAcceptOutput = if (hasRecipe) {
             val recipe = smeltingRecipeFor(inputItem, world) ?: return
-            val result = recipe.getOutput(world.registryManager)
+            val result = recipe.getResultItem(world.registryAccess())
             outputItem.isEmpty ||
-                (ItemStack.areItemsEqual(outputItem, result) &&
+                (ItemStack.isSameItem(outputItem, result) &&
                  outputItem.count + result.count <= result.maxStackSize)
         } else false
 
@@ -182,7 +189,7 @@ class IronFurnaceBlockEntity(
                 val remainder = fuelItem.item.getRecipeRemainder(fuelItem)
                 fuelItem.shrink(1)
                 if (fuelItem.isEmpty && !remainder.isEmpty) {
-                    setStack(SLOT_FUEL, remainder.copy())
+                    setItem(SLOT_FUEL, remainder.copy())
                 }
                 setChanged()
             }
@@ -195,11 +202,11 @@ class IronFurnaceBlockEntity(
             // 烧制完成
             if (sync.cookTime >= IronFurnaceSync.COOK_TIME_MAX) {
                 val recipe = smeltingRecipeFor(inputItem, world) ?: return
-                val result = recipe.getOutput(world.registryManager).copy()
+                val result = recipe.getResultItem(world.registryAccess()).copy()
 
                 inputItem.shrink(1)
                 if (outputItem.isEmpty) {
-                    setStack(SLOT_OUTPUT, result)
+                    setItem(SLOT_OUTPUT, result)
                 } else {
                     outputItem.grow(result.count)
                 }
@@ -284,8 +291,8 @@ class IronFurnaceBlockEntity(
 
     private fun smeltingRecipeFor(input: ItemStack, world: Level): net.minecraft.world.item.crafting.SmeltingRecipe? {
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedRecipeItem === input.item) return cachedSmeltingRecipe
-        val inputInv = SimpleContainer(1).apply { setStack(0, input) }
-        val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inputInv, world).orElse(null)
+        val inputInv = SimpleContainer(1).apply { setItem(0, input) }
+        val recipe = world.recipeManager.getRecipeFor(RecipeType.SMELTING, inputInv, world).orElse(null)
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
         cachedSmeltingRecipe = recipe
@@ -303,7 +310,7 @@ class IronFurnaceBlockEntity(
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
         val inv = SimpleContainer(stack.copyWithCount(1))
-        val found = w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
+        val found = w.recipeManager.getRecipeFor(RecipeType.SMELTING, inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found
@@ -316,7 +323,7 @@ class IronFurnaceBlockEntity(
         var amount = xp
         if (frac != 0.0f && Math.random() < frac) amount++
         if (amount > 0) {
-            player.addExperience(amount)
+            player.giveExperiencePoints(amount)
         }
         storedExperience = 0f
         setChanged()

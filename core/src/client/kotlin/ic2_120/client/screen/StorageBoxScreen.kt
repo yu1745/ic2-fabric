@@ -15,7 +15,7 @@ class StorageBoxScreen(
     title: Component
 ) : AbstractContainerScreen<StorageBoxScreenHandler>(handler, playerInventory, title) {
 
-    private val boxType = BoxType.of(handler.inventory.size())
+    private val boxType = BoxType.of(handler.inventory.getContainerSize())
 
     init {
         backgroundWidth = boxType.guiWidth

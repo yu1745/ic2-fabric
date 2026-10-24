@@ -1,5 +1,9 @@
 package ic2_120.content.item
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.compat.isClient
@@ -34,10 +38,9 @@ import java.util.function.Consumer
 import net.fabricmc.api.Environment
 import net.fabricmc.api.EnvType
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -62,11 +65,11 @@ interface IUpgradeItem
 
 abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendHoverText(stack, context, tooltip, type)
         val filter = FluidPipeUpgradeComponent.readFilter(stack)
         if (filter != null) {
-            val fluidName = filter.defaultBlockState.blockState.block.name
+            val fluidName = filter.defaultBlockState().blockState.block.name
             tooltip.add(Component.literal("过滤: ").append(fluidName).withStyle(ChatFormatting.GRAY))
         } else {
             tooltip.add(Component.literal("过滤: 未设置").withStyle(ChatFormatting.GRAY))
@@ -76,7 +79,7 @@ abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     }
 
     override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(hand)
+        val stack = user.getItemInHand(player.usedItemHand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
         if (user.isCrouching) {
@@ -91,10 +94,12 @@ abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
 
         // 打开配置 GUI
         if (user is ServerPlayer) {
-            user.openMenu(object : ExtendedScreenHandlerFactory {
+            user.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
                 override fun getDisplayName(): Component = Component.translatable("gui.ic2_120.fluid_upgrade.title")
-                override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-                    buf.writeEnumConstant(hand)
+                override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+                    val buf = FriendlyByteBuf(Unpooled.buffer())
+                        buf.writeEnum(hand)
+                    return buf
                 }
                 override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
                     return FluidUpgradeScreenHandler(syncId, playerInventory, hand)
@@ -124,8 +129,8 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     protected open val directionActionLabel: String = "弹出方向"
 
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendHoverText(stack, context, tooltip, type)
         val filterItem = EjectorUpgradeComponent.readFilter(stack)
         if (filterItem != null) {
             tooltip.add(Component.literal("过滤物品: ").append(filterItem.name).withStyle(ChatFormatting.GRAY))
@@ -137,7 +142,7 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     }
 
     override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(hand)
+        val stack = user.getItemInHand(player.usedItemHand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
         if (user.isCrouching) {
@@ -152,10 +157,12 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
 
         // 打开配置 GUI
         if (user is ServerPlayer) {
-            user.openMenu(object : ExtendedScreenHandlerFactory {
+            user.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
                 override fun getDisplayName(): Component = Component.translatable("gui.ic2_120.item_upgrade.title")
-                override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-                    buf.writeEnumConstant(hand)
+                override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+                    val buf = FriendlyByteBuf(Unpooled.buffer())
+                        buf.writeEnum(hand)
+                    return buf
                 }
                 override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
                     return ItemUpgradeScreenHandler(syncId, playerInventory, hand)
@@ -191,7 +198,7 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
 class OverclockerUpgrade : Item(Item.Properties()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             fun offer(coolant: Item, count: Int, suffix: String) {
@@ -215,7 +222,7 @@ class OverclockerUpgrade : Item(Item.Properties()), IUpgradeItem {
 class TransformerUpgrade : Item(Item.Properties()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val mv = MvTransformerBlock::class.item()
             val goldCable = DoubleInsulatedGoldCableBlock::class.item()
             val circuit = Circuit::class.instance()
@@ -237,7 +244,7 @@ class TransformerUpgrade : Item(Item.Properties()), IUpgradeItem {
 class EnergyStorageUpgrade : Item(Item.Properties()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val cable = InsulatedCopperCableBlock::class.item()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnergyStorageUpgrade::class.instance(), 1)
                 .pattern("PPP")
@@ -257,7 +264,7 @@ class EnergyStorageUpgrade : Item(Item.Properties()), IUpgradeItem {
 class RedstoneInverterUpgrade : Item(Item.Properties()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 1)
@@ -284,7 +291,7 @@ class RedstoneInverterUpgrade : Item(Item.Properties()), IUpgradeItem {
 class EjectorUpgrade : ItemFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 1)
@@ -313,7 +320,7 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val hopper = Items.HOPPER
@@ -341,7 +348,7 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
 class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val motor = ElectricMotor::class.instance()
@@ -369,7 +376,7 @@ class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
 class FluidPullingUpgrade : FluidFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val tap = Treetap::class.instance()

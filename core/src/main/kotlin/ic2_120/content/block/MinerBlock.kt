@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -57,34 +59,34 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult, hand: InteractionHand): InteractionResult {
         if (!world.isClient) {
-            getMenuProvider(state, world, pos)?.let(player::openHandledScreen)
+            getMenuProvider(state, world, pos)?.let { player.openMenu(it) }
         }
         return InteractionResult.SUCCESS
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.`is`(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
             if (be is BaseMinerBlockEntity) {
                 for (stack in be.itemCache) {
-                    if (!stack.isEmpty) net.minecraft.world.Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack.copy())
+                    if (!stack.isEmpty) net.minecraft.world.Containers.dropItemStack(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack.copy())
                 }
                 be.itemCache.clear()
                 be.cacheItemCount = 0
             }
             retrieveMiningPipes(world, pos)
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
     private fun retrieveMiningPipes(world: Level, pos: BlockPos) {
         // 读取采矿机的扫描范围，用于回收水平方向铺设的管道
         val be = world.getBlockEntity(pos)
         val radius = if (be is BaseMinerBlockEntity) {
-            val scanner = be.getStack(BaseMinerBlockEntity.SLOT_SCANNER)
+            val scanner = be.getItem(BaseMinerBlockEntity.SLOT_SCANNER)
             when (scanner.item) {
                 is OdScannerItem -> ScannerType.OD.scanRadius
                 is AdvancedScannerItem -> ScannerType.OV.scanRadius
@@ -93,7 +95,7 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         } else 0
 
         val planned = mutableListOf<BlockPos>()
-        for (y in (pos.y - 1) downTo world.bottomY) {
+        for (y in (pos.y - 1) downTo world.minBuildHeight) {
             var foundAny = false
 
             // 垂直管柱（直上直下的管道）
@@ -127,8 +129,8 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         for (pipePos in planned) {
             val state = world.getBlockState(pipePos)
             if (state.block !is MiningPipeBlock) continue
-            Containers.spawn(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), ItemStack(state.block.asItem()))
-            world.setBlock(pipePos, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
+            Containers.dropItemStack(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), ItemStack(state.block.asItem()))
+            world.setBlock(pipePos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)
         }
     }
 
@@ -143,7 +145,7 @@ class MinerBlock : BaseMinerBlock() {
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, MinerBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, MinerBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -179,7 +181,7 @@ class AdvancedMinerBlock : BaseMinerBlock() {
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, AdvancedMinerBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, AdvancedMinerBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 

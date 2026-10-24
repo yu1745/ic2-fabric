@@ -33,7 +33,7 @@ object RubberTreeCommand {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
                 Commands.literal("ic2rubber")
-                    .requires { source -> source.hasPermissionLevel(PERMISSION_LEVEL) }
+                    .requires { source -> source.hasPermission(PERMISSION_LEVEL) }
                     .executes { ctx -> execute(ctx, radius = 64, teleport = false) }
                     .then(
                         Commands.argument("radius", IntegerArgumentType.integer(1))
@@ -59,25 +59,27 @@ object RubberTreeCommand {
 
     private fun execute(ctx: CommandContext<CommandSourceStack>, radius: Int, teleport: Boolean): Int {
         val source = ctx.source
-        val player = source.player ?: run {
-            source.sendError(Component.literal("此命令只能由玩家执行"))
+        val player = try {
+            source.playerOrException
+        } catch (e: Exception) {
+            source.sendFailure(Component.literal("此命令只能由玩家执行"))
             return 0
         }
 
-        val world = source.world
+        val world = source.level
 
-        source.sendFeedback({ Component.literal("正在搜索 ${radius} 格范围内的橡胶树...") }, true)
+        source.sendSuccess({ Component.literal("正在搜索 ${radius} 格范围内的橡胶树...") }, true)
 
         val startTime = System.currentTimeMillis()
 
         CompletableFuture.supplyAsync(
-            { searchRubberTrees(world, player.blockPos, radius) },
+            { searchRubberTrees(world, player.blockPosition(), radius) },
             searchExecutor
         ).thenAcceptAsync({ result ->
             val elapsedMs = System.currentTimeMillis() - startTime
 
             if (result.trees.isEmpty()) {
-                source.sendFeedback({
+                source.sendSuccess({
                     Component.literal("在 ${radius} 格范围内未找到橡胶树 (耗时 ${elapsedMs}ms)")
                 }, false)
                 return@thenAcceptAsync
@@ -86,12 +88,12 @@ object RubberTreeCommand {
             val nearest = result.trees.first()
             if (teleport) {
                 val tpPos = findSafeTeleportPos(world, nearest)
-                player.teleport(player.serverWorld, tpPos.x + 0.5, tpPos.y.toDouble(), tpPos.z + 0.5, player.yaw, player.pitch)
-                source.sendFeedback({
+                player.teleportTo(player.serverLevel(), tpPos.x + 0.5, tpPos.y.toDouble(), tpPos.z + 0.5, player.yRot, player.xRot)
+                source.sendSuccess({
                     Component.literal("已传送到橡胶树位置 [${nearest.x}, ${nearest.y}, ${nearest.z}] (共 ${result.count} 棵, 耗时 ${elapsedMs}ms)")
                 }, true)
             } else {
-                source.sendFeedback({
+                source.sendSuccess({
                     Component.literal("找到 ${result.count} 棵橡胶树，最近的: [${nearest.x}, ${nearest.y}, ${nearest.z}] (耗时 ${elapsedMs}ms)")
                 }, false)
                 highlightTree(world, player, nearest)
@@ -130,7 +132,7 @@ object RubberTreeCommand {
             }
         }
 
-        return SearchResult(treePositions.sortedBy { it.getSquaredDistance(center) }, treeXZ.size)
+        return SearchResult(treePositions.sortedBy { it.distSqr(center) }, treeXZ.size)
     }
 
     private fun searchChunk(
@@ -142,7 +144,7 @@ object RubberTreeCommand {
         treeXZ: MutableSet<Pair<Int, Int>>,
         treePositions: MutableList<BlockPos>
     ) {
-        val chunk = if (!world.chunkSource.isChunkLoaded(chunkX, chunkZ)) {
+        val chunk = if (!world.chunkSource.hasChunk(chunkX, chunkZ)) {
             world.chunkSource.getChunk(chunkX, chunkZ, ChunkStatus.FULL, true)
         } else {
             world.getChunk(chunkX, chunkZ)
@@ -152,14 +154,14 @@ object RubberTreeCommand {
         val maxX = minOf((chunkX shl 4) + 15, center.x + radius)
         val minZ = maxOf((chunkZ shl 4), center.z - radius)
         val maxZ = minOf((chunkZ shl 4) + 15, center.z + radius)
-        val minY = maxOf(world.bottomY, center.y - radius)
-        val maxY = minOf(world.topY, center.y + radius)
+        val minY = maxOf(world.minBuildHeight, center.y - radius)
+        val maxY = minOf(world.maxBuildHeight, center.y + radius)
 
         for (x in minX..maxX) {
             for (z in minZ..maxZ) {
                 for (y in minY..maxY) {
                     val pos = BlockPos(x, y, z)
-                    if (pos.getSquaredDistance(center) > radius * radius) continue
+                    if (pos.distSqr(center) > radius * radius) continue
 
                     val state = chunk.getBlockState(pos)
                     if (!state.`is`(rubberLogBlock)) continue
@@ -180,7 +182,7 @@ object RubberTreeCommand {
         val queue = ArrayDeque<Pair<BlockPos, Int>>()
         val visited = HashSet<BlockPos>()
 
-        val start = startPos.toImmutable()
+        val start = startPos.immutable()
         queue.add(start to 0)
         visited.add(start)
 
@@ -189,7 +191,7 @@ object RubberTreeCommand {
             if (depth >= LEAF_SEARCH_DISTANCE) continue
 
             for (direction in Direction.values()) {
-                val neighborPos = current.offset(direction).toImmutable()
+                val neighborPos = current.offset(direction).immutable()
                 if (!visited.add(neighborPos)) continue
 
                 val neighborBlock = world.getBlockState(neighborPos).block
@@ -206,13 +208,13 @@ object RubberTreeCommand {
     }
 
     private fun findSafeTeleportPos(world: ServerLevel, logPos: BlockPos): BlockPos {
-        for (y in logPos.y downTo world.bottomY) {
+        for (y in logPos.y downTo world.minBuildHeight) {
             val pos = BlockPos(logPos.x, y, logPos.z)
             val state = world.getBlockState(pos)
 
-            if (!state.isAir && state.shouldSuffocate(world, pos)) {
-                val feetPos = pos.up()
-                val headPos = pos.up(2)
+            if (!state.isAir && state.isSuffocating(world, pos)) {
+                val feetPos = pos.above()
+                val headPos = pos.above(2)
 
                 val feetEmpty = world.getBlockState(feetPos).isAir
                 val headEmpty = world.getBlockState(headPos).isAir
@@ -234,17 +236,17 @@ object RubberTreeCommand {
             }
         }
 
-        return logPos.up()
+        return logPos.above()
     }
 
     private fun findGroundAt(world: ServerLevel, pos: BlockPos): BlockPos? {
-        for (y in pos.y downTo maxOf(world.bottomY, pos.y - 10)) {
+        for (y in pos.y downTo maxOf(world.minBuildHeight, pos.y - 10)) {
             val checkPos = BlockPos(pos.x, y, pos.z)
             val state = world.getBlockState(checkPos)
 
-            if (!state.isAir && state.shouldSuffocate(world, checkPos)) {
-                val feetPos = checkPos.up()
-                val headPos = checkPos.up(2)
+            if (!state.isAir && state.isSuffocating(world, checkPos)) {
+                val feetPos = checkPos.above()
+                val headPos = checkPos.above(2)
 
                 if (world.getBlockState(feetPos).isAir && world.getBlockState(headPos).isAir) {
                     return feetPos
@@ -255,8 +257,8 @@ object RubberTreeCommand {
     }
 
     private fun highlightTree(world: ServerLevel, player: net.minecraft.server.level.ServerPlayer, pos: BlockPos) {
-        val vec = Vec3.ofCenter(pos)
-        world.spawnParticles(
+        val vec = Vec3.atCenterOf(pos)
+        world.sendParticles(
             player,
             net.minecraft.core.particles.ParticleTypes.HEART,
             true,

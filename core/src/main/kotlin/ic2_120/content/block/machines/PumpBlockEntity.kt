@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -65,7 +71,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -92,7 +97,7 @@ class PumpBlockEntity(
     IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport,
     IClaimSensitive,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = PumpBlock.ACTIVE
 
@@ -157,10 +162,10 @@ class PumpBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) }),
+            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { canPlaceItem(SLOT_INPUT, it) }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_INPUT, SLOT_OUTPUT, SLOT_DISCHARGING, *SLOT_UPGRADE_INDICES),
@@ -221,23 +226,23 @@ class PumpBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
     override fun setChanged() = super.setChanged()
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == SLOT_INPUT -> {
             val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell"))
@@ -249,9 +254,11 @@ class PumpBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.pump")
@@ -283,7 +290,7 @@ class PumpBlockEntity(
         nbt.putFloat("ProgressF", progressF)
         nbt.putFloat("EnergyDebt", energyDebtF)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.amount)
-        nbt.putString(NBT_TANK_FLUID, if (tankInternal.variant.isBlank) "" else BuiltInRegistries.FLUID.getId(tankInternal.variant.fluid).toString())
+        nbt.putString(NBT_TANK_FLUID, if (tankInternal.variant.isBlank) "" else (BuiltInRegistries.FLUID.getKey(tankInternal.variant.fluid)?.toString() ?: "?"))
     }
 
     /** 重置全部进度状态（无法抽取/停泵时调用）。 */
@@ -406,7 +413,7 @@ class PumpBlockEntity(
     private fun tryDrainFromWorldSource(world: Level, targetPos: BlockPos): Long {
         val fluidState = world.getFluidState(targetPos)
         if (fluidState.isEmpty || !fluidState.isStill) return 0L
-        val fluid = fluidState.fluid
+        val fluid = fluidState.getType()
         if (!canAccept(fluid)) return 0L
         if (ClaimProtection.isProtected(world, targetPos, ownerUuid, ClaimProtection.EDIT_FLUID)) return 0L
 
@@ -423,7 +430,7 @@ class PumpBlockEntity(
             world.setBlock(targetPos, targetState.setValue(BlockStateProperties.WATERLOGGED, false), 3)
         } else {
             // 普通水源方块没有可保留的方块本体，抽空后清为空气。
-            world.setBlock(targetPos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState, 3)
+            world.setBlock(targetPos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3)
         }
         return FluidConstants.BUCKET
     }
@@ -434,10 +441,10 @@ class PumpBlockEntity(
     }
 
     private fun fillFluidCellFromTank() {
-        val input = getStack(SLOT_INPUT)
+        val input = getItem(SLOT_INPUT)
         if (input.isEmpty || tankInternal.amount < FluidConstants.BUCKET || tankInternal.variant.isBlank) return
 
-        val output = getStack(SLOT_OUTPUT)
+        val output = getItem(SLOT_OUTPUT)
         val filled = when {
             input.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) ->
                 fluidToFilledCellStack(tankInternal.variant.fluid)
@@ -447,7 +454,7 @@ class PumpBlockEntity(
         }
         if (filled.isEmpty) return
 
-        val canOutput = output.isEmpty || (ItemStack.canCombine(output, filled) && output.count < output.maxStackSize)
+        val canOutput = output.isEmpty || (ItemStack.isSameItemSameComponents(output, filled) && output.count < output.maxStackSize)
         if (!canOutput) return
 
         Transaction.openOuter().use { tx ->
@@ -457,7 +464,7 @@ class PumpBlockEntity(
         }
 
         input.shrink(1)
-        if (output.isEmpty) setStack(SLOT_OUTPUT, filled.copy())
+        if (output.isEmpty) setItem(SLOT_OUTPUT, filled.copy())
         else output.grow(1)
         setChanged()
     }
@@ -504,7 +511,7 @@ class PumpBlockEntity(
 
     private fun syncTankState() {
         sync.fluidAmount = tankInternal.amount.toInt().coerceAtLeast(0)
-        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(tankInternal.variant.fluid)
+        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getId(tankInternal.variant.fluid)
     }
 
     private fun hasPumpableFluid(world: Level, pos: BlockPos, state: BlockState): Boolean {
@@ -513,7 +520,7 @@ class PumpBlockEntity(
         for (target in positions) {
             val fluidState = world.getFluidState(target)
             if (!fluidState.isEmpty && fluidState.isStill) {
-                val fluid = fluidState.fluid
+                val fluid = fluidState.getType()
                 if (canAccept(fluid) && !ClaimProtection.isProtected(world, target, ownerUuid, ClaimProtection.EDIT_FLUID)) {
                     return true
                 }
@@ -537,7 +544,7 @@ class PumpBlockEntity(
             val target = pos.offset(front, offset)
             if (!ClaimProtection.isProtected(world, target, ownerUuid, ClaimProtection.EDIT_FLUID)) continue
             val fluidState = world.getFluidState(target)
-            val hasWorldFluid = !fluidState.isEmpty && fluidState.isStill && canAccept(fluidState.fluid)
+            val hasWorldFluid = !fluidState.isEmpty && fluidState.isStill && canAccept(fluidState.getType())
             val hasStorageFluid = FluidStorage.SIDED.find(world, target, front.opposite)?.let { storage ->
                 storage.any { !it.isResourceBlank && it.amount > 0L && canAccept(it.resource.fluid) }
             } ?: false

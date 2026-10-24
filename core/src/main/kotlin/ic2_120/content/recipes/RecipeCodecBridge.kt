@@ -7,9 +7,11 @@ import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
 import com.mojang.serialization.JsonOps
 import com.mojang.serialization.MapCodec
-import com.mojang.serialization.codecs.RecordCodecBuilder
+import com.mojang.serialization.MapLike
+import com.mojang.serialization.RecordBuilder
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.crafting.Recipe
+import java.util.stream.Stream
 
 /**
  * yarn 时代 RecipeSerializer（fromJson/read/write 三件套）→ mojmap 1.21.1
@@ -27,36 +29,36 @@ object RecipeCodecBridge {
         crossinline decode: (ResourceLocation, JsonObject) -> T,
         crossinline encode: (JsonObject, T) -> Unit
     ): MapCodec<T> = object : MapCodec<T>() {
-        override fun <O : Any> decode(ops: DynamicOps<O>, input: O): DataResult<Pair<T, O>> =
-            runCatching { ops.convertTo(JsonOps.INSTANCE, input) }.fold(
-                { el ->
-                    if (el != null && el.isJsonObject) {
-                        runCatching { decode(DUMMY_ID, el.asJsonObject) }.fold(
-                            { recipe -> DataResult.success(Pair(recipe, input)) },
-                            { DataResult.error { it.message ?: "decode failed" } }
-                        )
-                    } else {
-                        DataResult.error { "expected JsonObject, got: $el" }
-                    }
-                },
-                { DataResult.error { it.message ?: "convert failed" } }
+        override fun <O : Any?> decode(ops: DynamicOps<O>, input: MapLike<O>): DataResult<T> =
+            runCatching {
+                val json = JsonObject()
+                input.entries().forEach { (k, v) ->
+                    val key: JsonElement = ops.convertTo(JsonOps.INSTANCE, k).getOrThrow()
+                    val value: JsonElement = ops.convertTo(JsonOps.INSTANCE, v).getOrThrow()
+                    json.add(key.asString, value)
+                }
+                decode(DUMMY_ID, json)
+            }.fold(
+                { DataResult.success(it) },
+                { DataResult.error(it.message ?: "decode failed") }
             )
 
-        override fun <O : Any> encode(input: T, ops: DynamicOps<O>, prefix: O): DataResult<O> =
+        override fun <O : Any?> encode(input: T, ops: DynamicOps<O>, prefix: RecordBuilder<O>): RecordBuilder<O> =
             runCatching {
                 val json = JsonObject()
                 encode(json, input)
                 if (!json.has("type")) json.addProperty("type", jsonType)
                 val el: JsonElement = JsonParser.parseString(json.toString())
-                val converted = JsonOps.INSTANCE.convertTo(ops, el)
-                DataResult.success(ops.mergeToPrimitive(prefix, converted).getOrThrow())
+                val converted: O = JsonOps.INSTANCE.convertTo(ops, el).getOrThrow()
+                ops.getMapValues(converted).ifSuccess { pairs ->
+                    pairs.forEach { (k, v) -> prefix.add(k, v) }
+                }
             }.fold(
-                { it },
-                { DataResult.error { it.message ?: "encode failed" } }
+                { prefix },
+                { prefix.withErrorsFrom(DataResult.error<Any>(it.message ?: "encode failed")) }
             )
 
-        override fun <T1 : Any> keys(ops: DynamicOps<T1>): DataResult<java.util.stream.Stream<Pair<T1, T1>>> =
-            DataResult.success(java.util.stream.Stream.empty())
+        override fun <O : Any?> keys(ops: DynamicOps<O>): Stream<O> = Stream.empty()
     }
 }
 

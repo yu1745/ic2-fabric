@@ -80,7 +80,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class ReinforcedGlassBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(5.0f, 1200.0f) .noOcclusion().noLootTable()){
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val glass = Items.GLASS
             val alloy = Alloy::class.instance()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReinforcedGlassBlock::class.item(), 7)
@@ -106,10 +106,10 @@ class ReinforcedGlassBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.G
 )
 class ReinforcedDoorBlock(
     settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_DOOR).strength(25.0f, 1200.0f),
-) : DoorBlock(settings, BlockSetType.IRON) {
+) : DoorBlock(BlockSetType.IRON, settings) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val stone = ReinforcedStoneBlock::class.item()
             val ironDoor = Items.IRON_DOOR
             ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, ReinforcedDoorBlock::class.item(), 1)
@@ -135,34 +135,34 @@ abstract class Ic2FoamBlock(
      * 泡沫必须允许实体进入，但原版 isInsideWall 依赖碰撞形状，不能直接复用它。
      * 因此仅在实体的头部位于当前泡沫方块内时，按原版频率造成 inWall 伤害。
      */
-    override fun onEntityCollision(state: BlockState, world: Level, pos: BlockPos, entity: Entity) {
+    override fun entityInside(state: BlockState, world: Level, pos: BlockPos, entity: Entity) {
         val hasHazmatHelmet = entity is LivingEntity &&
             entity.getItemBySlot(EquipmentSlot.HEAD).item is HazmatHelmet
         if (!world.isClient && entity is LivingEntity && !hasHazmatHelmet &&
-            BlockPos.containing(entity.eyePos) == pos && entity.age % 20 == 0) {
-            entity.damage(world.damageSources.inWall(), 1.0f)
+            BlockPos.containing(entity.eyePosition) == pos && entity.tickCount % 20 == 0) {
+            entity.hurt(world.damageSources().inWall(), 1.0f)
         }
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun randomTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
-        var light = world.getLightLevel(pos)
-        if (!state.isOpaque && state.getOpacity(world, pos) == 0) {
+        var light = world.getMaxLocalRawBrightness(pos)
+        if (!state.canOcclude && state.getLightBlock(world, pos) == 0) {
             for (direction in Direction.values()) {
-                light = maxOf(light, world.getLightLevel(pos.offset(direction)))
+                light = maxOf(light, world.getMaxLocalRawBrightness(pos.offset(direction)))
             }
         }
 
         val averageSeconds = hardenTime * (16 - light).coerceAtLeast(1)
-        val randomTickSpeed = world.gameRules.getInt(GameRules.RANDOM_TICK_SPEED).coerceAtLeast(1)
+        val randomTickSpeed = world.gameRules.getInt(GameRules.RULE_RANDOMTICKING).coerceAtLeast(1)
         val chance = (4096.0f / (averageSeconds * 20.0f * randomTickSpeed)).coerceAtMost(1.0f)
         if (random.nextFloat() < chance) {
-            world.setBlock(pos, hardenedState(), Block.NOTIFY_ALL)
+            world.setBlock(pos, hardenedState(), Block.UPDATE_ALL)
         }
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getDroppedStacks(state: BlockState, builder: LootParams.Builder): MutableList<ItemStack> =
+    override fun getDrops(state: BlockState, builder: LootParams.Builder): MutableList<ItemStack> =
         foamDrops()
 
     protected abstract fun hardenedState(): BlockState
@@ -177,28 +177,28 @@ abstract class Ic2FoamBlock(
 class FoamBlock(
     settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_WOOL)
         .strength(0.01f, 10.0f)
-        .noCollision()
+        .noCollission()
          .noOcclusion()
-        .suffocates { _, _, _ -> true }
-        .blockVision { _, _, _ -> true }
-        .allowsSpawning { _, _, _, _ -> false }
-        .ticksRandomly()
+        .isSuffocating { _, _, _ -> true }
+        .isViewBlocking { _, _, _ -> true }
+        .isValidSpawn { _, _, _, _ -> false }
+        .randomTicks()
 ) : Ic2FoamBlock(settings, 300) {
 
-    override fun hardenedState(): BlockState = LightGrayWallBlock::class.instance().defaultBlockState
+    override fun hardenedState(): BlockState = LightGrayWallBlock::class.instance().defaultBlockState()
 
     override fun foamDrops(): MutableList<ItemStack> = mutableListOf()
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
-        if (world.isClient) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(hand)
+        if (world.isClientSide) return InteractionResult.SUCCESS
+        val stack = player.getItemInHand(player.usedItemHand)
         if (!stack.`is`(Items.SAND)) return InteractionResult.PASS
-        val wall = LightGrayWallBlock::class.instance().defaultBlockState
-        world.setBlock(pos, wall, Block.NOTIFY_ALL)
-        world.playSound(null, pos, SoundEvents.BLOCK_SAND_PLACE, SoundSource.BLOCKS, 0.85f, 0.9f)
-        world.syncWorldEvent(2001, pos, Block.getRawIdFromState(state))
-        if (!player.abilities.creativeMode) stack.shrink(1)
+        val wall = LightGrayWallBlock::class.instance().defaultBlockState()
+        world.setBlock(pos, wall, Block.UPDATE_ALL)
+        world.playSound(null, pos, SoundEvents.SAND_PLACE, SoundSource.BLOCKS, 0.85f, 0.9f)
+        world.levelEvent(2001, pos, Block.getId(state))
+        if (!player.abilities.instabuild) stack.shrink(1)
         return InteractionResult.CONSUME
     }
 
@@ -212,29 +212,29 @@ class FoamBlock(
 class ReinforcedFoamBlock(
     settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_WOOL)
         .strength(0.01f, 10.0f)
-        .noCollision()
+        .noCollission()
          .noOcclusion()
-        .suffocates { _, _, _ -> true }
-        .blockVision { _, _, _ -> true }
-        .allowsSpawning { _, _, _, _ -> false }
-        .ticksRandomly()
+        .isSuffocating { _, _, _ -> true }
+        .isViewBlocking { _, _, _ -> true }
+        .isValidSpawn { _, _, _, _ -> false }
+        .randomTicks()
 ) : Ic2FoamBlock(settings, 600) {
 
-    override fun hardenedState(): BlockState = ReinforcedStoneBlock::class.instance().defaultBlockState
+    override fun hardenedState(): BlockState = ReinforcedStoneBlock::class.instance().defaultBlockState()
 
     override fun foamDrops(): MutableList<ItemStack> =
         mutableListOf(ItemStack(IronScaffoldBlock::class.item()))
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
-        if (world.isClient) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(hand)
+        if (world.isClientSide) return InteractionResult.SUCCESS
+        val stack = player.getItemInHand(player.usedItemHand)
         if (!stack.`is`(Items.SAND)) return InteractionResult.PASS
-        val stone = ReinforcedStoneBlock::class.instance().defaultBlockState
-        world.setBlock(pos, stone, Block.NOTIFY_ALL)
-        world.playSound(null, pos, SoundEvents.BLOCK_STONE_PLACE, SoundSource.BLOCKS, 0.85f, 0.85f)
-        world.syncWorldEvent(2001, pos, Block.getRawIdFromState(state))
-        if (!player.abilities.creativeMode) stack.shrink(1)
+        val stone = ReinforcedStoneBlock::class.instance().defaultBlockState()
+        world.setBlock(pos, stone, Block.UPDATE_ALL)
+        world.playSound(null, pos, SoundEvents.STONE_PLACE, SoundSource.BLOCKS, 0.85f, 0.85f)
+        world.levelEvent(2001, pos, Block.getId(state))
+        if (!player.abilities.instabuild) stack.shrink(1)
         return InteractionResult.CONSUME
     }
 
@@ -244,16 +244,16 @@ class ReinforcedFoamBlock(
 class ResinSheetBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
         .strength(0.5f)
-        .velocityMultiplier(0.4f)
-        .jumpVelocityMultiplier(0.0f)
+        .speedFactor(0.4f)
+        .jumpFactor(0.0f)
 ) {
-    override fun onLandedUpon(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
-        entity.handleFallDamage(fallDistance, 0.2f, world.damageSources.fall())
+    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
+        entity.causeFallDamage(fallDistance, 0.2f, world.damageSources().fall())
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val resin = Resin::class.instance()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ResinSheetBlock::class.item(), 3)
                 .pattern("xxx")
@@ -269,16 +269,16 @@ class ResinSheetBlock : Block(
 class RubberSheetBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
         .strength(0.5f)
-        .velocityMultiplier(0.4f)
-        .jumpVelocityMultiplier(0.0f)
+        .speedFactor(0.4f)
+        .jumpFactor(0.0f)
 ) {
-    override fun onLandedUpon(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
-        entity.handleFallDamage(fallDistance, 0.2f, world.damageSources.fall())
+    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
+        entity.causeFallDamage(fallDistance, 0.2f, world.damageSources().fall())
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val rubber = RubberItem::class.instance()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RubberSheetBlock::class.item(), 3)
                 .pattern("xxx")
@@ -294,16 +294,16 @@ class RubberSheetBlock : Block(
 class WoolSheetBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
         .strength(0.5f)
-        .velocityMultiplier(0.4f)
-        .jumpVelocityMultiplier(0.0f)
+        .speedFactor(0.4f)
+        .jumpFactor(0.0f)
 ) {
-    override fun onLandedUpon(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
-        entity.handleFallDamage(fallDistance, 0.2f, world.damageSources.fall())
+    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
+        entity.causeFallDamage(fallDistance, 0.2f, world.damageSources().fall())
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoolSheetBlock::class.item(), 3)
                 .pattern("xxx")
                 .pattern("xxx")
@@ -319,11 +319,13 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
     Block(settings), SimpleWaterloggedBlock {
 
     init {
-        defaultState = defaultState
+        registerDefaultState(
+            defaultBlockState()
             .setValue(NORTH, false).setValue(SOUTH, false)
             .setValue(EAST, false).setValue(WEST, false)
             .setValue(UP, false).setValue(DOWN, false)
             .setValue(WATERLOGGED, false)
+        )
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -332,21 +334,21 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
-        val world = ctx.world
-        val pos = ctx.blockPos
+        val world = ctx.level
+        val pos = ctx.pos
         val fluidState = world.getFluidState(pos)
-        return defaultState
+        return defaultBlockState()
             .setValue(NORTH, canConnect(world, pos, Direction.NORTH))
             .setValue(SOUTH, canConnect(world, pos, Direction.SOUTH))
             .setValue(EAST, canConnect(world, pos, Direction.EAST))
             .setValue(WEST, canConnect(world, pos, Direction.WEST))
             .setValue(UP, canConnect(world, pos, Direction.UP))
             .setValue(DOWN, canConnect(world, pos, Direction.DOWN))
-            .setValue(WATERLOGGED, fluidState.fluid == Fluids.WATER)
+            .setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getStateForNeighborUpdate(
+    override fun updateShape(
         state: BlockState,
         direction: Direction,
         neighborState: BlockState,
@@ -356,7 +358,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
     ): BlockState {
         // 与原版含水方块一致：含水时调度水 tick，不在这里反推 WATERLOGGED。
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         return state.setValue(propertyFor(direction), canConnect(world, pos, direction))
     }
@@ -366,26 +368,26 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getFluidState(state: BlockState): FluidState =
-        if (state.getValue(WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
+        if (state.getValue(WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultFluidState()
 
-    override fun canFillWithFluid(world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canPlaceLiquid(player: Player?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.getValue(WATERLOGGED) && fluid == Fluids.WATER
 
-    override fun tryFillWithFluid(
+    override fun placeLiquid(
         world: LevelAccessor,
         pos: BlockPos,
         state: BlockState,
         fluidState: FluidState
     ): Boolean {
-        if (!canFillWithFluid(world, pos, state, fluidState.fluid)) return false
+        if (!canPlaceLiquid(null, world, pos, state, fluidState.getType())) return false
         if (!state.getValue(WATERLOGGED)) {
-            world.setBlock(pos, state.setValue(WATERLOGGED, true), Block.NOTIFY_ALL)
-            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.setBlock(pos, state.setValue(WATERLOGGED, true), Block.UPDATE_ALL)
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         return true
     }
 
-    override fun tryDrainFluid(world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
+    override fun pickupBlock(player: Player?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
 
     private fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction): Boolean {
         val neighborPos = pos.offset(direction)
@@ -407,14 +409,14 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         val east = Shapes.box(max, min, min, 1.0, max, max)
         val down = Shapes.box(min, 0.0, min, max, min, max)
         val up = Shapes.box(min, max, min, max, 1.0, max)
-        return stateManager.states.associateWith { state ->
+        return stateDefinition.possibleStates.associateWith { state ->
             var shape = center
-            if (state.getValue(NORTH)) shape = Shapes.union(shape, north)
-            if (state.getValue(SOUTH)) shape = Shapes.union(shape, south)
-            if (state.getValue(WEST)) shape = Shapes.union(shape, west)
-            if (state.getValue(EAST)) shape = Shapes.union(shape, east)
-            if (state.getValue(DOWN)) shape = Shapes.union(shape, down)
-            if (state.getValue(UP)) shape = Shapes.union(shape, up)
+            if (state.getValue(NORTH)) shape = Shapes.or(shape, north)
+            if (state.getValue(SOUTH)) shape = Shapes.or(shape, south)
+            if (state.getValue(WEST)) shape = Shapes.or(shape, west)
+            if (state.getValue(EAST)) shape = Shapes.or(shape, east)
+            if (state.getValue(DOWN)) shape = Shapes.or(shape, down)
+            if (state.getValue(UP)) shape = Shapes.or(shape, up)
             shape
         }
     }
@@ -424,11 +426,11 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         shapeCache[state]!!
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getOutlineShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape =
+    override fun getShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape =
         shapeCache[state]!!
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getCullingShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape =
+    override fun getOcclusionShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape =
         Shapes.empty()
 
     companion object {
@@ -450,7 +452,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ironPlate = IronPlate::class.instance()
             val treetap = Treetap::class.instance()
             ConsumeTreetapShapedRecipeDatagen.offer(
@@ -532,23 +534,23 @@ abstract class Ic2ScaffoldBlock(
 
     /** IC2 脚手架始终竖直放置，不跟随点击面或玩家朝向旋转。 */
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState =
-        defaultState.setValue(AXIS, Direction.Axis.Y)
+        defaultBlockState().setValue(AXIS, Direction.Axis.Y)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getOutlineShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape =
-        if (context.isHolding(state.block.asItem())) {
-            Shapes.fullCube()
+    override fun getShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape =
+        if (context.isHoldingItem(state.block.asItem())) {
+            Shapes.block()
         } else {
             if (isBottom(state, world, pos)) BOTTOM_OUTLINE_SHAPE else NORMAL_OUTLINE_SHAPE
         }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getRaycastShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape =
-        Shapes.fullCube()
+    override fun getVisualShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape =
+        Shapes.block()
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getCollisionShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape {
-        if (context.isAbove(Shapes.fullCube(), pos, true) && !context.isDescending) {
+        if (context.isAbove(Shapes.block(), pos, true) && !context.isDescending) {
             return NORMAL_OUTLINE_SHAPE
         }
         return if (isBottom(state, world, pos) && context.isAbove(OUTLINE_SHAPE, pos, true)) {
@@ -559,13 +561,13 @@ abstract class Ic2ScaffoldBlock(
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
-        super.onBlockAdded(state, world, pos, oldState, notify)
-        if (!world.isClient) world.scheduleBlockTick(pos, this, 1)
+    override fun onPlace(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+        super.onPlace(state, world, pos, oldState, notify)
+        if (!world.isClient) world.scheduleTick(pos, this, 1)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getStateForNeighborUpdate(
+    override fun updateShape(
         state: BlockState,
         direction: Direction,
         neighborState: BlockState,
@@ -573,12 +575,12 @@ abstract class Ic2ScaffoldBlock(
         pos: BlockPos,
         neighborPos: BlockPos,
     ): BlockState {
-        if (!world.isClient) world.scheduleBlockTick(pos, this, 1)
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
+        if (!world.isClient) world.scheduleTick(pos, this, 1)
+        return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun neighborUpdate(
+    override fun neighborChanged(
         state: BlockState,
         world: Level,
         pos: BlockPos,
@@ -586,8 +588,8 @@ abstract class Ic2ScaffoldBlock(
         sourcePos: BlockPos,
         notify: Boolean,
     ) {
-        super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
-        if (!world.isClient) world.scheduleBlockTick(pos, this, 1)
+        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
+        if (!world.isClient) world.scheduleTick(pos, this, 1)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -600,42 +602,42 @@ abstract class Ic2ScaffoldBlock(
         if (random.nextInt(8) == 0) checkSupport(world, pos)
     }
 
-    override fun canPlaceAt(state: BlockState, world: net.minecraft.world.level.LevelReader, pos: BlockPos): Boolean =
+    override fun canSurvive(state: BlockState, world: net.minecraft.world.level.LevelReader, pos: BlockPos): Boolean =
         hasSupportForPlacement(world, pos)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
-        if (world.isClient) return InteractionResult.SUCCESS
+        if (world.isClientSide) return InteractionResult.SUCCESS
         if (player.isCrouching || !isVerticalPillar(world, pos)) return InteractionResult.PASS
 
-        val stack = player.getItemInHand(hand)
+        val stack = player.getItemInHand(player.usedItemHand)
         val target: BlockState
         val required: Int
         val sound: net.minecraft.sounds.SoundEvent
         when (this) {
             is WoodenScaffoldBlock -> {
-                target = ReinforcedWoodenScaffoldBlock::class.instance().defaultBlockState.setValue(AXIS, state.getValue(AXIS))
+                target = ReinforcedWoodenScaffoldBlock::class.instance().defaultBlockState().setValue(AXIS, state.getValue(AXIS))
                 required = 2
                 if (!stack.`is`(Items.STICK) || stack.count < required) return InteractionResult.PASS
-                sound = SoundEvents.BLOCK_WOOD_PLACE
+                sound = SoundEvents.WOOD_PLACE
             }
             is IronScaffoldBlock -> {
-                target = ReinforcedIronScaffoldBlock::class.instance().defaultBlockState.setValue(AXIS, state.getValue(AXIS))
+                target = ReinforcedIronScaffoldBlock::class.instance().defaultBlockState().setValue(AXIS, state.getValue(AXIS))
                 required = 1
                 if (!stack.`is`(IronFenceBlock::class.item())) return InteractionResult.PASS
-                sound = SoundEvents.BLOCK_METAL_PLACE
+                sound = SoundEvents.METAL_PLACE
             }
             else -> return InteractionResult.PASS
         }
 
-        world.setBlock(pos, target, Block.NOTIFY_ALL)
+        world.setBlock(pos, target, Block.UPDATE_ALL)
         world.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f)
-        if (!player.abilities.creativeMode) stack.shrink(required)
+        if (!player.abilities.instabuild) stack.shrink(required)
         return InteractionResult.CONSUME
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getDroppedStacks(state: BlockState, builder: LootParams.Builder): MutableList<ItemStack> =
+    override fun getDrops(state: BlockState, builder: LootParams.Builder): MutableList<ItemStack> =
         when (this) {
             is ReinforcedWoodenScaffoldBlock -> mutableListOf(
                 ItemStack(WoodenScaffoldBlock::class.item()),
@@ -649,10 +651,10 @@ abstract class Ic2ScaffoldBlock(
         }
 
     private fun isBottom(state: BlockState, world: BlockGetter, pos: BlockPos): Boolean =
-        !isScaffold(world.getBlockState(pos.down()).block)
+        !isScaffold(world.getBlockState(pos.below()).block)
 
     private fun hasSupportForPlacement(world: BlockGetter, pos: BlockPos): Boolean {
-        val below = pos.down()
+        val below = pos.below()
         if (isSolidFoundation(world, below)) return true
 
         if (isScaffold(world.getBlockState(below).block)) {
@@ -670,7 +672,7 @@ abstract class Ic2ScaffoldBlock(
 
     private fun isVerticalPillar(world: Level, pos: BlockPos): Boolean {
         var cursor = pos
-        while (isScaffold(world.getBlockState(cursor).block)) cursor = cursor.down()
+        while (isScaffold(world.getBlockState(cursor).block)) cursor = cursor.below()
         return world.getBlockState(cursor).isSideSolidFullSquare(world, cursor, Direction.UP)
     }
 
@@ -682,8 +684,8 @@ abstract class Ic2ScaffoldBlock(
             if ((support[pos] ?: -1) >= 0) continue
             val state = world.getBlockState(pos)
             if (!isScaffold(state.block)) continue
-            Block.dropStacks(state, world, pos)
-            world.setBlock(pos, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
+            Block.dropResources(state, world, pos)
+            world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)
         }
     }
 
@@ -724,7 +726,7 @@ abstract class Ic2ScaffoldBlock(
             for (pos in component) {
                 val block = world.getBlockState(pos).block as? Ic2ScaffoldBlock ?: continue
                 var best = support[pos] ?: -1
-                val below = pos.down()
+                val below = pos.below()
                 if (isSolidFoundation(world, below)) {
                     best = maxOf(best, block.supportStrength)
                 }
@@ -758,7 +760,7 @@ abstract class Ic2ScaffoldBlock(
 
     companion object {
         private val COLLISION_SHAPE: VoxelShape = Shapes.box(0.0, 0.0, 0.0, 16.0, 2.0, 16.0)
-        private val OUTLINE_SHAPE: VoxelShape = Shapes.fullCube().offset(0.0, -1.0, 0.0)
+        private val OUTLINE_SHAPE: VoxelShape = Shapes.block().offset(0.0, -1.0, 0.0)
         private val NORMAL_OUTLINE_SHAPE: VoxelShape
         private val BOTTOM_OUTLINE_SHAPE: VoxelShape
 
@@ -768,12 +770,12 @@ abstract class Ic2ScaffoldBlock(
             val cornerB = Shapes.box(14.0, 0.0, 0.0, 16.0, 16.0, 2.0)
             val cornerC = Shapes.box(0.0, 0.0, 14.0, 2.0, 16.0, 16.0)
             val cornerD = Shapes.box(14.0, 0.0, 14.0, 16.0, 16.0, 16.0)
-            NORMAL_OUTLINE_SHAPE = Shapes.union(top, cornerA, cornerB, cornerC, cornerD)
+            NORMAL_OUTLINE_SHAPE = Shapes.or(top, cornerA, cornerB, cornerC, cornerD)
             val edgeA = Shapes.box(0.0, 0.0, 0.0, 2.0, 2.0, 16.0)
             val edgeB = Shapes.box(14.0, 0.0, 0.0, 16.0, 2.0, 16.0)
             val edgeC = Shapes.box(0.0, 0.0, 14.0, 16.0, 2.0, 16.0)
             val edgeD = Shapes.box(0.0, 0.0, 0.0, 16.0, 2.0, 2.0)
-            BOTTOM_OUTLINE_SHAPE = Shapes.union(COLLISION_SHAPE, NORMAL_OUTLINE_SHAPE, edgeA, edgeB, edgeC, edgeD)
+            BOTTOM_OUTLINE_SHAPE = Shapes.or(COLLISION_SHAPE, NORMAL_OUTLINE_SHAPE, edgeA, edgeB, edgeC, edgeD)
         }
     }
 }
@@ -791,7 +793,7 @@ class WoodenScaffoldBlock(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoodenScaffoldBlock::class.item(), 4)
                 .pattern("PPP")
                 .pattern(" S ")
@@ -828,7 +830,7 @@ class IronScaffoldBlock(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ironPlate = IronPlate::class.instance()
             val ironFence = IronFenceBlock::class.item()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronScaffoldBlock::class.item(), 16)

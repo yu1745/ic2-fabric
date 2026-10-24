@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.cachedState
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
@@ -36,7 +40,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.nbt.NbtOps
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.network.chat.Component
@@ -68,7 +72,7 @@ class SteamGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), IHeatConsumer, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SteamGeneratorBlock.ACTIVE
     override val tier: Int = 2
@@ -182,14 +186,18 @@ class SteamGeneratorBlockEntity(
         }
 
         /** NBT 恢复 */
-        fun readFromNbt(nbt: CompoundTag) {
-            variant = FluidVariant.fromNbt(nbt.getCompound("variant"))
+        fun readFromNbt(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+            // TODO(1.21.1): FluidVariant.fromNbt 在 fabric-api 1.21.1 已移除，改用 CODEC + RegistryOps 解析。
+            variant = FluidVariant.CODEC.parse(lookup.createSerializationContext(NbtOps.INSTANCE), nbt.getCompound("variant"))
+                .result().orElse(FluidVariant.blank())
             amount = nbt.getLong("amount")
         }
 
         /** NBT 保存 */
-        fun writeToNbt(): CompoundTag = CompoundTag().also {
-            it.put("variant", variant.toNbt())
+        fun writeToNbt(lookup: HolderLookup.Provider): CompoundTag = CompoundTag().also {
+            // TODO(1.21.1): FluidVariant.toNbt 在 fabric-api 1.21.1 已移除，改用 CODEC + RegistryOps 编码。
+            it.put("variant", FluidVariant.CODEC.encodeStart(lookup.createSerializationContext(NbtOps.INSTANCE), variant)
+                .result().orElse(CompoundTag()))
             it.putLong("amount", amount)
         }
     }
@@ -243,14 +251,18 @@ class SteamGeneratorBlockEntity(
         }
 
         /** NBT 恢复 */
-        fun readFromNbt(nbt: CompoundTag) {
-            variant = FluidVariant.fromNbt(nbt.getCompound("variant"))
+        fun readFromNbt(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+            // TODO(1.21.1): FluidVariant.fromNbt 在 fabric-api 1.21.1 已移除，改用 CODEC + RegistryOps 解析。
+            variant = FluidVariant.CODEC.parse(lookup.createSerializationContext(NbtOps.INSTANCE), nbt.getCompound("variant"))
+                .result().orElse(FluidVariant.blank())
             amount = nbt.getLong("amount")
         }
 
         /** NBT 保存 */
-        fun writeToNbt(): CompoundTag = CompoundTag().also {
-            it.put("variant", variant.toNbt())
+        fun writeToNbt(lookup: HolderLookup.Provider): CompoundTag = CompoundTag().also {
+            // TODO(1.21.1): FluidVariant.toNbt 在 fabric-api 1.21.1 已移除，改用 CODEC + RegistryOps 编码。
+            it.put("variant", FluidVariant.CODEC.encodeStart(lookup.createSerializationContext(NbtOps.INSTANCE), variant)
+                .result().orElse(CompoundTag()))
             it.putLong("amount", amount)
         }
     }
@@ -305,7 +317,7 @@ class SteamGeneratorBlockEntity(
     // ==== IHeatConsumer — 六面均可输入热量 ====
 
     override fun getHeatTransferFace(): Direction {
-        return cachedState.getOrEmpty(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)
+        return cachedState.getOptionalValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)
             .orElse(Direction.NORTH)
     }
 
@@ -322,9 +334,11 @@ class SteamGeneratorBlockEntity(
 
     // ==== AbstractContainerMenu ====
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.steam_generator")
@@ -348,8 +362,8 @@ class SteamGeneratorBlockEntity(
         sync.inputMB = nbt.getInt(NBT_INPUT_MB).coerceIn(0, 1000)
         sync.pressure = nbt.getInt(NBT_PRESSURE).coerceIn(0, SteamGeneratorSync.MAX_PRESSURE)
 
-        if (nbt.hasProperty(NBT_WATER_TANK)) waterTank.readFromNbt(nbt.getCompound(NBT_WATER_TANK))
-        if (nbt.hasProperty(NBT_STEAM_TANK)) steamTank.readFromNbt(nbt.getCompound(NBT_STEAM_TANK))
+        if (nbt.contains(NBT_WATER_TANK)) waterTank.readFromNbt(nbt.getCompound(NBT_WATER_TANK), lookup)
+        if (nbt.contains(NBT_STEAM_TANK)) steamTank.readFromNbt(nbt.getCompound(NBT_STEAM_TANK), lookup)
         sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
         sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.calcification = calcification.coerceIn(0L, SteamGeneratorSync.MAX_CALCIFICATION).toInt()
@@ -363,8 +377,8 @@ class SteamGeneratorBlockEntity(
         nbt.putInt(NBT_INPUT_MB, sync.inputMB)
         nbt.putInt(NBT_PRESSURE, sync.pressure)
 
-        nbt.put(NBT_WATER_TANK, waterTank.writeToNbt())
-        nbt.put(NBT_STEAM_TANK, steamTank.writeToNbt())
+        nbt.put(NBT_WATER_TANK, waterTank.writeToNbt(lookup))
+        nbt.put(NBT_STEAM_TANK, steamTank.writeToNbt(lookup))
     }
 
     // ==== Tick ====
@@ -385,7 +399,7 @@ class SteamGeneratorBlockEntity(
             val steamVariant = steamTank.variant
             for (side in Direction.entries) {
                 if (steamTank.amount <= 0L) break
-                val neighborStorage = FluidStorage.SIDED.find(world, pos.offset(side), side.opposite) ?: continue
+                val neighborStorage = FluidStorage.SIDED.find(world, pos.relative(side), side.opposite) ?: continue
                 if (!neighborStorage.supportsInsertion()) continue
                 Transaction.openOuter().use { tx ->
                     val accepted = neighborStorage.insert(steamVariant, steamTank.amount, tx)
@@ -414,8 +428,8 @@ class SteamGeneratorBlockEntity(
             if (world.random.nextInt(10) == 0) {
                 // debugSteamExplodedDroplets += leftoverSteam
                 if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
-                    world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                        1f, Level.ExplosionSourceType.NONE)
+                    world.explode(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                        1f, Level.ExplosionInteraction.NONE)
                 }
             } else {
                 val recoveredDroplets = leftoverSteam / SteamGeneratorSync.STEAM_EXPANSION
@@ -478,7 +492,7 @@ class SteamGeneratorBlockEntity(
                         var ejected = 0L
                         for (side in Direction.entries) {
                             if (ejected >= droplets) break
-                            val neighborStorage = FluidStorage.SIDED.find(world, pos.offset(side), side.opposite)
+                            val neighborStorage = FluidStorage.SIDED.find(world, pos.relative(side), side.opposite)
                             if (neighborStorage != null && neighborStorage.supportsInsertion()) {
                                 val remaining = droplets - ejected
                                 Transaction.openOuter().use { tx ->
@@ -560,8 +574,8 @@ class SteamGeneratorBlockEntity(
         // 4. 超温爆炸 — 对齐 ic2_origin heatup(): >500°C 必爆, 半径 10, 不毁地形
         if (systemHeatMilli > SteamGeneratorSync.MAX_SYSTEM_HEAT_MILLI) {
             if (ClaimProtection.explosionCubeAllowed(world, pos, 10f, null)) {
-                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                    10f, Level.ExplosionSourceType.NONE)
+                world.explode(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                    10f, Level.ExplosionInteraction.NONE)
             }
         }
 
@@ -620,7 +634,7 @@ class SteamGeneratorBlockEntity(
 
     /** 获取群系温度（milli-°C），对齐 ic2_origin BiomeUtil.getBiomeTemperature */
     private fun getBiomeTemperatureMilli(world: Level, pos: BlockPos): Long {
-        val temp = world.getBiome(pos).value().temperature  // temp 是 base biome temperature
+        val temp = world.getBiome(pos).value().baseTemperature  // temp 是 base biome temperature
         return when {
             temp >= 0.8f -> 45_000L  // 炎热群系 (沙漠/热带)
             temp <= 0.3f -> 0L        // 寒冷群系 (雪原/冰原)

@@ -46,7 +46,7 @@ class ReplicatorScreenHandler(
     )
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
@@ -93,13 +93,13 @@ class ReplicatorScreenHandler(
     private fun deriveSpec(beSlot: Int) = itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? ReplicatorBlockEntity ?: return@get
+        context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? ReplicatorBlockEntity ?: return@evaluate false
             when (id) {
                 BUTTON_CANCEL -> be.cancelWork()
                 BUTTON_MODE_SINGLE -> be.setSingleMode()
                 BUTTON_MODE_REPEAT -> be.setRepeatMode()
-                else -> return@get
+                else -> return@evaluate false
             }
         }, false)
         return id == BUTTON_CANCEL || id == BUTTON_MODE_SINGLE || id == BUTTON_MODE_REPEAT
@@ -129,7 +129,7 @@ class ReplicatorScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
         }
@@ -137,7 +137,7 @@ class ReplicatorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is ReplicatorBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -162,7 +162,7 @@ class ReplicatorScreenHandler(
             val propertyCount = buf.readVarInt()
             return ReplicatorScreenHandler(
                 syncId, playerInventory, SimpleContainer(ReplicatorBlockEntity.INVENTORY_SIZE),
-                pos, ContainerLevelAccess.create(playerInventory.player.world, pos),
+                pos, ContainerLevelAccess.create(playerInventory.player.level(), pos),
                 SimpleContainerData(propertyCount)
             )
         }

@@ -41,7 +41,7 @@ class TeleporterScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     init {
@@ -71,8 +71,8 @@ class TeleporterScreenHandler(
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id != BUTTON_ID_RANGE_1 && id != BUTTON_ID_RANGE_3) return false
-        context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? TeleporterBlockEntity ?: return@get
+        context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? TeleporterBlockEntity ?: return@evaluate
             val next = if (id == BUTTON_ID_RANGE_3) {
                 TeleporterBlockEntity.TELEPORT_RANGE_MAX
             } else {
@@ -93,7 +93,7 @@ class TeleporterScreenHandler(
             when {
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage
@@ -110,7 +110,7 @@ class TeleporterScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
         }
@@ -118,7 +118,7 @@ class TeleporterScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is TeleporterBlock && player.distanceToSqr(
                 pos.x + 0.5,
                 pos.y + 0.5,
@@ -127,7 +127,7 @@ class TeleporterScreenHandler(
         }, true)
 
     fun getUpgradeTooltips(): List<McText> {
-        val be = context.get({ world, pos -> world.getBlockEntity(pos) }, null)
+        val be = context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null)
         return buildList {
             add(McText.literal("可支持的升级"))
             if (be is IOverclockerUpgradeSupport) add(McText.literal("超频升级"))

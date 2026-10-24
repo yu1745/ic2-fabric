@@ -6,6 +6,7 @@ import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.recipes.ModTags
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import java.util.function.Consumer
@@ -129,43 +130,18 @@ object MetalFormerRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            MetalFormerRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "metal_forming/${entry.mode.name.lowercase()}/${entry.name}"),
-                input = entry.input,
-                outputItem = entry.output,
-                outputCount = entry.outputCount,
-                mode = entry.mode
-            ).also(exporter::accept)
+            val recipeId = ResourceLocation.fromNamespaceAndPath(
+                "ic2_120", "metal_forming/${entry.mode.name.lowercase()}/${entry.name}"
+            )
+            val output = ItemStack(entry.output, entry.outputCount)
+            val recipe: MetalFormerRecipe = when (entry.mode) {
+                Mode.ROLLING -> RollingRecipe(recipeId, entry.input.toIngredient(), output)
+                Mode.CUTTING -> CuttingRecipe(recipeId, entry.input.toIngredient(), output)
+                Mode.EXTRUDING -> ExtrudingRecipe(recipeId, entry.input.toIngredient(), output)
+            }
+            exporter.accept(recipeId, recipe, null)
         }
-    }
-
-    private class MetalFormerRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: IngredientInput,
-        private val outputItem: Item,
-        private val outputCount: Int,
-        private val mode: Mode
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "ic2_120:metal_forming")
-            json.add("ingredient", input.toJson())
-
-            val result = JsonObject()
-            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-
-            json.addProperty("mode", mode.name.lowercase())
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(MetalFormerRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

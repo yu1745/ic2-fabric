@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -34,7 +39,6 @@ import net.minecraft.world.level.Level
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import net.minecraft.core.HolderLookup
 import net.minecraft.network.FriendlyByteBuf
 import io.netty.buffer.Unpooled
 
@@ -108,7 +112,7 @@ open class TransformerBlockEntity(
     override fun getScreenOpeningData(player: net.minecraft.server.level.ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+        buf.writeVarInt(syncedData.size)
         buf.writeVarInt(transformerTier)  // 传递变压器等级到客户端
         return buf
     }
@@ -135,8 +139,8 @@ open class TransformerBlockEntity(
         )
     }
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(TransformerSync.NBT_ENERGY_STORED).coerceIn(0L, sync.capacity)
         sync.syncCommittedAmount()
@@ -144,8 +148,8 @@ open class TransformerBlockEntity(
         sync.setMode(TransformerSync.Mode.fromId(nbt.getInt(TransformerSync.NBT_MODE)))
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(TransformerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(TransformerSync.NBT_MODE, sync.mode)
@@ -185,7 +189,7 @@ open class TransformerBlockEntity(
         val isActive = sync.amount > 0
 
         if (wasActive != isActive) {
-            world.setBlock(pos, state.setValue(TransformerBlock.ACTIVE, isActive))
+            world.setBlockAndUpdate(pos, state.setValue(TransformerBlock.ACTIVE, isActive))
         }
 
         // 调试日志：记录能量流动

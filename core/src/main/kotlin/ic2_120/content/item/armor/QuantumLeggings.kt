@@ -1,5 +1,7 @@
 package ic2_120.content.item.armor
 
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.config.Ic2Config
 import ic2_120.content.block.MachineCasingBlock
 import ic2_120.content.item.IridiumPlate
@@ -18,9 +20,9 @@ import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import java.util.function.Consumer
 
 /**
  * 量子护腿 (Quantum Leggings)
@@ -47,7 +49,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_leggings", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.LEGGINGS, Item.Properties().maxStackSize(1)) {
+class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.LEGGINGS, Item.Properties().stacksTo(1)) {
 
     companion object {
         private const val SPEED_TIER_KEY = "SpeedTier"
@@ -113,7 +115,7 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val casing = MachineCasingBlock::class.item()
             val lapotron = LapotronCrystalItem::class.instance()
             val iridium = IridiumPlate::class.instance()
@@ -136,8 +138,8 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendHoverText(stack, context, tooltip, type)
         val tier = stack.orCreateNbt.getInt(SPEED_TIER_KEY)
         val energy = getEnergy(stack)
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {

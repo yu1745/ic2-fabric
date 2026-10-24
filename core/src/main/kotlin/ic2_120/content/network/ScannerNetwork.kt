@@ -29,7 +29,7 @@ class ScannerResultPacket(
     companion object {
         val ID = CustomPacketPayload.Type<ScannerResultPacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "scanner_result"))
         val CODEC: StreamCodec<FriendlyByteBuf, ScannerResultPacket> = StreamCodec.of(
-            { value, buf -> write(value, buf) },
+            { buf, value -> write(value, buf) },
             { read(it) }
         )
 
@@ -41,7 +41,7 @@ class ScannerResultPacket(
             val count = buf.readVarInt()
             val results = mutableListOf<OreScanEntry>()
             for (i in 0 until count) {
-                val blockId = buf.readString()
+                val blockId = buf.readUtf()
                 val oreCount = buf.readVarInt()
                 results.add(OreScanEntry(blockId, oreCount))
             }
@@ -55,7 +55,7 @@ class ScannerResultPacket(
             buf.writeVarInt(packet.maxUses)
             buf.writeVarInt(packet.results.size)
             for (entry in packet.results) {
-                buf.writeString(entry.blockId)
+                buf.writeUtf(entry.blockId)
                 buf.writeVarInt(entry.count)
             }
         }

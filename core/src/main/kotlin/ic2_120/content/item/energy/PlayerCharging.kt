@@ -41,10 +41,10 @@ fun chargePlayerInventory(player: Player, eu: Long): Long {
         }
     }
 
-    chargeStack(player.mainHandStack)
+    chargeStack(player.mainHandItem)
     for (target in player.inventory.armor) chargeStack(target)
-    for (i in 0..8) chargeStack(player.inventory.getStack(i))
-    for (i in 9 until player.inventory.main.size) chargeStack(player.inventory.getStack(i))
+    for (i in 0..8) chargeStack(player.inventory.getItem(i))
+    for (i in 9 until player.inventory.items.size) chargeStack(player.inventory.getItem(i))
 
     return charged
 }
@@ -114,10 +114,10 @@ fun chargePlayerInventoryPerItemLimit(
         }
     }
 
-    chargeStack(player.mainHandStack)
-    chargeStack(player.offHandStack)
+    chargeStack(player.mainHandItem)
+    chargeStack(player.offhandItem)
     for (target in player.inventory.armor) chargeStack(target)
-    for (i in 0 until player.inventory.main.size) chargeStack(player.inventory.getStack(i))
+    for (i in 0 until player.inventory.items.size) chargeStack(player.inventory.getItem(i))
 
     return charged
 }

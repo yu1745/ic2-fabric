@@ -21,10 +21,10 @@ object FluidFuelRegistry {
     fun isSupported(fluid: Fluid): Boolean = getProfile(fluid) != null
 
     fun getProfile(fluid: Fluid): FuelProfile? {
-        val state = fluid.defaultBlockState
+        val state = fluid.defaultFluidState()
         return when {
-            state.isIn(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) -> BIOFUEL_PROFILE
-            state.isIn(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT) -> CREOSOTE_PROFILE
+            state.`is`(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) -> BIOFUEL_PROFILE
+            state.`is`(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT) -> CREOSOTE_PROFILE
             else -> null
         }
     }

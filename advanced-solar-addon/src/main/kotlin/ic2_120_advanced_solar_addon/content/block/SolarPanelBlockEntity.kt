@@ -1,5 +1,9 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.core.HolderLookup
 import ic2_120_advanced_solar_addon.content.sync.SolarPanelSync
 import ic2_120_advanced_solar_addon.content.screen.SolarPanelScreenHandler
@@ -24,7 +28,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.server.level.ServerPlayer
@@ -57,7 +60,7 @@ abstract class SolarPanelBlockEntity(
      * 否则面板产得出、送不走，存满后浪费（积压）。产能速度不变。
      */
     val maxOutput: Long = ic2_120.content.energy.EnergyTier.euPerTickFromTier(tier)
-) : MachineBlockEntity(type, pos, state), IGenerator, ExtendedScreenHandlerFactory, Container {
+) : MachineBlockEntity(type, pos, state), IGenerator, ExtendedScreenHandlerFactory<FriendlyByteBuf>, Container {
 
     companion object {
         private const val CHARGE_SLOTS = 4
@@ -232,19 +235,19 @@ abstract class SolarPanelBlockEntity(
 
     // ====== Container interface ======
 
-    override fun size(): Int = CHARGE_SLOTS
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = CHARGE_SLOTS
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         setChanged()
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    // ====== ExtendedScreenHandlerFactory ======
+    // ====== ExtendedScreenHandlerFactory<FriendlyByteBuf> ======
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120_advanced_solar_addon.${getBlockName()}")
 
@@ -257,11 +260,13 @@ abstract class SolarPanelBlockEntity(
             itemStorage
         )
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        buf.writeVarInt(CHARGE_SLOTS)
-        buf.writeVarInt(tier)
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.getContainerSize())
+            buf.writeVarInt(CHARGE_SLOTS)
+            buf.writeVarInt(tier)
+        return buf
     }
 
     protected open fun getBlockName(): String = "advanced_solar_panel"

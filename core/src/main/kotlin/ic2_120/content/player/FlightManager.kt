@@ -1,5 +1,7 @@
 package ic2_120.content.player
 
+import ic2_120.compat.orCreateNbt
+
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.QuantumChestplate
@@ -39,7 +41,7 @@ object FlightManager {
     private val pendingResync = java.util.concurrent.ConcurrentHashMap.newKeySet<UUID>()
 
     fun tick(server: MinecraftServer) {
-        for (world in server.worlds) {
+        for (world in server.allLevels) {
             for (player in world.players) {
                 tickPlayer(player)
             }
@@ -74,7 +76,7 @@ object FlightManager {
         // 维度切换兜底：grantFlightPermission 在服务端 allowFlying 已为 true 时不会重发，
         // 这里强制补发一次，把客户端被 setAbilities(SURVIVAL) 抹掉的 allowFlying 同步回来。
         if (pendingResync.remove(player.uuid)) {
-            player.sendAbilitiesUpdate()
+            player.onUpdateAbilities()
         }
     }
 
@@ -89,15 +91,15 @@ object FlightManager {
     private fun grantFlightPermission(player: Player) {
         abilitySnapshots.getOrPut(player.uuid) {
             FlightAbilitySnapshot(
-                allowFlying = player.abilities.allowFlying,
+                allowFlying = player.abilities.mayfly,
                 flying = player.abilities.flying
             )
         }
 
-        if (player.abilities.allowFlying) return
+        if (player.abilities.mayfly) return
 
-        player.abilities.allowFlying = true
-        player.sendAbilitiesUpdate()
+        player.abilities.mayfly = true
+        player.onUpdateAbilities()
     }
 
     private fun restorePreviousFlightState(player: Player) {
@@ -108,12 +110,12 @@ object FlightManager {
             player.abilities.flying = snapshot.flying
             changed = true
         }
-        if (player.abilities.allowFlying != snapshot.allowFlying) {
-            player.abilities.allowFlying = snapshot.allowFlying
+        if (player.abilities.mayfly != snapshot.allowFlying) {
+            player.abilities.mayfly = snapshot.allowFlying
             changed = true
         }
         if (changed) {
-            player.sendAbilitiesUpdate()
+            player.onUpdateAbilities()
         }
     }
 

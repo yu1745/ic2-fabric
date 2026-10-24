@@ -127,12 +127,12 @@ class LeashKineticGeneratorBlockEntity(
 
         sync.hasAnimal = true
 
-        val mobPos = mob.pos
+        val mobPos = mob.position()
         val centerX = pos.x + 0.5
         val centerZ = pos.z + 0.5
         val dx = mobPos.x - centerX
         val dz = mobPos.z - centerZ
-        val dy = (mobPos.y + mob.getStandingEyeHeight()) - (pos.y + 1.5)
+        val dy = (mobPos.y + mob.getEyeHeight()) - (pos.y + 1.5)
         val horizontalDist = Math.sqrt(dx * dx + dz * dz)
         val leashLength = Math.sqrt(dx * dx + dy * dy + dz * dz)
 
@@ -221,19 +221,19 @@ class LeashKineticGeneratorBlockEntity(
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
-            world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
+            world.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS)
+            (world as? ServerLevel)?.chunkSource?.blockChanged(pos)
         }
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
-        if (nbt.containsUuid("LeashedMobUuid")) {
-            leashedMobUuid = nbt.getUuid("LeashedMobUuid")
+        if (nbt.hasUUID("LeashedMobUuid")) {
+            leashedMobUuid = nbt.getUUID("LeashedMobUuid")
         }
-        if (nbt.containsUuid("KnotUuid")) {
-            knotUuid = nbt.getUuid("KnotUuid")
+        if (nbt.hasUUID("KnotUuid")) {
+            knotUuid = nbt.getUUID("KnotUuid")
         }
         mobName = nbt.getString("MobName")
         syncedData.readNbt(nbt)
@@ -242,13 +242,13 @@ class LeashKineticGeneratorBlockEntity(
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
         nbt.putInt("PendingKu", pendingOutputKu)
-        leashedMobUuid?.let { nbt.putUuid("LeashedMobUuid", it) }
-        knotUuid?.let { nbt.putUuid("KnotUuid", it) }
+        leashedMobUuid?.let { nbt.putUUID("LeashedMobUuid", it) }
+        knotUuid?.let { nbt.putUUID("KnotUuid", it) }
         nbt.putString("MobName", mobName)
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
+    override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveWithFullMetadata(lookup)
 
-    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
+    override fun getUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
 }

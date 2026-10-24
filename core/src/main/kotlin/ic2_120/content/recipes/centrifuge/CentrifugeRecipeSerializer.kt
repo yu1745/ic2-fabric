@@ -1,5 +1,8 @@
 package ic2_120.content.recipes.centrifuge
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.recipes.RecipeCodecBridge
 
 import net.minecraft.network.codec.StreamCodec
@@ -37,22 +40,22 @@ import net.minecraft.util.GsonHelper
 @ModMachineRecipe(id = "centrifuging", recipeClass = CentrifugeRecipe::class)
 object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
     private fun fromJson(id: ResourceLocation, json: JsonObject): CentrifugeRecipe {
-        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
-        val inputCount = GsonHelper.getInt(json, "input_count", 1)
-        val minHeat = GsonHelper.getInt(json, "min_heat")
+        val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
+        val inputCount = (if (json.has("input_count")) json.get("input_count").asInt else 1)
+        val minHeat = json.get("min_heat").asInt
 
-        val resultsArray = GsonHelper.getArray(json, "results")
+        val resultsArray = json.getAsJsonArray("results")
         val outputs = mutableListOf<ItemStack>()
 
         resultsArray.forEach { element ->
             val resultObj = element.asJsonObject
-            val itemId = ResourceLocation.parse(GsonHelper.getString(resultObj, "item"))
+            val itemId = ResourceLocation.parse(resultObj.get("item").asString)
             val item = BuiltInRegistries.ITEM.get(itemId)
-            val count = GsonHelper.getInt(resultObj, "count", 1)
+            val count = (if (resultObj.has("count")) resultObj.get("count").asInt else 1)
             outputs.add(ItemStack(item, count))
         }
 
-        return CentrifugeRecipe(id, ingredient, inputCount, minHeat, outputs)
+        return CentrifugeRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, inputCount, minHeat, outputs)
     }
 
     private fun read(buf: RegistryFriendlyByteBuf): CentrifugeRecipe {
@@ -64,23 +67,22 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
         val outputs = mutableListOf<ItemStack>()
 
         repeat(outputCount) {
-            outputs.add(bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf))
+            outputs.add(ItemStack.OPTIONAL_STREAM_CODEC.decode(buf))
         }
 
-        return CentrifugeRecipe(id, ingredient, inputCount, minHeat, outputs)
+        return CentrifugeRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, inputCount, minHeat, outputs)
     }
 
-    private fun write(buf: FriendlyByteBuf, recipe: CentrifugeRecipe) {
+    private fun write(buf: RegistryFriendlyByteBuf, recipe: CentrifugeRecipe) {
         Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
         buf.writeVarInt(recipe.inputCount)
         buf.writeVarInt(recipe.minHeat)
 
         buf.writeVarInt(recipe.outputs.size)
         recipe.outputs.forEach { output ->
-            bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, output.copy())
+            ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, output.copy())
         }
     }
-}
 
     override fun codec(): MapCodec<CentrifugeRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:centrifuging",
@@ -90,3 +92,4 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, CentrifugeRecipe> =
         StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })
+}

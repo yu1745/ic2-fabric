@@ -45,7 +45,7 @@ enum class CropType(private val id: String) : StringRepresentable {
     VENOMILIA("venomilia"),
     WHEAT("wheat");
 
-    override fun asString(): String = id
+    override fun getSerializedName(): String = id
 }
 
 data class CropStats(

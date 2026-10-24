@@ -1,5 +1,6 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.content.recipes.ModTags
@@ -31,7 +32,7 @@ class Uranium : Item(Item.Properties()) {
                 .pattern("XXX")
                 .define('X', Ingredient.of(ModTags.Compat.Items.INGOTS_URANIUM))
                 .define('O', SmallUranium235::class.instance())
-                .unlockedBy(has(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
+                .unlockedBy(getHasName(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
                 .save(exporter, Uranium::class.recipeId("1"))
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Uranium::class.instance(), 1)
                 .pattern("XXX")
@@ -39,7 +40,7 @@ class Uranium : Item(Item.Properties()) {
                 .pattern("XXX")
                 .define('X', Uranium238::class.instance())
                 .define('O', SmallUranium235::class.instance())
-                .unlockedBy(has(Uranium238::class.instance()), has(Uranium238::class.instance()))
+                .unlockedBy(getHasName(Uranium238::class.instance()), has(Uranium238::class.instance()))
                 .save(exporter, Uranium::class.recipeId("2"))
         }
     }
@@ -69,7 +70,7 @@ class Mox : Item(Item.Properties()) {
                 .pattern("XXX")
                 .define('X', Ingredient.of(ModTags.Compat.Items.INGOTS_URANIUM))
                 .define('O', Plutonium::class.instance())
-                .unlockedBy(has(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
+                .unlockedBy(getHasName(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
                 .save(exporter, Mox::class.recipeId("1"))
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Mox::class.instance(), 1)
                 .pattern("XXX")
@@ -77,7 +78,7 @@ class Mox : Item(Item.Properties()) {
                 .pattern("XXX")
                 .define('X', Uranium238::class.instance())
                 .define('O', Plutonium::class.instance())
-                .unlockedBy(has(Uranium238::class.instance()), has(Uranium238::class.instance()))
+                .unlockedBy(getHasName(Uranium238::class.instance()), has(Uranium238::class.instance()))
                 .save(exporter, Mox::class.recipeId("2"))
         }
     }
@@ -96,12 +97,12 @@ class SmallUranium235 : Item(Item.Properties()) {
                 .requires(SmallUranium235::class.instance()).requires(SmallUranium235::class.instance())
                 .requires(SmallUranium235::class.instance()).requires(SmallUranium235::class.instance())
                 .requires(SmallUranium235::class.instance()).unlockedBy(
-                    has(SmallUranium235::class.instance()), has(SmallUranium235::class.instance())
+                    getHasName(SmallUranium235::class.instance()), has(SmallUranium235::class.instance())
                 ).save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_uranium_235_to_uranium_235"))
             // 1 铀-235 -> 9 小撮
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SmallUranium235::class.instance(), 9)
                 .requires(Uranium235::class.instance())
-                .unlockedBy(has(Uranium235::class.instance()), has(Uranium235::class.instance()))
+                .unlockedBy(getHasName(Uranium235::class.instance()), has(Uranium235::class.instance()))
                 .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "uranium_235_to_small_uranium_235"))
         }
     }
@@ -120,12 +121,12 @@ class SmallUranium238 : Item(Item.Properties()) {
                 .requires(SmallUranium238::class.instance()).requires(SmallUranium238::class.instance())
                 .requires(SmallUranium238::class.instance()).requires(SmallUranium238::class.instance())
                 .requires(SmallUranium238::class.instance()).unlockedBy(
-                    has(SmallUranium238::class.instance()), has(SmallUranium238::class.instance())
+                    getHasName(SmallUranium238::class.instance()), has(SmallUranium238::class.instance())
                 ).save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_uranium_238_to_uranium_238"))
             // 1 铀-238 -> 9 小撮
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SmallUranium238::class.instance(), 9)
                 .requires(Uranium238::class.instance())
-                .unlockedBy(has(Uranium238::class.instance()), has(Uranium238::class.instance()))
+                .unlockedBy(getHasName(Uranium238::class.instance()), has(Uranium238::class.instance()))
                 .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "uranium_238_to_small_uranium_238"))
         }
     }
@@ -144,12 +145,12 @@ class SmallPlutonium : Item(Item.Properties()) {
                 .requires(SmallPlutonium::class.instance()).requires(SmallPlutonium::class.instance())
                 .requires(SmallPlutonium::class.instance()).requires(SmallPlutonium::class.instance())
                 .requires(SmallPlutonium::class.instance()).unlockedBy(
-                    has(SmallPlutonium::class.instance()), has(SmallPlutonium::class.instance())
+                    getHasName(SmallPlutonium::class.instance()), has(SmallPlutonium::class.instance())
                 ).save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_plutonium_to_plutonium"))
             // 1 钚 -> 9 小撮
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SmallPlutonium::class.instance(), 9)
                 .requires(Plutonium::class.instance())
-                .unlockedBy(has(Plutonium::class.instance()), has(Plutonium::class.instance()))
+                .unlockedBy(getHasName(Plutonium::class.instance()), has(Plutonium::class.instance()))
                 .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "plutonium_to_small_plutonium"))
         }
     }
@@ -177,7 +178,7 @@ class RtgPellet : Item(Item.Properties()) {
                 .pattern("XXX")
                 .define('X', DenseIronPlate::class.instance())
                 .define('O', Plutonium::class.instance())
-                .unlockedBy(has(DenseIronPlate::class.instance()), has(DenseIronPlate::class.instance()))
+                .unlockedBy(getHasName(DenseIronPlate::class.instance()), has(DenseIronPlate::class.instance()))
                 .save(exporter, RtgPellet::class.id())
         }
     }

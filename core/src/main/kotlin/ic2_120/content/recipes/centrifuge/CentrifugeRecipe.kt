@@ -1,5 +1,10 @@
 package ic2_120.content.recipes.centrifuge
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.content.recipes.ModMachineRecipes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.Ingredient
@@ -7,7 +12,6 @@ import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.crafting.RecipeInput
-import net.minecraft.core.HolderLookup
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.level.Level
 
@@ -24,17 +28,17 @@ class CentrifugeRecipe(
     }
 
     override fun matches(input: RecipeInput, world: Level): Boolean {
-        val stack = input.getStackInSlot(0)
+        val stack = input.getItem(0)
         return ingredient.test(stack) && stack.count >= inputCount
     }
 
-    override fun craft(input: RecipeInput, lookup: HolderLookup.WrapperLookup): ItemStack {
+    override fun assemble(input: RecipeInput, provider: HolderLookup.Provider): ItemStack {
         return outputs.first().copy()
     }
 
-    override fun fits(width: Int, height: Int): Boolean = true
+    override fun canCraftInDimensions(width: Int, height: Int): Boolean = true
 
-    override fun getResult(lookup: HolderLookup.WrapperLookup): ItemStack {
+    override fun getResultItem(provider: HolderLookup.Provider): ItemStack {
         return outputs.first().copy()
     }
 

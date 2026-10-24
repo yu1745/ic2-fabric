@@ -1,26 +1,28 @@
 package ic2_120.content.recipes.crafting
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.serialization.MapCodec
 import ic2_120.content.item.Cutter
 import ic2_120.content.item.ForgeHammer
 import ic2_120.content.item.Treetap
 import ic2_120.content.item.Wrench
 import ic2_120.registry.annotation.ModMachineRecipe
-import net.minecraft.data.recipes.RecipeOutput
-import net.minecraft.world.inventory.CraftingContainer
+import net.minecraft.core.HolderLookup
+import net.minecraft.core.NonNullList
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.RegistryFriendlyByteBuf
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.inventory.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.world.item.crafting.CraftingInput
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.ShapelessRecipe
-import net.minecraft.data.recipes.RecipeCategory
-import net.minecraft.core.RegistryAccess
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.core.NonNullList
-import java.util.function.Consumer
 
 /**
  * 工作台无序配方：合成时对 IC2 工具（锻造锤、切割机、木龙头、扳手）返回耐久-1 的本体，
@@ -29,23 +31,21 @@ import java.util.function.Consumer
  * 与 Item.getRecipeRemainder() 不同，该配方类型只在明确的合成路径中返回损伤工具，
  * 而不会在原版合并修复路径触发余物返回，从而避免无限刷物品漏洞。
  */
-class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
-    delegate.id,
-    delegate.group,
-    delegate.category,
-    delegate.getOutput(RegistryAccess.EMPTY),
-    delegate.ingredients
-) {
-    override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> {
-        val remainder = NonNullList.withSize(inventory.size(), ItemStack.EMPTY)
-        for (slot in 0 until inventory.size()) {
-            val stack = inventory.getStack(slot)
+class DamageToolShapelessRecipe(
+    private val recipeIngredients: List<Ingredient>,
+    result: ItemStack,
+    group: String = "",
+) : ShapelessRecipe(group, CraftingBookCategory.MISC, NonNullList.of(Ingredient.EMPTY, *recipeIngredients.toTypedArray()), result) {
+    override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
+        val remainder = NonNullList.withSize(input.getContainerSize(), ItemStack.EMPTY)
+        for (slot in 0 until input.getContainerSize()) {
+            val stack = input.getItem(slot)
             if (stack.isEmpty) continue
             val item = stack.item
             if (isDamageableCraftingTool(item)) {
                 val result = stack.copy()
-                if (result.damage < result.maxDamage - 1) {
-                    result.damage += 1
+                if (result.damageValue < result.maxDamage - 1) {
+                    result.damageValue += 1
                     remainder[slot] = result
                 }
                 // 已达最大耐久损耗时不返回（工具损坏）
@@ -64,93 +64,72 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
     }
 }
 
+fun decodeDamageToolShapelessJson(id: ResourceLocation, json: JsonObject): DamageToolShapelessRecipe {
+    val ingredients = json.getAsJsonArray("ingredients").map { INGREDIENT_CODEC_FROM(it) }
+    val resultObj = json.getAsJsonObject("result")
+    val resultItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(resultObj.get("item").asString))
+    val count = if (resultObj.has("count")) resultObj.get("count").asInt else 1
+    return DamageToolShapelessRecipe(ingredients, ItemStack(resultItem, count))
+}
+
+private fun INGREDIENT_CODEC_FROM(element: com.google.gson.JsonElement): Ingredient =
+    ic2_120.content.recipes.INGREDIENT_CODEC(element.asJsonObject)
+
+fun encodeDamageToolShapelessJson(json: JsonObject, recipe: DamageToolShapelessRecipe) {
+    json.addProperty("type", "ic2_120:damage_tool_shapeless")
+
+    val ingredientsArr = JsonArray()
+    for (ingredient in recipe.recipeIngredients) {
+        val obj = JsonObject()
+        val first = ingredient.items.firstOrNull()
+        obj.addProperty("item", first?.let { BuiltInRegistries.ITEM.getKey(it.item)?.toString() } ?: "minecraft:air")
+        ingredientsArr.add(obj)
+    }
+    json.add("ingredients", ingredientsArr)
+
+    val result = recipe.getResultItem(net.minecraft.core.RegistryAccess.EMPTY)
+    val resultObj = JsonObject()
+    BuiltInRegistries.ITEM.getKey(result.item)?.let { resultObj.addProperty("item", it.toString()) }
+    if (result.count > 1) resultObj.addProperty("count", result.count)
+    json.add("result", resultObj)
+}
+
 @ModMachineRecipe(id = "damage_tool_shapeless", recipeClass = DamageToolShapelessRecipe::class)
 object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapelessRecipe> {
-    override fun fromJson(id: ResourceLocation, json: JsonObject, lookup: HolderLookup.Provider): DamageToolShapelessRecipe {
-        val shapeless = RecipeSerializer.SHAPELESS.read(id, json)
-        return DamageToolShapelessRecipe(shapeless)
-    }
+    override fun codec(): MapCodec<DamageToolShapelessRecipe> = ic2_120.content.recipes.RecipeCodecBridge.jsonMapCodec(
+        "ic2_120:damage_tool_shapeless",
+        ::decodeDamageToolShapelessJson,
+        ::encodeDamageToolShapelessJson
+    )
 
-    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): DamageToolShapelessRecipe {
-        val shapeless = RecipeSerializer.SHAPELESS.read(id, buf)
-        return DamageToolShapelessRecipe(shapeless)
-    }
-
-    override fun write(buf: FriendlyByteBuf, recipe: DamageToolShapelessRecipe) {
-        RecipeSerializer.SHAPELESS.write(buf, recipe)
+    // TODO(1.21.1): 配方不走网络同步（双端各自读 datapack），流编解码仅做占位实现
+    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, DamageToolShapelessRecipe> {
+        val delegate = RecipeSerializer.SHAPELESS_RECIPE.streamCodec()
+        return StreamCodec.ofMember(
+            { buf: RegistryFriendlyByteBuf, recipe: DamageToolShapelessRecipe -> delegate.encode(buf, recipe) },
+            { _ ->
+                DamageToolShapelessRecipe(listOf(Ingredient.EMPTY), ItemStack.EMPTY)
+            }
+        )
     }
 }
 
 /**
  * 生成使用 damage_tool_shapeless 配方类型的无序合成配方 JSON。
- *
- * 用法示例（Kotlin datagen）：
- * ```
- * DamageToolShapelessRecipeDatagen.offer(
- *     exporter = exporter,
- *     recipeId = BronzePlate::class.id(),
- *     result = BronzePlate::class.instance(),
- *     resultCount = 1,
- *     ingredients = listOf(
- *         DamageToolShapelessRecipeDatagen.toolIngredient<ForgeHammer>(),
- *         Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
- *     ),
- *     category = "misc"
- * )
- * ```
  */
 object DamageToolShapelessRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeOutput>,
+        exporter: net.minecraft.data.recipes.RecipeOutput,
         recipeId: ResourceLocation,
         result: Item,
         resultCount: Int = 1,
         ingredients: List<Ingredient>,
         category: String = "misc"
     ) {
-        exporter.accept(
-            Provider(
-                recipeId = recipeId,
-                result = result,
-                resultCount = resultCount,
-                ingredients = ingredients,
-                category = category
-            )
-        )
+        val recipe = DamageToolShapelessRecipe(ingredients, ItemStack(result, resultCount))
+        exporter.accept(recipeId, recipe, null)
     }
 
     fun toolIngredient(tool: Item): Ingredient =
-        Ingredient.ofItems(tool)
-
-    private class Provider(
-        private val recipeId: ResourceLocation,
-        private val result: Item,
-        private val resultCount: Int,
-        private val ingredients: List<Ingredient>,
-        private val category: String
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "ic2_120:damage_tool_shapeless")
-            json.addProperty("category", category)
-
-            val ingredientsArr = JsonArray()
-            for (ingredient in ingredients) {
-                ingredientsArr.add(ingredient.toJson())
-            }
-            json.add("ingredients", ingredientsArr)
-
-            val resultObj = JsonObject()
-            resultObj.addProperty("item", BuiltInRegistries.ITEM.getId(result).toString())
-            if (resultCount > 1) resultObj.addProperty("count", resultCount)
-            json.add("result", resultObj)
-        }
-
-        override fun getSerializer(): RecipeSerializer<*> = DamageToolShapelessRecipeSerializer
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
-    }
+        Ingredient.of(tool)
 }

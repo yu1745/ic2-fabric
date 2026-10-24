@@ -10,7 +10,7 @@ object PipeNetworkManager {
     private val worldNetworks = mutableMapOf<ResourceKey<Level>, MutableSet<PipeNetwork>>()
 
     private fun mapFor(world: Level): MutableMap<Long, PipeNetwork> =
-        worldPosToNetwork.getOrPut(world.registryKey) { mutableMapOf() }
+        worldPosToNetwork.getOrPut(world.dimension()) { mutableMapOf() }
 
     fun getOrCreateNetwork(world: Level, pos: BlockPos): PipeNetwork {
         val map = mapFor(world)
@@ -43,8 +43,8 @@ object PipeNetworkManager {
             (world.getBlockEntity(current) as? PipeBlockEntity)?.network = network
 
             for (dir in Direction.entries) {
-                if (!state.get(BasePipeBlock.propertyFor(dir))) continue
-                val next = current.offset(dir)
+                if (!state.getValue(BasePipeBlock.propertyFor(dir))) continue
+                val next = current.relative(dir)
                 val nextLong = next.asLong()
                 if (nextLong in visited) continue
                 visited.add(nextLong)
@@ -56,40 +56,40 @@ object PipeNetworkManager {
             }
         }
 
-        val networks = worldNetworks.getOrPut(world.registryKey) { mutableSetOf() }
+        val networks = worldNetworks.getOrPut(world.dimension()) { mutableSetOf() }
         networks.removeAll(absorbedNetworks)
         networks.add(network)
         return network
     }
 
     fun invalidateAt(world: Level, pos: BlockPos) {
-        val map = worldPosToNetwork[world.registryKey] ?: return
+        val map = worldPosToNetwork[world.dimension()] ?: return
         val network = map[pos.asLong()] ?: return
-        worldNetworks[world.registryKey]?.remove(network)
+        worldNetworks[world.dimension()]?.remove(network)
         for (pipePos in network.pipes) {
             map.remove(pipePos)
-            (world.getBlockEntity(BlockPos.fromLong(pipePos)) as? PipeBlockEntity)?.network = null
+            (world.getBlockEntity(BlockPos.of(pipePos)) as? PipeBlockEntity)?.network = null
         }
     }
 
     fun invalidateConnectionCachesAt(world: Level, pos: BlockPos) {
-        val map = worldPosToNetwork[world.registryKey] ?: return
+        val map = worldPosToNetwork[world.dimension()] ?: return
         val network = map[pos.asLong()] ?: return
         network.invalidateConnectionCaches()
     }
 
     fun tickAllWorlds(server: net.minecraft.server.MinecraftServer) {
-        for (world in server.worlds) {
+        for (world in server.allLevels) {
             // Snapshot by network count so invalidation during transfer cannot
             // mutate the set being iterated. This replaces the old per-pipe
             // map scan and temporary deduplication set.
-            val networks = worldNetworks[world.registryKey]?.toList() ?: continue
+            val networks = worldNetworks[world.dimension()]?.toList() ?: continue
             for (network in networks) network.tickIfNeeded(world)
         }
     }
 
     fun onWorldUnload(world: Level) {
-        worldPosToNetwork.remove(world.registryKey)
-        worldNetworks.remove(world.registryKey)
+        worldPosToNetwork.remove(world.dimension())
+        worldNetworks.remove(world.dimension())
     }
 }

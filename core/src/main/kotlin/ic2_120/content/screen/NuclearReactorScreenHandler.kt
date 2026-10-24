@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import ic2_120.compat.world
 
 import ic2_120.compat.stack
@@ -137,7 +139,7 @@ class NuclearReactorScreenHandler(
             when {
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, playerInvStart, slots.size, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index in playerInvStart until slots.size -> {
                     val storage = itemStorage
@@ -151,7 +153,7 @@ class NuclearReactorScreenHandler(
                     if (!moveItemStackTo(stackInSlot, playerInvStart, slots.size, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -160,7 +162,7 @@ class NuclearReactorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is NuclearReactorBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
@@ -168,8 +170,8 @@ class NuclearReactorScreenHandler(
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id != BUTTON_ID_TOGGLE_LOCK) return false
-        context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? NuclearReactorBlockEntity ?: return@get
+        context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? NuclearReactorBlockEntity ?: return@evaluate
             be.toggleLayoutLock()
             // 发送锁数据同步包到客户端
             val packet = ReactorLayoutLockPacket(pos, be.lockedSlots.toMap())
@@ -221,10 +223,10 @@ class NuclearReactorScreenHandler(
             val lockedSlots = mutableMapOf<Int, Item>()
             for (i in 0 until lockSize) {
                 val slot = buf.readVarInt()
-                val item = BuiltInRegistries.ITEM.get(buf.readIdentifier())
+                val item = BuiltInRegistries.ITEM.get(buf.readResourceLocation())
                 lockedSlots[slot] = item
             }
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val blockInv = SimpleContainer(NuclearReactorBlockEntity.INVENTORY_SIZE)
             val reactor = playerInventory.player.world.getBlockEntity(pos) as? NuclearReactorBlockEntity
             // 将锁数据写入 client BE，供槽位 canInsert 和 Screen 虚影渲染使用

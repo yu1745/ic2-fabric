@@ -47,7 +47,7 @@ class UraniumOreBlock : Block(
 @ModBlock(name = "deepslate_lead_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS, materialTags = ["ores/lead"])
 class DeepslateLeadOreBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE)
-        .mapColor(MapColor.DEEPSLATE_GRAY)
+        .mapColor(MapColor.DEEPSLATE)
         .strength(4.5f, 3.0f)
         .sounds(SoundType.DEEPSLATE)
 )
@@ -56,7 +56,7 @@ class DeepslateLeadOreBlock : Block(
 @ModBlock(name = "deepslate_tin_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS, materialTags = ["ores/tin"])
 class DeepslateTinOreBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE)
-        .mapColor(MapColor.DEEPSLATE_GRAY)
+        .mapColor(MapColor.DEEPSLATE)
         .strength(4.5f, 3.0f)
         .sounds(SoundType.DEEPSLATE)
 )
@@ -65,7 +65,7 @@ class DeepslateTinOreBlock : Block(
 @ModBlock(name = "deepslate_uranium_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS, materialTags = ["ores/uranium"])
 class DeepslateUraniumOreBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE)
-        .mapColor(MapColor.DEEPSLATE_GRAY)
+        .mapColor(MapColor.DEEPSLATE)
         .strength(4.5f, 3.0f)
         .sounds(SoundType.DEEPSLATE)
 )

@@ -30,12 +30,12 @@ class PumpAttachmentScreenHandler(
 ) : AbstractContainerMenu(PumpAttachmentScreenHandler::class.type(), syncId) {
 
     constructor(syncId: Int, playerInventory: Inventory, be: PipeBlockEntity) :
-        this(syncId, playerInventory, be, ContainerLevelAccess.create(playerInventory.player.world, be.pos))
+        this(syncId, playerInventory, be, ContainerLevelAccess.create(playerInventory.player.level(), be.pos))
 
     init {
         addSlot(object : Slot(SimpleContainer(1), FILTER_SLOT, 80, 31) {
             override fun canInsert(stack: ItemStack): Boolean = false
-            override fun canTakeItems(playerEntity: Player): Boolean = false
+            override fun mayPickup(playerEntity: Player): Boolean = false
         })
 
         for (row in 0 until 3) {
@@ -62,9 +62,9 @@ class PumpAttachmentScreenHandler(
         return true
     }
 
-    override fun onSlotClick(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
+    override fun clicked(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
         if (slotIndex == FILTER_SLOT && actionType == ClickType.PICKUP) {
-            val cursor = cursorStack
+            val cursor = carried
             if (cursor.isEmpty || button == 1) {
                 blockEntity?.clearPumpFilter()
             } else {
@@ -75,21 +75,21 @@ class PumpAttachmentScreenHandler(
             }
             return
         }
-        super.onSlotClick(slotIndex, button, actionType, player)
+        super.clicked(slotIndex, button, actionType, player)
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is PumpAttachmentBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     /** 真实容器仅作为过滤样本；设置后放回背包，不占用过滤槽。 */
     private fun returnCursorToInventory() {
-        val returning = cursorStack.copy()
+        val returning = carried.copy()
         if (returning.isEmpty) return
         playerInventory.safeInsert(returning)
-        cursorStack = if (returning.isEmpty) ItemStack.EMPTY else returning
+        carried = if (returning.isEmpty) ItemStack.EMPTY else returning
     }
 
     companion object {

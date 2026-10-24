@@ -1,5 +1,12 @@
 package ic2_120.content.recipes
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
+import net.minecraft.core.registries.Registries
+
 import ic2_120.Ic2_120
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
@@ -21,12 +28,12 @@ import kotlin.reflect.KClass
  */
 class ModItemTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<net.minecraft.core.HolderLookup.WrapperLookup>,
+    registriesFuture: CompletableFuture<HolderLookup.Provider>,
 ) : FabricTagProvider.ItemTagProvider(output, registriesFuture) {
 
     private val compatPathsBuilt = mutableSetOf<String>()
 
-    override fun configure(registries: net.minecraft.core.HolderLookup.WrapperLookup) {
+    override fun configure(registries: HolderLookup.Provider) {
         for ((clazz, paths) in MaterialTagRegistry.itemEntries) {
             @Suppress("UNCHECKED_CAST")
             val item = (clazz as KClass<out Item>).instance()
@@ -51,7 +58,7 @@ class ModItemTagProvider(
                 val parts = tagId.split(":", limit = 2)
                 val namespace = parts[0]
                 val path = if (parts.size == 2) parts[1] else parts[0]
-                val tagKey = TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(namespace, path))
+                val tagKey = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(namespace, path))
                 getOrCreateTagBuilder(tagKey).add(item)
             }
         }
@@ -130,11 +137,11 @@ class ModItemTagProvider(
     }
 
     private fun cItem(path: String): TagKey<Item> =
-        TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", path))
+        TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", path))
 
     private fun forgeItem(path: String): TagKey<Item> =
-        TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("forge", path))
+        TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("forge", path))
 
     private fun compatItem(path: String): TagKey<Item> =
-        TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
+        TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
 }

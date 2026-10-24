@@ -28,7 +28,6 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.tags.ItemTags
-import java.util.function.Consumer
 
 /**
  * 反应堆访问接口。在反应堆结构内时，右键可打开反应堆 UI；Container 委托到对应的中心核反应堆。
@@ -59,7 +58,7 @@ class ReactorAccessHatchBlock(settings: BlockBehaviour.Properties = ReactorShell
         for (dx in -2..2) {
             for (dy in -2..2) {
                 for (dz in -2..2) {
-                    val reactorPos = pos.add(dx, dy, dz)
+                    val reactorPos = pos.offset(dx, dy, dz)
                     val be = world.getBlockEntity(reactorPos)
                     if (be is NuclearReactorBlockEntity && be.isPositionInStructure(pos)) {
                         player.openMenu(be)
@@ -73,7 +72,7 @@ class ReactorAccessHatchBlock(settings: BlockBehaviour.Properties = ReactorShell
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)

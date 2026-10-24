@@ -39,7 +39,7 @@ class LeashKineticGeneratorScreenHandler(
     override fun quickMoveStack(player: Player, index: Int): ItemStack = ItemStack.EMPTY
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is LeashKineticGeneratorBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)

@@ -1,5 +1,7 @@
 package ic2_120.content.block.energy
 
+import net.minecraft.core.registries.Registries
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -83,7 +85,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     private var boundaryEndpointCache: List<CachedEndpointLookup>? = null
 
     /** 端点强制重查相位（0..INTERVAL-1），把不同电网的全量重查分散到不同 tick。 */
-    private val endpointVerifyPhase: Int = kotlin.random.RandomSource.nextInt(ENDPOINT_VERIFY_INTERVAL)
+    private val endpointVerifyPhase: Int = java.util.concurrent.ThreadLocalRandom.current().nextInt(ENDPOINT_VERIFY_INTERVAL)
 
     /** provider 候选路径缓存（key = consumer entries + providers 签名），避免每 tick 重建+排序。 */
     private val providerCandidatesCacheByConsumer = mutableMapOf<String, List<ProviderPath>>()
@@ -295,9 +297,9 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         var maxY = Int.MIN_VALUE
         var maxZ = Int.MIN_VALUE
         for (cablePosLong in leakingCables) {
-            val x = BlockPos.unpackLongX(cablePosLong)
-            val y = BlockPos.unpackLongY(cablePosLong)
-            val z = BlockPos.unpackLongZ(cablePosLong)
+            val x = BlockPos.getX(cablePosLong)
+            val y = BlockPos.getY(cablePosLong)
+            val z = BlockPos.getZ(cablePosLong)
             if (x < minX) minX = x
             if (y < minY) minY = y
             if (z < minZ) minZ = z
@@ -312,11 +314,11 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         )
 
         val hurtEntities = mutableListOf<LivingEntity>()
-        for (entity in world.getEntitiesByClass(LivingEntity::class.java, scanBox) { e ->
+        for (entity in world.getEntitiesOfClass(LivingEntity::class.java, scanBox) { e ->
             e.isAlive && !e.isSpectator
         }) {
-            if (hasLeakingCableNearby(entity.blockPos, leakingCables, rangeInt)) {
-                entity.damage(damageSource, damageAmount)
+            if (hasLeakingCableNearby(entity.blockPosition(), leakingCables, rangeInt)) {
+                entity.hurt(damageSource, damageAmount)
                 hurtEntities.add(entity)
             }
         }
@@ -341,10 +343,10 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     private fun createCableShockDamageSource(world: ServerLevel): DamageSource {
-        val registry = world.registryManager.getValue(egistries.DAMAGE_TYPE)
-        val key = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "cable_shock"))
-        val entry = registry.getEntry(key).orElse(null)
-            ?: registry.getEntry(ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("minecraft", "lightning")))
+        val registry = world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
+        val key = ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "cable_shock"))
+        val entry = registry.getHolder(key).orElse(null)
+            ?: registry.getHolder(ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("minecraft", "lightning")))
                 .orElseThrow()
         return DamageSource(entry)
     }
@@ -367,7 +369,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         val maxBurnPercent = generalConfig.cableBurnMaxPercent.coerceIn(1, 100)
         val lowerPercent = minOf(minBurnPercent, maxBurnPercent)
         val upperPercent = maxOf(minBurnPercent, maxBurnPercent)
-        val burnPercent = serverWorld.random.nextBetween(lowerPercent, upperPercent)
+        val burnPercent = serverWorld.random.nextIntBetweenInclusive(lowerPercent, upperPercent)
         // 向上取整，避免少量导线因百分比计算得到 0 根烧毁。
         val burnCount = ((toBurn.size.toLong() * burnPercent + 99L) / 100L)
             .toInt()
@@ -405,18 +407,18 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         val actuallyBurned = mutableListOf<Pair<BlockPos, String>>()
         val burnPositions = mutableListOf<BlockPos>()
         for (posLong in selected) {
-            val pos = BlockPos.fromLong(posLong)
+            val pos = BlockPos.of(posLong)
             val state = world.getBlockState(pos)
             if (state.isAir) continue
             val block = state.block as? BaseCableBlock ?: continue
             if (block !is ITiered || block.tier >= outputLevel) continue
 
-            burnPositions.add(pos.toImmutable())
+            burnPositions.add(pos.immutable())
         }
         if (!ClaimProtection.allAllowedUuid(world, burnPositions, null, ClaimProtection.EDIT_BLOCK)) return
 
         for (posLong in selected) {
-            val pos = BlockPos.fromLong(posLong)
+            val pos = BlockPos.of(posLong)
             val state = world.getBlockState(pos)
             if (state.isAir) continue
             val block = state.block as? BaseCableBlock ?: continue
@@ -427,9 +429,9 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             val x = pos.x + 0.5
             val y = pos.y + 0.5
             val z = pos.z + 0.5
-            serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE, x, y, z, 12, 0.2, 0.2, 0.2, 0.02)
-            serverWorld.spawnParticles(ParticleTypes.FLAME, x, y, z, 6, 0.15, 0.15, 0.15, 0.01)
-            world.breakBlock(pos, false)
+            serverWorld.sendParticles(ParticleTypes.LARGE_SMOKE, x, y, z, 12, 0.2, 0.2, 0.2, 0.02)
+            serverWorld.sendParticles(ParticleTypes.FLAME, x, y, z, 6, 0.15, 0.15, 0.15, 0.01)
+            world.destroyBlock(pos, false)
         }
 
         if (actuallyBurned.isNotEmpty() && ENABLE_CABLE_BURN_LOG) {
@@ -461,7 +463,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         val candidateSeen = mutableSetOf<Long>()
         for (boundary in topology.boundaries) {
             if (!candidateSeen.add(boundary.neighborPosLong)) continue
-            val candidatePos = BlockPos.fromLong(boundary.neighborPosLong)
+            val candidatePos = BlockPos.of(boundary.neighborPosLong)
             val candidate = world.getBlockEntity(candidatePos)
             if (candidate is IGenerator || candidate is TransformerBlockEntity || candidate !is ITieredMachine) continue
             if (outputLevel > candidate.effectiveVoltageTierForSide(boundary.lookupFromNeighborSide)) {
@@ -476,7 +478,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             val neighborLong = boundary.neighborPosLong
             if (neighborLong in checked) continue
             checked.add(neighborLong)
-            val neighborPos = BlockPos.fromLong(neighborLong)
+            val neighborPos = BlockPos.of(neighborLong)
             val be = world.getBlockEntity(neighborPos) ?: continue
 
             if (be is IGenerator) {
@@ -534,11 +536,11 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                 log.debug("[超压检测]   → 触发爆炸！电网等级 $outputLevel > 机器耐压 $effectiveTier")
             }
             if (be is Container) be.clear()
-            world.breakBlock(neighborPos, false)
+            world.destroyBlock(neighborPos, false)
             val x = neighborPos.x + 0.5
             val y = neighborPos.y + 0.5
             val z = neighborPos.z + 0.5
-            world.createExplosion(null, x, y, z, candidatePower, false, Level.ExplosionSourceType.BLOCK)
+            world.explode(null, x, y, z, candidatePower, false, Level.ExplosionInteraction.BLOCK)
             explodedCount++
         }
 
@@ -569,7 +571,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                             stale = true
                             break
                         }
-                    } else if (world.getBlockEntity(BlockPos.fromLong(entry.neighborPosLong)) != null) {
+                    } else if (world.getBlockEntity(BlockPos.of(entry.neighborPosLong)) != null) {
                         // null 条目（无 BE 邻居，如空气/石头）可能是 chunk 重载或邻居替换刚带来的
                         // 新 BE（新 BE 创建不发 block update，isRemoved 无法兜底）。实时轻查一次：
                         // 只对 null 条目查世界，机器边界条目（非 null）不增加查询，收益保留。
@@ -587,7 +589,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         // 端点缓存重建 = storage 引用整体刷新；provider 候选缓存依赖 storage 引用，一并失效。
         providerCandidatesCacheByConsumer.clear()
         return topology.boundaries.map { boundary ->
-            val neighborPos = BlockPos.fromLong(boundary.neighborPosLong)
+            val neighborPos = BlockPos.of(boundary.neighborPosLong)
             CachedEndpointLookup(
                 cablePosLong = boundary.cablePosLong,
                 neighborPosLong = boundary.neighborPosLong,
@@ -738,7 +740,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                         }
 
                         if (ENABLE_ENERGY_TRANSFER_LOG) {
-                            val destPos = consumer.blockPos?.let { BlockPos.fromLong(it) } ?: BlockPos.ORIGIN
+                            val destPos = consumer.blockPos?.let { BlockPos.of(it) } ?: BlockPos.ZERO
                             val destBlock = world.getBlockState(destPos).block
                             log.info(
                                 "[能量传输] 电网缓冲 → $destBlock @ $destPos | " +
@@ -812,8 +814,8 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                         remainingBudget -= extracted
 
                         if (ENABLE_ENERGY_TRANSFER_LOG) {
-                            val sourcePos = candidate.providerPos?.let { BlockPos.fromLong(it) } ?: BlockPos.ORIGIN
-                            val destPos = consumer.blockPos?.let { BlockPos.fromLong(it) } ?: BlockPos.ORIGIN
+                            val sourcePos = candidate.providerPos?.let { BlockPos.of(it) } ?: BlockPos.ZERO
+                            val destPos = consumer.blockPos?.let { BlockPos.of(it) } ?: BlockPos.ZERO
                             val sourceBlock = world.getBlockState(sourcePos).block
                             val destBlock = world.getBlockState(destPos).block
                             log.info(
@@ -846,7 +848,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             val transferRate = cableRates[cablePosLong] ?: continue
             val remaining = cableTransferRemaining[cablePosLong] ?: transferRate
             val used = transferRate - remaining
-            val pos = BlockPos.fromLong(cablePosLong)
+            val pos = BlockPos.of(cablePosLong)
             // 只为 Jade 显示同步，绝不为它同步加载区块（曾致主线程卡 60s 被 Watchdog 砍）
             if (!world.isChunkLoaded(pos)) continue
             val be = world.getBlockEntity(pos)
@@ -964,7 +966,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         }
 
         for (cablePosLong in cables) {
-            val cablePos = BlockPos.fromLong(cablePosLong)
+            val cablePos = BlockPos.of(cablePosLong)
             val state = world.getBlockState(cablePos)
             val block = state.block as? BaseCableBlock ?: continue
             val be = world.getBlockEntity(cablePos) as? CableBlockEntity
@@ -1026,12 +1028,12 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
 
         val cablesThatLeak = cables.filter { cablePosLong ->
             val block =
-                world.getBlockState(BlockPos.fromLong(cablePosLong)).block as? BaseCableBlock ?: return@filter true
+                world.getBlockState(BlockPos.of(cablePosLong)).block as? BaseCableBlock ?: return@filter true
             block.insulationLevel < outputLevel
         }
 
         val cablesThatCanBurn = cables.filter { cablePosLong ->
-            val block = world.getBlockState(BlockPos.fromLong(cablePosLong)).block
+            val block = world.getBlockState(BlockPos.of(cablePosLong)).block
             val tier = (block as? ITiered)?.tier ?: 1
             tier < outputLevel
         }

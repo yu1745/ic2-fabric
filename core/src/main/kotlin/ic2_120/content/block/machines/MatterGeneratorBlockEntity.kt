@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -59,7 +63,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -79,7 +82,7 @@ class MatterGeneratorBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
-    IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty = MatterGeneratorBlock.ACTIVE
     override val tier: Int = MatterGeneratorSync.MATTER_GENERATOR_TIER
@@ -139,11 +142,11 @@ class MatterGeneratorBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_SCRAP), matcher = { isValid(SLOT_SCRAP, it) }),
-            ItemInsertRoute(intArrayOf(SLOT_CONTAINER_INPUT), matcher = { isValid(SLOT_CONTAINER_INPUT, it) })
+            ItemInsertRoute(intArrayOf(SLOT_SCRAP), matcher = { canPlaceItem(SLOT_SCRAP, it) }),
+            ItemInsertRoute(intArrayOf(SLOT_CONTAINER_INPUT), matcher = { canPlaceItem(SLOT_CONTAINER_INPUT, it) })
         ),
         extractSlots = intArrayOf(SLOT_SCRAP, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT),
         setChanged = { setChanged() }
@@ -277,10 +280,10 @@ class MatterGeneratorBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
@@ -288,29 +291,31 @@ class MatterGeneratorBlockEntity(
 
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     private fun matterGenIsFillableContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val itemId = BuiltInRegistries.ITEM.getId(stack.item)
+        val itemId = BuiltInRegistries.ITEM.getKey(stack.item)
         return itemId == ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell") ||
             stack.item == Items.BUCKET ||
             (itemId == ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_SCRAP -> Ic2Config.current.matterGenerator.allowScrapBoost && isScrapFuel(stack)
         SLOT_CONTAINER_INPUT -> !stack.isEmpty && matterGenIsFillableContainer(stack)
         SLOT_CONTAINER_OUTPUT -> false
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem && stack.item !is OverclockerUpgrade
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.matter_generator")
@@ -327,7 +332,7 @@ class MatterGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(MatterGeneratorSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -341,7 +346,7 @@ class MatterGeneratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MatterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
@@ -391,7 +396,7 @@ class MatterGeneratorBlockEntity(
             sync.mode = resolveDisplayedMode()
         }
 
-        val hasScrap = Ic2Config.current.matterGenerator.allowScrapBoost && isScrapFuel(getStack(SLOT_SCRAP))
+        val hasScrap = Ic2Config.current.matterGenerator.allowScrapBoost && isScrapFuel(getItem(SLOT_SCRAP))
         val euPerMb = if (hasScrap) MatterGeneratorSync.SCRAP_EU_PER_MB else MatterGeneratorSync.BASE_EU_PER_MB
 
         // Consume as much energy as available, up to 1mb worth per tick
@@ -436,7 +441,7 @@ class MatterGeneratorBlockEntity(
     /** 消耗废料等价量，返回实际消耗量（普通废料 1 个 = 1 等价量；废料盒整盒 = SCRAP_UNITS_PER_BOX）。 */
     private fun consumeScrapUnits(units: Int): Int {
         if (units <= 0) return 0
-        val scrapStack = getStack(SLOT_SCRAP)
+        val scrapStack = getItem(SLOT_SCRAP)
         if (scrapStack.isEmpty) return 0
 
         if (isScrapBox(scrapStack)) {
@@ -445,7 +450,7 @@ class MatterGeneratorBlockEntity(
             // 只消耗一整盒（=9 等价量），槽内其余盒子保留，绝不能整组清空
             scrapStack.shrink(1)
             if (scrapStack.isEmpty) {
-                setStack(SLOT_SCRAP, ItemStack.EMPTY)
+                setItem(SLOT_SCRAP, ItemStack.EMPTY)
             } else {
                 setChanged()
             }
@@ -456,7 +461,7 @@ class MatterGeneratorBlockEntity(
         if (actualCount <= 0) return 0
         scrapStack.shrink(actualCount)
         if (scrapStack.isEmpty) {
-            setStack(SLOT_SCRAP, ItemStack.EMPTY)
+            setItem(SLOT_SCRAP, ItemStack.EMPTY)
         } else {
             setChanged()
         }
@@ -476,7 +481,7 @@ class MatterGeneratorBlockEntity(
     private fun fillContainersFromTank() {
         if (tankInternal.getStoredAmount() < FluidConstants.BUCKET) return
 
-        val input = getStack(SLOT_CONTAINER_INPUT)
+        val input = getItem(SLOT_CONTAINER_INPUT)
         if (input.isEmpty) return
 
         val result = when (input.item) {
@@ -495,15 +500,15 @@ class MatterGeneratorBlockEntity(
         }
         if (result.isEmpty) return
 
-        val output = getStack(SLOT_CONTAINER_OUTPUT)
+        val output = getItem(SLOT_CONTAINER_OUTPUT)
         if (!canMergeIntoSlot(output, result)) return
 
         val drained = tankInternal.extractInternal(FluidConstants.BUCKET)
         if (drained < FluidConstants.BUCKET) return
 
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_CONTAINER_INPUT, ItemStack.EMPTY)
-        if (output.isEmpty) setStack(SLOT_CONTAINER_OUTPUT, result.copy())
+        if (input.isEmpty) setItem(SLOT_CONTAINER_INPUT, ItemStack.EMPTY)
+        if (output.isEmpty) setItem(SLOT_CONTAINER_OUTPUT, result.copy())
         else output.grow(result.count)
         setChanged()
     }
@@ -515,13 +520,13 @@ class MatterGeneratorBlockEntity(
     }
 
     private fun resolveDisplayedMode(): Int {
-        val scrapCount = if (Ic2Config.current.matterGenerator.allowScrapBoost) getStack(SLOT_SCRAP).count else 0
+        val scrapCount = if (Ic2Config.current.matterGenerator.allowScrapBoost) getItem(SLOT_SCRAP).count else 0
         return if (scrapCount > 0) 1 else 0
     }
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
+        return current.isEmpty || (ItemStack.isSameItemSameComponents(current, toInsert) && current.count < current.maxStackSize)
     }
 
     private fun isScrap(stack: ItemStack): Boolean =

@@ -1,5 +1,9 @@
 package ic2_120.content.fluid
 
+import net.minecraft.core.registries.Registries
+
+import net.minecraft.core.registries.BuiltInRegistries
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -59,7 +63,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
 
@@ -268,9 +272,9 @@ object ModFluids {
             BuiltInRegistries.BLOCK,
             ResourceLocation.fromNamespaceAndPath(modId, name),
             if (rises) {
-                SteamFluidBlock(still as FlowingFluid, BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noCollision().noLootTable())
+                SteamFluidBlock(still as FlowingFluid, BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noCollission().noLootTable())
             } else {
-                LiquidBlock(still as FlowingFluid, BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noCollision().noLootTable())
+                LiquidBlock(still as FlowingFluid, BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noCollission().noLootTable())
             }
         )
 
@@ -281,7 +285,7 @@ object ModFluids {
             val bucketItem = Ic2BucketItem(
                 still,
                 placeOverride,
-                Item.Properties().recipeRemainder(Items.BUCKET).maxStackSize(1)
+                Item.Properties().stacksTo(1)
             )
             val b = Registry.register(
                 BuiltInRegistries.ITEM,
@@ -310,7 +314,7 @@ object ModFluids {
         if (withBucket && bucket !== Items.AIR) {
             val ic2MaterialsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(modId, CreativeTab.IC2_MATERIALS.id))
             ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
-                entries.add(bucket)
+                entries.accept(bucket)
             }
         }
 
@@ -387,29 +391,29 @@ object ModFluids {
             builder.add(AGE)
         }
 
-        override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
-            super.onBlockAdded(state, world, pos, oldState, notify)
+        override fun onPlace(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+            super.onPlace(state, world, pos, oldState, notify)
             if (!world.isClient) {
-                world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
+                world.scheduleTick(pos, this, LIFECYCLE_TICK_RATE)
             }
         }
 
         @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
-        override fun neighborUpdate(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
+        override fun neighborChanged(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
             @Suppress("DEPRECATION")
-            super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
+            super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
             if (!world.isClient) {
-                world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
+                world.scheduleTick(pos, this, LIFECYCLE_TICK_RATE)
             }
         }
 
-        override fun hasRandomTicks(state: BlockState): Boolean = true
+        override fun isRandomlyTicking(state: BlockState): Boolean = true
 
         override fun randomTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
             // 兼容升级前已经留在存档中的无调度蒸汽块。
-            world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
-            val currentFluid = state.fluidState.fluid
-            world.scheduleFluidTick(pos, currentFluid, currentFluid.getTickRate(world))
+            world.scheduleTick(pos, this, LIFECYCLE_TICK_RATE)
+            val currentFluid = state.fluidState.getType()
+            world.scheduleTick(pos, currentFluid, currentFluid.getTickDelay(world))
         }
 
         @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
@@ -417,19 +421,19 @@ object ModFluids {
             val nextAge = state.getValue(AGE) + 1
             if (nextAge <= MAX_AGE) {
                 // AGE 只在服务端用于生命周期，不需要每 5 tick 向客户端广播。
-                world.setBlock(pos, state.setValue(AGE, nextAge), Block.FORCE_STATE or Block.NO_REDRAW)
-                world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
+                world.setBlock(pos, state.setValue(AGE, nextAge), Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_INVISIBLE)
+                world.scheduleTick(pos, this, LIFECYCLE_TICK_RATE)
                 return
             }
 
             if (state.`is`(SUPERHEATED_STEAM_BLOCK)) {
                 // 过热蒸汽冷却为普通蒸汽，并保留当前扩散等级；新方块从 0 重新计时。
-                val cooled = STEAM_BLOCK.defaultBlockState
+                val cooled = STEAM_BLOCK.defaultBlockState()
                     .setValue(LEVEL, state.getValue(LEVEL))
                     .setValue(AGE, 0)
-                world.setBlock(pos, cooled, Block.NOTIFY_ALL)
+                world.setBlock(pos, cooled, Block.UPDATE_ALL)
             } else {
-                world.setBlock(pos, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
+                world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)
             }
         }
     }
@@ -453,22 +457,22 @@ object ModFluids {
             val bucketMap = mutableMapOf<String, Item>()
         }
 
-        override fun getStill(): Fluid = getStillFluid()
+        override fun getSource(): Fluid = getStillFluid()
         override fun getFlowing(): Fluid = getFlowingFluid()
-        override fun getBucketItem(): Item = getIc2Bucket()
-        override fun toBlockState(state: FluidState): BlockState =
-            getBlock().defaultBlockState.setValue(LiquidBlock.LEVEL, getBlockStateLevel(state))
+        override fun getBucket(): Item = getIc2Bucket()
+        override fun createLegacyBlock(state: FluidState): BlockState =
+            getBlock().defaultBlockState().setValue(LiquidBlock.LEVEL, getLegacyLevel(state))
 
         protected abstract fun getStillFluid(): Fluid
         protected abstract fun getFlowingFluid(): Fluid
         protected abstract fun getBlock(): Block
         protected abstract fun getIc2Bucket(): Item
 
-        override fun matchesType(fluid: Fluid): Boolean = fluid == getStillFluid() || fluid == getFlowingFluid()
-        override fun isInfinite(world: Level): Boolean = false
-        override fun beforeBreakingBlock(world: net.minecraft.world.level.LevelAccessor, pos: net.minecraft.core.BlockPos, state: BlockState) {
+        override fun isSame(fluid: Fluid): Boolean = fluid == getStillFluid() || fluid == getFlowingFluid()
+        override fun canConvertToSource(world: Level): Boolean = false
+        override fun beforeDestroyingBlock(world: net.minecraft.world.level.LevelAccessor, pos: net.minecraft.core.BlockPos, state: BlockState) {
             val entity = if (state.hasBlockEntity()) world.getBlockEntity(pos) else null
-            Block.dropStacks(state, world, pos, entity)
+            Block.dropResources(state, world, pos, entity)
         }
         override fun canBeReplacedWith(
             state: FluidState,
@@ -477,48 +481,48 @@ object ModFluids {
             fluid: Fluid,
             direction: Direction
         ): Boolean = false
-        override fun getFlowSpeed(world: LevelReader): Int = 4
-        override fun getLevelDecreasePerBlock(world: LevelReader): Int = 1
-        override fun getTickRate(world: LevelReader): Int = 5
-        override fun getBlastResistance(): Float = 100f
+        override fun getSlopeFindDistance(world: LevelReader): Int = 4
+        override fun getDropOff(world: LevelReader): Int = 1
+        override fun getTickDelay(world: LevelReader): Int = 5
+        override fun getExplosionResistance(): Float = 100f
 
-        override fun getVelocity(world: BlockGetter, pos: BlockPos, state: FluidState): Vec3 =
-            if (rises) Vec3(0.0, 0.08, 0.0) else super.getVelocity(world, pos, state)
+        override fun getFlow(world: BlockGetter, pos: BlockPos, state: FluidState): Vec3 =
+            if (rises) Vec3(0.0, 0.08, 0.0) else super.getFlow(world, pos, state)
 
-        override fun getHeight(state: FluidState): Float =
-            if (rises) 1.0f else super.getHeight(state)
+        override fun getOwnHeight(state: FluidState): Float =
+            if (rises) 1.0f else super.getOwnHeight(state)
 
         override fun getHeight(state: FluidState, world: BlockGetter, pos: BlockPos): Float =
             if (rises) 1.0f else super.getHeight(state, world, pos)
 
         // ========== 上升流体（蒸汽）行为 ==========
 
-        override fun getUpdatedState(world: Level, pos: BlockPos, state: BlockState): FluidState {
-            if (!rises) return super.getUpdatedState(world, pos, state)
+        override fun getNewLiquid(world: Level, pos: BlockPos, state: BlockState): FluidState {
+            if (!rises) return super.getNewLiquid(world, pos, state)
 
             // 源块由生命周期管理；流动块从下方和水平邻居获取强度。
             val current = world.getFluidState(pos)
-            if (current.isStill && current.fluid.matchesType(this)) {
+            if (current.isSource && current.getType().isSame(this)) {
                 return getStill(false)
             }
 
-            var strongestLevel = propagatedLevel(world.getFluidState(pos.down()), world)
-            for (direction in Direction.Type.HORIZONTAL) {
+            var strongestLevel = propagatedLevel(world.getFluidState(pos.below()), world)
+            for (direction in Direction.Plane.HORIZONTAL) {
                 strongestLevel = maxOf(strongestLevel, propagatedLevel(world.getFluidState(pos.offset(direction)), world))
             }
 
-            return if (strongestLevel > 0) getFlowing(strongestLevel, false) else Fluids.EMPTY.defaultBlockState
+            return if (strongestLevel > 0) getFlowing(strongestLevel, false) else Fluids.EMPTY.defaultFluidState()
         }
 
         private fun propagatedLevel(state: FluidState, world: LevelReader): Int {
-            if (state.isEmpty || !state.fluid.matchesType(this)) return 0
-            val level = if (state.isStill) 8 else state.level
-            return (level - getLevelDecreasePerBlock(world)).coerceAtLeast(0)
+            if (state.isEmpty || !state.getType().isSame(this)) return 0
+            val level = if (state.isSource()) 8 else state.getAmount()
+            return (level - getDropOff(world)).coerceAtLeast(0)
         }
 
-        override fun tryFlow(world: Level, pos: BlockPos, state: FluidState) {
+        override fun spread(world: Level, pos: BlockPos, state: FluidState) {
             if (state.isEmpty || !rises) {
-                super.tryFlow(world, pos, state)
+                super.spread(world, pos, state)
                 return
             }
 
@@ -529,9 +533,9 @@ object ModFluids {
             for (direction in directions) {
                 val targetPos = pos.offset(direction)
                 val targetBlockState = world.getBlockState(targetPos)
-                val targetFluidState = getUpdatedState(world, targetPos, targetBlockState)
+                val targetFluidState = getNewLiquid(world, targetPos, targetBlockState)
                 if (targetFluidState.isEmpty) continue
-                if (canFlow(
+                if (canSpreadTo(
                         world,
                         pos,
                         blockState,
@@ -539,52 +543,52 @@ object ModFluids {
                         targetPos,
                         targetBlockState,
                         world.getFluidState(targetPos),
-                        targetFluidState.fluid
+                        targetFluidState.getType()
                     )
                 ) {
-                    flow(world, targetPos, targetBlockState, direction, targetFluidState)
+                    spreadTo(world, targetPos, targetBlockState, direction, targetFluidState)
                 }
             }
         }
 
-        override fun onScheduledTick(world: Level, pos: BlockPos, state: FluidState) {
+        override fun tick(world: Level, pos: BlockPos, state: FluidState) {
             if (!rises) {
-                super.onScheduledTick(world, pos, state)
+                super.tick(world, pos, state)
                 return
             }
 
             // 蒸汽伤害：每秒 2 血
             applySteamDamage(world, pos)
 
-            if (state.isStill) {
-                world.scheduleFluidTick(pos, state.fluid, getTickRate(world))
-                tryFlow(world, pos, state)
+            if (state.isSource()) {
+                world.scheduleTick(pos, state.getType(), getTickDelay(world))
+                spread(world, pos, state)
                 return
             }
 
             // 流动状态：上升流体需要始终重调度 tick，以便检测源消散
-            val newState = getUpdatedState(world, pos, world.getBlockState(pos))
+            val newState = getNewLiquid(world, pos, world.getBlockState(pos))
             if (newState.isEmpty) {
-                world.setBlock(pos, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
+                world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)
             } else {
                 if (!newState.equals(state)) {
                     val oldBlockState = world.getBlockState(pos)
-                    val newBlockState = newState.blockState.let { updated ->
+                    val newBlockState = newState.createLegacyBlock().let { updated ->
                         if (oldBlockState.contains(SteamFluidBlock.AGE) && updated.contains(SteamFluidBlock.AGE)) {
                             updated.setValue(SteamFluidBlock.AGE, oldBlockState.getValue(SteamFluidBlock.AGE))
                         } else {
                             updated
                         }
                     }
-                    world.setBlock(pos, newBlockState, Block.NOTIFY_LISTENERS)
-                    world.updateNeighborsAlways(pos, newBlockState.block)
+                    world.setBlock(pos, newBlockState, Block.UPDATE_CLIENTS)
+                    world.updateNeighborsAt(pos, newBlockState.block)
                 }
-                val actualFluid = world.getFluidState(pos).fluid
-                world.scheduleFluidTick(pos, actualFluid, getTickRate(world))
+                val actualFluid = world.getFluidState(pos).getType()
+                world.scheduleTick(pos, actualFluid, getTickDelay(world))
             }
             val actualState = world.getFluidState(pos)
             if (!actualState.isEmpty) {
-                tryFlow(world, pos, actualState)
+                spread(world, pos, actualState)
             }
         }
 
@@ -592,18 +596,18 @@ object ModFluids {
         private fun applySteamDamage(world: Level, pos: BlockPos) {
             if (world.isClient) return
             if (world.time % 20L >= 5L) return
-            val entities = world.getEntitiesByClass(LivingEntity::class.java, AABB(pos)) { !it.isSpectator }
+            val entities = world.getEntitiesOfClass(LivingEntity::class.java, AABB(pos)) { !it.isSpectator }
             if (entities.isEmpty()) return
-            val damageKey = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "steam"))
-            val source = DamageSource(world.registryManager.getValue(egistries.DAMAGE_TYPE).entryOf(damageKey))
+            val damageKey = ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "steam"))
+            val source = DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).entryOf(damageKey))
             for (entity in entities) {
-                entity.damage(source, 2.0f)
+                entity.hurt(source, 2.0f)
             }
         }
 
         class Still(name: String, stillTex: String, flowTex: String, rises: Boolean = false) : Ic2Fluid(name, stillTex, flowTex, rises) {
-            override fun getLevel(state: FluidState): Int = 8
-            override fun isStill(state: FluidState): Boolean = true
+            override fun getAmount(state: FluidState): Int = 8
+            override fun isSource(state: FluidState): Boolean = true
             override fun getStillFluid(): Fluid = stillFluidMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
             override fun getFlowingFluid(): Fluid = flowingFluidMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
             override fun getBlock(): Block = blockMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
@@ -615,8 +619,8 @@ object ModFluids {
                 super.createBlockStateDefinition(builder)
                 builder.add(LEVEL)
             }
-            override fun getLevel(state: FluidState): Int = state.getValue(LEVEL)
-            override fun isStill(state: FluidState): Boolean = false
+            override fun getAmount(state: FluidState): Int = state.getValue(LEVEL)
+            override fun isSource(state: FluidState): Boolean = false
             override fun getStillFluid(): Fluid = stillFluidMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
             override fun getFlowingFluid(): Fluid = flowingFluidMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
             override fun getBlock(): Block = blockMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
@@ -636,27 +640,26 @@ object ModFluids {
     open class Ic2BucketItem(
         internal val bucketFluid: FlowingFluid, // 改名为 bucketFluid 避免与父类冲突
         private val placeFluidOverride: FlowingFluid? = null,
-        settings: FabricItemSettings
-    ) : BucketItem(bucketFluid, settings.recipeRemainder(Items.BUCKET).maxStackSize(1)) {
+        settings: Item.Properties
+    ) : BucketItem(bucketFluid, settings.stacksTo(1)) {
+        // 1.21.1：配方余物改由 getItem/getCraftingRemainingItem 提供
+        override fun getCraftingRemainingItem(): net.minecraft.world.item.Item = Items.BUCKET
+        override fun hasCraftingRemainingItem(): Boolean = true
+
 
         /** 实际放置到世界的流体（用于蒸馏水等特殊情况） */
         private val fluidToPlace: FlowingFluid
             get() = placeFluidOverride ?: bucketFluid
 
         @Environment(EnvType.CLIENT)
-        override fun appendTooltip(
-            stack: ItemStack,
-            world: Level?,
-            tooltip: MutableList<Component>,
-            context: TooltipContext
-        ) {
-            super.appendTooltip(stack, context, tooltip, type)
+        override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+            super.appendHoverText(stack, context, tooltip, type)
             if (placeFluidOverride != null) {
                 tooltip.add(Component.translatable("tooltip.ic2_120.distilled_water_places_water").withStyle(ChatFormatting.GRAY))
             }
         }
 
-        override fun placeFluid(
+        override fun emptyContents(
             player: net.minecraft.world.entity.player.Player?,
             world: Level,
             pos: BlockPos,
@@ -668,30 +671,30 @@ object ModFluids {
 
             // LiquidBlockContainer：如炼药锅等可注入液体的方块
             if (block is LiquidBlockContainer) {
-                if (block.canFillWithFluid(world, pos, state, actualFluid)) {
-                    block.tryFillWithFluid(world, pos, state, actualFluid.defaultBlockState)
-                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundSource.BLOCKS, 1f, 1f) }
-                    world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
+                if (block.canPlaceLiquid(player, world, pos, state, actualFluid)) {
+                    block.placeLiquid(world, pos, state, actualFluid.defaultFluidState())
+                    actualFluid.getPickupSound().ifPresent { world.playSound(player, pos, it, SoundSource.BLOCKS, 1f, 1f) }
+                    world.gameEvent(player, GameEvent.FLUID_PLACE, pos)
                     return true
                 }
             }
 
             // 普通方块：在点击位置放置流体（需可替换，如空气、流体本身）
-            if (state.isReplaceable || state.fluidState.isStill) {
-                if (world.setBlock(pos, actualFluid.defaultBlockState.blockState)) {
-                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundSource.BLOCKS, 1f, 1f) }
-                    world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
+            if (state.canBeReplaced() || state.fluidState.isSource()) {
+                if (world.setBlock(pos, actualFluid.defaultFluidState().createLegacyBlock())) {
+                    actualFluid.getPickupSound().ifPresent { world.playSound(player, pos, it, SoundSource.BLOCKS, 1f, 1f) }
+                    world.gameEvent(player, GameEvent.FLUID_PLACE, pos)
                     return true
                 }
             }
 
             // 固体方块：在点击面朝向的相邻格放置
-            val adjacentPos = hitResult?.side?.let { pos.offset(it) } ?: pos.up()
+            val adjacentPos = hitResult?.direction?.let { pos.offset(it) } ?: pos.above()
             val adjacentState = world.getBlockState(adjacentPos)
-            if (adjacentState.isReplaceable || adjacentState.fluidState.isStill) {
-                if (world.setBlock(adjacentPos, actualFluid.defaultBlockState.blockState)) {
-                    actualFluid.getBucketFillSound().ifPresent { world.playSound(player, adjacentPos, it, SoundSource.BLOCKS, 1f, 1f) }
-                    world.emitGameEvent(player, GameEvent.FLUID_PLACE, adjacentPos)
+            if (adjacentState.canBeReplaced() || adjacentState.fluidState.isSource()) {
+                if (world.setBlock(adjacentPos, actualFluid.defaultFluidState().createLegacyBlock())) {
+                    actualFluid.getPickupSound().ifPresent { world.playSound(player, adjacentPos, it, SoundSource.BLOCKS, 1f, 1f) }
+                    world.gameEvent(player, GameEvent.FLUID_PLACE, adjacentPos)
                     return true
                 }
             }

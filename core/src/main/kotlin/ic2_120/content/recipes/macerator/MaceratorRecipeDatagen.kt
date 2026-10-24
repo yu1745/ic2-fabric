@@ -1,6 +1,5 @@
 package ic2_120.content.recipes.macerator
 
-import com.google.gson.JsonObject
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.recipes.ModTags
@@ -50,11 +49,12 @@ import ic2_120.content.item.GrinPowder
 import ic2_120.registry.instance
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.ItemTags
 import net.minecraft.resources.ResourceLocation
-import java.util.function.Consumer
 
 object MaceratorRecipeDatagen {
     data class Entry(
@@ -161,86 +161,30 @@ object MaceratorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
+        // TODO(1.21.1): RecipeOutput 不再接受自定义 RecipeJsonProvider，改为直接构造
+        // MaceratorRecipe 实例交给 exporter（JSON 由 serializer codec 序列化）。
         entries.forEach { entry ->
-            MaceratorRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}"),
-                input = entry.input,
-                outputItem = entry.output,
-                outputCount = entry.count,
-                inputCount = entry.inputCount
-            ).also(exporter::accept)
+            val id = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}")
+            val recipe = MaceratorRecipe(
+                id,
+                entry.input.toIngredient(),
+                ItemStack(entry.output, entry.count),
+                entry.inputCount
+            )
+            exporter.accept(id, recipe, null)
         }
         externalEntries.forEach { entry ->
-            ExternalMaceratorRecipeJsonProvider(
-                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}"),
-                input = entry.input,
-                output = entry.output,
-                outputCount = entry.count,
-                inputCount = entry.inputCount
-            ).also(exporter::accept)
+            val id = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}")
+            val inputItem = BuiltInRegistries.ITEM.get(entry.input)
+            val outputItem = BuiltInRegistries.ITEM.get(entry.output)
+            val recipe = MaceratorRecipe(
+                id,
+                Ingredient.of(ItemStack(inputItem)),
+                ItemStack(outputItem, entry.count),
+                entry.inputCount
+            )
+            exporter.accept(id, recipe, null)
         }
-    }
-
-    private class MaceratorRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: IngredientInput,
-        private val outputItem: Item,
-        private val outputCount: Int,
-        private val inputCount: Int = 1
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(MaceratorRecipe::class)}")
-            val ingredient = input.toJson()
-            if (inputCount > 1) {
-                ingredient.addProperty("count", inputCount)
-            }
-            json.add("ingredient", ingredient)
-
-            val result = JsonObject()
-            result.addProperty("item", BuiltInRegistries.ITEM.getId(outputItem).toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(MaceratorRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
-    }
-
-    private class ExternalMaceratorRecipeJsonProvider(
-        private val recipeId: ResourceLocation,
-        private val input: ResourceLocation,
-        private val output: ResourceLocation,
-        private val outputCount: Int,
-        private val inputCount: Int = 1
-    ) : RecipeOutput {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(MaceratorRecipe::class)}")
-
-            val ingredient = JsonObject()
-            ingredient.addProperty("item", input.toString())
-            if (inputCount > 1) {
-                ingredient.addProperty("count", inputCount)
-            }
-            json.add("ingredient", ingredient)
-
-            val result = JsonObject()
-            result.addProperty("item", output.toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(MaceratorRecipe::class)
-
-        override fun getRecipeId(): ResourceLocation = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): ResourceLocation? = null
     }
 }

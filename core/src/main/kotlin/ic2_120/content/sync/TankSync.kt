@@ -23,8 +23,8 @@ class TankSync(
     val fluidId: ResourceLocation?
         get() {
             if (fluidRawId < 0) return null
-            val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
-            return BuiltInRegistries.FLUID.getId(fluid)
+            val fluid = BuiltInRegistries.FLUID.byId(fluidRawId)
+            return BuiltInRegistries.FLUID.getKey(fluid)
         }
 
     val hasFluid: Boolean get() = fluidAmount > 0 && fluidRawId >= 0

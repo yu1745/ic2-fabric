@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.world.level.block.entity.BlockEntityType
 
 import net.minecraft.data.recipes.RecipeProvider.has
@@ -46,7 +48,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LeashKineticGeneratorBlock::class.item(), 1)
                 .pattern(" L ")
@@ -67,7 +69,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
     }
 
     override fun getStateForPlacement(ctx: net.minecraft.world.item.context.BlockPlaceContext): BlockState? {
-        return defaultState.setValue(BlockStateProperties.FACING, ctx.horizontalPlayerFacing).setValue(ACTIVE, false)
+        return defaultBlockState().setValue(BlockStateProperties.FACING, ctx.horizontalDirection).setValue(ACTIVE, false)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
@@ -79,7 +81,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, LeashKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, LeashKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -87,7 +89,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity ?: return InteractionResult.PASS
 
-        val heldStack = player.getItemInHand(hand)
+        val heldStack = player.getItemInHand(player.usedItemHand)
 
         if (heldStack.item === Items.LEAD) {
             if (world.isClient) return InteractionResult.SUCCESS
@@ -101,16 +103,16 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 knot?.remove(Entity.RemovalReason.DISCARDED)
                 be.setLeashedMob(null, "")
                 if (!player.isCreative) {
-                    player.giveItemStack(Items.LEAD.defaultStack)
+                    player.getInventory().add(Items.LEAD.defaultInstance)
                 }
-                player.displayClientMessage(Component.translatable("message.ic2_120.leash_kinetic.detached", false), true)
+                player.displayClientMessage(Component.translatable("message.ic2_120.leash_kinetic.detached"), true)
                 return InteractionResult.SUCCESS
             }
 
             // Find mobs leashed to the player
-            val nearbyMobs = world.getEntitiesByClass(
+            val nearbyMobs = world.getEntitiesOfClass(
                 Mob::class.java,
-                AABB(pos).expand(10.0)
+                AABB(pos).inflate(10.0)
             ) { mob ->
                 mob.isAlive && mob.holdingEntity === player
             }
@@ -133,12 +135,12 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                     }
                 }
                 heldStack.shrink(1)
-                player.sendMessage(
+                player.displayClientMessage(
                     Component.translatable("message.ic2_120.leash_kinetic.attached", mob.name),
                     true
                 )
             } else {
-                player.displayClientMessage(Component.translatable("message.ic2_120.leash_kinetic.no_mob", false), true)
+                player.displayClientMessage(Component.translatable("message.ic2_120.leash_kinetic.no_mob"), true)
             }
             return InteractionResult.SUCCESS
         }
@@ -146,7 +148,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         return InteractionResult.SUCCESS
     }
 
-    override fun onBreak(world: Level, pos: BlockPos, state: BlockState, player: Player) {
+    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity
             be?.let {
@@ -161,6 +163,6 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 }
             }
         }
-        super.onBreak(world, pos, state, player)
+        super.playerWillDestroy(world, pos, state, player)
     }
 }

@@ -28,7 +28,7 @@ sealed class IngredientInput {
     abstract fun toIngredient(): Ingredient
     abstract fun toItemStack(count: Int): ItemStack
     fun toItemStacks(count: Int): List<ItemStack> =
-        toIngredient().matchingStacks.map { stack ->
+        toIngredient().items.map { stack ->
             stack.copy().also { it.count = count }
         }.ifEmpty {
             listOf(toItemStack(count))
@@ -36,9 +36,9 @@ sealed class IngredientInput {
 
     data class ItemInput(val item: Item) : IngredientInput() {
         override fun toJson(): JsonObject = JsonObject().apply {
-            addProperty("item", BuiltInRegistries.ITEM.getId(item).toString())
+            addProperty("item", BuiltInRegistries.ITEM.getKey(item).toString())
         }
-        override fun toIngredient(): Ingredient = Ingredient.ofItems(item)
+        override fun toIngredient(): Ingredient = Ingredient.of(item)
         override fun toItemStack(count: Int): ItemStack = ItemStack(item, count)
     }
 
@@ -47,7 +47,7 @@ sealed class IngredientInput {
      */
     data class TagInput(val tag: TagKey<Item>, val displayItem: Item) : IngredientInput() {
         override fun toJson(): JsonObject = JsonObject().apply {
-            addProperty("tag", tag.id.toString())
+            addProperty("tag", tag.location.toString())
         }
         override fun toIngredient(): Ingredient = Ingredient.of(tag)
         override fun toItemStack(count: Int): ItemStack = ItemStack(displayItem, count)

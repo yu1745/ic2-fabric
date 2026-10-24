@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -35,7 +37,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 
 @ModBlock(name = "solid_heat_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
@@ -49,7 +50,7 @@ class SolidHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, SolidHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, SolidHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -59,8 +60,8 @@ class SolidHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusi
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
-        defaultState
-            .setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing)
+        defaultBlockState()
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalDirection)
             .setValue(ACTIVE, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -77,7 +78,7 @@ class SolidHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val heat = HeatConductor::class.instance()
             val plate = IronPlate::class.instance()
             val furnace = IronFurnaceBlock::class.item()

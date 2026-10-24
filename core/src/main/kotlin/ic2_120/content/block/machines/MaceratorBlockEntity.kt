@@ -1,12 +1,19 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
 
-import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.content.sync.MaceratorSync
 import ic2_120.content.energy.charge.BatteryDischargerComponent
@@ -45,15 +52,14 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
-import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.network.chat.Component
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
+import net.minecraft.world.item.crafting.SingleRecipeInput
 import net.minecraft.world.level.Level
 import ic2_120.content.upgrade.IValidInputItem
 
@@ -64,7 +70,7 @@ class MaceratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf>, IValidInputItem {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = MaceratorBlock.ACTIVE
 
@@ -110,7 +116,7 @@ class MaceratorBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isRecipeInput(it) }),
@@ -144,9 +150,9 @@ class MaceratorBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) {
             stack.count = 1
         }
@@ -156,11 +162,11 @@ class MaceratorBlockEntity(
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecipeInput(stack)
         SLOT_OUTPUT -> false
         SLOT_DISCHARGING -> isBatteryItem(stack) || stack.item === Items.REDSTONE || stack.item is ic2_120.content.item.EnergiumDust
@@ -168,9 +174,11 @@ class MaceratorBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.macerator")
@@ -180,7 +188,7 @@ class MaceratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MaceratorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -195,7 +203,7 @@ class MaceratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MaceratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -228,7 +236,7 @@ class MaceratorBlockEntity(
         // 从放电槽提取能量
         extractFromDischargingSlot()
 
-        val input = getStack(SLOT_INPUT)
+        val input = getItem(SLOT_INPUT)
         if (input.isEmpty()) {
             resetProgress()
             sync.syncCurrentTickFlow()
@@ -243,10 +251,10 @@ class MaceratorBlockEntity(
         }
         val result = maceratorOutputFor(recipe)
         val inputCount = recipe.inputCount
-        val outputSlot = getStack(SLOT_OUTPUT)
+        val outputSlot = getItem(SLOT_OUTPUT)
         val maxStack = result.maxStackSize
         val canAccept = outputSlot.isEmpty() ||
-            (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
+            (ItemStack.isSameItem(outputSlot, result) && outputSlot.count + result.count <= maxStack)
 
         if (input.count < inputCount || !canAccept) {
             resetProgress()
@@ -256,7 +264,7 @@ class MaceratorBlockEntity(
 
         if (progressF >= MaceratorSync.PROGRESS_MAX) {
             input.shrink(inputCount)
-            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
+            if (outputSlot.isEmpty()) setItem(SLOT_OUTPUT, result.copy())
             else outputSlot.grow(result.count)
             progressF = 0f
             energyDebtF = 0f
@@ -319,8 +327,8 @@ class MaceratorBlockEntity(
             if (cached != null && input.count >= cached.inputCount) return cached
             if (cached == null && input.count <= cachedRecipeQueryCount) return null
         }
-        val recipeInventory = SimpleContainer(input)
-        val recipe = world.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, world).orElse(null)
+        val recipeInventory = SingleRecipeInput(input)
+        val recipe = world.recipeManager.getRecipeFor(getRecipeType<MaceratorRecipe>(), recipeInventory, world).orElse(null)?.value()
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
         cachedRecipe = recipe
@@ -348,8 +356,8 @@ class MaceratorBlockEntity(
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val currentWorld = world ?: return true
         // 仅用于识别物品类型时，必须提供足够大的虚拟堆叠；部分配方需要多个输入。
-        val recipeInventory = SimpleContainer(stack.copyWithCount(stack.maxStackSize))
-        val found = currentWorld.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, currentWorld).isPresent
+        val recipeInventory = SingleRecipeInput(stack.copyWithCount(stack.maxStackSize))
+        val found = currentWorld.recipeManager.getRecipeFor(getRecipeType<MaceratorRecipe>(), recipeInventory, currentWorld).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found

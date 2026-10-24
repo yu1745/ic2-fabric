@@ -40,7 +40,7 @@ import io.netty.buffer.Unpooled
  * 防辐射容纳盒：12 格物品栏，数据存于物品 NBT；禁止再放入容纳盒避免嵌套。
  */
 @ModItem(name = "containment_box", tab = CreativeTab.IC2_MATERIALS, group = "containment")
-class ContainmentBoxItem : Item(Item.Properties().maxStackSize(1)) {
+class ContainmentBoxItem : Item(Item.Properties().stacksTo(1)) {
 
     override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = player.getItemInHand(hand)
@@ -52,7 +52,7 @@ class ContainmentBoxItem : Item(Item.Properties().maxStackSize(1)) {
 
             override fun getScreenOpeningData(serverPlayer: net.minecraft.server.level.ServerPlayer): FriendlyByteBuf {
                 val buf = FriendlyByteBuf(Unpooled.buffer())
-                buf.writeEnumConstant(hand)
+                buf.writeEnum(hand)
                 return buf
             }
 
@@ -103,8 +103,8 @@ class ContainmentBoxInventory(
         if (!loading) saveToStack()
     }
 
-    override fun onClose(player: Player) {
-        super.onClose(player)
+    override fun stopOpen(player: Player) {
+        super.stopOpen(player)
         saveToStack()
     }
 
@@ -116,15 +116,15 @@ class ContainmentBoxInventory(
     private fun loadFromStack() {
         loading = true
         try {
-        for (i in 0 until SIZE) setStack(i, ItemStack.EMPTY)
+        for (i in 0 until SIZE) setItem(i, ItemStack.EMPTY)
         val stack = player.getItemInHand(hand)
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return
         val root = stack.getCustomData() ?: return
-        if (!root.hasProperty(NBT_KEY)) return
+        if (!root.contains(NBT_KEY)) return
         val tag = root.getCompound(NBT_KEY)
         val list = NonNullList.withSize(SIZE, ItemStack.EMPTY)
-        ContainerHelper.loadAllItems(tag, list, player.world.registryManager)
-        for (i in 0 until SIZE) setStack(i, list[i])
+        ContainerHelper.loadAllItems(tag, list, player.level().registryAccess())
+        for (i in 0 until SIZE) setItem(i, list[i])
         } finally {
             loading = false
         }
@@ -136,8 +136,8 @@ class ContainmentBoxInventory(
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return
         val tag = CompoundTag()
         val list = NonNullList.withSize(SIZE, ItemStack.EMPTY)
-        for (i in 0 until SIZE) list[i] = getStack(i).copy()
-        ContainerHelper.saveAllItems(tag, list, player.world.registryManager)
+        for (i in 0 until SIZE) list[i] = getItem(i).copy()
+        ContainerHelper.saveAllItems(tag, list, player.level().registryAccess())
         stack.editCustomData { it.put(NBT_KEY, tag) }
     }
 

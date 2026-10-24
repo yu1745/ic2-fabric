@@ -32,7 +32,7 @@ object SeedCommand {
             dispatcher.register(
                 Commands.literal("ic2seed")
                     .requires { source ->
-                        source.hasPermissionLevel(PERMISSION_LEVEL) ||
+                        source.hasPermission(PERMISSION_LEVEL) ||
                         source.player?.isCreative() == true
                     }
                     .then(
@@ -67,7 +67,7 @@ object SeedCommand {
             msg.append(Component.literal("  ${type.asString().padEnd(maxKeyWidth)} - "))
             msg.append(CropSeedData.displayName(type))
         }
-        source.sendFeedback({ msg }, false)
+        source.sendSuccess({ msg }, false)
         return types.size
     }
 
@@ -78,7 +78,7 @@ object SeedCommand {
         val seedTypeStr = StringArgumentType.getString(ctx, "seed_type")
         val seedType = CropType.entries.firstOrNull { it.asString().equals(seedTypeStr, ignoreCase = true) }
             ?: run {
-                source.sendError(Component.literal("未知种子类型: $seedTypeStr，可用类型见 Tab 补全"))
+                source.sendFailure(Component.literal("未知种子类型: $seedTypeStr，可用类型见 Tab 补全"))
                 return 0
             }
 
@@ -88,14 +88,14 @@ object SeedCommand {
 
         val itemStack = CropSeedBagItem.createStack(seedType, CropStats(growth, gain, resistance), scanLevel = 4)
 
-        if (!player.inventory.safeInsert(itemStack)) {
-            player.spawnAtLocation(itemStack, true)
-            source.sendFeedback(
+        if (!player.inventory.add(itemStack)) {
+            player.drop(itemStack, true)
+            source.sendSuccess(
                 { Component.literal("已给予种子（背包已满，丢在地上）") },
                 false
             )
         } else {
-            source.sendFeedback(
+            source.sendSuccess(
                 {
                     Component.literal("已给予 ")
                         .append(CropSeedData.displayName(seedType))

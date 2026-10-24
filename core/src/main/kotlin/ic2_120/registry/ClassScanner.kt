@@ -1,5 +1,7 @@
 package ic2_120.registry
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import ic2_120.compat.world
 
 import net.minecraft.core.registries.Registries
@@ -62,6 +64,9 @@ import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.MenuType
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.SimpleContainerData
+import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.network.codec.StreamCodec
+import net.minecraft.network.RegistryFriendlyByteBuf
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
@@ -133,7 +138,7 @@ object ClassScanner {
     private val screenHandlerTypes = mutableMapOf<kotlin.reflect.KClass<*>, MenuType<*>>()
 
     /** 配方生成器列表（带 modId 标记，支持附属 mod 按需过滤） */
-    private data class RecipeGeneratorEntry(val modId: String, val generator: (Consumer<RecipeOutput>) -> Unit)
+    private data class RecipeGeneratorEntry(val modId: String, val generator: (RecipeOutput) -> Unit)
     private val recipeGenerators = mutableListOf<RecipeGeneratorEntry>()
 
     /**
@@ -598,7 +603,7 @@ object ClassScanner {
                 val id = ResourceLocation.fromNamespaceAndPath(modId, name)
 
                 // 创建 ResourceKey
-                val tabKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, id)
+                val tabKey = ResourceKey.create(RRegistries.CREATIVE_MODE_TAB, id)
 
                 // 获取这个物品栏对应的枚举值
                 val tabEnum = CreativeTab.values().find { it.id == name }
@@ -623,13 +628,13 @@ object ClassScanner {
                     annotation.iconItem.isNotEmpty() -> {
                         // 使用已注册的物品作为图标
                         val iconId = ResourceLocation.fromNamespaceAndPath(modId, annotation.iconItem)
-                        iconStackSupplier = { ItemStack(BuiltInRegistries.ITEM.getValue(iconId)) }
+                        iconStackSupplier = { ItemStack(BuiltInRegistries.ITEM.get(iconId)) }
                     }
                     else -> {
                         // 默认使用第一个物品
                         val firstEntry = entries.firstOrNull()
                         iconStackSupplier = if (firstEntry != null) {
-                            { ItemStack(BuiltInRegistries.ITEM.getValue(firstEntry.itemId)) }
+                            { ItemStack(BuiltInRegistries.ITEM.get(firstEntry.itemId)) }
                         } else {
                             { ItemStack(net.minecraft.world.item.Items.BARRIER) }
                         }
@@ -639,7 +644,7 @@ object ClassScanner {
                 // 创建物品栏，使用 entries() 方法添加物品
                 val itemGroup = FabricItemGroup.builder()
                     .icon(iconStackSupplier)
-                    .displayName(Component.translatable("itemGroup.$modId.$name"))
+                    .title(Component.translatable("itemGroup.$modId.$name"))
                     .entries { _, collector ->
                         // 实时读取 tabItems（不能捕获构建时快照）：Connector/Forge 环境下附属 main
                         // 可能先于 core 的 registerWithAddons 执行，创造栏会早于附属导线注册构建；
@@ -648,7 +653,7 @@ object ClassScanner {
                             .sortedWith(compareBy({ it.group }, { it.itemId.toString() }))
                         // 添加所有属于这个物品栏的物品（已按 group 排序）
                         for (entry in liveEntries) {
-                            val item = BuiltInRegistries.ITEM.getValue(ntry.itemId)
+                            val item = BuiltInRegistries.ITEM.get(entry.itemId)
                             if (item !== net.minecraft.world.item.Items.AIR) {
                                 // 检查物品是否实现了 IBatteryItem 或 IElectricTool 接口
                                 // 如果实现了，添加空电和满电两个版本
@@ -667,7 +672,7 @@ object ClassScanner {
                                         val electricTool = item as IElectricTool
                                         electricTool.setEnergy(emptyStack, 0)
                                     }
-                                    collector.add(emptyStack)
+                                    collector.accept(emptyStack)
 
                                     // 添加满电版本
                                     val fullStack = ItemStack(item)
@@ -678,13 +683,13 @@ object ClassScanner {
                                         val electricTool = item as IElectricTool
                                         electricTool.setEnergy(fullStack, electricTool.maxCapacity)
                                     }
-                                    collector.add(fullStack)
+                                    collector.accept(fullStack)
                                } else {
                                    // 普通物品，直接添加
-                                   collector.add(item)
+                                   collector.accept(item)
                                    // 若物品实现了 ICreativeFullVariant，追加满变体
                                    if (item is ICreativeFullVariant) {
-                                       collector.add(item.createFullVariant())
+                                       collector.accept(item.createFullVariant())
                                    }
                                }
                             }
@@ -693,7 +698,7 @@ object ClassScanner {
                     .build()
 
                 // 注册到注册表
-                Registry.register(BuiltInBuiltInRegistries.CREATIVE_MODE_TAB, tabKey, itemGroup)
+                Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, tabKey, itemGroup)
                 logger.info("已注册创造模式物品栏: {}", id)
             } catch (e: Exception) {
                 logger.error("注册创造模式物品栏 {} 失败: {}", clazz.simpleName, e.message, e)
@@ -744,11 +749,26 @@ object ClassScanner {
 
                     val id = ResourceLocation.fromNamespaceAndPath(modId, finalName)
 
-                    val type = ExtendedScreenHandlerType { syncId, playerInventory, buf ->
-                        createFromBuffer(syncId, playerInventory, buf)
-                    }
+                    // 1.21.1 fabric：ExtendedScreenHandlerType 带 D 数据类型 + StreamCodec。
+                    // D 用 FriendlyByteBuf（内容按 length-prefixed 字节转发），保持
+                    // getScreenOpeningData(...): FriendlyByteBuf 与 fromBuffer(syncId, inv, buf) 旧签名不变。
+                    val type = ExtendedScreenHandlerType<AbstractContainerMenu, FriendlyByteBuf>(
+                        { syncId, playerInventory, data ->
+                            createFromBuffer(syncId, playerInventory, data)
+                        },
+                        StreamCodec.ofMember(
+                            { buf: RegistryFriendlyByteBuf, data: FriendlyByteBuf ->
+                                val bytes = ByteArray(data.readableBytes())
+                                data.getBytes(data.readerIndex(), bytes)
+                                buf.writeByteArray(bytes)
+                            },
+                            { buf: RegistryFriendlyByteBuf ->
+                                FriendlyByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(buf.readByteArray()))
+                            }
+                        )
+                    )
 
-                    Registry.register(BuiltInRegistries.SCREEN_HANDLER, id, type)
+                    Registry.register(BuiltInRegistries.MENU, id, type)
                     screenHandlerTypes[clazz] = type
                     logger.debug("已注册 AbstractContainerMenu 类型: {} (来自类 {})", id, clazz.simpleName)
                 }
@@ -793,7 +813,7 @@ object ClassScanner {
                         "需要 (syncId: Int, playerInventory: Inventory, hand: InteractionHand, ...)"
                 )
                 return { syncId, playerInventory, buf ->
-                    val hand = buf.readEnumConstant(InteractionHand::class.java)
+                    val hand = buf.readEnum(InteractionHand::class.java)
                     ctor.callBy(mapOf(
                         ctor.parameters[0] to syncId,
                         ctor.parameters[1] to playerInventory,
@@ -831,7 +851,7 @@ object ClassScanner {
                 return { syncId, playerInventory, buf ->
                     val pos = buf.readBlockPos()
                     val propertyCount = buf.readVarInt()
-                    val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+                    val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
                     val propertyDelegate = SimpleContainerData(propertyCount)
                     if (ctor5 != null) {
                         val blockInventory = SimpleContainer(inventorySize)
@@ -953,10 +973,10 @@ object ClassScanner {
                 accessor
             } catch (_: Throwable) {
                 // 访问权限或 JVM 反射限制下回退；该路径只在启动时决定一次。
-                { instance: Any -> (property as KProperty1<Any, Any?>).getValue(instance) }
+                { instance: Any -> (property as KProperty1<Any, Any?>).get(instance) }
             }
         }
-        return { instance: Any -> (property as KProperty1<Any, Any?>).getValue(instance) }
+        return { instance: Any -> (property as KProperty1<Any, Any?>).get(instance) }
     }
 
     private fun registerFluidStorageLookup(clazz: KClass<*>) {
@@ -1004,7 +1024,7 @@ object ClassScanner {
                     return@mapNotNull null
                 }
                 val blockId = ResourceLocation.fromNamespaceAndPath(modId, blockName)
-                val block = BuiltInRegistries.BLOCK.getValue(blockId)
+                val block = BuiltInRegistries.BLOCK.get(blockId)
                 if (block == net.minecraft.world.level.block.Blocks.AIR && blockId.path != "air") {
                     logger.warn("方块实体 {} 对应的方块未找到: {}，请确保方块先于方块实体注册", clazz.simpleName, blockId)
                     return@mapNotNull null
@@ -1250,7 +1270,7 @@ object ClassScanner {
 
     private fun parseItemGroupKey(modId: String, tab: CreativeTab): ResourceKey<CreativeModeTab> {
         val id = ResourceLocation.parse(tab.getNamespacedId(modId))
-        return ResourceKey.create(Registries.CREATIVE_MODE_TAB, id)
+        return ResourceKey.create(RRegistries.CREATIVE_MODE_TAB, id)
     }
 
     /**
@@ -1299,22 +1319,26 @@ object ClassScanner {
                 } ?: clazz.companionObject?.memberFunctions?.find { it.name == "generateRecipes" }
                     ?: continue
 
-                // 验证方法签名
+                // 验证方法签名：兼容 (Consumer<RecipeOutput>) 与 (RecipeOutput) 两种参数
                 val parameters = generateRecipesMethod.parameters
+                val paramClassifier = parameters[1].type.classifier
                 if (parameters.size != 2 ||
-                    parameters[1].type.classifier != Consumer::class) {
+                    (paramClassifier != Consumer::class && paramClassifier != RecipeOutput::class)) {
                     logger.warn(
-                        "类 {} 的 {} 方法签名不正确，应为 (Consumer<RecipeOutput>) -> Unit",
+                        "类 {} 的 {} 方法签名不正确，应为 (Consumer<RecipeOutput>) -> Unit 或 (RecipeOutput) -> Unit",
                         clazz.simpleName,
                         generateRecipesMethod.name
                     )
                     continue
                 }
 
-                // 创建生成器闭包
-                val generator: (Consumer<RecipeOutput>) -> Unit = { exporter ->
+                // 创建生成器闭包（统一以 RecipeOutput 调用；Consumer 参数时经 ForwardingRecipeOutput 适配）
+                val generator: (RecipeOutput) -> Unit = { exporter ->
+                    val arg: Any = if (paramClassifier == Consumer::class) {
+                        Consumer<RecipeOutput> { /* 旧 yarn provider 通道在 mojmap 下无输出语义，仅防御不崩溃 */ }
+                    } else exporter
                     @Suppress("UNCHECKED_CAST")
-                    generateRecipesMethod.call(companion, exporter as Any?)
+                    generateRecipesMethod.call(companion, arg)
                 }
 
                 recipeGenerators.add(RecipeGeneratorEntry(currentModId, generator))
@@ -1331,7 +1355,7 @@ object ClassScanner {
      * 执行所有配方生成
      * 供 ModRecipeProvider 调用
      */
-    fun generateAllRecipes(recipeExporter: Consumer<RecipeOutput>) {
+    fun generateAllRecipes(recipeExporter: RecipeOutput) {
         logger.info("开始生成配方...")
         var successCount = 0
         var failCount = 0
@@ -1351,7 +1375,7 @@ object ClassScanner {
     /**
      * 执行指定 modId 的配方生成（供附属 mod 使用）。
      */
-    fun generateRecipesForMod(modId: String, recipeExporter: Consumer<RecipeOutput>) {
+    fun generateRecipesForMod(modId: String, recipeExporter: RecipeOutput) {
         logger.info("开始生成 {} 配方...", modId)
         var successCount = 0
         var failCount = 0
@@ -1367,6 +1391,27 @@ object ClassScanner {
             }
         }
         logger.info("{} 配方生成完成 - 成功: {}, 失败: {}, 总计: {}", modId, successCount, failCount, filtered.size)
+    }
+
+    /** 兼容旧 Consumer<RecipeOutput> 调用点 */
+    fun generateAllRecipes(recipeExporter: Consumer<RecipeOutput>) =
+        generateAllRecipes(ForwardingRecipeOutput(recipeExporter))
+
+    /** 兼容旧 Consumer<RecipeOutput> 调用点 */
+    fun generateRecipesForMod(modId: String, recipeExporter: Consumer<RecipeOutput>) =
+        generateRecipesForMod(modId, ForwardingRecipeOutput(recipeExporter))
+
+    /** 把 mojmap RecipeOutput 的 accept 转发给真实输出（RecipeOutput → Consumer<RecipeOutput> 适配） */
+    private class ForwardingRecipeOutput(private val real: RecipeOutput) : RecipeOutput {
+        override fun accept(
+            id: net.minecraft.resources.ResourceLocation,
+            recipe: net.minecraft.world.item.crafting.Recipe<*>,
+            advancementHolder: net.minecraft.advancements.AdvancementHolder?
+        ) {
+            real.accept(id, recipe, advancementHolder)
+        }
+
+        override fun advancement() = real.advancement()
     }
 
     /**
@@ -1419,7 +1464,7 @@ object ClassScanner {
         val annotation = clazz.findAnnotation<ModBlockEntity>() ?: return null
         val name = resolveNameFromBlockOrAnnotation(annotation.name, annotation.block, clazz.simpleName ?: "unknown")
         val id = ResourceLocation.fromNamespaceAndPath(currentModId, name)
-        val type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getOrEmpty(id).orElse(null) ?: return null
+        val type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getOptional(id).orElse(null) ?: return null
         blockEntityTypes[clazz] = type
         return type as? BlockEntityType<T>
     }
@@ -1456,7 +1501,7 @@ object ClassScanner {
                 val instance = clazz.createInstance() as MobEffect
                 val ns = if (annotation.namespace.isNotEmpty()) annotation.namespace else modId
                 val id = ResourceLocation.fromNamespaceAndPath(ns, annotation.name)
-                Registry.register(BuiltInRegistries.STATUS_EFFECT, id, instance)
+                Registry.register(BuiltInRegistries.MOB_EFFECT, id, instance)
                 logger.debug("已注册效果: {}", id)
             } catch (e: Exception) {
                 logger.error("注册效果 {} 失败: {}", clazz.simpleName, e.message, e)
@@ -1490,12 +1535,12 @@ object ClassScanner {
                     logger.warn("未知 MobCategory '{}', 回退到 MISC", annotation.spawnGroup)
                     MobCategory.MISC
                 }
-                val builder = EntityType.Builder.create(factory, spawnGroup)
-                    .setDimensions(annotation.width, annotation.height)
-                    .maxTrackingRange(annotation.maxTrackingRange)
+                val builder = EntityType.Builder.of(factory, spawnGroup)
+                    .sized(annotation.width, annotation.height)
+                    .clientTrackingRange(annotation.maxTrackingRange)
 
                 if (annotation.trackingTickInterval > 0) {
-                    builder.trackingTickInterval(annotation.trackingTickInterval)
+                    builder.updateInterval(annotation.trackingTickInterval)
                 }
 
                 val type = builder.build(annotation.dataFixerType) as EntityType<Entity>

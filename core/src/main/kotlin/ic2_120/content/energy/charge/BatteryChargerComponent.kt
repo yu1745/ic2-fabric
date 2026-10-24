@@ -38,7 +38,7 @@ class BatteryChargerComponent(
     fun tick(): Long {
         if (!canChargeNow()) return 0L
 
-        val stack = inventory.getStack(batterySlot)
+        val stack = inventory.getItem(batterySlot)
         val item = stack.item
 
         return when (item) {
@@ -55,7 +55,7 @@ class BatteryChargerComponent(
     fun discharge(): Long {
         if (!canChargeNow()) return 0L
 
-       val stack = inventory.getStack(batterySlot)
+       val stack = inventory.getItem(batterySlot)
        val item = stack.item as? IBatteryItem ?: return 0L
        if (item.tier > machineTierProvider()) return 0L
         if (stack.count > 1) return 0L
@@ -80,7 +80,7 @@ class BatteryChargerComponent(
             item.charge(stack, discharged - inserted)
         }
 
-        inventory.setStack(batterySlot, stack)
+        inventory.setItem(batterySlot, stack)
         return inserted
     }
 
@@ -105,7 +105,7 @@ class BatteryChargerComponent(
             battery.discharge(stack, extracted - charged)
         }
 
-        inventory.setStack(batterySlot, stack)
+        inventory.setItem(batterySlot, stack)
         return charged
     }
 
@@ -122,7 +122,7 @@ class BatteryChargerComponent(
         if (extracted <= 0L) return 0L
 
         tool.setEnergy(stack, tool.getEnergy(stack) + extracted)
-        inventory.setStack(batterySlot, stack)
+        inventory.setItem(batterySlot, stack)
         return extracted
     }
 }

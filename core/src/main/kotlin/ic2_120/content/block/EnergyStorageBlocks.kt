@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -193,7 +195,7 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
  */
 abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(defaultMachineSettings() .noOcclusion()) { // 3D 模型：关闭相邻面剔除
     init {
-        defaultState = stateManager.defaultBlockState
+        registerDefaultState(stateDefinition.any())
             .setValue(BlockStateProperties.HORIZONTAL_FACING, net.minecraft.core.Direction.NORTH)
             .setValue(EnergyStorageBlock.ACTIVE, false)
     }
@@ -204,10 +206,10 @@ abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(de
     }
 
     /** 红石模式输出（与储电箱同源：BE 红石模式 0-6，默认 0 = 不输出）。 */
-    override fun emitsRedstonePower(state: BlockState): Boolean = true
+    override fun isSignalSource(state: BlockState): Boolean = true
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getWeakRedstonePower(
+    override fun getSignal(
         state: BlockState,
         world: net.minecraft.world.level.BlockGetter,
         pos: BlockPos,
@@ -234,7 +236,7 @@ abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(de
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getOutlineShape(
+    override fun getShape(
         state: BlockState,
         world: net.minecraft.world.level.BlockGetter,
         pos: net.minecraft.core.BlockPos,

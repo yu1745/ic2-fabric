@@ -52,7 +52,7 @@ object RedstoneControlComponent {
         ) {
             cached.powered
         } else {
-            world.isReceivingRedstonePower(pos).also {
+            world.hasNeighborSignal(pos).also {
                 tickCache[machine] = RedstoneCacheEntry(world, now, inverted, it)
             }
         }

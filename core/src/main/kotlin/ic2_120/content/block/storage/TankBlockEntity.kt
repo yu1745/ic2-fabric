@@ -1,5 +1,9 @@
 package ic2_120.content.block.storage
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.cachedState
@@ -29,8 +33,8 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import com.mojang.serialization.NbtOps
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -67,7 +71,7 @@ import java.util.ArrayDeque
 class TankBlockEntity(
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(TankBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory {
+) : BlockEntity(TankBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     companion object {
         /** 青铜/铁储罐容量 (mB) */
@@ -207,7 +211,7 @@ class TankBlockEntity(
 
     fun syncFluidState() {
         val variant = tankInternal.variant
-        sync.fluidRawId = if (variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(variant.fluid)
+        sync.fluidRawId = if (variant.isBlank) -1 else BuiltInRegistries.FLUID.getId(variant.fluid)
         sync.fluidAmount = getFluidAmountMb()
         sync.capacity = getCapacityMb()
         if (!trackingInitialized) {
@@ -266,11 +270,11 @@ class TankBlockEntity(
     fun getFluidAmountMb(): Int =
         (tankInternal.amount * 1000 / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
 
-    // ========== ExtendedScreenHandlerFactory ==========
+    // ========== ExtendedScreenHandlerFactory<FriendlyByteBuf> ==========
 
     override fun getDisplayName(): Component {
         val block = cachedState.block
-        return Component.translatable(block.translationKey)
+        return Component.translatable(block.descriptionId)
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
@@ -284,9 +288,11 @@ class TankBlockEntity(
         )
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     /**
@@ -310,7 +316,10 @@ class TankBlockEntity(
         super.saveAdditional(nbt, lookup)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
-            nbt.put(NBT_FLUID_VARIANT, tankInternal.variant.toNbt())
+            // TODO(1.21.1): FluidVariant.toNbt 移除，改走 FluidVariant.CODEC（NbtOps）
+            FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, tankInternal.variant)
+                .result()
+                .ifPresent { nbt.put(NBT_FLUID_VARIANT, it) }
         }
         syncedData.writeNbt(nbt)
     }
@@ -319,7 +328,9 @@ class TankBlockEntity(
         super.loadAdditional(nbt, lookup)
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
-        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(fluidTag)
+        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else
+            // TODO(1.21.1): FluidVariant.fromNbt 移除，改走 FluidVariant.CODEC（NbtOps）
+            FluidVariant.CODEC.parse(NbtOps.INSTANCE, fluidTag).result().orElseGet { FluidVariant.blank() }
         syncedData.readNbt(nbt)
         syncFluidState()
         updateRateSync()

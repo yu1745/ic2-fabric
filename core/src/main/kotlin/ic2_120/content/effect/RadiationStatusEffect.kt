@@ -1,5 +1,7 @@
 package ic2_120.content.effect
 
+import net.minecraft.core.registries.Registries
+
 import ic2_120.compat.world
 
 import ic2_120.Ic2_120
@@ -24,18 +26,18 @@ class RadiationStatusEffect : MobEffect(MobEffectCategory.HARMFUL, 0x55FF55) {
         val world = entity.world
         if (world !is ServerLevel) return false
 
-        val registry = world.registryManager.getValue(egistries.DAMAGE_TYPE)
-        val key = ResourceKey.of(
+        val registry = world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
+        val key = ResourceKey.create(
             Registries.DAMAGE_TYPE,
             ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "radiation")
         )
-        val entry = registry.getEntry(key).orElse(null)
-            ?: registry.getEntry(
-                ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("minecraft", "magic"))
+        val entry = registry.getHolder(key).orElse(null)
+            ?: registry.getHolder(
+                ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("minecraft", "magic"))
             ).orElse(null)
 
         return if (entry != null) {
-            entity.damage(DamageSource(entry), 1.0f)
+            entity.hurt(DamageSource(entry), 1.0f)
             true
         } else {
             false

@@ -78,7 +78,7 @@ object UuCostIndex {
 
         // 2. 收集配方
         val recipeManager: RecipeManager = server.recipeManager
-        val result = UuRecipeBridge.collect(recipeManager, server.registryManager)
+        val result = UuRecipeBridge.collect(recipeManager, server.registryAccess())
         result.transformations.forEach { UuGraph.addTransformation(it) }
 
         // 3. 求解
@@ -91,7 +91,7 @@ object UuCostIndex {
         var dynamicCount = 0
         for ((item, _) in UuGraph.allValues()) {
             if (UuGraph.value(item).isInfinite()) continue
-            val id = BuiltInRegistries.ITEM.getId(item).toString()
+            val id = BuiltInRegistries.ITEM.getKey(item).toString()
             if (id in whitelistIds) continue  // 白名单物品走 Ic2Config，不缓存
             val ub = UuGraph.costUb(item)
             if (ub > 0) {
@@ -128,7 +128,7 @@ object UuCostIndex {
         if (!ready) return emptyMap()
         val out = LinkedHashMap<String, Long>()
         for ((item, ub) in dynamicCache) {
-            out[BuiltInRegistries.ITEM.getId(item).toString()] = ub
+            out[BuiltInRegistries.ITEM.getKey(item).toString()] = ub
         }
         return out
     }
@@ -167,10 +167,10 @@ object UuCostIndex {
         // 未覆盖
         logger.info("---- IC2 物品中无成本的 ----")
         val inf = BuiltInRegistries.ITEM
-            .filter { it !== Items.AIR && BuiltInRegistries.ITEM.getId(it).namespace == Ic2_120.MOD_ID }
+            .filter { it !== Items.AIR && BuiltInRegistries.ITEM.getKey(it).namespace == Ic2_120.MOD_ID }
             .filter { UuGraph.value(it).isInfinite() }
-            .sortedBy { BuiltInRegistries.ITEM.getId(it).path }
-        for (item in inf) logger.info("  ∞  ${BuiltInRegistries.ITEM.getId(item)}")
+            .sortedBy { BuiltInRegistries.ITEM.getKey(it).path }
+        for (item in inf) logger.info("  ∞  ${BuiltInRegistries.ITEM.getKey(item)}")
         logger.info("(共 ${inf.size} 个)")
 
         logger.info("==================== UU Cost Dump End ====================")
@@ -191,7 +191,7 @@ object UuCostIndex {
             val finiteCount = sorted.size
             val infItems = BuiltInRegistries.ITEM
                 .filter { it !== Items.AIR && UuGraph.value(it).isInfinite() }
-                .sortedBy { BuiltInRegistries.ITEM.getId(it).toString() }
+                .sortedBy { BuiltInRegistries.ITEM.getKey(it).toString() }
 
             java.io.File(path).bufferedWriter(Charsets.UTF_8).use { w ->
                 w.write("# IC2 UU 复制消耗表\n")
@@ -208,7 +208,7 @@ object UuCostIndex {
                 }
                 w.write("\n# ===== 无成本物品（∞，合成链未通到白名单叶节点）=====\n")
                 for (item in infItems) {
-                    val id = BuiltInRegistries.ITEM.getId(item).toString()
+                    val id = BuiltInRegistries.ITEM.getKey(item).toString()
                     w.write(String.format("%-48s %s\n", "∞  $id", displayName(id)))
                 }
             }
@@ -230,7 +230,7 @@ object UuCostIndex {
             try {
                 val res = rm.getResource(id)
                 if (res.isPresent) {
-                    res.get().inputStream.use { stream ->
+                    res.get().open().use { stream ->
                         val obj = com.fasterxml.jackson.databind.ObjectMapper().readValue(stream, Map::class.java)
                         @Suppress("UNCHECKED_CAST")
                         for ((k, v) in obj as Map<String, Any>) merged[k] = v.toString()
@@ -250,8 +250,8 @@ object UuCostIndex {
         val item = BuiltInRegistries.ITEM.get(id)
         if (item === Items.AIR) return "?"
         return try {
-            val key = item.translationKey
-            zhLangCache[key] ?: item.getName().string
+            val key = item.descriptionId
+            zhLangCache[key] ?: item.defaultInstance.hoverName.string
         } catch (e: Exception) {
             itemId.substringAfterLast(':')
         }

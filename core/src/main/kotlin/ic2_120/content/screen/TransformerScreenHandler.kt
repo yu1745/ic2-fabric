@@ -42,19 +42,19 @@ class TransformerScreenHandler(
     )
 
     private fun getFacingDirection(): Direction {
-        return context.get({ world, pos ->
+        return context.evaluate({ world, pos ->
             world.getBlockState(pos).getValue(BlockStateProperties.FACING)
         }, Direction.NORTH)
     }
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             val be = world.getBlockEntity(pos)
             if (be is ic2_120.content.block.machines.TransformerBlockEntity) {
                 when (id) {
                     BUTTON_ID_STEP_UP -> be.setModeDirect(TransformerSync.Mode.STEP_UP)
                     BUTTON_ID_STEP_DOWN -> be.setModeDirect(TransformerSync.Mode.STEP_DOWN)
-                    else -> return@get
+                    else -> return@evaluate true
                 }
             }
         }, true)
@@ -76,7 +76,7 @@ class TransformerScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             val block = world.getBlockState(pos).block
             block is ic2_120.content.block.TransformerBlock &&
                     player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -94,7 +94,7 @@ class TransformerScreenHandler(
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val tier = buf.readVarInt()
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             return TransformerScreenHandler(syncId, playerInventory, context, SimpleContainerData(propertyCount), tier)
         }
     }

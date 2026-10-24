@@ -1,6 +1,9 @@
 package ic2_120.content.reactor
 
-import net.minecraft.client.item.TooltipContext
+import ic2_120.compat.orCreateNbt
+import ic2_120.getCustomData
+
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.chat.Component
@@ -23,9 +26,9 @@ import net.minecraft.world.level.Level
  * 永远不能堆叠**。AE2 模糊卡等按 vanilla 耐久工作的外部 mod 不受影响。
  */
 abstract class AbstractDamageableReactorComponent(
-    settings: FabricItemSettings,
+    settings: Item.Properties,
     protected val maxUse: Int
-) : AbstractReactorComponent(settings.maxDamage(maxUse)) {
+) : AbstractReactorComponent(settings.durability(maxUse)) {
 
     companion object {
         /**
@@ -36,7 +39,7 @@ abstract class AbstractDamageableReactorComponent(
     }
 
     protected fun getUse(stack: ItemStack): Int {
-        val nbt = stack.nbt ?: return 0
+        val nbt = stack.getCustomData() ?: return 0
         return nbt.getInt("use").coerceIn(0, maxUse)
     }
 
@@ -81,8 +84,8 @@ abstract class AbstractDamageableReactorComponent(
         return (13.0 * remaining).toInt().coerceIn(0, 13)
     }
 
-    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendTooltip(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendHoverText(stack, context, tooltip, type)
         val remaining = maxUse - getUse(stack)
         tooltip.add(Component.translatable("tooltip.ic2_120.reactor_durability", remaining, maxUse).withStyle(ChatFormatting.GRAY))
     }

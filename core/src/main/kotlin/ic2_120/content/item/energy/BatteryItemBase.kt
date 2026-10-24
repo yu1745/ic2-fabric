@@ -92,13 +92,13 @@ abstract class BatteryItemBase(
      * 添加工具提示（电量显示）
      * 子类可以重写此方法添加额外的提示信息
      */
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
         tooltip: MutableList<Component>,
         type: TooltipFlag
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
 
         val energy = getCurrentCharge(stack)
         val ratio = getChargeRatio(stack)

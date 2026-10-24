@@ -33,11 +33,11 @@ class StorageBoxScreenHandler(
 ) : AbstractContainerMenu(StorageBoxScreenHandler::class.type(), syncId) {
 
     /** 玩家主背包首槽索引（随储物格数量变化） */
-    val playerInventorySlotStart: Int get() = inventory.size()
+    val playerInventorySlotStart: Int get() = inventory.getContainerSize()
 
     init {
         // 储物箱槽位
-        val inventorySize = inventory.size()
+        val inventorySize = inventory.getContainerSize()
         val columns = if (inventorySize == 126) 14 else 9
         val rows = (inventorySize + columns - 1) / columns
         val (slotStartX, slotStartY) = when (inventorySize) {
@@ -85,15 +85,15 @@ class StorageBoxScreenHandler(
             movedStack = stack.copy()
 
             // 从储物箱移到玩家背包
-            if (slotIndex < inventory.size()) {
-                if (!this.moveItemStackTo(stack, inventory.size(), slots.size, true)) {
+            if (slotIndex < inventory.getContainerSize()) {
+                if (!this.moveItemStackTo(stack, inventory.getContainerSize(), slots.size, true)) {
                     return ItemStack.EMPTY
                 }
             }
             // 从玩家背包移到储物箱：禁止放入可存储物品
             else {
                 if (isStorageItem(stack)) return ItemStack.EMPTY
-                if (!this.moveItemStackTo(stack, 0, inventory.size(), false)) {
+                if (!this.moveItemStackTo(stack, 0, inventory.getContainerSize(), false)) {
                     return ItemStack.EMPTY
                 }
             }
@@ -116,7 +116,7 @@ class StorageBoxScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean {
-        return inventory.canPlayerUse(player)
+        return inventory.stillValid(player)
     }
 
     companion object {
@@ -126,7 +126,7 @@ class StorageBoxScreenHandler(
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): StorageBoxScreenHandler {
             val pos = buf.readBlockPos()
-            val world = playerInventory.player.world
+            val world = playerInventory.player.level()
             val blockEntity = world.getBlockEntity(pos)
 
             if (blockEntity is StorageBoxBlockEntity) {

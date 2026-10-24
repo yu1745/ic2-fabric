@@ -53,14 +53,14 @@ class SplitterCableScreenHandler(
     }
 
     var threshold: Int
-        get() = propertyDelegate.getValue(PROP_THRESHOLD)
+        get() = propertyDelegate.get(PROP_THRESHOLD)
         set(value) = propertyDelegate.set(
             PROP_THRESHOLD,
             value.coerceIn(CableBlockEntity.MIN_SPLITTER_THRESHOLD, CableBlockEntity.MAX_SPLITTER_THRESHOLD)
         )
 
     var inverted: Boolean
-        get() = propertyDelegate.getValue(PROP_INVERTED) != 0
+        get() = propertyDelegate.get(PROP_INVERTED) != 0
         set(value) = propertyDelegate.set(PROP_INVERTED, if (value) 1 else 0)
 
     init {
@@ -76,8 +76,8 @@ class SplitterCableScreenHandler(
     }
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        if (player.world.isClient) return true
-        val be = player.world.getBlockEntity(pos) as? CableBlockEntity ?: return false
+        if (player.level().isClientSide) return true
+        val be = player.level().getBlockEntity(pos) as? CableBlockEntity ?: return false
         if (be.cachedState.block !is SplitterCableBlock) return false
 
         when (id) {
@@ -92,12 +92,12 @@ class SplitterCableScreenHandler(
         threshold = be.splitterThreshold
         inverted = be.splitterInverted
         be.setChanged()
-        (be.cachedState.block as SplitterCableBlock).refreshControlState(player.world, pos, be.cachedState)
+        (be.cachedState.block as SplitterCableBlock).refreshControlState(player.level(), pos, be.cachedState)
         return true
     }
 
     override fun stillValid(player: Player): Boolean =
-        player.world.getBlockState(pos).block is SplitterCableBlock &&
+        player.level().getBlockState(pos).block is SplitterCableBlock &&
             player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
 
     override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack {
@@ -111,7 +111,7 @@ class SplitterCableScreenHandler(
             moveItemStackTo(stack, 0, 27, false)
         }
         if (!inserted) return ItemStack.EMPTY
-        if (stack.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+        if (stack.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
         return moved
     }
 }

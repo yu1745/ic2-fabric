@@ -32,14 +32,14 @@ class ReactorAccessHatchBlockEntity(
 
     fun getCentralReactorPublic(): NuclearReactorBlockEntity? = getCentralReactor()
 
-    override fun getMaxCountPerStack(): Int = 1
+    override fun getMaxStackSize(): Int = 1
 
     private fun getCentralReactor(): NuclearReactorBlockEntity? {
         val w = world ?: return null
         for (dx in -2..2) {
             for (dy in -2..2) {
                 for (dz in -2..2) {
-                    val be = w.getBlockEntity(pos.add(dx, dy, dz))
+                    val be = w.getBlockEntity(pos.offset(dx, dy, dz))
                     if (be is NuclearReactorBlockEntity && be.isPositionInStructure(pos)) return be
                 }
             }
@@ -48,23 +48,23 @@ class ReactorAccessHatchBlockEntity(
     }
 
     // ========== Container 委托到中心反应堆 ==========
-    override fun size(): Int = getCentralReactor()?.size() ?: 0
-    override fun getStack(slot: Int): ItemStack = getCentralReactor()?.getStack(slot) ?: ItemStack.EMPTY
-    override fun setStack(slot: Int, stack: ItemStack) = getCentralReactor()?.setStack(slot, stack) ?: Unit
+    override fun getContainerSize(): Int = getCentralReactor()?.getContainerSize() ?: 0
+    override fun getItem(slot: Int): ItemStack = getCentralReactor()?.getItem(slot) ?: ItemStack.EMPTY
+    override fun setItem(slot: Int, stack: ItemStack) = getCentralReactor()?.setItem(slot, stack) ?: Unit
     override fun removeItem(slot: Int, amount: Int): ItemStack =
-        getCentralReactor()?.remove(slot, amount) ?: ItemStack.EMPTY
-    override fun removeItemNoUpdate(slot: Int): ItemStack = getCentralReactor()?.remove(slot) ?: ItemStack.EMPTY
-    override fun clear() = getCentralReactor()?.clear() ?: Unit
+        getCentralReactor()?.removeItem(slot, amount) ?: ItemStack.EMPTY
+    override fun removeItemNoUpdate(slot: Int): ItemStack = getCentralReactor()?.removeItemNoUpdate(slot) ?: ItemStack.EMPTY
+    override fun clearContent() = getCentralReactor()?.clearContent() ?: Unit
     override fun isEmpty(): Boolean = getCentralReactor()?.isEmpty() ?: true
     override fun setChanged() {
         getCentralReactor()?.setChanged()
         super.setChanged()
     }
     override fun stillValid(player: Player): Boolean =
-        getCentralReactor()?.canPlayerUse(player) ?: false
+        getCentralReactor()?.stillValid(player) ?: false
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean =
-        getCentralReactor()?.isValid(slot, stack) ?: true
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean =
+        getCentralReactor()?.canPlaceItem(slot, stack) ?: true
 
     companion object {
         fun tick(world: Level, pos: BlockPos, state: BlockState, be: ReactorAccessHatchBlockEntity) {

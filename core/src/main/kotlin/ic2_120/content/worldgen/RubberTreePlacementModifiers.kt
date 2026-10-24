@@ -1,5 +1,7 @@
 package ic2_120.content.worldgen
 
+import net.minecraft.core.registries.Registries
+
 import ic2_120.compat.world
 
 import com.mojang.serialization.Codec
@@ -30,15 +32,15 @@ import java.util.stream.Stream
 object RubberTreeBiomeTags {
     /** 入口层：所有允许生成橡胶树的群系（= forest ∪ swamp）。 */
     val GENERATES_RUBBER_TREES: TagKey<Biome> =
-        TagKey.of(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "generates_rubber_trees"))
+        TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "generates_rubber_trees"))
 
     /** 概率层：森林/丛林类（Forge FOREST + JUNGLE）。 */
     val FOREST: TagKey<Biome> =
-        TagKey.of(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_tree_forest"))
+        TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_tree_forest"))
 
     /** 概率层：沼泽类（Forge SWAMP）。 */
     val SWAMP: TagKey<Biome> =
-        TagKey.of(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_tree_swamp"))
+        TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_tree_swamp"))
 }
 
 /**
@@ -64,7 +66,7 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
             return Stream.empty()
         }
 
-        val world = context.world
+        val world = context.level
 
         // 对齐 Forge：在 chunk 内 4 个点采样 biome。
         // pos 是区块原点 (chunkX*16, 0, chunkZ*16)，采样偏移与 Forge 一致。
@@ -77,10 +79,10 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
             // JADX 原版使用 world.func_181545_F()，即世界海平面，而不是 Y=0。
             val biome = world.getBiome(BlockPos(sampleX, world.seaLevel, sampleZ))
             // 与 Forge 顺序一致：先查 SWAMP，再查 FOREST/JUNGLE（两个独立 if，非 else）
-            if (biome.isIn(RubberTreeBiomeTags.SWAMP)) {
+            if (biome.`is`(RubberTreeBiomeTags.SWAMP)) {
                 biomeBonus += random.nextInt(10) + 5  // 5~14，沼泽加成更高
             }
-            if (biome.isIn(RubberTreeBiomeTags.FOREST)) {
+            if (biome.`is`(RubberTreeBiomeTags.FOREST)) {
                 biomeBonus += random.nextInt(5) + 1   // 1~5
             }
         }
@@ -101,7 +103,7 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
         return positions.stream()
     }
 
-    override fun getType(): PlacementModifierType<*> =
+    override fun type(): PlacementModifierType<*> =
         ModWorldgen.RUBBER_TREE_CONFIG_PLACEMENT_MODIFIER_TYPE
 
     companion object {
@@ -125,12 +127,12 @@ class RubberTreeConfigWaterDepthFilterPlacementModifier : PlacementFilter() {
             return false
         }
 
-        val oceanFloorY = context.getTopY(Heightmap.Type.OCEAN_FLOOR, pos.x, pos.z)
-        val worldSurfaceY = context.getTopY(Heightmap.Type.WORLD_SURFACE, pos.x, pos.z)
+        val oceanFloorY = context.getHeight(Heightmap.Types.OCEAN_FLOOR, pos.x, pos.z)
+        val worldSurfaceY = context.getHeight(Heightmap.Types.WORLD_SURFACE, pos.x, pos.z)
         return worldSurfaceY - oceanFloorY <= config.maxWaterDepth
     }
 
-    override fun getType(): PlacementModifierType<*> =
+    override fun type(): PlacementModifierType<*> =
         ModWorldgen.RUBBER_TREE_CONFIG_WATER_DEPTH_FILTER_TYPE
 
     companion object {

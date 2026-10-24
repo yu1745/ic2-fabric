@@ -16,21 +16,21 @@ import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecoratorTy
  */
 class RubberHoleTreeDecorator : TreeDecorator() {
 
-    override fun getType(): TreeDecoratorType<*> = ModWorldgen.RUBBER_HOLE_TREE_DECORATOR_TYPE
+    override fun type(): TreeDecoratorType<*> = ModWorldgen.RUBBER_HOLE_TREE_DECORATOR_TYPE
 
-    override fun generate(generator: TreeDecorator.Generator) {
+    override fun place(context: TreeDecorator.Context) {
         val rubberLog = RubberLogBlock::class.instance()
-        val baseState = rubberLog.defaultBlockState
+        val baseState = rubberLog.defaultBlockState()
             .setValue(BlockStateProperties.AXIS, net.minecraft.core.Direction.Axis.Y)
             .setValue(RubberLogBlock.NATURAL, true)
 
-        val initializedLogs = generator.logPositions
+        val initializedLogs = context.logs()
             .sortedBy { it.y }
             // 只处理最终仍然保留为原木的位置。
             // 树叶放置器可能会把最顶端那根原木覆盖成树叶；这里不能再把它写回原木。
-            .filter { pos -> generator.world.testBlockState(pos) { it.block is RubberLogBlock } }
+            .filter { pos -> context.level().isStateAtPosition(pos) { it.block is RubberLogBlock } }
             .map { pos ->
-                pos.toImmutable() to RubberLogBlock.initializeNaturalState(baseState, generator.random)
+                pos.immutable() to RubberLogBlock.initializeNaturalState(baseState, context.random())
             }
 
         if (initializedLogs.isEmpty()) return
@@ -41,10 +41,10 @@ class RubberHoleTreeDecorator : TreeDecorator() {
             } else {
                 // 保底孔优先落在树干下半部，避免刷到顶部后被树叶挡住。
                 val lowerHalfEndExclusive = maxOf(1, (initializedLogs.size + 1) / 2)
-                val fallbackIndex = generator.random.nextInt(lowerHalfEndExclusive)
+                val fallbackIndex = context.random().nextInt(lowerHalfEndExclusive)
                 initializedLogs.mapIndexed { index, entry ->
                     if (index == fallbackIndex) {
-                        entry.first to addFallbackHole(entry.second, generator.random)
+                        entry.first to addFallbackHole(entry.second, context.random())
                     } else {
                         entry
                     }
@@ -52,7 +52,7 @@ class RubberHoleTreeDecorator : TreeDecorator() {
             }
 
         finalLogs.forEach { (pos, state) ->
-            generator.replace(pos, state)
+            context.setBlock(pos, state)
         }
     }
 
@@ -61,7 +61,7 @@ class RubberHoleTreeDecorator : TreeDecorator() {
 
         private fun hasWetRubberFace(state: net.minecraft.world.level.block.state.BlockState): Boolean =
             listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
-                .any { state.get(RubberLogBlock.propFor(it)) == RubberFaceState.WET }
+                .any { state.getValue(RubberLogBlock.propFor(it)) == RubberFaceState.WET }
 
         private fun addFallbackHole(
             state: net.minecraft.world.level.block.state.BlockState,

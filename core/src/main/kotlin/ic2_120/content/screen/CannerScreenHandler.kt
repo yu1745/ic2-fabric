@@ -38,7 +38,7 @@ class CannerScreenHandler(
     val sync = CannerSync(SyncedDataView(propertyDelegate))
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
@@ -98,9 +98,9 @@ class CannerScreenHandler(
     }
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             val be = world.getBlockEntity(pos)
-            if (be !== blockInventory) return@get
+            if (be !== blockInventory) return@evaluate true
             if (be is CannerBlockEntity) {
                 when (id) {
                     BUTTON_ID_MODE_CYCLE -> be.cycleMode()
@@ -110,7 +110,7 @@ class CannerScreenHandler(
                         val changed = be.swapTanks()
                         val leftAfter = be.getLeftFluidAmount()
                         val rightAfter = be.getRightFluidAmount()
-                        player.sendMessage(
+                        player.displayClientMessage(
                             Component.translatable(
                                 if (changed) "gui.ic2_120.canner.tanks_swapped"
                                 else "gui.ic2_120.canner.tanks_swap_unchanged",
@@ -119,7 +119,7 @@ class CannerScreenHandler(
                             ), true
                         )
                     }
-                    else -> return@get
+                    else -> return@evaluate true
                 }
             }
         }, true)
@@ -135,15 +135,15 @@ class CannerScreenHandler(
             when {
                 index == SLOT_OUTPUT_INDEX -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index == SLOT_DISCHARGING_INDEX -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
@@ -157,7 +157,7 @@ class CannerScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -166,7 +166,7 @@ class CannerScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is CannerBlock &&
                 (world.isClient || world.getBlockEntity(pos) === blockInventory) &&
                 player.distanceToSqr(

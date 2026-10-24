@@ -26,7 +26,7 @@ object EnergyStorageUpgradeComponent {
     fun countUpgrades(inventory: Container, upgradeSlotIndices: IntArray): Int {
         var count = 0
         for (idx in upgradeSlotIndices) {
-            val stack = inventory.getStack(idx)
+            val stack = inventory.getItem(idx)
             if (!stack.isEmpty && stack.item is EnergyStorageUpgrade) {
                 count += stack.count
             }

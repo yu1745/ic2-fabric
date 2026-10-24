@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import ic2_120.compat.orCreateNbt
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.compat.stack
@@ -58,7 +60,7 @@ import java.util.function.Consumer
  * 进行染色。未固化泡沫和强化泡沫不会被染色，符合原版 IC2 Painter 的目标范围。
  */
 @ModItem(name = "painter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class PainterItem : Item(Item.Properties().maxStackSize(1).maxDamage(MAX_DAMAGE)) {
+class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
 
     override fun getName(stack: ItemStack): Component {
         val color = getColor(stack)
@@ -73,27 +75,27 @@ class PainterItem : Item(Item.Properties().maxStackSize(1).maxDamage(MAX_DAMAGE)
         val dye = player.getItemInHand(InteractionHand.OFF_HAND).item as? DyeItem
         if (dye != null) {
             if (setColor(stack, dye.color, player, InteractionHand.OFF_HAND)) {
-                return if (context.world.isClient) InteractionResult.SUCCESS else InteractionResult.CONSUME
+                return if (context.level().isClientSide) InteractionResult.SUCCESS else InteractionResult.CONSUME
             }
         }
 
         val color = getColor(stack) ?: return InteractionResult.PASS
-        val oldBlock = context.world.getBlockState(context.blockPos).block
+        val oldBlock = context.level.getBlockState(context.pos).block
         val target = wallFor(color)
         if (target == null || oldBlock === target) return InteractionResult.PASS
         if (wallColor(oldBlock) != null) {
-            if (!context.world.isClient && ClaimProtection.isProtected(context.world, context.blockPos, player, ClaimProtection.EDIT_BLOCK)) {
+            if (!context.level().isClientSide && ClaimProtection.isProtected(context.level, context.pos, player, ClaimProtection.EDIT_BLOCK)) {
                 return InteractionResult.FAIL
             }
-            context.world.setBlock(context.blockPos, target.defaultBlockState)
-            if (!context.world.isClient) damagePainter(stack, player, context.hand)
+            context.level.setBlock(context.pos, target.defaultBlockState())
+            if (!context.level().isClientSide) damagePainter(stack, player, context.hand)
             return InteractionResult.CONSUME
         }
         return InteractionResult.PASS
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(hand)
+        val stack = user.getItemInHand(player.usedItemHand)
         val dyeHand = if (hand == InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
         val dye = user.getItemInHand(dyeHand).item as? DyeItem
         if (dye != null && setColor(stack, dye.color, user, dyeHand)) {
@@ -102,13 +104,13 @@ class PainterItem : Item(Item.Properties().maxStackSize(1).maxDamage(MAX_DAMAGE)
         return InteractionResultHolder.pass(stack)
     }
 
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         world: Level?,
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext,
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
         val color = getColor(stack)
         tooltip.add(
             Component.translatable(
@@ -129,8 +131,8 @@ class PainterItem : Item(Item.Properties().maxStackSize(1).maxDamage(MAX_DAMAGE)
 
     private fun setColor(stack: ItemStack, color: DyeColor, player: Player, dyeHand: InteractionHand): Boolean {
         if (getColor(stack) == color) return false
-        stack.orCreateNbt.putInt(COLOR_KEY, color.id)
-        if (!player.abilities.creativeMode) player.getItemInHand(dyeHand).shrink(1)
+        stack.orCreateNbt = stack.orCreateNbt.apply { putInt(COLOR_KEY, color.id) }
+        if (!player.abilities.instabuild) player.getItemInHand(dyeHand).shrink(1)
         return true
     }
 
@@ -139,8 +141,8 @@ class PainterItem : Item(Item.Properties().maxStackSize(1).maxDamage(MAX_DAMAGE)
         if (nextDamage >= stack.maxDamage) {
             // 原版 IC2 涂刷器耗尽后不会消失，而是恢复成未着色的初始刷子。
             stack.damage = 0
-            stack.removeSubNbt(COLOR_KEY)
-            player.sendToolBreakStatus(hand)
+            val nbt0 = stack.orCreateNbt; nbt0.remove(COLOR_KEY); stack.orCreateNbt = nbt0
+            player
         } else {
             stack.damage = nextDamage
         }
@@ -151,15 +153,16 @@ class PainterItem : Item(Item.Properties().maxStackSize(1).maxDamage(MAX_DAMAGE)
         private const val MAX_DAMAGE = 32
 
         fun getColor(stack: ItemStack): DyeColor? {
-            val nbt = stack.nbt ?: return null
-            if (!nbt.hasProperty(COLOR_KEY)) return null
+            val nbt = stack.orCreateNbt
+        if (nbt.allTags.isEmpty) return null
+            if (!nbt.contains(COLOR_KEY)) return null
             return DyeColor.byId(nbt.getInt(COLOR_KEY))
         }
 
         /** 创造栏和 JEI 使用的 16 个带色刷子变体。 */
         fun createColoredStacks(): List<ItemStack> = DyeColor.entries.map { color ->
             ItemStack(PainterItem::class.instance()).also { stack ->
-                stack.orCreateNbt.putInt(COLOR_KEY, color.id)
+                stack.orCreateNbt = stack.orCreateNbt.apply { putInt(COLOR_KEY, color.id) }
             }
         }
 
@@ -185,8 +188,8 @@ class PainterItem : Item(Item.Properties().maxStackSize(1).maxDamage(MAX_DAMAGE)
         private fun wallColor(block: Block): DyeColor? = DyeColor.entries.firstOrNull { wallFor(it) === block }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, PainterItem::class.instance(), 1)
+        fun generateRecipes(exporter: RecipeOutput) {
+            ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, PainterItem::class.instance(), 1)
                 .pattern("II ")
                 .pattern(" IS")
                 .pattern("  I")

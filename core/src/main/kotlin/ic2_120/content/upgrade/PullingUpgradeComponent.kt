@@ -101,7 +101,7 @@ object PullingUpgradeComponent {
         // 预解析每个抽入升级的有效方向与速率（多个抽入升级共享同一方向的缓存查找结果）
         val active = mutableListOf<Triple<Int, Item?, List<Direction>>>()
         for (idx in upgradeSlotIndices) {
-            val upgradeStack = inventory.getStack(idx)
+            val upgradeStack = inventory.getItem(idx)
             if (upgradeStack.isEmpty || upgradeStack.item !is PullingUpgrade) continue
             val rate = EjectorUpgradeComponent.itemTransferRate(upgradeStack.count)
             if (rate <= 0) continue
@@ -114,7 +114,7 @@ object PullingUpgradeComponent {
 
         // 输入槽全部已满（非空且达到堆叠上限）时，任何物品都无法再抽入，跳过整个方向循环
         if (inputSlotIndices.all { slot ->
-                val stack = inventory.getStack(slot)
+                val stack = inventory.getItem(slot)
                 !stack.isEmpty && stack.count >= stack.maxStackSize
             }) return false
 
@@ -132,7 +132,7 @@ object PullingUpgradeComponent {
                 val source = if (caches != null) {
                     caches[dir.ordinal]?.find(dir.opposite)
                 } else {
-                    ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite)
+                    ItemStorage.SIDED.find(world, pos.relative(dir), dir.opposite)
                 } ?: continue
                 if (!source.supportsExtraction()) continue
                 candidates.add(source)
@@ -162,14 +162,14 @@ object PullingUpgradeComponent {
                     // 找到可以接受此物品的输入槽
                     for (slotIndex in inputSlotIndices) {
                         if (remainingQuota <= 0) break
-                        val current = inventory.getStack(slotIndex)
+                        val current = inventory.getItem(slotIndex)
                         if (!current.isEmpty) {
                             if (current.item != item) continue
                             if (current.count >= current.maxStackSize) continue
                         }
 
                         // 检查机器是否接受该物品（完整语义裁决，仅对放行候选执行一次）
-                        if (!inventory.isValid(slotIndex, variant.toStack(1))) continue
+                        if (!inventory.canPlaceItem(slotIndex, variant.toStack(1))) continue
 
                         val space = if (current.isEmpty) current.maxStackSize else current.maxStackSize - current.count
                         if (space <= 0) continue
@@ -186,11 +186,11 @@ object PullingUpgradeComponent {
                                 didWork = true
                                 // 将物品放入输入槽
                                 if (current.isEmpty) {
-                                    inventory.setStack(slotIndex, variant.toStack(extracted.toInt()))
+                                    inventory.setItem(slotIndex, variant.toStack(extracted.toInt()))
                                 } else {
                                     val newStack = current.copy()
                                     newStack.count += extracted.toInt()
-                                    inventory.setStack(slotIndex, newStack)
+                                    inventory.setItem(slotIndex, newStack)
                                 }
                             }
                         }

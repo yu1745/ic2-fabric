@@ -63,14 +63,14 @@ class WaterKineticGeneratorScreenHandler(
                     if (rotorSlot .hasItem()) return ItemStack.EMPTY
                     val one = stackInSlot.copy()
                     one.count = 1
-                    rotorSlot.stack = one
+                    rotorSlot.set(one)
                     rotorSlot.setChanged()
                     stackInSlot.shrink(1)
                 }
                 else -> if (!moveItemStackTo(stackInSlot, 1, 37, false)) return ItemStack.EMPTY
             }
 
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
         }
@@ -78,7 +78,7 @@ class WaterKineticGeneratorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is WaterKineticGeneratorBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
@@ -92,7 +92,7 @@ class WaterKineticGeneratorScreenHandler(
         private val ROTOR_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack ->
-                ALLOWED_ROTORS.contains(net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.item).path)
+                ALLOWED_ROTORS.contains(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.item).path)
             }
         )
 

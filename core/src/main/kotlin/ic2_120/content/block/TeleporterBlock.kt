@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -35,7 +37,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 @ModBlock(name = "teleporter", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
@@ -52,13 +53,13 @@ class TeleporterBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, TeleporterBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, TeleporterBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
-        val stack = player.getItemInHand(hand)
+        val stack = player.mainHandItem
         if (stack.item is FrequencyTransmitter || stack.item is RecallScrollItem) {
             return InteractionResult.PASS
         }
@@ -83,7 +84,7 @@ class TeleporterBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val freq = FrequencyTransmitter::class.instance()
             val advancedCircuit = AdvancedCircuit::class.instance()

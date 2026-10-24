@@ -12,14 +12,14 @@ object ItemIdCommand {
             dispatcher.register(
                 literal("ic2itemid")
                     .executes { context ->
-                        val player = context.source.playerOrThrow
-                        val stack = player.mainHandStack
+                        val player = context.source.getPlayerOrException()
+                        val stack = player.mainHandItem
                         if (stack.isEmpty) {
-                            context.source.sendError(Component.literal("主手没有物品"))
+                            context.source.sendFailure(Component.literal("主手没有物品"))
                             return@executes 0
                         }
-                        val id = BuiltInRegistries.ITEM.getId(stack.item)
-                        context.source.sendFeedback({ Component.literal(id.toString()) }, false)
+                        val id = BuiltInRegistries.ITEM.getKey(stack.item)
+                        context.source.sendSuccess({ Component.literal(id.toString()) }, false)
                         Command.SINGLE_SUCCESS
                     }
             )

@@ -13,7 +13,7 @@ object KineticNetworkManager {
     private val worldPosToNetwork = mutableMapOf<ResourceKey<Level>, MutableMap<Long, KineticNetwork>>()
 
     private fun mapFor(world: Level): MutableMap<Long, KineticNetwork> =
-        worldPosToNetwork.getOrPut(world.registryKey) { mutableMapOf() }
+        worldPosToNetwork.getOrPut(world.dimension()) { mutableMapOf() }
 
     fun tickAt(world: Level, pos: BlockPos) {
         if (world.isClient) return
@@ -31,22 +31,22 @@ object KineticNetworkManager {
     }
 
     fun invalidateAt(world: Level, pos: BlockPos) {
-        val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
+        val posToNetwork = worldPosToNetwork[world.dimension()] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
         for (node in network.nodes) {
             posToNetwork.remove(node)
-            (world.getBlockEntity(BlockPos.fromLong(node)) as? TransmissionBlockEntity)?.setCurrentKu(0)
+            (world.getBlockEntity(BlockPos.of(node)) as? TransmissionBlockEntity)?.setCurrentKu(0)
         }
     }
 
     fun invalidateConnectionCachesAt(world: Level, pos: BlockPos) {
-        val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
+        val posToNetwork = worldPosToNetwork[world.dimension()] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
         network.invalidateConnectionCaches()
     }
 
     fun onWorldUnload(world: Level) {
-        worldPosToNetwork.remove(world.registryKey)
+        worldPosToNetwork.remove(world.dimension())
     }
 
     private fun getOrCreateNetwork(world: Level, start: BlockPos): KineticNetwork {
@@ -83,7 +83,7 @@ object KineticNetworkManager {
 
             val dirs = KineticConnectionRules.nodeDirections(world, cur, state)
             for (dir in dirs) {
-                val next = cur.offset(dir)
+                val next = cur.relative(dir)
                 val nextLong = next.asLong()
                 if (nextLong in visited) continue
                 val nextState = world.getBlockState(next)

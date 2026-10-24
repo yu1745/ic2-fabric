@@ -1,5 +1,14 @@
 package ic2_120.content.recipes
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
+import net.minecraft.core.registries.Registries
+
 import ic2_120.Ic2_120
 import ic2_120.content.block.DirectionalMachineBlock
 import ic2_120.content.block.Ic2ScaffoldBlock
@@ -11,7 +20,6 @@ import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
 import net.minecraft.world.level.block.Block
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.HolderLookup
 import net.minecraft.tags.BlockTags
 import net.minecraft.tags.TagKey
 import net.minecraft.resources.ResourceLocation
@@ -27,7 +35,7 @@ import kotlin.reflect.KClass
  */
 class ModBlockTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<HolderLookup.WrapperLookup>,
+    registriesFuture: CompletableFuture<HolderLookup.HolderLookup.Provider>,
 ) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
     private val compatPathsBuilt = mutableSetOf<String>()
 
@@ -73,7 +81,7 @@ class ModBlockTagProvider(
         "iridium_tank",
     )
 
-    override fun configure(registries: HolderLookup.WrapperLookup) {
+    override fun configure(registries: HolderLookup.HolderLookup.Provider) {
         val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).setReplace(false)
         val ironToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).setReplace(false)
         val stoneToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL).setReplace(false)
@@ -170,11 +178,11 @@ class ModBlockTagProvider(
     }
 
     private fun cBlock(path: String): TagKey<Block> =
-        TagKey.of(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", path))
+        TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", path))
 
     private fun forgeBlock(path: String): TagKey<Block> =
-        TagKey.of(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("forge", path))
+        TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("forge", path))
 
     private fun compatBlock(path: String): TagKey<Block> =
-        TagKey.of(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
+        TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
 }

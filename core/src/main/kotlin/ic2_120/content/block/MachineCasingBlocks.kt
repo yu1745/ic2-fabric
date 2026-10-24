@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.registry.CreativeTab
@@ -19,7 +21,6 @@ import ic2_120.content.item.SteelPlate
 import ic2_120.content.item.CarbonPlate
 import ic2_120.content.item.Alloy
 import ic2_120.content.recipes.ModTags
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -31,13 +32,13 @@ class MachineCasingBlock : Block(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MachineCasingBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("I I")
                 .pattern("III")
                 .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
-                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, MachineCasingBlock::class.recipeId("from_plates"))
         }
     }
@@ -52,7 +53,7 @@ class AdvancedMachineCasingBlock : Block(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedMachineCasingBlock::class.instance(), 1)
                 .pattern("sgs")
                 .pattern("cxc")
@@ -61,7 +62,7 @@ class AdvancedMachineCasingBlock : Block(
                 .define('g', Alloy::class.instance())
                 .define('c', CarbonPlate::class.instance())
                 .define('x', MachineCasingBlock::class.instance())
-                .unlockedBy(has(SteelPlate::class.instance()), has(SteelPlate::class.instance()))
+                .unlockedBy(getHasName(SteelPlate::class.instance()), has(SteelPlate::class.instance()))
                 .save(exporter, AdvancedMachineCasingBlock::class.recipeId("from_components"))
         }
     }

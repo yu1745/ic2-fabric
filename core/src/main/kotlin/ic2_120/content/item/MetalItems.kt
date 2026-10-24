@@ -1,5 +1,6 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.registry.CreativeTab
@@ -34,7 +35,7 @@ class TinIngot : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, TinIngot::class.instance(), 9)
                 .requires(TinBlock::class.instance())
-                .unlockedBy(has(TinBlock::class.instance()), has(TinBlock::class.instance()))
+                .unlockedBy(getHasName(TinBlock::class.instance()), has(TinBlock::class.instance()))
                 .save(exporter, TinIngot::class.recipeId("from_block"))
 
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TinBlock::class.instance(), 1)
@@ -42,60 +43,60 @@ class TinIngot : Item(Item.Properties()) {
                 .pattern("III")
                 .pattern("III")
                 .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
-                .unlockedBy(has(TinIngot::class.instance()), has(TinIngot::class.instance()))
+                .unlockedBy(getHasName(TinIngot::class.instance()), has(TinIngot::class.instance()))
                 .save(exporter, TinBlock::class.recipeId("from_ingot"))
 
-            SimpleCookingRecipeBuilder.createSmelting(
-                Ingredient.ofItems(TinOreBlock::class.item()),
+            SimpleCookingRecipeBuilder.smelting(
+                Ingredient.of(TinOreBlock::class.item()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
             )
-                .unlockedBy(has(TinOreBlock::class.item()), has(TinOreBlock::class.item()))
+                .unlockedBy(getHasName(TinOreBlock::class.item()), has(TinOreBlock::class.item()))
                 .save(exporter, TinIngot::class.recipeId("from_tin_ore_smelting"))
 
-            SimpleCookingRecipeBuilder.createSmelting(
-                Ingredient.ofItems(DeepslateTinOreBlock::class.item()),
+            SimpleCookingRecipeBuilder.smelting(
+                Ingredient.of(DeepslateTinOreBlock::class.item()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
             )
                 .unlockedBy(
-                    has(DeepslateTinOreBlock::class.item()),
+                    getHasName(DeepslateTinOreBlock::class.item()),
                     has(DeepslateTinOreBlock::class.item())
                 )
                 .save(exporter, TinIngot::class.recipeId("from_deepslate_tin_ore_smelting"))
 
-            SimpleCookingRecipeBuilder.createSmelting(
-                Ingredient.ofItems(RawTin::class.instance()),
+            SimpleCookingRecipeBuilder.smelting(
+                Ingredient.of(RawTin::class.instance()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
             )
-                .unlockedBy(has(RawTin::class.instance()), has(RawTin::class.instance()))
+                .unlockedBy(getHasName(RawTin::class.instance()), has(RawTin::class.instance()))
                 .save(exporter, TinIngot::class.recipeId("from_raw_tin_smelting"))
 
-            SimpleCookingRecipeBuilder.createSmelting(
-                Ingredient.ofItems(CrushedTin::class.instance()),
+            SimpleCookingRecipeBuilder.smelting(
+                Ingredient.of(CrushedTin::class.instance()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
             )
-                .unlockedBy(has(CrushedTin::class.instance()), has(CrushedTin::class.instance()))
+                .unlockedBy(getHasName(CrushedTin::class.instance()), has(CrushedTin::class.instance()))
                 .save(exporter, TinIngot::class.recipeId("from_crushed_tin_smelting"))
 
-            SimpleCookingRecipeBuilder.createSmelting(
-                Ingredient.ofItems(PurifiedTin::class.instance()),
+            SimpleCookingRecipeBuilder.smelting(
+                Ingredient.of(PurifiedTin::class.instance()),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
             )
-                .unlockedBy(has(PurifiedTin::class.instance()), has(PurifiedTin::class.instance()))
+                .unlockedBy(getHasName(PurifiedTin::class.instance()), has(PurifiedTin::class.instance()))
                 .save(exporter, TinIngot::class.recipeId("from_purified_tin_smelting"))
         }
     }
@@ -111,7 +112,7 @@ class BronzeIngot : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
                 .requires(BronzeBlock::class.instance())
-                .unlockedBy(has(BronzeBlock::class.instance()), has(BronzeBlock::class.instance()))
+                .unlockedBy(getHasName(BronzeBlock::class.instance()), has(BronzeBlock::class.instance()))
                 .save(exporter, BronzeIngot::class.recipeId("from_block"))
 
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzeBlock::class.instance(), 1)
@@ -119,7 +120,7 @@ class BronzeIngot : Item(Item.Properties()) {
                 .pattern("III")
                 .pattern("III")
                 .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE))
-                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .unlockedBy(getHasName(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
                 .save(exporter, BronzeBlock::class.recipeId("from_ingot"))
         }
     }

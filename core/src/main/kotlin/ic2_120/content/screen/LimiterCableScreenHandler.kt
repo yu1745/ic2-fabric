@@ -61,8 +61,8 @@ class LimiterCableScreenHandler(
     /** 32-bit limit value split across two 16-bit ContainerData entries. */
     var limit: Long
         get() {
-            val low = propertyDelegate.getValue(PROP_LOW).toLong() and 0xFFFFL
-            val high = propertyDelegate.getValue(PROP_HIGH).toLong() and 0xFFFFL
+            val low = propertyDelegate.get(PROP_LOW).toLong() and 0xFFFFL
+            val high = propertyDelegate.get(PROP_HIGH).toLong() and 0xFFFFL
             return (high shl 16) or low
         }
         set(value) {
@@ -86,7 +86,7 @@ class LimiterCableScreenHandler(
     }
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        val world = player.world
+        val world = player.level()
         if (world.isClient) return true
         val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return false
 
@@ -129,7 +129,7 @@ class LimiterCableScreenHandler(
             if (!moveItemStackTo(stack, 0, 27, false)) return ItemStack.EMPTY
         }
 
-        if (stack.isEmpty) slot.stack = ItemStack.EMPTY
+        if (stack.isEmpty) slot.set(ItemStack.EMPTY)
         else slot.setChanged()
         return moved
     }

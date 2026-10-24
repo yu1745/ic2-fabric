@@ -1,5 +1,9 @@
 package ic2_120.content.uu
 
+import ic2_120.compat.orCreateNbt
+import ic2_120.getCustomData
+import net.minecraft.core.component.DataComponents
+
 import ic2_120.config.Ic2Config
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
@@ -26,7 +30,7 @@ data class UuTemplateEntry(
         val id = ResourceLocation.tryParse(itemId)
         val item = id?.let { BuiltInRegistries.ITEM.get(it) }
         return if (item != null && item != net.minecraft.world.item.Items.AIR) {
-            item.name.copy()
+            item.description.copy()
         } else {
             Component.literal(itemId)
         }
@@ -43,16 +47,22 @@ data class UuTemplateEntry(
 }
 
 fun ItemStack.getUuTemplate(): UuTemplateEntry? =
-    UuTemplateEntry.fromNbt(nbt?.getCompound(UU_TEMPLATE_NBT_KEY))
+    UuTemplateEntry.fromNbt(getCustomData()?.getCompound(UU_TEMPLATE_NBT_KEY))
 
 fun ItemStack.setUuTemplate(entry: UuTemplateEntry?) {
+    // TODO(1.21.1): 组件时代 NBT 为复制语义，修改后必须通过 orCreateNbt 写回。
     val root = orCreateNbt
     if (entry == null) {
         root.remove(UU_TEMPLATE_NBT_KEY)
-        if (root.isEmpty) nbt = null
+        if (root.isEmpty) {
+            this.remove(DataComponents.CUSTOM_DATA)
+        } else {
+            orCreateNbt = root
+        }
         return
     }
     root.put(UU_TEMPLATE_NBT_KEY, entry.toNbt())
+    orCreateNbt = root
 }
 
 fun ItemStack.appendUuTemplateTooltip(tooltip: MutableList<Component>) {

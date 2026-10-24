@@ -1,5 +1,10 @@
 package ic2_120.content.recipes.metalformer
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.content.recipes.ModMachineRecipes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.Ingredient
@@ -7,7 +12,6 @@ import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.crafting.RecipeInput
-import net.minecraft.core.HolderLookup
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.level.Level
 
@@ -21,31 +25,30 @@ sealed class MetalFormerRecipe(
 ) : Recipe<MetalFormerRecipe.Input> {
 
     override fun matches(inventory: Input, world: Level): Boolean {
-        return ingredient.test(inventory.getStack(0))
+        return ingredient.test(inventory.getItem(0))
     }
 
-    override fun craft(inventory: Input, lookup: HolderLookup.WrapperLookup): ItemStack {
+    override fun assemble(inventory: Input, lookup: HolderLookup.Provider): ItemStack {
         return output.copy()
     }
 
     fun getId(): ResourceLocation = recipeId
 
-    override fun fits(width: Int, height: Int): Boolean = true
+    override fun canCraftInDimensions(width: Int, height: Int): Boolean = true
 
-    override fun getResult(lookup: HolderLookup.WrapperLookup): ItemStack = output.copy()
+    override fun getResultItem(lookup: HolderLookup.Provider): ItemStack = output.copy()
 
-    override fun getRemainder(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
+    override fun getRemainingItems(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
         return net.minecraft.core.NonNullList.withSize(1, ItemStack.EMPTY)
     }
 
     class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.world.Container {
-        override fun getStack(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
-        override fun getStackInSlot(slot: Int): ItemStack = getStack(slot)
-        override fun getSize(): Int = 1
+        override fun getItem(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
         override fun size(): Int = 1
+        override fun getContainerSize(): Int = 1
         override fun isEmpty(): Boolean = inputStack.isEmpty
-        override fun clear() {}
-        override fun setStack(slot: Int, stack: ItemStack) {}
+        override fun clearContent() {}
+        override fun setItem(slot: Int, stack: ItemStack) {}
         override fun removeItemNoUpdate(slot: Int): ItemStack = ItemStack.EMPTY
         override fun removeItem(slot: Int, amount: Int): ItemStack = ItemStack.EMPTY
         override fun setChanged() {}

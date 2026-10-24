@@ -22,7 +22,7 @@ fun pullKuFromNeighbors(
         val sideFromReceiver = direction
         if (!receiver.canInputKuFrom(sideFromReceiver)) continue
 
-        val neighborPos = pos.offset(direction)
+        val neighborPos = pos.relative(direction)
         val source = world.getBlockEntity(neighborPos) as? IKineticMachinePort ?: continue
 
         val sideFromSource = direction.opposite

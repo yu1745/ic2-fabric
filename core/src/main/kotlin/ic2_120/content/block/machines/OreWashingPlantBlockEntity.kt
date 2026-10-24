@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -61,7 +65,6 @@ import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.RecipeManager
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -97,7 +100,7 @@ class OreWashingPlantBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = OreWashingPlantBlock.ACTIVE
 
@@ -162,7 +165,7 @@ class OreWashingPlantBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_ORE), matcher = { isCrushedOreInput(it) }),
@@ -250,9 +253,9 @@ class OreWashingPlantBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) {
             stack.count = 1
         }
@@ -262,12 +265,12 @@ class OreWashingPlantBlockEntity(
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_ORE -> isCrushedOreInput(stack)
         SLOT_INPUT_WATER -> isWaterInput(stack)
         SLOT_OUTPUT_1, SLOT_OUTPUT_2, SLOT_OUTPUT_3, SLOT_OUTPUT_EMPTY -> false
@@ -276,9 +279,11 @@ class OreWashingPlantBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.ore_washing_plant")
@@ -289,7 +294,7 @@ class OreWashingPlantBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(OreWashingPlantSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -305,7 +310,7 @@ class OreWashingPlantBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(OreWashingPlantSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -341,7 +346,7 @@ class OreWashingPlantBlockEntity(
         val inv = OreWashingRecipe.Input(input)
         val recipeManager = world?.recipeManager ?: return null
 
-        val recipe = recipeManager.getFirstMatch(getRecipeType<OreWashingRecipe>(), inv, world ?: return null).orElse(null)
+        val recipe = recipeManager.getRecipeFor(getRecipeType<OreWashingRecipe>(), inv, world ?: return null).orElse(null)?.value
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
         cachedRecipe = recipe
@@ -386,7 +391,7 @@ class OreWashingPlantBlockEntity(
         extractFromWaterInputSlot()
 
         // 检查输入物品
-        val input = getStack(SLOT_INPUT_ORE)
+        val input = getItem(SLOT_INPUT_ORE)
         if (input.isEmpty) {
             resetProgress()
             currentRecipe = null
@@ -414,17 +419,17 @@ class OreWashingPlantBlockEntity(
         val output3 = allOutputs[2]
 
         // 检查输出槽是否有空间
-        val output1Slot = getStack(SLOT_OUTPUT_1)
-        val output2Slot = getStack(SLOT_OUTPUT_2)
-        val output3Slot = getStack(SLOT_OUTPUT_3)
-        val outputEmptySlot = getStack(SLOT_OUTPUT_EMPTY)
+        val output1Slot = getItem(SLOT_OUTPUT_1)
+        val output2Slot = getItem(SLOT_OUTPUT_2)
+        val output3Slot = getItem(SLOT_OUTPUT_3)
+        val outputEmptySlot = getItem(SLOT_OUTPUT_EMPTY)
 
         val canAccept1 = output1Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output1Slot, output1) && output1Slot.count + output1.count <= output1.maxStackSize)
+            (ItemStack.isSameItem(output1Slot, output1) && output1Slot.count + output1.count <= output1.maxStackSize)
         val canAccept2 = output2Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output2Slot, output2) && output2Slot.count + output2.count <= output2.maxStackSize)
+            (ItemStack.isSameItem(output2Slot, output2) && output2Slot.count + output2.count <= output2.maxStackSize)
         val canAccept3 = output3Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output3Slot, output3) && output3Slot.count + output3.count <= output3.maxStackSize)
+            (ItemStack.isSameItem(output3Slot, output3) && output3Slot.count + output3.count <= output3.maxStackSize)
 
         if (!canAccept1 || !canAccept2 || !canAccept3) {
             resetProgress()
@@ -437,13 +442,13 @@ class OreWashingPlantBlockEntity(
         if (progressF >= OreWashingPlantSync.PROGRESS_MAX) {
             input.shrink(1)
             // 放入输出槽
-            if (output1Slot.isEmpty()) setStack(SLOT_OUTPUT_1, output1)
+            if (output1Slot.isEmpty()) setItem(SLOT_OUTPUT_1, output1)
             else if (!output1.isEmpty) output1Slot.grow(output1.count)
 
-            if (output2Slot.isEmpty()) setStack(SLOT_OUTPUT_2, output2)
+            if (output2Slot.isEmpty()) setItem(SLOT_OUTPUT_2, output2)
             else if (!output2.isEmpty) output2Slot.grow(output2.count)
 
-            if (output3Slot.isEmpty()) setStack(SLOT_OUTPUT_3, output3)
+            if (output3Slot.isEmpty()) setItem(SLOT_OUTPUT_3, output3)
             else if (!output3.isEmpty) output3Slot.grow(output3.count)
 
             progressF = 0f
@@ -498,26 +503,26 @@ class OreWashingPlantBlockEntity(
     }
 
     private fun extractFromWaterInputSlot() {
-        val waterInput = getStack(SLOT_INPUT_WATER)
+        val waterInput = getItem(SLOT_INPUT_WATER)
         if (waterInput.isEmpty) return
 
         // 检查储罐是否有空间
         val space = waterTankInternal.remainingSpace().coerceAtLeast(0L)
         if (space < FluidConstants.BUCKET) return
 
-        val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
+        val emptySlot = getItem(SLOT_OUTPUT_EMPTY)
         val emptyStack = when (waterInput.item) {
             Items.WATER_BUCKET -> ItemStack(Items.BUCKET)
             is WaterCell -> {
                 val cellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")
-                ItemStack(BuiltInRegistries.ITEM.getValue(cellId))
+                ItemStack(BuiltInRegistries.ITEM.get(cellId))
             }
             else -> return
         }
 
         // 检查空容器槽是否有空间
         val canAcceptEmpty = emptySlot.isEmpty() ||
-            (ItemStack.areItemsEqual(emptySlot, emptyStack) && emptySlot.count + 1 <= emptyStack.maxStackSize)
+            (ItemStack.isSameItem(emptySlot, emptyStack) && emptySlot.count + 1 <= emptyStack.maxStackSize)
 
         if (!canAcceptEmpty) return
 
@@ -526,10 +531,10 @@ class OreWashingPlantBlockEntity(
 
         // 消耗水输入
         waterInput.shrink(1)
-        if (waterInput.isEmpty) setStack(SLOT_INPUT_WATER, ItemStack.EMPTY)
+        if (waterInput.isEmpty) setItem(SLOT_INPUT_WATER, ItemStack.EMPTY)
 
         // 放入空容器
-        if (emptySlot.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyStack)
+        if (emptySlot.isEmpty) setItem(SLOT_OUTPUT_EMPTY, emptyStack)
         else emptySlot.grow(1)
 
         setChanged()

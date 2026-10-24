@@ -1,5 +1,6 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.Ic2_120
@@ -155,7 +156,7 @@ class DualUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Properties(), 20_
                 .pattern("XFX")
                 .define('X', UraniumFuelRodItem::class.instance())
                 .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
-                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, DualUraniumFuelRodItem::class.id())
         }
     }
@@ -175,7 +176,7 @@ class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Properties(), 20_
                 .define('X', DualUraniumFuelRodItem::class.instance())
                 .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
                 .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
-                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, QuadUraniumFuelRodItem::class.id())
 
             // 四联 <- 单联 × 2：XFX / CFC / XFX（X=单联）
@@ -184,7 +185,7 @@ class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Properties(), 20_
                 .define('X', UraniumFuelRodItem::class.instance())
                 .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
                 .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
-                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quad_uranium_fuel_rod_from_single"))
         }
     }
@@ -304,7 +305,7 @@ class MoxFuelRodItem : AbstractMoxFuelRodItem(Item.Properties(), 10_000, 1) {
                 .pattern("XFX")
                 .define('X', MoxFuelRodItem::class.instance())
                 .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
-                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, DualMoxFuelRodItem::class.id())
         }
     }
@@ -324,7 +325,7 @@ class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Properties(), 10_000, 2) 
                 .define('X', DualMoxFuelRodItem::class.instance())
                 .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
                 .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
-                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, QuadMoxFuelRodItem::class.id())
 
             // 四联 <- 单联：XFX / CFC / XFX（X=单联MOX燃料棒）
@@ -333,7 +334,7 @@ class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Properties(), 10_000, 2) 
                 .define('X', MoxFuelRodItem::class.instance())
                 .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
                 .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
-                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quad_mox_fuel_rod_from_single"))
         }
     }

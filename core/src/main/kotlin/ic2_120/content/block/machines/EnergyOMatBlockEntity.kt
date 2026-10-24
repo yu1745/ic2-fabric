@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -42,7 +46,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.server.level.ServerPlayer
@@ -73,7 +76,7 @@ class EnergyOMatBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty = EnergyOMatBlock.ACTIVE
     override fun getInventory(): Container = this
@@ -99,7 +102,7 @@ class EnergyOMatBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_UPGRADE), matcher = { it.item is ic2_120.content.item.IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_CHARGE), matcher = { it.item is IBatteryItem || it.item is IElectricTool }, maxPerSlot = 1),
@@ -138,9 +141,9 @@ class EnergyOMatBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun getContainerSize(): Int = INVENTORY_SIZE
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_CHARGE && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
@@ -148,12 +151,12 @@ class EnergyOMatBlockEntity(
     }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun setChanged() { super.setChanged() }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_DEMAND -> true
         SLOT_INPUT -> matchesDemand(stack)
         SLOT_CHARGE -> stack.item is IBatteryItem || stack.item is IElectricTool
@@ -163,24 +166,26 @@ class EnergyOMatBlockEntity(
 
     private fun matchesDemand(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val demand = getStack(SLOT_DEMAND)
+        val demand = getItem(SLOT_DEMAND)
         if (demand.isEmpty) return false
-        return ItemStack.areItemsEqual(demand, stack)
+        return ItemStack.isSameItem(demand, stack)
     }
 
     fun isOwner(player: Player): Boolean {
         val uuid = ownerUuid ?: return true
-        return player.uuid == uuid || player.hasPermissionLevel(2)
+        return player.uuid == uuid || player.hasPermissions(2)
     }
 
-    fun getScreenHandlerFactory(player: Player): ExtendedScreenHandlerFactory {
+    fun getScreenHandlerFactory(player: Player): ExtendedScreenHandlerFactory<FriendlyByteBuf> {
         val owner = isOwner(player)
         val be = this
-        return object : ExtendedScreenHandlerFactory {
-            override fun writeScreenOpeningData(p: ServerPlayer, buf: FriendlyByteBuf) {
-                buf.writeBlockPos(pos)
-                buf.writeVarInt(syncedData.size())
-                buf.writeBoolean(owner)
+        return object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+            override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+                val buf = FriendlyByteBuf(Unpooled.buffer())
+                    buf.writeBlockPos(pos)
+                    buf.writeVarInt(syncedData.size)
+                    buf.writeBoolean(owner)
+                return buf
             }
             override fun getDisplayName(): Component = be.getDisplayName()
             override fun createMenu(syncId: Int, playerInventory: Inventory, p: Player?): AbstractContainerMenu =
@@ -195,15 +200,17 @@ class EnergyOMatBlockEntity(
         EnergyOMatScreenHandler(syncId, playerInventory, this,
             ContainerLevelAccess.create(world!!, pos), syncedData, player?.let { isOwner(it) } ?: false)
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        buf.writeBoolean(isOwner(player))
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+            buf.writeBoolean(isOwner(player))
+        return buf
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyOMatSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -215,7 +222,7 @@ class EnergyOMatBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyOMatSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_EU_OFFER, sync.euOffer)
@@ -259,10 +266,10 @@ class EnergyOMatBlockEntity(
     }
 
     private fun processTrade(world: Level, pos: BlockPos) {
-        val demand = getStack(SLOT_DEMAND)
-        val input = getStack(SLOT_INPUT)
+        val demand = getItem(SLOT_DEMAND)
+        val input = getItem(SLOT_INPUT)
         if (demand.isEmpty || input.isEmpty) return
-        if (!ItemStack.areItemsEqual(demand, input) || input.count < demand.count) return
+        if (!ItemStack.isSameItem(demand, input) || input.count < demand.count) return
 
         // 模拟：demand 物品能否送入相邻库存
         val demandVariant = ItemVariant.of(demand)
@@ -272,7 +279,7 @@ class EnergyOMatBlockEntity(
 
         // 实际执行：消耗 input，送入相邻库存
         input.shrink(demand.count)
-        if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
+        if (input.isEmpty) setItem(SLOT_INPUT, ItemStack.EMPTY)
         distributeToAdjacent(world, pos, demandVariant, demandAmount)
 
         // 累计 EU 额度
@@ -284,7 +291,7 @@ class EnergyOMatBlockEntity(
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
-            val storage = ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
+            val storage = ItemStorage.SIDED.find(world, pos.relative(dir), dir.opposite) ?: continue
             Transaction.openOuter().use { tx ->
                 remaining -= storage.insert(variant, remaining, tx)
             }
@@ -296,7 +303,7 @@ class EnergyOMatBlockEntity(
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
-            val storage = ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
+            val storage = ItemStorage.SIDED.find(world, pos.relative(dir), dir.opposite) ?: continue
             Transaction.openOuter().use { tx ->
                 val inserted = storage.insert(variant, remaining, tx)
                 if (inserted > 0) {

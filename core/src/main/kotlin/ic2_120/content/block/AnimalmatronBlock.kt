@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -50,7 +52,7 @@ class AnimalmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) 
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, AnimalmatronBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, AnimalmatronBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -65,7 +67,7 @@ class AnimalmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            getMenuProvider(state, world, pos)?.let(player::openHandledScreen)
+            getMenuProvider(state, world, pos)?.let(player::openMenu)
         }
         return InteractionResult.SUCCESS
     }
@@ -89,9 +91,9 @@ class AnimalmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) 
          */
         @JvmStatic
         fun isManaged(entity: net.minecraft.world.entity.Entity): Boolean {
-            val world = entity.world
+            val world = entity.level()
             if (world !is net.minecraft.server.level.ServerLevel) return false
-            val searchBox = entity.boundingBox.expand(RANGE_RADIUS)
+            val searchBox = entity.boundingBox.inflate(RANGE_RADIUS)
             val minPos = net.minecraft.core.BlockPos(
                 Math.floor(searchBox.minX).toInt(),
                 Math.floor(searchBox.minY).toInt(),
@@ -102,7 +104,7 @@ class AnimalmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) 
                 Math.ceil(searchBox.maxY).toInt(),
                 Math.ceil(searchBox.maxZ).toInt()
             )
-            for (bp in net.minecraft.core.BlockPos.iterate(minPos, maxPos)) {
+            for (bp in net.minecraft.core.BlockPos.betweenClosed(minPos, maxPos)) {
                 if (world.getBlockState(bp).block !is AnimalmatronBlock) continue
                 val be = world.getBlockEntity(bp) as? AnimalmatronBlockEntity ?: continue
                 if (be.sync.amount > 0L) return true
@@ -111,7 +113,7 @@ class AnimalmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) 
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()

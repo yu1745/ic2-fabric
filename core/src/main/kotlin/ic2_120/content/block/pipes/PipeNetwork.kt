@@ -86,11 +86,11 @@ class PipeNetwork {
 
         val primaryFluid = providers.firstOrNull()?.variant?.fluid
         stalledByMixedProviders = primaryFluid != null && providers.any { it.variant.fluid != primaryFluid }
-        primaryFluidId = primaryFluid?.let { BuiltInRegistries.FLUID.getId(it).toString() }
+        primaryFluidId = primaryFluid?.let { BuiltInRegistries.FLUID.getKey(it).toString() }
 
         if (stalledByMixedProviders) {
             conflictingFluidIds = providers.asSequence()
-                .map { BuiltInRegistries.FLUID.getId(it.variant.fluid).toString() }
+                .map { BuiltInRegistries.FLUID.getKey(it.variant.fluid).toString() }
                 .distinct()
                 .toList()
             syncPipeLoad(world, topology.pipeRates, emptyMap())
@@ -307,12 +307,12 @@ class PipeNetwork {
     private fun findProviders(world: Level, topology: TopologyCache): List<ProviderEndpoint> {
         val providers = mutableListOf<ProviderEndpoint>()
         for (edge in topology.boundaries) {
-            val sourcePos = BlockPos.fromLong(edge.cablePosLong)
+            val sourcePos = BlockPos.of(edge.cablePosLong)
             val sourceState = world.getBlockState(sourcePos)
             if (sourceState.block !is PumpAttachmentBlock) continue
             // 泵附件只能从正面抽取
             if (sourceState.getValue(BlockStateProperties.FACING) != edge.lookupFromNeighborSide.opposite) continue
-            val neighborPos = BlockPos.fromLong(edge.neighborPosLong)
+            val neighborPos = BlockPos.of(edge.neighborPosLong)
             val storage = FluidStorage.SIDED.find(world, neighborPos, edge.lookupFromNeighborSide) ?: continue
             if (!storage.supportsExtraction()) continue
             val variant = resolveProviderVariant(storage, pumpFilterFor(world, edge))
@@ -328,7 +328,7 @@ class PipeNetwork {
         val receivers = mutableListOf<ReceiverEndpoint>()
         for (edge in topology.boundaries) {
             if (isPumpFrontFace(world, edge)) continue
-            val neighborPos = BlockPos.fromLong(edge.neighborPosLong)
+            val neighborPos = BlockPos.of(edge.neighborPosLong)
             val storage = FluidStorage.SIDED.find(world, neighborPos, edge.lookupFromNeighborSide) ?: continue
             if (!storage.supportsInsertion()) continue
             if (simulateInsertion(storage, primaryVariant, FluidConstants.BUCKET) > 0L) {
@@ -339,14 +339,14 @@ class PipeNetwork {
     }
 
     private fun pumpFilterFor(world: Level, edge: BoundaryEdge): Fluid? {
-        val sourceState = world.getBlockState(BlockPos.fromLong(edge.cablePosLong))
+        val sourceState = world.getBlockState(BlockPos.of(edge.cablePosLong))
         if (sourceState.block !is PumpAttachmentBlock) return null
-        val sourceBe = world.getBlockEntity(BlockPos.fromLong(edge.cablePosLong)) as? PipeBlockEntity ?: return null
+        val sourceBe = world.getBlockEntity(BlockPos.of(edge.cablePosLong)) as? PipeBlockEntity ?: return null
         return sourceBe.pumpFilterFluid()
     }
 
     private fun isPumpFrontFace(world: Level, edge: BoundaryEdge): Boolean {
-        val sourcePos = BlockPos.fromLong(edge.cablePosLong)
+        val sourcePos = BlockPos.of(edge.cablePosLong)
         val sourceState = world.getBlockState(sourcePos)
         val block = sourceState.block
         if (block !is PumpAttachmentBlock) return false
@@ -361,17 +361,17 @@ class PipeNetwork {
         val boundaries = mutableListOf<BoundaryEdge>()
 
         for (pipePosLong in pipes) {
-            val pos = BlockPos.fromLong(pipePosLong)
+            val pos = BlockPos.of(pipePosLong)
             val state = world.getBlockState(pos)
             if (state.block !is BasePipeBlock) continue
             val adjacent = neighbors.getOrPut(pipePosLong) { mutableListOf() }
             for (dir in Direction.entries) {
-                if (!state.get(BasePipeBlock.propertyFor(dir))) continue
-                val np = pos.offset(dir)
+                if (!state.getValue(BasePipeBlock.propertyFor(dir))) continue
+                val np = pos.relative(dir)
                 val npLong = np.asLong()
                 if (npLong in pipes) {
                     val ns = world.getBlockState(np)
-                    if (ns.block is BasePipeBlock && ns.get(BasePipeBlock.propertyFor(dir.opposite))) {
+                    if (ns.block is BasePipeBlock && ns.getValue(BasePipeBlock.propertyFor(dir.opposite))) {
                         adjacent.add(npLong)
                     }
                 } else {
@@ -391,14 +391,14 @@ class PipeNetwork {
             for (pipePos in pipesToUpdate) {
                 val rate = rates[pipePos] ?: continue
                 val used = rate - (remaining[pipePos] ?: rate)
-                val pos = BlockPos.fromLong(pipePos)
+                val pos = BlockPos.of(pipePos)
                 val be = world.getBlockEntity(pos) as? PipeBlockEntity ?: continue
                 val beFluidChanged = be.currentFluidId != primaryFluidId
                 if (be.pipeLoad == used && !beFluidChanged) continue
                 be.pipeLoad = used
                 be.currentFluidId = primaryFluidId
                 if (beFluidChanged) {
-                    world.updateListeners(pos, be.cachedState, be.cachedState, net.minecraft.world.level.block.Block.NOTIFY_LISTENERS)
+                    world.sendBlockUpdated(pos, be.cachedState, be.cachedState, net.minecraft.world.level.block.Block.UPDATE_CLIENTS)
                 }
             }
         }
@@ -407,7 +407,7 @@ class PipeNetwork {
         if (!fluidTypeChanged) {
             for (pipePos in lastTouchedPipes) {
                 if (pipePos in currentTouchedPipes) continue
-                val pos = BlockPos.fromLong(pipePos)
+                val pos = BlockPos.of(pipePos)
                 val be = world.getBlockEntity(pos) as? PipeBlockEntity ?: continue
                 if (be.pipeLoad == 0L) continue
                 be.pipeLoad = 0L

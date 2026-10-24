@@ -2,6 +2,7 @@ package ic2_120.content.upgrade
 
 import ic2_120.content.energy.EnergyTier
 import ic2_120.content.item.TransformerUpgrade
+import ic2_120.registry.instance
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
@@ -14,6 +15,13 @@ import net.minecraft.nbt.Tag
  * 等级 1 = 32 EU/t，等级 2 = 128 EU/t，等级 3 = 512 EU/t。
  */
 object TransformerUpgradeComponent {
+
+    /** 高压升级物品的 registry id（延迟解析，注册完成后可用）。 */
+    private val UPGRADE_ITEM_ID: String by lazy {
+        net.minecraft.core.registries.BuiltInRegistries.ITEM
+            .getKey(TransformerUpgrade::class.instance())
+            .toString()
+    }
 
     /** 每个电压等级对应的 maxInsertPerTick，委托 [EnergyTier.euPerTickFromTier] */
     fun maxInsertForTier(tier: Int): Long = EnergyTier.euPerTickFromTier(tier)
@@ -31,7 +39,7 @@ object TransformerUpgradeComponent {
     fun countUpgrades(inventory: Container, upgradeSlotIndices: IntArray): Int {
         var count = 0
         for (idx in upgradeSlotIndices) {
-            val stack = inventory.getStack(idx)
+            val stack = inventory.getItem(idx)
             if (!stack.isEmpty && stack.item is TransformerUpgrade) {
                 count += stack.count
             }
@@ -49,12 +57,14 @@ object TransformerUpgradeComponent {
      * 因此全槽扫描与按升级槽统计等价。
      */
     fun countUpgradesInNbt(nbt: CompoundTag): Int {
-        val items = nbt.getList("Items", Tag.COMPOUND_TYPE.toInt())
+        // TODO(1.21.1): ItemStack.fromNbt 已移除（parse 需要 HolderLookup.Provider），
+        // 这里直接按原版 ContainerHelper 的存档格式读 id/Count，避免引入 lookup 参数改动调用方。
+        val items = nbt.getList("Items", Tag.TAG_COMPOUND)
         var count = 0
         for (i in 0 until items.size) {
-            val stack = ItemStack.fromNbt(items.getCompound(i))
-            if (!stack.isEmpty && stack.item is TransformerUpgrade) {
-                count += stack.count
+            val entry = items.getCompound(i)
+            if (entry.getString("id") == UPGRADE_ITEM_ID) {
+                count += entry.getInt("Count").coerceAtLeast(0)
             }
         }
         return count

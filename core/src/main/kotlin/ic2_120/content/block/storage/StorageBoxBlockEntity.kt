@@ -1,5 +1,10 @@
 package ic2_120.content.block.storage
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.compat.cachedState
 import ic2_120.compat.pos
 
@@ -24,7 +29,6 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 
 import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.core.HolderLookup
 import net.minecraft.network.FriendlyByteBuf
 import io.netty.buffer.Unpooled
 
@@ -120,7 +124,7 @@ class StorageBoxBlockEntity(
     var shouldDropOnBreak = true
 
     /** 获取物品栏大小 */
-    override fun size(): Int = inventory.size
+    override fun getContainerSize(): Int = inventory.size
 
     /** 判断物品栏是否为空 */
     override fun isEmpty(): Boolean {
@@ -131,7 +135,7 @@ class StorageBoxBlockEntity(
     }
 
     /** 获取指定槽位的物品 */
-    override fun getStack(slot: Int): ItemStack {
+    override fun getItem(slot: Int): ItemStack {
         return if (slot >= 0 && slot < inventory.size) {
             inventory[slot]
         } else {
@@ -165,7 +169,7 @@ class StorageBoxBlockEntity(
     }
 
     /** 设置指定槽位的物品 */
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot >= 0 && slot < inventory.size) {
             inventory[slot] = stack
             setChanged()
@@ -181,7 +185,7 @@ class StorageBoxBlockEntity(
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     /** 清空物品栏 */
-    override fun clear() {
+    override fun clearContent() {
         inventory.clear()
         setChanged()
     }
@@ -191,7 +195,7 @@ class StorageBoxBlockEntity(
     /** 创建菜单标题 */
     override fun getDisplayName(): Component {
         val block = cachedState.block
-        return Component.translatable(block.translationKey)
+        return Component.translatable(block.descriptionId)
     }
 
     /** 创建 AbstractContainerMenu */
@@ -206,19 +210,19 @@ class StorageBoxBlockEntity(
         return buf
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         // 保存物品栏到 NBT
         val inventoryNbt = CompoundTag()
         ContainerHelper.saveAllItems(inventoryNbt, inventory, lookup)
         nbt.put(INVENTORY_KEY, inventoryNbt)
     }
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         // 从 NBT 读取物品栏
         val inventoryNbt = nbt.getCompound(INVENTORY_KEY)
-        if (inventoryNbt.size == 0) {
+        if (inventoryNbt.size() == 0) {
             // 兼容旧格式（直接存储在 Items 键）
             val itemsNbt = nbt.getList(ITEMS_KEY, 10)
             if (itemsNbt.size != 0) {

@@ -41,7 +41,7 @@ class SemifluidGeneratorScreenHandler(
     )
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     /** BE 槽位索引 -> handler 槽位索引 */
@@ -96,12 +96,12 @@ class SemifluidGeneratorScreenHandler(
                 SLOT_EMPTY_CONTAINER_INDEX,
                 SLOT_BATTERY_INDEX -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 // 升级槽 -> 玩家物品栏
                 in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 else -> {
                     if (index in PLAYER_INV_START until HOTBAR_END) {
@@ -116,7 +116,7 @@ class SemifluidGeneratorScreenHandler(
                     }
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -125,7 +125,7 @@ class SemifluidGeneratorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is SemifluidGeneratorBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
@@ -134,7 +134,7 @@ class SemifluidGeneratorScreenHandler(
     /** 客户端读取 BE 上由网络包更新的燃料颜色 */
     val fuelColorArgb: Int get() {
         var color = 0xFFCC4400.toInt()
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             val be = world.getBlockEntity(pos)
             if (be is SemifluidGeneratorBlockEntity) {
                 color = be.clientFuelColorArgb

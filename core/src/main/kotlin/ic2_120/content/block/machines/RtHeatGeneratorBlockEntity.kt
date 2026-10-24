@@ -1,9 +1,15 @@
-import ic2_120.compat.pos
-import ic2_120.compat.world
-
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
+import ic2_120.compat.pos
+import ic2_120.compat.world
 import ic2_120.Ic2_120
 import ic2_120.content.block.RtHeatGeneratorBlock
 import ic2_120.content.screen.RtHeatGeneratorScreenHandler
@@ -25,7 +31,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.network.chat.Component
@@ -46,7 +51,7 @@ class RtHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = RtHeatGeneratorBlock.ACTIVE
 
@@ -78,9 +83,9 @@ class RtHeatGeneratorBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = (FUEL_SLOT_START..FUEL_SLOT_END).map { s ->
-            ItemInsertRoute(intArrayOf(s), matcher = { isValid(s, it) }, maxPerSlot = 1)
+            ItemInsertRoute(intArrayOf(s), matcher = { canPlaceItem(s, it) }, maxPerSlot = 1)
         },
         // 靶丸无限耐久不消耗，仅 GUI 可取，禁止物流抽出（避免被管道静默抽空导致停机）
         extractSlots = intArrayOf(),
@@ -100,11 +105,13 @@ class RtHeatGeneratorBlockEntity(
 
     /** 统计燃料槽中靶丸数量 */
     fun countPelletSlots(): Int =
-        (FUEL_SLOT_START..FUEL_SLOT_END).count { !getStack(it).isEmpty }
+        (FUEL_SLOT_START..FUEL_SLOT_END).count { !getItem(it).isEmpty }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.rt_heat_generator")
@@ -120,14 +127,14 @@ class RtHeatGeneratorBlockEntity(
         )
 
     override fun getInventory(): Container = this
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot in FUEL_SLOT_START..FUEL_SLOT_END && stack.count > 1) {
             stack.count = 1
         }
@@ -135,18 +142,18 @@ class RtHeatGeneratorBlockEntity(
         setChanged()
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean =
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean =
         slot in FUEL_SLOT_START..FUEL_SLOT_END && !stack.isEmpty && isRtgPellet(stack)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 

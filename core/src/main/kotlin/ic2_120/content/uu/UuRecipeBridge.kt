@@ -46,7 +46,8 @@ object UuRecipeBridge {
         var stonecutting = 0
         var machine = 0
 
-        for (recipe in recipeManager.values()) {
+        for (holder in recipeManager.recipes) {
+            val recipe = holder.value
             try {
                 val tx = when (recipe) {
                     // ===== IC2 机器配方 =====
@@ -195,7 +196,7 @@ object UuRecipeBridge {
         // AbstractCookingRecipe.getIngredients() (public) 返回单元素 list，getOutput(rm) 返回输出
         val ingredientList = this.ingredients
         if (ingredientList.isEmpty()) return null
-        val out = this.getOutput(rm)
+        val out = this.getResultItem(rm)
         if (out.isEmpty) return null
         val groups = ingredientList.map { it.toLeanGroup(1) }.filter { it.isNotEmpty() }
         if (groups.isEmpty()) return null
@@ -209,7 +210,7 @@ object UuRecipeBridge {
     private fun McCuttingRecipe.toStonecuttingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? {
         val ingredientList = this.ingredients
         if (ingredientList.isEmpty()) return null
-        val out = this.getOutput(rm)
+        val out = this.getResultItem(rm)
         val groups = ingredientList.map { it.toLeanGroup(1) }.filter { it.isNotEmpty() }
         if (groups.isEmpty()) return null
         return UuGraph.Transformation(
@@ -226,7 +227,7 @@ object UuRecipeBridge {
         toCraftingTxCommon(rm)
 
     private fun Recipe<*>.toCraftingTxCommon(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? {
-        val out = this.getOutput(rm)
+        val out = this.getResultItem(rm)
         if (out.isEmpty) return null
         val ingredientList = this.ingredients
         if (ingredientList.isEmpty()) return null
@@ -247,8 +248,8 @@ object UuRecipeBridge {
      * [count] 为该输入槽位需要的物品数量（每个备选都按此数量）。
      */
     private fun Ingredient.toLeanGroup(count: Int): List<UuGraph.LeanStack> {
-        val stacks = this.matchingStacks
-        if (stacks.isNullOrEmpty()) return emptyList()
+        val stacks = this.items
+        if (stacks.isEmpty()) return emptyList()
         // 按 Item 去重（同 item 不同 nbt 只取第一个，UU 计算不关心 NBT）
         val seen = mutableSetOf<Item>()
         val result = mutableListOf<UuGraph.LeanStack>()

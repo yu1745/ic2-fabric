@@ -1,5 +1,7 @@
 package ic2_120.integration.jade
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import ic2_120.compat.time
 
 import ic2_120.compat.pos
@@ -129,7 +131,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
 object ScaffoldJadeProvider : IBlockComponentProvider {
     private val SCAFFOLD_SUPPORT = ResourceLocation.fromNamespaceAndPath("ic2_120", "scaffold_support")
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val block = accessor.blockState.block as? Ic2ScaffoldBlock ?: return
         val remaining = block.remainingHorizontalSupport(accessor.level, accessor.position)
 
@@ -204,7 +206,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
     }
 
     // IBlockComponentProvider — client side
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val be = accessor.blockEntity as? PipeBlockEntity ?: return
         if (!accessor.serverData.contains("pipeLoad", 4)) return
 
@@ -225,7 +227,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         if (accessor.serverData.contains("fluidName")) {
             val fluidId = accessor.serverData.getString("fluidName")
             val fluid = BuiltInRegistries.FLUID.get(ResourceLocation.tryParse(fluidId) ?: return)
-            val fluidText = BuiltInRegistries.FLUID.getId(fluid).toLanguageKey().let { Component.translatable("block.$it") }
+            val fluidText = BuiltInRegistries.FLUID.getKey(fluid).toLanguageKey().let { Component.translatable("block.$it") }
             tooltip.add(Component.translatable("ic2_120.jade.fluid_name", fluidText))
         }
         if (accessor.serverData.getBoolean("stalled")) {
@@ -236,7 +238,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
                 val fluidId = nbtList.getString(i)
                 val id = ResourceLocation.tryParse(fluidId) ?: continue
                 val fluid = BuiltInRegistries.FLUID.get(id)
-                val fluidText = BuiltInRegistries.FLUID.getId(fluid).toLanguageKey().let { Component.translatable("block.$it") }
+                val fluidText = BuiltInRegistries.FLUID.getKey(fluid).toLanguageKey().let { Component.translatable("block.$it") }
                 tooltip.add(Component.translatable("ic2_120.jade.stalled_fluid_entry", fluidText).setStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)))
             }
         }
@@ -293,7 +295,7 @@ object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcc
     }
 
     // IBlockComponentProvider — client side
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (!accessor.serverData.contains("cableLoad", 4)) return
 
         val rawLoad = accessor.serverData.getLong("cableLoad")
@@ -406,7 +408,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         }
     }
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (accessor.serverData.getBoolean("isStick")) {
             val crossingBase = accessor.serverData.getBoolean("crossingBase")
             val nutrients = accessor.serverData.getInt("nutrients")
@@ -576,7 +578,7 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
         }
     }
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val kind = accessor.serverData.getString("kind")
         when (kind) {
             "transmission" -> {
@@ -675,7 +677,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
         if (entity !is AgeableMob) return
 
         val world = accessor.level
-        val pos = entity.blockPos
+        val pos = entity.blockPosition()
 
         // 只显示被管理的动物
         if (!AnimalFoodMapping.isManagedAnimal(entity)) {
@@ -728,7 +730,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
         data.putInt("requiredToFed", AnimalmatronBlockEntity.FOOD_TO_GROW) // 10
     }
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: EntityAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: EntityAccessor, config: IPluginConfig) {
         if (!accessor.serverData.contains("isManaged")) return
         if (!accessor.serverData.getBoolean("isManaged")) return
 
@@ -794,11 +796,11 @@ object RubberSaplingJadeProvider : IBlockComponentProvider {
     private val SAPLING_GROWTH = ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_sapling_growth")
     private const val MIN_GROW_LIGHT = 9
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val world = accessor.level
         val pos = accessor.position
 
-        val light = world.getLightLevel(pos.up())
+        val light = world.getMaxLocalRawBrightness(pos.above())
         val enoughLight = light >= MIN_GROW_LIGHT
         val clear = RubberSaplingGrowth.hasClearArea(world, pos)
 
@@ -845,7 +847,7 @@ object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<Bloc
         }
     }
 
-    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val state = accessor.blockState
         if (state.block !is RubberLogBlock) return
 

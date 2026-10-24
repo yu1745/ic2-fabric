@@ -69,7 +69,7 @@ class FilledTinCanItem : Item(
             FoodProperties.Builder()
                 .nutrition(2)
                 .saturationModifier(0.2f)
-                .snack()
+                .fast()
                 .alwaysEdible()
                 .build()
         )
@@ -79,23 +79,23 @@ class FilledTinCanItem : Item(
         get() = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
 
     /** 10 tick ≈ 1秒吃2个） */
-    override fun getMaxUseTime(stack: ItemStack, user: LivingEntity): Int = 10
+    override fun getUseDuration(stack: ItemStack, user: LivingEntity): Int = 10
 
-    override fun finishUsing(stack: ItemStack, world: Level, user: LivingEntity): ItemStack {
+    override fun finishUsingItem(stack: ItemStack, world: Level, user: LivingEntity): ItemStack {
         if (!world.isClient && user is Player) {
             val player = user
             if (player.health < player.maxHealth) {
                 player.heal(2f)
             } else {
-                player.foodData.add(2, 0.4f)
+                player.foodData.eat(2, 0.4f)
             }
         }
 
         val remainder = ItemStack(emptyTinCanItem)
         if (stack.count > 1) {
             stack.shrink(1)
-            if (user is Player && !user.inventory.safeInsert(remainder)) {
-                user.spawnAtLocation(remainder, false)
+            if (user is Player && !user.inventory.add(remainder)) {
+                user.spawnAtLocation(remainder, 0f)
             }
             return stack
         }

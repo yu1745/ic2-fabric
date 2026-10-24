@@ -78,12 +78,13 @@ class UuScannerScreenHandler(
     private fun deriveSpec(beSlot: Int) = itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? UuScannerBlockEntity ?: return@get
+        context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? UuScannerBlockEntity ?: return@evaluate false
             when (id) {
                 BUTTON_DELETE_TEMPLATE -> be.deleteTemplate()
                 BUTTON_SAVE_TO_CRYSTAL -> be.saveTemplateToCrystal()
             }
+            true
         }, false)
         return id == BUTTON_DELETE_TEMPLATE || id == BUTTON_SAVE_TO_CRYSTAL
     }
@@ -111,7 +112,7 @@ class UuScannerScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
         }
@@ -119,7 +120,7 @@ class UuScannerScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is UuScannerBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -142,7 +143,7 @@ class UuScannerScreenHandler(
                 syncId, playerInventory,
                 SimpleContainer(UuScannerBlockEntity.INVENTORY_SIZE),
                 pos,
-                ContainerLevelAccess.create(playerInventory.player.world, pos),
+                ContainerLevelAccess.create(playerInventory.player.level(), pos),
                 SimpleContainerData(propertyCount)
             )
         }

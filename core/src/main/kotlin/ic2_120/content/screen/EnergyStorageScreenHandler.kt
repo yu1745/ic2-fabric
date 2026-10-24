@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import net.minecraft.core.registries.BuiltInRegistries
+
 import ic2_120.compat.world
 
 import ic2_120.compat.stack
@@ -57,10 +59,10 @@ class EnergyStorageScreenHandler(
     val sync = EnergyStorageSync(
         schema = SyncedDataView(propertyDelegate),
         getFacing = {
-            context.get({ world, pos ->
+            context.evaluate({ world, pos ->
                 val state = world.getBlockState(pos)
-                state.getOrEmpty(BlockStateProperties.FACING)
-                    .orElse(state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
+                state.getOptional(BlockStateProperties.FACING)
+                    .orElse(state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
             }, Direction.NORTH)
         },
         tier = config.tier,
@@ -72,7 +74,7 @@ class EnergyStorageScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     private fun resolveConfig(): EnergyStorageConfig {
-        return context.get({ world, pos ->
+        return context.evaluate({ world, pos ->
             val block = world.getBlockState(pos).block
             val id = BuiltInRegistries.BLOCK.getId(block)
             EnergyStorageConfig.fromBlockPath(id.path) ?: EnergyStorageConfig.BATBOX
@@ -127,7 +129,7 @@ class EnergyStorageScreenHandler(
     ): Slot = object : Slot(inventory, index, x, y) {
         override fun canInsert(stack: ItemStack): Boolean {
             val item = stack.item
-            return item is ArmorItem && item.type.getEquipmentSlot() == equipmentSlot
+            return item is ArmorItem && item.type.getSlot() == equipmentSlot
         }
     }
 
@@ -143,7 +145,7 @@ class EnergyStorageScreenHandler(
             when {
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 useEquipmentSlots && index in machineSlotCount until machineSlotCount + 4 -> {
                     if (!moveItemStackTo(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
@@ -161,7 +163,7 @@ class EnergyStorageScreenHandler(
                 }
             }
 
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -175,7 +177,7 @@ class EnergyStorageScreenHandler(
        get() = playerInventorySlotStart + 35
 
    override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             val block = world.getBlockState(pos).block
             (block is ic2_120.content.block.storage.EnergyStorageBlock || block is ChargepadBlock) &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
@@ -190,8 +192,8 @@ class EnergyStorageScreenHandler(
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id != BUTTON_REDSTONE_MODE) return super.clickMenuButton(player, id)
-        context.run { world, pos ->
-            val be = world.getBlockEntity(pos) as? EnergyStorageBlockEntity ?: return@run
+        context.execute { world, pos ->
+            val be = world.getBlockEntity(pos) as? EnergyStorageBlockEntity ?: return@execute
             be.cycleRedstoneMode()
         }
         return true
@@ -207,10 +209,10 @@ class EnergyStorageScreenHandler(
             val propertyCount = buf.readVarInt()
             val slotCount = buf.readVarInt()
             buf.readBoolean() // useEquipmentSlots, read but not stored (AbstractContainerMenu gets config from context)
-            val ctx = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val ctx = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val blockInv = SimpleContainer(slotCount.coerceAtLeast(1))
-            val blockId = BuiltInRegistries.BLOCK.getId(playerInventory.player.world.getBlockState(pos).block)
-            val screenHandlerType = BuiltInRegistries.SCREEN_HANDLER.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
+            val blockId = BuiltInRegistries.BLOCK.getKey(playerInventory.player.level().getBlockState(pos).block) ?: error("block not registered")
+            val screenHandlerType = BuiltInRegistries.MENU.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
                 ?: error("AbstractContainerMenu type not found for $blockId")
             @Suppress("UNCHECKED_CAST")
             return EnergyStorageScreenHandler(

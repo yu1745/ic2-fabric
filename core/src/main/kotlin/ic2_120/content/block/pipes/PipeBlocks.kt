@@ -1,5 +1,7 @@
 package ic2_120.content.block.pipes
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.world.level.block.entity.BlockEntityType
 
 import net.minecraft.data.recipes.RecipeProvider.has
@@ -36,7 +38,7 @@ import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelAccessor
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.world.item.TooltipFlag
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.network.chat.Component
@@ -78,7 +80,7 @@ abstract class BasePipeBlock(
         get() = size.baseBucketsPerSecond * material.multiplier
 
     init {
-        setDefaultState(stateManager.defaultBlockState
+        setDefaultState(stateDefinition.any()()
             .setValue(BlockStateProperties.WATERLOGGED, false)
             .setValue(NORTH, false)
             .setValue(SOUTH, false)
@@ -101,11 +103,11 @@ abstract class BasePipeBlock(
         if (state.getValue(TRANSPARENT)) RenderShape.ENTITYBLOCK_ANIMATED else RenderShape.MODEL
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
-        val world = ctx.world
-        val pos = ctx.blockPos
+        val world = ctx.level
+        val pos = ctx.pos
         val fluidState = world.getFluidState(pos)
-        return defaultState
-            .setValue(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+        return defaultBlockState()
+            .setValue(BlockStateProperties.WATERLOGGED, fluidState.getType() == Fluids.WATER)
             .setValue(NORTH, canConnect(world, pos, Direction.NORTH, null))
             .setValue(SOUTH, canConnect(world, pos, Direction.SOUTH, null))
             .setValue(EAST, canConnect(world, pos, Direction.EAST, null))
@@ -115,7 +117,7 @@ abstract class BasePipeBlock(
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getStateForNeighborUpdate(
+    override fun updateShape(
         state: BlockState,
         direction: Direction,
         neighborState: BlockState,
@@ -124,7 +126,7 @@ abstract class BasePipeBlock(
         neighborPos: BlockPos
     ): BlockState {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         val be = world.getBlockEntity(pos) as? PipeBlockEntity
         val property = propertyFor(direction)
@@ -138,7 +140,7 @@ abstract class BasePipeBlock(
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getFluidState(state: BlockState): FluidState =
-        if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.defaultBlockState
+        if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultBlockState()
 
     override fun canFillWithFluid(world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.getValue(BlockStateProperties.WATERLOGGED) && fluid == Fluids.WATER
@@ -149,10 +151,10 @@ abstract class BasePipeBlock(
         state: BlockState,
         fluidState: FluidState
     ): Boolean {
-        if (!canFillWithFluid(world, pos, state, fluidState.fluid)) return false
+        if (!canFillWithFluid(world, pos, state, fluidState.getType())) return false
         if (!state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.NOTIFY_ALL)
-            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL)
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         return true
     }
@@ -184,11 +186,11 @@ abstract class BasePipeBlock(
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
+    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!state.`is`(newState.block)) {
             PipeNetworkManager.invalidateAt(world, pos)
         }
-        super.onStateReplaced(state, world, pos, newState, moved)
+        super.onRemove(state, world, pos, newState, moved)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = PipeBlockEntity(pos, state)
@@ -197,13 +199,13 @@ abstract class BasePipeBlock(
      * 添加物品提示信息（显示流量）
      */
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(
+    override fun appendHoverText(
         stack: ItemStack,
         world: BlockGetter?,
         tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
-        super.appendTooltip(stack, context, tooltip, type)
+        super.appendHoverText(stack, context, tooltip, type)
         val flowPerSec = flowRateBucketsPerSecond * 1000 // 转换为 mB/s
         val bucketsPerSec = flowRateBucketsPerSecond
         tooltip.add(Component.translatable(
@@ -215,7 +217,7 @@ abstract class BasePipeBlock(
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, PipeBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, PipeBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     /** Pre-computed shape cache for all block states. Uses IdentityHashMap since BlockState is a flyweight. */
     protected var shapeCache: Map<BlockState, VoxelShape> = emptyMap()
@@ -223,7 +225,7 @@ abstract class BasePipeBlock(
     /** Call after setDefaultState to populate the shape cache. */
     protected fun buildShapeCache() {
         val map = java.util.IdentityHashMap<BlockState, VoxelShape>()
-        for (state in stateManager.states) map[state] = pipeShape(state)
+        for (state in stateDefinition.states) map[state] = pipeShape(state)
         shapeCache = map
     }
 
@@ -231,7 +233,7 @@ abstract class BasePipeBlock(
     override fun getCollisionShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape = shapeCache[state] ?: pipeShape(state)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getOutlineShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape = shapeCache[state] ?: pipeShape(state)
+    override fun getShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape = shapeCache[state] ?: pipeShape(state)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getCullingShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape =
@@ -242,12 +244,12 @@ abstract class BasePipeBlock(
         val min = 0.5 - r
         val max = 0.5 + r
         var shape = Shapes.box(min, min, min, max, max, max)
-        if (state.getValue(NORTH)) shape = Shapes.union(shape, Shapes.box(min, min, 0.0, max, max, min))
-        if (state.getValue(SOUTH)) shape = Shapes.union(shape, Shapes.box(min, min, max, max, max, 1.0))
-        if (state.getValue(WEST)) shape = Shapes.union(shape, Shapes.box(0.0, min, min, min, max, max))
-        if (state.getValue(EAST)) shape = Shapes.union(shape, Shapes.box(max, min, min, 1.0, max, max))
-        if (state.getValue(DOWN)) shape = Shapes.union(shape, Shapes.box(min, 0.0, min, max, min, max))
-        if (state.getValue(UP)) shape = Shapes.union(shape, Shapes.box(min, max, min, max, 1.0, max))
+        if (state.getValue(NORTH)) shape = Shapes.or(shape, Shapes.box(min, min, 0.0, max, max, min))
+        if (state.getValue(SOUTH)) shape = Shapes.or(shape, Shapes.box(min, min, max, max, max, 1.0))
+        if (state.getValue(WEST)) shape = Shapes.or(shape, Shapes.box(0.0, min, min, min, max, max))
+        if (state.getValue(EAST)) shape = Shapes.or(shape, Shapes.box(max, min, min, 1.0, max, max))
+        if (state.getValue(DOWN)) shape = Shapes.or(shape, Shapes.box(min, 0.0, min, max, min, max))
+        if (state.getValue(UP)) shape = Shapes.or(shape, Shapes.box(min, max, min, max, 1.0, max))
         return shape
     }
 
@@ -284,7 +286,7 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
     }
 
     init {
-        defaultState = stateManager.defaultBlockState
+        registerDefaultState(stateDefinition.any())
             .setValue(BlockStateProperties.WATERLOGGED, false)
             .setValue(NORTH, false)
             .setValue(SOUTH, false)
@@ -299,14 +301,14 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
-        val world = ctx.world
-        val pos = ctx.blockPos
+        val world = ctx.level
+        val pos = ctx.pos
         val fluidState = world.getFluidState(pos)
-        val facing = ctx.side.opposite
+        val facing = ctx.direction.opposite
         val back = facing.opposite
         val be = world.getBlockEntity(pos) as? PipeBlockEntity
-        return defaultState
-            .setValue(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+        return defaultBlockState()
+            .setValue(BlockStateProperties.WATERLOGGED, fluidState.getType() == Fluids.WATER)
             .setValue(BlockStateProperties.FACING, facing)
             .setValue(propertyFor(back), canConnect(world, pos, back, be, facing))
             .setValue(propertyFor(facing), canConnect(world, pos, facing, be, facing))
@@ -360,12 +362,12 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
             if (dir == facing) continue
             if (state.get(propertyFor(dir))) {
                 shape = when (dir) {
-                    Direction.NORTH -> Shapes.union(shape, Shapes.box(min, min, 0.0, max, max, min))
-                    Direction.SOUTH -> Shapes.union(shape, Shapes.box(min, min, max, max, max, 1.0))
-                    Direction.WEST -> Shapes.union(shape, Shapes.box(0.0, min, min, min, max, max))
-                    Direction.EAST -> Shapes.union(shape, Shapes.box(max, min, min, 1.0, max, max))
-                    Direction.DOWN -> Shapes.union(shape, Shapes.box(min, 0.0, min, max, min, max))
-                    Direction.UP -> Shapes.union(shape, Shapes.box(min, max, min, max, 1.0, max))
+                    Direction.NORTH -> Shapes.or(shape, Shapes.box(min, min, 0.0, max, max, min))
+                    Direction.SOUTH -> Shapes.or(shape, Shapes.box(min, min, max, max, max, 1.0))
+                    Direction.WEST -> Shapes.or(shape, Shapes.box(0.0, min, min, min, max, max))
+                    Direction.EAST -> Shapes.or(shape, Shapes.box(max, min, min, 1.0, max, max))
+                    Direction.DOWN -> Shapes.or(shape, Shapes.box(min, 0.0, min, max, min, max))
+                    Direction.UP -> Shapes.or(shape, Shapes.box(min, max, min, max, 1.0, max))
                 }
             }
         }
@@ -378,7 +380,7 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
             Direction.DOWN -> Shapes.box(2.0 / 16.0, 0.0, 2.0 / 16.0, 14.0 / 16.0, 2.0 / 16.0, 14.0 / 16.0)
             Direction.UP -> Shapes.box(2.0 / 16.0, 14.0 / 16.0, 2.0 / 16.0, 14.0 / 16.0, 1.0, 14.0 / 16.0)
         }
-        return Shapes.union(shape, plate)
+        return Shapes.or(shape, plate)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -398,7 +400,7 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
 class BronzePipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeTinyBlock::class.item(), 6)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', BronzeCasing::class.instance())
@@ -412,7 +414,7 @@ class BronzePipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.BRONZE) {
 class BronzePipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeSmallBlock::class.item(), 3)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', BronzeCasing::class.instance())
@@ -426,7 +428,7 @@ class BronzePipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.BRONZE) 
 class BronzePipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
@@ -440,7 +442,7 @@ class BronzePipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.BRONZE
 class BronzePipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
@@ -454,7 +456,7 @@ class BronzePipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.BRONZE) 
 class CarbonPipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeTinyBlock::class.item(), 6)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', CarbonFibre::class.instance())
@@ -468,7 +470,7 @@ class CarbonPipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.CARBON) {
 class CarbonPipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeSmallBlock::class.item(), 3)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', CarbonFibre::class.instance())
@@ -482,7 +484,7 @@ class CarbonPipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.CARBON) 
 class CarbonPipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', CarbonMesh::class.instance())
@@ -496,7 +498,7 @@ class CarbonPipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.CARBON
 class CarbonPipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', CarbonMesh::class.instance())
@@ -510,7 +512,7 @@ class CarbonPipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.CARBON) 
 class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePumpAttachmentBlock::class.item(), 1)
                 .pattern(" P ").pattern(" T ").pattern(" P ")
                 .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
@@ -525,7 +527,7 @@ class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
 class CarbonPumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPumpAttachmentBlock::class.item(), 1)
                 .pattern(" P ").pattern(" T ").pattern(" P ")
                 .define('P', CarbonPlate::class.instance())

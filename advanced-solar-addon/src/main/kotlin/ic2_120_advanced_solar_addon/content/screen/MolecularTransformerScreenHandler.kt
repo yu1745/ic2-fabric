@@ -87,7 +87,7 @@ class MolecularTransformerScreenHandler(
                 // Machine slots -> player inventory
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onTake(stackInSlot, stack)
                 }
                 // Player inventory -> machine (via RoutedItemStorage routes)
                 index in PLAYER_INV_START until HOTBAR_END -> {

@@ -25,7 +25,7 @@ fun <T : Block> KClass<T>.instance(): T =
  */
 @JvmName("blockId")
 fun <T : Block> KClass<T>.id(): ResourceLocation =
-    BuiltInRegistries.BLOCK.getId(instance())
+    BuiltInRegistries.BLOCK.getKey(instance())
 
 /**
  * 获取 Block 对应的 Item
@@ -47,7 +47,7 @@ fun <T : Item> KClass<T>.instance(): T =
  */
 @JvmName("itemId")
 fun <T : Item> KClass<T>.id(): ResourceLocation =
-    BuiltInRegistries.ITEM.getId(instance())
+    BuiltInRegistries.ITEM.getKey(instance())
 
 /**
  * 生成配方 ID（带可选后缀）
@@ -55,7 +55,7 @@ fun <T : Item> KClass<T>.id(): ResourceLocation =
  */
 @JvmName("itemRecipeId")
 fun <T : Item> KClass<T>.recipeId(suffix: String = ""): ResourceLocation {
-    val baseId = BuiltInRegistries.ITEM.getId(instance()).path
+    val baseId = BuiltInRegistries.ITEM.getKey(instance()).path
     return ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
 }
 
@@ -65,7 +65,7 @@ fun <T : Item> KClass<T>.recipeId(suffix: String = ""): ResourceLocation {
  */
 @JvmName("blockRecipeId")
 fun <T : Block> KClass<T>.recipeId(suffix: String = ""): ResourceLocation {
-    val baseId = BuiltInRegistries.BLOCK.getId(instance()).path
+    val baseId = BuiltInRegistries.BLOCK.getKey(instance()).path
     return ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
 }
 

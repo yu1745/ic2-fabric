@@ -1,5 +1,10 @@
 package ic2_120.content.block.nuclear
 
+import net.minecraft.core.HolderLookup
+
+import net.minecraft.server.level.ServerPlayer
+
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
@@ -14,7 +19,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import net.minecraft.core.HolderLookup
 
 /**
  * 反应堆红石接口方块实体。
@@ -47,7 +51,7 @@ class ReactorRedstonePortBlockEntity(
         for (dx in -2..2) {
             for (dy in -2..2) {
                 for (dz in -2..2) {
-                    val be = w.getBlockEntity(pos.add(dx, dy, dz))
+                    val be = w.getBlockEntity(pos.offset(dx, dy, dz))
                     if (be is NuclearReactorBlockEntity) return be
                 }
             }
@@ -68,13 +72,13 @@ class ReactorRedstonePortBlockEntity(
         }
     }
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.readNbt(nbt, lookup)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         redstoneInverted = nbt.getBoolean("RedstoneInverted")
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 }

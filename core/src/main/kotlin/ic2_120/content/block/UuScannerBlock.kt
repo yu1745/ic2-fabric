@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -52,11 +54,11 @@ class UuScannerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, UuScannerBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, UuScannerBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
-    override fun createScreenHandlerFactory(
+    override fun getMenuProvider(
         state: BlockState,
         world: Level,
         pos: BlockPos
@@ -66,7 +68,7 @@ class UuScannerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            getMenuProvider(state, world, pos)?.let(player::openHandledScreen)
+            getMenuProvider(state, world, pos)?.let(player::openMenu)
         }
         return InteractionResult.SUCCESS
     }
@@ -83,7 +85,7 @@ class UuScannerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val advancedCircuit = AdvancedCircuit::class.instance()
             val electricMotor = ElectricMotor::class.instance()

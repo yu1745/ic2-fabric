@@ -32,19 +32,19 @@ object BandwidthStatsService {
     }
 
     fun onServerTick(server: MinecraftServer) {
-        val tick = server.ticks.toLong()
+        val tick = server.tickCount.toLong()
         if (tick % 20L != 0L) return
         if (lastSecondTick == tick) return
         lastSecondTick = tick
 
         val statsByPlayer = HashMap<UUID, PlayerCounter>()
-        for (player in server.playerList.playerList) {
+        for (player in server.playerList.players) {
             val counter = counters.computeIfAbsent(player.uuid) { PlayerCounter(player.name.string) }
             counter.lastBytesPerSecond = counter.secondBytes.sumThenReset()
             statsByPlayer[player.uuid] = counter
         }
 
-        val snapshot = server.playerList.playerList.map { player ->
+        val snapshot = server.playerList.players.map { player ->
             val stat = statsByPlayer[player.uuid] ?: PlayerCounter(player.name.string)
             BandwidthPlayerStat(
                 name = player.name.string,
@@ -55,7 +55,7 @@ object BandwidthStatsService {
 
         val serverBps = snapshot.sumOf { it.bytesPerSecond }
         val packet = BandwidthHudPacket(serverBytesPerSecond = serverBps, players = snapshot)
-        for (player in server.playerList.playerList) {
+        for (player in server.playerList.players) {
             ServerPlayNetworking.send(player, packet)
         }
     }

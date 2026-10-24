@@ -1,10 +1,15 @@
+package ic2_120.content.block.machines
+
+import net.minecraft.core.registries.BuiltInRegistries
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
-
-﻿package ic2_120.content.block.machines
-
 import net.minecraft.core.HolderLookup
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.TeleporterBlock
@@ -43,7 +48,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.level.ServerLevel
@@ -74,7 +78,7 @@ class TeleporterBlockEntity(
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
-    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
+    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = TeleporterBlock.ACTIVE
     override fun getInventory(): net.minecraft.world.Container = this
@@ -123,7 +127,7 @@ class TeleporterBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }, maxPerSlot = 1)
         ),
@@ -173,29 +177,29 @@ class TeleporterBlockEntity(
         state
     )
 
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
     override fun setChanged() = super.setChanged()
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
     }
 
     fun setTarget(pos: BlockPos, dimension: String) {
-        targetPos = pos.toImmutable()
+        targetPos = pos.immutable()
         targetDimension = dimension
         sync.targetSet = 1
         sync.targetX = pos.x
@@ -204,9 +208,11 @@ class TeleporterBlockEntity(
         setChanged()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.teleporter")
@@ -232,8 +238,8 @@ class TeleporterBlockEntity(
         }
 
         teleportCooldown = nbt.getInt(NBT_COOLDOWN).coerceAtLeast(0)
-        chargingEntityUuid = if (nbt.hasProperty(NBT_CHARGING_ENTITY)) nbt.getUuid(NBT_CHARGING_ENTITY) else null
-        chargingTargetPos = if (nbt.hasProperty(NBT_CHARGING_TARGET_X)) {
+        chargingEntityUuid = if (nbt.contains(NBT_CHARGING_ENTITY)) nbt.getUUID(NBT_CHARGING_ENTITY) else null
+        chargingTargetPos = if (nbt.contains(NBT_CHARGING_TARGET_X)) {
             BlockPos(nbt.getInt(NBT_CHARGING_TARGET_X), nbt.getInt(NBT_CHARGING_TARGET_Y), nbt.getInt(NBT_CHARGING_TARGET_Z))
         } else {
             null
@@ -272,7 +278,7 @@ class TeleporterBlockEntity(
         }
         nbt.putInt(NBT_COOLDOWN, teleportCooldown)
 
-        chargingEntityUuid?.let { nbt.putUuid(NBT_CHARGING_ENTITY, it) }
+        chargingEntityUuid?.let { nbt.putUUID(NBT_CHARGING_ENTITY, it) }
         chargingTargetPos?.let {
             nbt.putInt(NBT_CHARGING_TARGET_X, it.x)
             nbt.putInt(NBT_CHARGING_TARGET_Y, it.y)
@@ -315,7 +321,7 @@ class TeleporterBlockEntity(
             return
         }
 
-        val thisDim = world.registryKey.value.toString()
+        val thisDim = world.dimension().value.toString()
         if (thisDim != targetDimension || !world.isChunkLoaded(target.x shr 4, target.z shr 4)) {
             clearCharging()
             setActiveState(world, pos, state, false)
@@ -345,8 +351,8 @@ class TeleporterBlockEntity(
             return
         }
 
-        val entity = world.getOtherEntities(null, getActivationBox(pos)) {
-            it.isAlive && !it.hasVehicle() && !it.hasPassengers()
+        val entity = world.getEntities(null, getActivationBox(pos)) {
+            it.isAlive && !it.isPassenger() && !it.hasPassengers()
         }
             .minByOrNull { it.distanceToSqr(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5) }
 
@@ -376,7 +382,7 @@ class TeleporterBlockEntity(
 
     fun hasAdjacentMfeOrMfsu(world: Level, pos: BlockPos): Boolean {
         for (dir in Direction.entries) {
-            val id = BuiltInRegistries.BLOCK.getId(world.getBlockState(pos.offset(dir)).block)
+            val id = BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos.offset(dir)).block) ?: continue
             if (id.namespace == "ic2_120" && (id.path == "mfe" || id.path == "mfsu" || id.path == "mfe_chargepad" || id.path == "mfsu_chargepad")) return true
         }
         return false
@@ -388,7 +394,7 @@ class TeleporterBlockEntity(
             weight += entity.inventory.armor.count { !it.isEmpty } * 100
 
             var invWeight = 0.0
-            for (stack in entity.inventory.main) {
+            for (stack in entity.inventory.items) {
                 if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
             }
             for (stack in entity.inventory.offHand) {
@@ -413,7 +419,7 @@ class TeleporterBlockEntity(
 
     private fun startCharging(entity: Entity, target: BlockPos, energyNeed: Long, distance: Long) {
         chargingEntityUuid = entity.uuid
-        chargingTargetPos = target.toImmutable()
+        chargingTargetPos = target.immutable()
         chargingEnergyNeed = energyNeed
         chargeTicksElapsed = 0
         // 充能时间：浮点除法 + 向上取整（原 (40 + distance/20L) 整数除法 + toInt 截断会漏掉超频效果）；
@@ -566,7 +572,7 @@ class TeleporterBlockEntity(
 
     private fun canTeleportTo(world: Level, entity: Entity, x: Double, y: Double, z: Double): Boolean {
         val offset = entity.boundingBox.offset(x - entity.x, y - entity.y, z - entity.z)
-        return world.isSpaceEmpty(entity, offset)
+        return world.noCollision(entity, offset)
     }
 
     private fun extractFromAdjacentMfe(world: Level, pos: BlockPos, amount: Long, tx: Transaction): Long {
@@ -574,7 +580,7 @@ class TeleporterBlockEntity(
         for (dir in Direction.entries) {
             if (remaining <= 0) break
             val neighborPos = pos.offset(dir)
-            val id = BuiltInRegistries.BLOCK.getId(world.getBlockState(neighborPos).block)
+            val id = BuiltInRegistries.BLOCK.getKey(world.getBlockState(neighborPos).block) ?: continue
             if (id.namespace != "ic2_120" ||
                 (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
             // 绕过单 tick 输出上限，直接修改储电盒内部 amount
@@ -597,7 +603,7 @@ class TeleporterBlockEntity(
         var total = 0L
         for (dir in Direction.entries) {
             val neighborPos = pos.offset(dir)
-            val id = BuiltInRegistries.BLOCK.getId(world.getBlockState(neighborPos).block)
+            val id = BuiltInRegistries.BLOCK.getKey(world.getBlockState(neighborPos).block) ?: continue
             if (id.namespace != "ic2_120" ||
                 (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
             val be = world.getBlockEntity(neighborPos)
@@ -609,7 +615,7 @@ class TeleporterBlockEntity(
     }
 
     private fun teleportEntity(entity: Entity, x: Double, y: Double, z: Double) {
-        entity.requestTeleport(x, y, z)
+        entity.teleportTo(x, y, z)
         entity.velocity = Vec3.ZERO
         entity.velocityModified = true
     }

@@ -84,7 +84,7 @@ object RecyclerRecipes {
                     } else {
                         configured.mapNotNull { id ->
                             val identifier = net.minecraft.resources.ResourceLocation.tryParse(id) ?: return@mapNotNull null
-                            BuiltInRegistries.ITEM.getOrEmpty(identifier).orElse(null)
+                            BuiltInRegistries.ITEM.getOptional(identifier).orElse(null)
                         }.toSet()
                     }
                     cachedResults.clear()

@@ -231,7 +231,7 @@ class IronFenceBlock(
     settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BARS).strength(5.0f, 6.0f)
 ) : FenceBlock(settings) {
 
-    override fun canConnect(state: BlockState, neighborIsFullSquare: Boolean, dir: Direction): Boolean {
+    override fun connectsTo(state: BlockState, neighborIsFullSquare: Boolean, dir: Direction): Boolean {
         val block = state.block
         // 与同类型铁栅栏、原版铁栏杆相互连接
         return block is IronFenceBlock

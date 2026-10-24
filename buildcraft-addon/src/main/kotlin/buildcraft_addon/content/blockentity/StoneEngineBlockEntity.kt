@@ -1,5 +1,9 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.core.HolderLookup
 import buildcraft_addon.content.block.StoneEngineBlock
 import buildcraft_addon.content.screen.StoneEngineScreenHandler
@@ -16,7 +20,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -50,7 +53,7 @@ class StoneEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, ExtendedScreenHandlerFactory, IKineticMachinePort {
+) : BlockEntity(type, pos, state), Container, ExtendedScreenHandlerFactory<FriendlyByteBuf>, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         StoneEngineBlockEntity::class.type(), pos, state
@@ -72,16 +75,18 @@ class StoneEngineBlockEntity(
             else -> 0
         }
         override fun set(index: Int, value: Int) {}
-        override fun size(): Int = 2
+        override fun getContainerSize(): Int = 2
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
         return StoneEngineScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(2)
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(2)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.buildcraft_addon.stone_engine")
@@ -301,9 +306,9 @@ class StoneEngineBlockEntity(
     }
 
     // === Container ===
-    override fun size(): Int = 1
-    override fun getStack(slot: Int): ItemStack = inventory[slot]
-    override fun setStack(slot: Int, stack: ItemStack) { inventory[slot] = stack }
+    override fun getContainerSize(): Int = 1
+    override fun getItem(slot: Int): ItemStack = inventory[slot]
+    override fun setItem(slot: Int, stack: ItemStack) { inventory[slot] = stack }
     override fun removeItem(slot: Int, amount: Int): ItemStack = inventory[slot].split(amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack {
         val stack = inventory[slot]
@@ -311,7 +316,7 @@ class StoneEngineBlockEntity(
         return stack
     }
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun clear() { inventory.fill(ItemStack.EMPTY) }
+    override fun clearContent() { inventory.fill(ItemStack.EMPTY) }
     override fun stillValid(player: net.minecraft.world.entity.player.Player): Boolean = true
 
     // === NBT ===

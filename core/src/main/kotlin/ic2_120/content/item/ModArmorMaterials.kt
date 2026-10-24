@@ -19,11 +19,11 @@ import java.util.function.Supplier
 object ModArmorMaterials {
 
     // ========== 修复原料 ==========
-    private val bronzeIngot = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bronze_ingot")))
-    private val rubber = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber")))
-    private val carbonFibre = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "carbon_fibre")))
-    private val advancedAlloy = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "alloy")))
-    private val iridium = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "iridium")))
+    private val bronzeIngot = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bronze_ingot")))
+    private val rubber = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber")))
+    private val carbonFibre = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "carbon_fibre")))
+    private val advancedAlloy = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "alloy")))
+    private val iridium = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "iridium")))
 
     /**
      * 创建自定义护甲材料
@@ -36,7 +36,7 @@ object ModArmorMaterials {
         toughness: Float,
         knockbackResistance: Float,
         repairIngredient: Ingredient
-    ): Holder<ArmorMaterial> = Holder.of(
+    ): Holder<ArmorMaterial> = Holder.direct(
         ArmorMaterial(
             protection,
             enchantability,
@@ -62,7 +62,7 @@ object ModArmorMaterials {
             ArmorItem.Type.BOOTS to 3
         ),
         enchantability = 10,
-        equipSound = SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND,
+        equipSound = SoundEvents.ARMOR_EQUIP_DIAMOND,
         toughness = 2f,
         knockbackResistance = 0f,
         repairIngredient = carbonFibre
@@ -82,7 +82,7 @@ object ModArmorMaterials {
             ArmorItem.Type.BOOTS to 3
         ),
         enchantability = 15,
-        equipSound = SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE,
+        equipSound = SoundEvents.ARMOR_EQUIP_NETHERITE,
         toughness = 3f,
         knockbackResistance = 0.4f,
         repairIngredient = iridium
@@ -101,7 +101,7 @@ object ModArmorMaterials {
             ArmorItem.Type.BOOTS to 0
         ),
         enchantability = 10,
-        equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
+        equipSound = SoundEvents.ARMOR_EQUIP_LEATHER,
         toughness = 0f,
         knockbackResistance = 0f,
         repairIngredient = bronzeIngot
@@ -120,7 +120,7 @@ object ModArmorMaterials {
             ArmorItem.Type.BOOTS to 0
         ),
         enchantability = 10,
-        equipSound = SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND,
+        equipSound = SoundEvents.ARMOR_EQUIP_DIAMOND,
         toughness = 0f,
         knockbackResistance = 0f,
         repairIngredient = carbonFibre

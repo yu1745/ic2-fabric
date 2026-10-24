@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -53,7 +55,7 @@ class FluidHeatExchangerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else BlockEntityType.validateTicker(world, type, FluidHeatExchangerBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, FluidHeatExchangerBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -63,16 +65,17 @@ class FluidHeatExchangerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
-        defaultState
-            .setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing)
+        defaultBlockState
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalDirection)
             .setValue(ACTIVE, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            val storage = FluidStorage.SIDED.find(world, pos, hit.side)
+            val storage = FluidStorage.SIDED.find(world, pos, hit.direction)
                 ?: FluidStorage.SIDED.find(world, pos, null)
-            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+            if (storage != null && // TODO(1.21.1): useWithoutItem 不再携带 hand，保守取主手
+                FluidStorageUtil.interactWithFluidStorage(storage, player, InteractionHand.MAIN_HAND)) {
                 return InteractionResult.SUCCESS
             }
             getMenuProvider(state, world, pos)?.let { factory ->
@@ -86,7 +89,7 @@ class FluidHeatExchangerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val casing = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             val heat = HeatConductor::class.instance()

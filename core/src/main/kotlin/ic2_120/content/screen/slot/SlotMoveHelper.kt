@@ -54,10 +54,10 @@ object SlotMoveHelper {
         // 注意必须用 slot.index（库存索引）而非 slot.id（handler 槽位列表序号）：
         // 两者在高级采矿机等跳过中间槽位的 GUI 布局中错位，用 id 判空会读到别的槽，
         // 而写入（setStack）仍走 index，导致新物品直接覆写已有物品（吞升级）。
-        val realStack = slot.inventory.getStack(slot.index)
+        val realStack = slot.container.getItem(slot.containerSlot)
         // 源槽守卫：目标槽即源槽（同一实例）时拒绝——同实例合并是历史复制 bug 的根因。
         if (realStack === stack) return false
-        val effectiveLimit = maxPerSlot ?: slot.maxItemCount
+        val effectiveLimit = maxPerSlot ?: slot.maxStackSize
         val slotLimit = effectiveLimit
         if (slotLimit <= 0) return false
 
@@ -66,13 +66,13 @@ object SlotMoveHelper {
             if (moveCount <= 0) return false
             val moved = stack.copy()
             moved.count = moveCount
-            slot.stack = moved
+            slot.set(moved)
             stack.shrink(moveCount)
             slot.setChanged()
             return true
         }
 
-        if (!ItemStack.canCombine(realStack, stack)) return false
+        if (!ItemStack.isSameItemSameComponents(realStack, stack)) return false
 
         val space = (slotLimit - realStack.count).coerceAtLeast(0)
         if (space <= 0) return false

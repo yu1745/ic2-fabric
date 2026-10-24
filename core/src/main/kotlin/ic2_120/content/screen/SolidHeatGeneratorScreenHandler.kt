@@ -80,7 +80,7 @@ class SolidHeatGeneratorScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
         }
@@ -88,7 +88,7 @@ class SolidHeatGeneratorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is SolidHeatGeneratorBlock &&
                 player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
@@ -98,7 +98,7 @@ class SolidHeatGeneratorScreenHandler(
         const val HOTBAR_END = 38
 
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
-            !stack.isEmpty && (FuelRegistry.INSTANCE.getValue(stack.item) ?: 0) > 0
+            !stack.isEmpty && (FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0
         })
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false })
 

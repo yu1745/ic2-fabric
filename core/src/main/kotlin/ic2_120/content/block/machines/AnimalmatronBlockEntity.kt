@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -65,7 +71,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.ListTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -93,7 +98,7 @@ class AnimalmatronBlockEntity(
     ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = AnimalmatronBlock.ACTIVE
     override val tier: Int = ANIMALMATRON_TIER
@@ -120,13 +125,13 @@ class AnimalmatronBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_SHEARS), matcher = { !it.isEmpty && it.item == Items.SHEARS }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_WATER_INPUT), matcher = { isValid(SLOT_WATER_INPUT, it) }),
-            ItemInsertRoute(intArrayOf(SLOT_WEED_EX_INPUT), matcher = { isValid(SLOT_WEED_EX_INPUT, it) }),
-            ItemInsertRoute(SLOT_FEED_INDICES, matcher = { isValid(SLOT_FEED_0, it) })
+            ItemInsertRoute(intArrayOf(SLOT_WATER_INPUT), matcher = { canPlaceItem(SLOT_WATER_INPUT, it) }),
+            ItemInsertRoute(intArrayOf(SLOT_WEED_EX_INPUT), matcher = { canPlaceItem(SLOT_WEED_EX_INPUT, it) }),
+            ItemInsertRoute(SLOT_FEED_INDICES, matcher = { canPlaceItem(SLOT_FEED_0, it) })
         ),
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         setChanged = { setChanged() }
@@ -296,7 +301,7 @@ class AnimalmatronBlockEntity(
         }
     }
 
-    private var workOffset: Int = random.nextBetween(0, WORK_INTERVAL_TICKS - 1)
+    private var workOffset: Int = random.nextIntBetweenInclusive(0, WORK_INTERVAL_TICKS - 1)
 
     private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
     private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
@@ -307,15 +312,15 @@ class AnimalmatronBlockEntity(
     constructor(pos: BlockPos, state: BlockState) : this(AnimalmatronBlockEntity::class.type(), pos, state)
 
     override fun getInventory(): Container = this
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_SHEARS && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
@@ -329,9 +334,9 @@ class AnimalmatronBlockEntity(
         val distilledWaterCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")
         return when {
             stack.item == Items.WATER_BUCKET || stack.item == ModFluids.DISTILLED_WATER_BUCKET -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == waterCellId -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == distilledWaterCellId -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
+            BuiltInRegistries.ITEM.getKey(stack.item) == waterCellId -> true
+            BuiltInRegistries.ITEM.getKey(stack.item) == distilledWaterCellId -> true
+            BuiltInRegistries.ITEM.getKey(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||
                     fluid == ModFluids.DISTILLED_WATER_STILL || fluid == ModFluids.DISTILLED_WATER_FLOWING
@@ -346,8 +351,8 @@ class AnimalmatronBlockEntity(
         val weedExCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex_cell")
         return when {
             stack.item == ModFluids.WEED_EX_BUCKET -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == weedExCellId -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
+            BuiltInRegistries.ITEM.getKey(stack.item) == weedExCellId -> true
+            BuiltInRegistries.ITEM.getKey(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
             }
@@ -365,7 +370,7 @@ class AnimalmatronBlockEntity(
             item == Items.HAY_BLOCK
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == SLOT_WATER_OUTPUT || slot == SLOT_WEED_EX_OUTPUT || slot == SLOT_HARVEST_OUTPUT -> false
         slot == SLOT_WATER_INPUT -> matchesWaterInput(stack)
@@ -376,9 +381,11 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.animalmatron")
@@ -494,7 +501,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
         // 获取范围内的动物实体（仅包含白名单中的动物）
         val box = AABB(pos).expand(SCAN_RADIUS.toDouble())
-        val animals = world.getEntitiesByClass(
+        val animals = world.getEntitiesOfClass(
             AgeableMob::class.java,
             box
         ) { it.isAlive && AnimalFoodMapping.isManagedAnimal(it) }
@@ -624,7 +631,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         // 原版手动繁殖同步：玩家用原版机制配对后 breedingAge>0（6000t 冷却）。此时档案的
         // breedUnlocked/canBreed 必须立即失效，否则机器会认为它"已解锁待配对"，JADE 显示
         // 与实际状态不符，且冷却结束后可能绕过机器喂食直接机器配对。
-        if (animal is Animal && animal.breedingAge > 0) {
+        if (animal is Animal && animal.age > 0) {
             animalData.breedUnlocked = false
             animalData.canBreed = false
             return
@@ -660,7 +667,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
         val readyAnimals = animals
             .filterIsInstance<Animal>()
-            .filter { it.isAlive && !it.isBaby && animalDataMap[it.uuid]?.canBreed == true && it.breedingAge <= 0 }
+            .filter { it.isAlive && !it.isBaby && animalDataMap[it.uuid]?.canBreed == true && it.age <= 0 }
 
         if (readyAnimals.size < 2) return
 
@@ -683,12 +690,12 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
             val animalData = animalDataMap[animal.uuid] ?: continue
             val mateData = animalDataMap[mate.uuid] ?: continue
-            val child = animal.createChild(world, mate) ?: continue
+            val child = animal.getBreedOffspring(world, mate) ?: continue
 
             child.setBaby(true)
             child.refreshPositionAndAngles(animal.x, animal.y, animal.z, 0f, 0f)
-            animal.breed(world, mate, child)
-            world.spawnEntityAndPassengers(child)
+            animal.spawnChildFromBreeding(world, mate)
+            world.addFreshEntityWithPassengers(child)
 
             animalData.foodConsumed = 0
             animalData.breedUnlocked = false
@@ -707,7 +714,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     private fun processWaterInputContainer() {
         if (waterTankInternal.amount > waterTankCapacity - FluidConstants.BUCKET) return
 
-        val input = getStack(SLOT_WATER_INPUT)
+        val input = getItem(SLOT_WATER_INPUT)
         if (input.isEmpty) return
 
         val emptyRemainder = when {
@@ -723,20 +730,20 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         }
         if (emptyRemainder.isEmpty) return
 
-        val out = getStack(SLOT_WATER_OUTPUT)
+        val out = getItem(SLOT_WATER_OUTPUT)
         if (!canMergeIntoSlot(out, emptyRemainder)) return
 
         waterTankInternal.insertInternal(FluidConstants.BUCKET)
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_WATER_INPUT, ItemStack.EMPTY)
-        if (out.isEmpty) setStack(SLOT_WATER_OUTPUT, emptyRemainder.copy()) else out.grow(1)
+        if (input.isEmpty) setItem(SLOT_WATER_INPUT, ItemStack.EMPTY)
+        if (out.isEmpty) setItem(SLOT_WATER_OUTPUT, emptyRemainder.copy()) else out.grow(1)
         setChanged()
     }
 
     private fun processWeedExInputContainer() {
         if (weedExTankInternal.amount > weedExTankCapacity - FluidConstants.BUCKET) return
 
-        val input = getStack(SLOT_WEED_EX_INPUT)
+        val input = getItem(SLOT_WEED_EX_INPUT)
         if (input.isEmpty) return
 
         val emptyRemainder = when {
@@ -751,22 +758,22 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         }
         if (emptyRemainder.isEmpty) return
 
-        val out = getStack(SLOT_WEED_EX_OUTPUT)
+        val out = getItem(SLOT_WEED_EX_OUTPUT)
         if (!canMergeIntoSlot(out, emptyRemainder)) return
 
         weedExTankInternal.insertInternal(FluidConstants.BUCKET)
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_WEED_EX_INPUT, ItemStack.EMPTY)
-        if (out.isEmpty) setStack(SLOT_WEED_EX_OUTPUT, emptyRemainder.copy()) else out.grow(1)
+        if (input.isEmpty) setItem(SLOT_WEED_EX_INPUT, ItemStack.EMPTY)
+        if (out.isEmpty) setItem(SLOT_WEED_EX_OUTPUT, emptyRemainder.copy()) else out.grow(1)
         setChanged()
     }
 
     private fun tryConsumeFeed(foodItem: Item): Boolean {
         for (slot in SLOT_FEED_INDICES) {
-            val stack = getStack(slot)
+            val stack = getItem(slot)
             if (!stack.isEmpty && stack.item == foodItem) {
                 stack.shrink(1)
-                if (stack.isEmpty) setStack(slot, ItemStack.EMPTY)
+                if (stack.isEmpty) setItem(slot, ItemStack.EMPTY)
                 setChanged()
                 return true
             }
@@ -778,7 +785,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
      * 获取动物的额外产物
      */
     private fun getExtraProduct(animal: AgeableMob): ItemStack? {
-        val entityId = BuiltInRegistries.ENTITY_TYPE.getId(animal.type).toString()
+        val entityId = (BuiltInRegistries.ENTITY_TYPE.getKey(animal.type)?.toString() ?: "?")
         return when (entityId) {
             "minecraft:chicken" -> {
                 // P5 修复：幼鸡不下蛋（原实现无 isBaby 检查）
@@ -799,13 +806,13 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
      * 消耗剪刀耐久度
      */
     private fun tryConsumeShearsDurability(): Boolean {
-        val shears = getStack(SLOT_SHEARS)
+        val shears = getItem(SLOT_SHEARS)
         if (shears.isEmpty || shears.item != Items.SHEARS) return false
 
         val currentDamage = shears.damage
         if (currentDamage >= shears.maxDamage - 1) {
             // 最后一次使用，剪刀损坏
-            setStack(SLOT_SHEARS, ItemStack.EMPTY)
+            setItem(SLOT_SHEARS, ItemStack.EMPTY)
         } else {
             shears.damage = currentDamage + 1
         }
@@ -828,8 +835,8 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         // P5 修复：先确认输出槽可容纳，再产生副作用（剪刀耐久/羊剪毛标记）。
         // 原实现先扣耐久+标 isSheared 再发现输出满直接 return——羊毛凭空消失，
         // 且 lastHarvestTick 不推进，每 2400t 空剪一次。
-        val out = getStack(SLOT_HARVEST_OUTPUT)
-        val canStore = out.isEmpty || (ItemStack.canCombine(out, product) && out.count + product.count <= out.maxStackSize)
+        val out = getItem(SLOT_HARVEST_OUTPUT)
+        val canStore = out.isEmpty || (ItemStack.isSameItemSameComponents(out, product) && out.count + product.count <= out.maxStackSize)
         if (!canStore) {
             // 输出满：推进 lastHarvestTick，避免每 tick 重扫，但不消耗任何资源
             animalData.lastHarvestTick = world.time
@@ -849,11 +856,11 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         }
 
         // 放入输出槽
-        val out2 = getStack(SLOT_HARVEST_OUTPUT)
+        val out2 = getItem(SLOT_HARVEST_OUTPUT)
         if (!out2.isEmpty) {
             out2.grow(product.count)
         } else {
-            setStack(SLOT_HARVEST_OUTPUT, product.copy())
+            setItem(SLOT_HARVEST_OUTPUT, product.copy())
         }
 
         animalData.lastHarvestTick = world.time
@@ -863,7 +870,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
+        return current.isEmpty || (ItemStack.isSameItemSameComponents(current, toInsert) && current.count < current.maxStackSize)
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {

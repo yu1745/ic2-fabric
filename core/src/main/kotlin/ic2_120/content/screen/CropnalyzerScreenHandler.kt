@@ -67,20 +67,20 @@ class CropnalyzerScreenHandler(
        if (id != BUTTON_ID_SCAN) return false
 
        val scanner = getScannerStack(player) ?: return true
-       val seed = itemInventory.getStack(SLOT_INPUT)
+       val seed = itemInventory.getItem(SLOT_INPUT)
        if (seed.item !is CropSeedBagItem) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.insert_seed_bag").withStyle(net.minecraft.ChatFormatting.RED), true)
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.insert_seed_bag").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
 
         val type = CropSeedData.readType(seed)
         if (type == null) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").withStyle(net.minecraft.ChatFormatting.RED), true)
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
 
-        if (!itemInventory.getStack(SLOT_OUTPUT).isEmpty) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.output_occupied").withStyle(net.minecraft.ChatFormatting.RED), true)
+        if (!itemInventory.getItem(SLOT_OUTPUT).isEmpty) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.output_occupied").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
 
@@ -89,11 +89,11 @@ class CropnalyzerScreenHandler(
        val currentLevel = CropSeedData.readScanLevel(seed)
       val scanCost = CropnalyzerItem.energyForScanLevel(currentLevel)
        if (scanCost <= 0L) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").withStyle(net.minecraft.ChatFormatting.RED), true)
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
         if (currentEnergy < scanCost) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.status_no_energy").withStyle(net.minecraft.ChatFormatting.RED), true)
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.status_no_energy").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
 
@@ -101,13 +101,13 @@ class CropnalyzerScreenHandler(
 
        val stats = CropSeedData.readStats(seed)
        CropSeedData.write(seed, type, stats, currentLevel + 1)
-       itemInventory.setStack(SLOT_OUTPUT, seed.copy())
-       itemInventory.setStack(SLOT_INPUT, ItemStack.EMPTY)
+       itemInventory.setItem(SLOT_OUTPUT, seed.copy())
+       itemInventory.setItem(SLOT_INPUT, ItemStack.EMPTY)
        itemInventory.setChanged()
 
        refreshEnergyState()
-        sendContentUpdates()
-        player.sendMessage(CropnalyzerItem.buildResultMessage(type, stats, currentLevel + 1), false)
+        broadcastChanges()
+        player.displayClientMessage(CropnalyzerItem.buildResultMessage(type, stats, currentLevel + 1), false)
         return true
     }
 
@@ -132,7 +132,7 @@ class CropnalyzerScreenHandler(
             return ItemStack.EMPTY
         }
 
-        if (stack.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+        if (stack.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
         slot.onTake(player, stack)
         return moved
     }
@@ -142,9 +142,9 @@ class CropnalyzerScreenHandler(
         return scanner.item is CropnalyzerItem
     }
 
-    override fun onClosed(player: Player) {
-        super.onClosed(player)
-        dropInventory(player, itemInventory)
+    override fun removed(player: Player) {
+        super.removed(player)
+        clearContainer(player, itemInventory)
     }
 
     private fun refreshEnergyState() {

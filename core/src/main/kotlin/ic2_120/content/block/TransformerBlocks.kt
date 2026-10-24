@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.validateTicker
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -83,13 +85,13 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
 
     init {
         // 设置默认激活状态为 false（FACING 由父类处理）
-        defaultState = stateManager.defaultBlockState.setValue(ACTIVE, false)
+        registerDefaultState(stateDefinition.any().setValue(ACTIVE, false))
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
         // 根据玩家面向的方向决定变压器正面朝向（水平方向）
         // 变压器通常放置在地面，正面应该朝向玩家面对的方向
-        val facing = ctx.horizontalPlayerFacing.opposite
+        val facing = ctx.horizontalDirection.opposite
         return super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)?.setValue(BlockStateProperties.FACING, facing)
     }
 
@@ -107,13 +109,13 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
                 is EvTransformerBlock -> EvTransformerBlockEntity::class.type()
                 else -> return null
             }
-            BlockEntityType.validateTicker(world, type, beType) { world1, pos, state, be ->
+            validateTicker(type, beType) { world1, pos, state, be ->
                 be.tick(world1, pos, state)
             }
         }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult, hand: InteractionHand): InteractionResult {
         if (!world.isClient) {
             getMenuProvider(state, world, pos)?.let { factory ->
                 player.openMenu(factory)
@@ -184,7 +186,7 @@ class HvTransformerBlock : TransformerBlock() {
                 ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern("CTB").pattern(" W ")
                     .define('W', insulatedGoldCable).define('C', circuit).define('T', MvTransformerBlock::class.item()).define('B', advancedReBattery)
-                    .unlockedBy(has(MvTransformerBlock::class.item()), has(MvTransformerBlock::class.item()))
+                    .unlockedBy(getHasName(MvTransformerBlock::class.item()), has(MvTransformerBlock::class.item()))
                     .save(exporter, HvTransformerBlock::class.id())
             }
         }
@@ -206,7 +208,7 @@ class EvTransformerBlock : TransformerBlock() {
                 ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern("CTL").pattern(" W ")
                     .define('W', insulatedIronCable).define('C', advancedCircuit).define('T', HvTransformerBlock::class.item()).define('L', lapotronCrystal)
-                    .unlockedBy(has(HvTransformerBlock::class.item()), has(HvTransformerBlock::class.item()))
+                    .unlockedBy(getHasName(HvTransformerBlock::class.item()), has(HvTransformerBlock::class.item()))
                     .save(exporter, EvTransformerBlock::class.id())
             }
         }

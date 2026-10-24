@@ -74,10 +74,10 @@ object ClaimProtection {
     @JvmStatic
     fun explosionCubeAllowed(world: Level, center: BlockPos, radius: Float, ownerUuid: UUID?): Boolean {
         val r = ceil(radius.toDouble()).toInt().coerceAtLeast(1)
-        val positions = BlockPos.iterate(
+        val positions = BlockPos.betweenClosed(
             center.x - r, center.y - r, center.z - r,
             center.x + r, center.y + r, center.z + r
-        ).map { it.toImmutable() }.toList()
+        ).map { it.immutable() }.toList()
         return allExplosionAllowed(world, positions, ownerUuid)
     }
 }

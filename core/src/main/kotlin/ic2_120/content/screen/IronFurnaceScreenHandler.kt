@@ -42,7 +42,7 @@ class IronFurnaceScreenHandler(
 
         addTrackedSlot(blockInventory, IronFurnaceBlockEntity.SLOT_INPUT, 55, 16, DEFAULT_SLOT_SPEC)
         addSlot(FurnaceOutputSlot(blockInventory, IronFurnaceBlockEntity.SLOT_OUTPUT, 116, 35, OUTPUT_SLOT_SPEC) {
-            context.get({ world, pos ->
+            context.evaluate({ world, pos ->
                 val be = world.getBlockEntity(pos)
                 if (be is IronFurnaceBlockEntity) be.dropStoredExperience()
             })
@@ -68,7 +68,7 @@ class IronFurnaceScreenHandler(
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id == BUTTON_ID_COLLECT_XP) {
-            context.get({ world, pos ->
+            context.evaluate({ world, pos ->
                 val be = world.getBlockEntity(pos)
                 if (be is IronFurnaceBlockEntity) be.collectXp(player)
             }, true)
@@ -87,7 +87,7 @@ class IronFurnaceScreenHandler(
             when {
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                    slot.onQuickCraft(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
@@ -101,7 +101,7 @@ class IronFurnaceScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -110,7 +110,7 @@ class IronFurnaceScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             world.getBlockState(pos).block is IronFurnaceBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0

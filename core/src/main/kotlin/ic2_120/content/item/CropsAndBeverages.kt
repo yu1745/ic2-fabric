@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.registry.CreativeTab
@@ -25,14 +27,14 @@ class Fertilizer : Item(Item.Properties()) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
                 .requires(Scrap::class.instance(), 2)
                 .requires(Items.BONE_MEAL)
-                .unlockedBy(has(Scrap::class.instance()), has(Scrap::class.instance()))
+                .unlockedBy(getHasName(Scrap::class.instance()), has(Scrap::class.instance()))
                 .save(exporter, Fertilizer::class.recipeId("from_scrap_and_bone_meal"))
 
             // 一个肥料 + 两个废料 -> 两个肥料
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
                 .requires(Fertilizer::class.instance())
                 .requires(Scrap::class.instance(), 2)
-                .unlockedBy(has(Fertilizer::class.instance()), has(Fertilizer::class.instance()))
+                .unlockedBy(getHasName(Fertilizer::class.instance()), has(Fertilizer::class.instance()))
                 .save(exporter, Fertilizer::class.recipeId("from_fertilizer_and_scrap"))
         }
     }

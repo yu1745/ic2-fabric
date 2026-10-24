@@ -129,7 +129,7 @@ object ModFluids {
         // 3. 注册桶
         val bucket = Registry.register(
             BuiltInRegistries.ITEM, BuildCraftAddon.id("${name}_bucket"),
-            BucketItem(still, Item.Properties().maxStackSize(1))
+            BucketItem(still, Item.Properties().stacksTo(1))
         )
         BcOilFluid.bucketLookup[name] = bucket
 

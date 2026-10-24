@@ -15,11 +15,11 @@ import org.jetbrains.annotations.Nullable
 interface IRoutedSidedInventory : WorldlyContainer {
     val routedItemStorage: RoutedItemStorage
 
-   override fun getAvailableSlots(side: Direction): IntArray = routedItemStorage.visibleSlots
+   override fun getSlotsForFace(side: Direction): IntArray = routedItemStorage.visibleSlots
 
-    override fun canInsert(slot: Int, stack: ItemStack, side: Direction?): Boolean =
+    override fun canPlaceItemThroughFace(slot: Int, stack: ItemStack, side: Direction?): Boolean =
         routedItemStorage.canInsertFromSide(slot, stack)
 
-    override fun canExtract(slot: Int, stack: ItemStack, side: Direction): Boolean =
+    override fun canTakeItemThroughFace(slot: Int, stack: ItemStack, side: Direction): Boolean =
         slot in routedItemStorage.extractSlots
 }

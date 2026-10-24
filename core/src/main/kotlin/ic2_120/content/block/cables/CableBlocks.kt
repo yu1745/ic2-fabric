@@ -1,5 +1,9 @@
 package ic2_120.content.block.cables
 
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.compat.isClient
@@ -37,7 +41,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
@@ -67,7 +70,7 @@ class TinCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : B
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = TinCableBlock::class.id(),
@@ -180,7 +183,7 @@ class IronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : 
     renderLayer = "cutout_mipped"
 )
 class GlassFibreCableBlock(
-    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0.5f).noCollision()
+    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0.5f).noCollission()
 ) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     companion object {
@@ -240,7 +243,7 @@ class InsulatedCopperCableBlock(settings: BlockBehaviour.Properties = defaultSet
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.ofItems(InsulatedCopperCableBlock::class.item())
+                    Ingredient.of(InsulatedCopperCableBlock::class.item())
                 )
             )
         }
@@ -277,7 +280,7 @@ class InsulatedTinCableBlock(settings: BlockBehaviour.Properties = defaultSettin
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.ofItems(InsulatedTinCableBlock::class.item())
+                    Ingredient.of(InsulatedTinCableBlock::class.item())
                 )
             )
         }
@@ -315,7 +318,7 @@ class InsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaultSetti
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.ofItems(InsulatedGoldCableBlock::class.item())
+                    Ingredient.of(InsulatedGoldCableBlock::class.item())
                 )
             )
         }
@@ -364,7 +367,7 @@ class DoubleInsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaul
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.ofItems(DoubleInsulatedGoldCableBlock::class.item())
+                    Ingredient.of(DoubleInsulatedGoldCableBlock::class.item())
                 )
             )
         }
@@ -402,7 +405,7 @@ class InsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaultSetti
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.ofItems(InsulatedIronCableBlock::class.item())
+                    Ingredient.of(InsulatedIronCableBlock::class.item())
                 )
             )
         }
@@ -451,7 +454,7 @@ class DoubleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaul
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.ofItems(DoubleInsulatedIronCableBlock::class.item())
+                    Ingredient.of(DoubleInsulatedIronCableBlock::class.item())
                 )
             )
         }
@@ -501,7 +504,7 @@ class TripleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaul
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.ofItems(TripleInsulatedIronCableBlock::class.item())
+                    Ingredient.of(TripleInsulatedIronCableBlock::class.item())
                 )
             )
         }
@@ -519,7 +522,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SplitterCableBlock::class.item(), 1)
                 .pattern("RCR")
                 .pattern("LRL")
@@ -545,7 +548,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
-        val active = ctx.world.getReceivedRedstonePower(ctx.blockPos) >= CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
+        val active = ctx.level.getSignal(ctx.pos) >= CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
         val superState = super.getStateForPlacement(ctx)
         return if (active) {
             var state = superState.setValue(ACTIVE, true)
@@ -559,16 +562,16 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun neighborUpdate(
+    override fun neighborChanged(
         state: BlockState, world: Level, pos: BlockPos,
         block: Block, sourcePos: BlockPos, notify: Boolean
     ) {
         if (world.isClient) {
-            super.neighborUpdate(state, world, pos, block, sourcePos, notify)
+            super.neighborChanged(state, world, pos, block, sourcePos, notify)
             return
         }
         refreshControlState(world, pos, state)
-        super.neighborUpdate(state, world, pos, block, sourcePos, notify)
+        super.neighborChanged(state, world, pos, block, sourcePos, notify)
     }
 
     /** 按方块实体中的阈值与反相配置刷新断开状态。 */
@@ -577,7 +580,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
         val be = world.getBlockEntity(pos) as? CableBlockEntity
         val threshold = be?.splitterThreshold ?: CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
         val inverted = be?.splitterInverted ?: false
-        val thresholdReached = world.getReceivedRedstonePower(pos) >= threshold
+        val thresholdReached = world.getSignal(pos) >= threshold
         val shouldDisconnect = if (inverted) !thresholdReached else thresholdReached
         if (shouldDisconnect == state.getValue(ACTIVE)) return
 
@@ -585,7 +588,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
         for (dir in Direction.values()) {
             newState = newState.setValue(propertyFor(dir), !shouldDisconnect && canConnect(world, pos, dir))
         }
-        world.setBlock(pos, newState, Block.NOTIFY_ALL)
+        world.setBlock(pos, newState, Block.UPDATE_ALL)
         EnergyNetworkManager.invalidateAt(world, pos)
     }
 
@@ -593,13 +596,15 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return InteractionResult.PASS
-        player.openMenu(object : ExtendedScreenHandlerFactory {
+        player.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
             override fun getDisplayName(): Component = Component.translatable("block.ic2_120.splitter_cable")
 
-            override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-                buf.writeBlockPos(pos)
-                buf.writeVarInt(be.splitterThreshold)
-                buf.writeBoolean(be.splitterInverted)
+            override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+                val buf = FriendlyByteBuf(Unpooled.buffer())
+                    buf.writeBlockPos(pos)
+                    buf.writeVarInt(be.splitterThreshold)
+                    buf.writeBoolean(be.splitterInverted)
+                return buf
             }
 
             override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
@@ -613,17 +618,17 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getStateForNeighborUpdate(
+    override fun updateShape(
         state: BlockState, direction: Direction, neighborState: BlockState,
         world: LevelAccessor, pos: BlockPos, neighborPos: BlockPos
     ): BlockState {
         if (state.getValue(ACTIVE)) {
             if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-                world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+                world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
             }
             return state.setValue(propertyFor(direction), false)
         }
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
+        return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
     }
 }
 
@@ -636,7 +641,7 @@ class LimiterCableBlock(settings: BlockBehaviour.Properties = defaultSettings())
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LimiterCableBlock::class.item(), 1)
                 .pattern(" C ")
                 .pattern("RGR")
@@ -660,11 +665,13 @@ class LimiterCableBlock(settings: BlockBehaviour.Properties = defaultSettings())
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return InteractionResult.PASS
-        player.openMenu(object : ExtendedScreenHandlerFactory {
+        player.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
             override fun getDisplayName(): Component = Component.translatable("block.ic2_120.limiter_cable")
-            override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-                buf.writeBlockPos(pos)
-                buf.writeLong(be.configuredLimit)
+            override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+                val buf = FriendlyByteBuf(Unpooled.buffer())
+                    buf.writeBlockPos(pos)
+                    buf.writeLong(be.configuredLimit)
+                return buf
             }
             override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
                 val handler = LimiterCableScreenHandler(syncId, playerInventory, pos)

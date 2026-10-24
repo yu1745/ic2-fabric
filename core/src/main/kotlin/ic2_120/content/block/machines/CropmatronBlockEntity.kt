@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.registries.BuiltInRegistries
+
+import net.minecraft.network.FriendlyByteBuf
+
+import io.netty.buffer.Unpooled
+
 import ic2_120.compat.time
 
 import ic2_120.compat.isClient
@@ -61,7 +67,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
@@ -87,7 +92,7 @@ class CropmatronBlockEntity(
     ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CropmatronBlock.ACTIVE
     override val tier: Int = CROPMATRON_TIER
@@ -114,12 +119,12 @@ class CropmatronBlockEntity(
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_WATER_INPUT), matcher = { isValid(SLOT_WATER_INPUT, it) }),
-            ItemInsertRoute(intArrayOf(SLOT_WEED_EX_INPUT), matcher = { isValid(SLOT_WEED_EX_INPUT, it) }),
-            ItemInsertRoute(SLOT_FERTILIZER_INDICES, matcher = { isValid(SLOT_FERTILIZER_0, it) })
+            ItemInsertRoute(intArrayOf(SLOT_WATER_INPUT), matcher = { canPlaceItem(SLOT_WATER_INPUT, it) }),
+            ItemInsertRoute(intArrayOf(SLOT_WEED_EX_INPUT), matcher = { canPlaceItem(SLOT_WEED_EX_INPUT, it) }),
+            ItemInsertRoute(SLOT_FERTILIZER_INDICES, matcher = { canPlaceItem(SLOT_FERTILIZER_0, it) })
         ),
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         setChanged = { setChanged() }
@@ -286,7 +291,7 @@ class CropmatronBlockEntity(
         }
     }
 
-    private var workOffset: Int = random.nextBetween(0, WORK_INTERVAL_TICKS - 1)
+    private var workOffset: Int = random.nextIntBetweenInclusive(0, WORK_INTERVAL_TICKS - 1)
 
     private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
     private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
@@ -297,15 +302,15 @@ class CropmatronBlockEntity(
     constructor(pos: BlockPos, state: BlockState) : this(CropmatronBlockEntity::class.type(), pos, state)
 
     override fun getInventory(): Container = this
-    override fun size(): Int = INVENTORY_SIZE
+    override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
-    override fun clear() = inventory.clear()
+    override fun clearContent() = inventory.clear()
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun setStack(slot: Int, stack: ItemStack) {
+    override fun setItem(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         setChanged()
@@ -318,9 +323,9 @@ class CropmatronBlockEntity(
         val distilledWaterCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")
         return when {
             stack.item == Items.WATER_BUCKET || stack.item == ModFluids.DISTILLED_WATER_BUCKET -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == waterCellId -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == distilledWaterCellId -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
+            BuiltInRegistries.ITEM.getKey(stack.item) == waterCellId -> true
+            BuiltInRegistries.ITEM.getKey(stack.item) == distilledWaterCellId -> true
+            BuiltInRegistries.ITEM.getKey(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||
                     fluid == ModFluids.DISTILLED_WATER_STILL || fluid == ModFluids.DISTILLED_WATER_FLOWING
@@ -335,8 +340,8 @@ class CropmatronBlockEntity(
         val weedExCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex_cell")
         return when {
             stack.item == ModFluids.WEED_EX_BUCKET -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == weedExCellId -> true
-            BuiltInRegistries.ITEM.getId(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
+            BuiltInRegistries.ITEM.getKey(stack.item) == weedExCellId -> true
+            BuiltInRegistries.ITEM.getKey(stack.item) == fluidCellId && stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
             }
@@ -344,7 +349,7 @@ class CropmatronBlockEntity(
         }
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
+    override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == SLOT_WATER_OUTPUT || slot == SLOT_WEED_EX_OUTPUT -> false
         slot == SLOT_WATER_INPUT -> cropmatronMatchesWaterInput(stack)
@@ -354,9 +359,11 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+            buf.writeBlockPos(pos)
+            buf.writeVarInt(syncedData.size)
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.cropmatron")
@@ -453,7 +460,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
                     tryApplyFertilizer(be, report)
                     tryApplyHydration(be, report)
                     tryApplyWeedEx(be, report)
-                } else if (waterTankInternal.amount > 0 && tryHydrateFarmland(world, cropPos.down())) {
+                } else if (waterTankInternal.amount > 0 && tryHydrateFarmland(world, cropPos.below())) {
                     if (chargeEnergy(ENERGY_PER_APPLY * energyMultiplier) > 0L) {
                         report.farmlandHydrated++
                     }
@@ -545,7 +552,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
     private fun processWaterInputContainer() {
         if (waterTankInternal.amount > waterTankCapacity - FluidConstants.BUCKET) return
 
-        val input = getStack(SLOT_WATER_INPUT)
+        val input = getItem(SLOT_WATER_INPUT)
         if (input.isEmpty) return
 
         val emptyRemainder = when {
@@ -561,20 +568,20 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         }
         if (emptyRemainder.isEmpty) return
 
-        val out = getStack(SLOT_WATER_OUTPUT)
+        val out = getItem(SLOT_WATER_OUTPUT)
         if (!canMergeIntoSlot(out, emptyRemainder)) return
 
         waterTankInternal.insertInternal(FluidConstants.BUCKET)
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_WATER_INPUT, ItemStack.EMPTY)
-        if (out.isEmpty) setStack(SLOT_WATER_OUTPUT, emptyRemainder.copy()) else out.grow(1)
+        if (input.isEmpty) setItem(SLOT_WATER_INPUT, ItemStack.EMPTY)
+        if (out.isEmpty) setItem(SLOT_WATER_OUTPUT, emptyRemainder.copy()) else out.grow(1)
         setChanged()
     }
 
     private fun processWeedExInputContainer() {
         if (weedExTankInternal.amount > weedExTankCapacity - FluidConstants.BUCKET) return
 
-        val input = getStack(SLOT_WEED_EX_INPUT)
+        val input = getItem(SLOT_WEED_EX_INPUT)
         if (input.isEmpty) return
 
         val emptyRemainder = when {
@@ -589,19 +596,19 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         }
         if (emptyRemainder.isEmpty) return
 
-        val out = getStack(SLOT_WEED_EX_OUTPUT)
+        val out = getItem(SLOT_WEED_EX_OUTPUT)
         if (!canMergeIntoSlot(out, emptyRemainder)) return
 
         weedExTankInternal.insertInternal(FluidConstants.BUCKET)
         input.shrink(1)
-        if (input.isEmpty) setStack(SLOT_WEED_EX_INPUT, ItemStack.EMPTY)
-        if (out.isEmpty) setStack(SLOT_WEED_EX_OUTPUT, emptyRemainder.copy()) else out.grow(1)
+        if (input.isEmpty) setItem(SLOT_WEED_EX_INPUT, ItemStack.EMPTY)
+        if (out.isEmpty) setItem(SLOT_WEED_EX_OUTPUT, emptyRemainder.copy()) else out.grow(1)
         setChanged()
     }
 
     private fun hasFertilizer(): Boolean {
         for (slot in SLOT_FERTILIZER_INDICES) {
-            val stack = getStack(slot)
+            val stack = getItem(slot)
             if (!stack.isEmpty && stack.item == Fertilizer::class.instance()) return true
         }
         return false
@@ -609,10 +616,10 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     private fun consumeOneFertilizer(): Boolean {
         for (slot in SLOT_FERTILIZER_INDICES) {
-            val stack = getStack(slot)
+            val stack = getItem(slot)
             if (!stack.isEmpty && stack.item == Fertilizer::class.instance()) {
                 stack.shrink(1)
-                if (stack.isEmpty) setStack(slot, ItemStack.EMPTY)
+                if (stack.isEmpty) setItem(slot, ItemStack.EMPTY)
                 setChanged()
                 return true
             }
@@ -623,12 +630,12 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
     private fun refundOneFertilizer() {
         val fertilizer = ItemStack(Fertilizer::class.instance())
         for (slot in SLOT_FERTILIZER_INDICES) {
-            val stack = getStack(slot)
+            val stack = getItem(slot)
             if (stack.isEmpty) {
-                setStack(slot, fertilizer)
+                setItem(slot, fertilizer)
                 return
             }
-            if (ItemStack.canCombine(stack, fertilizer) && stack.count < stack.maxStackSize) {
+            if (ItemStack.isSameItemSameComponents(stack, fertilizer) && stack.count < stack.maxStackSize) {
                 stack.grow(1)
                 setChanged()
                 return
@@ -638,7 +645,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
+        return current.isEmpty || (ItemStack.isSameItemSameComponents(current, toInsert) && current.count < current.maxStackSize)
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {

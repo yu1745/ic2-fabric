@@ -32,7 +32,7 @@ class BrokenRubberBoatItem : Ic2BoatItem(ModEntities.BROKEN_RUBBER_BOAT, Item.Pr
             ShapelessRecipeBuilder.shapeless(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
                 .requires(BrokenRubberBoatItem::class.instance())
                 .requires(RubberItem::class.instance())
-                .unlockedBy(has(BrokenRubberBoatItem::class.instance()), has(BrokenRubberBoatItem::class.instance()))
+                .unlockedBy(getHasName(BrokenRubberBoatItem::class.instance()), has(BrokenRubberBoatItem::class.instance()))
                 .save(exporter, BrokenRubberBoatItem::class.recipeId("repair_to_rubber_boat"))
         }
     }
