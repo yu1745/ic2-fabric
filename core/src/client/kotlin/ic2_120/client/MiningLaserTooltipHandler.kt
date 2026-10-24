@@ -30,7 +30,7 @@ object MiningLaserTooltipHandler {
             lines.add(
                 Component.translatable("tooltip.ic2_120.mining_laser.current_mode")
                     .withStyle(ChatFormatting.GRAY)
-                    .append(Component.translatable(mode.translationKey).withStyle(ChatFormatting.AQUA))
+                    .append(Component.translatable(mode.descriptionId).withStyle(ChatFormatting.AQUA))
             )
 
             lines.add(
@@ -57,7 +57,7 @@ object MiningLaserTooltipHandler {
                     lines.add(
                         Component.literal("• ")
                             .withStyle(ChatFormatting.GRAY)
-                            .append(Component.translatable(m.translationKey).withStyle(ChatFormatting.AQUA))
+                            .append(Component.translatable(m.descriptionId).withStyle(ChatFormatting.AQUA))
                             .append(Component.literal(" — ").withStyle(ChatFormatting.DARK_GRAY))
                             .append(Component.translatable(m.descriptionKey).withStyle(ChatFormatting.GRAY))
                     )

@@ -5,17 +5,19 @@ import ic2_120.content.item.armor.NanoHelmet
 import ic2_120.content.item.armor.QuantumBoots
 import ic2_120.content.item.armor.QuantumHelmet
 import ic2_120.content.item.armor.QuantumLeggings
-import ic2_120.content.network.NetworkManager
-import io.netty.buffer.Unpooled
+import ic2_120.content.network.ToggleNightVisionGogglesPayload
+import ic2_120.content.network.ToggleNanoVisionPayload
+import ic2_120.content.network.ToggleQuantumLeggingsSpeedPayload
+import ic2_120.content.network.ToggleQuantumBootsJumpPayload
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.KeyMapping
+import net.minecraft.client.Minecraft
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.network.FriendlyByteBuf
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -30,6 +32,8 @@ import org.lwjgl.glfw.GLFW
  */
 @Environment(EnvType.CLIENT)
 object ArmorKeybinds {
+    private val minecraft = Minecraft.getInstance()
+
     private val toggleVisionKey = KeyBindingHelper.registerKeyBinding(
         KeyMapping(
             "key.ic2_120.toggle_vision",
@@ -62,7 +66,7 @@ object ArmorKeybinds {
             val player = minecraft.player ?: return@register
 
             while (toggleVisionKey.consumeClick()) {
-                if (!isAltDown(client)) continue
+                if (!isAltDown()) continue
 
                 // 优先级 1：头盔 → 夜视眼镜
                 val helmet = player.getItemBySlot(EquipmentSlot.HEAD)
@@ -78,7 +82,7 @@ object ArmorKeybinds {
             }
 
             while (toggleSpeedKey.consumeClick()) {
-                if (!isAltDown(client)) continue
+                if (!isAltDown()) continue
 
                 val legs = player.getItemBySlot(EquipmentSlot.LEGS)
                 if (legs.item is QuantumLeggings) {
@@ -87,7 +91,7 @@ object ArmorKeybinds {
             }
 
             while (toggleJumpKey.consumeClick()) {
-                if (!isAltDown(client)) continue
+                if (!isAltDown()) continue
 
                 val feet = player.getItemBySlot(EquipmentSlot.FEET)
                 if (feet.item is QuantumBoots) {
@@ -97,10 +101,10 @@ object ArmorKeybinds {
         }
     }
 
-    private fun isAltDown(client: net.minecraft.client.Minecraft): Boolean {
+    private fun isAltDown(): Boolean {
         val window = minecraft.getWindow().handle
-        return InputConstants..isDown.takeIf { it } != null || window, GLFW.GLFW_KEY_LEFT_ALT) ||
-               InputConstants..isDown.takeIf { it } != null || window, GLFW.GLFW_KEY_RIGHT_ALT)
+        return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_ALT) ||
+               InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_ALT)
     }
 
     fun getVisionKey(): KeyMapping = toggleVisionKey

@@ -99,18 +99,6 @@ class SemifluidGeneratorFuelStatePacketPayload(val packet: SemifluidGeneratorFue
     }
 }
 
-class ReactorLayoutLockPacketPayload(val packet: ReactorLayoutLockPacket) : CustomPacketPayload {
-    override fun type(): CustomPacketPayload.Type<ReactorLayoutLockPacketPayload> = ID
-
-    companion object {
-        val ID = CustomPacketPayload.Type<ReactorLayoutLockPacketPayload>(ReactorLayoutLockPacket.ID)
-        val CODEC: StreamCodec<FriendlyByteBuf, ReactorLayoutLockPacketPayload> = StreamCodec.of(
-            { buf, value -> ReactorLayoutLockPacket.write(value.packet, buf) },
-            { buf -> ReactorLayoutLockPacketPayload(ReactorLayoutLockPacket.read(buf)) }
-        )
-    }
-}
-
 object NetworkManager {
     // 旧 ResourceLocation 常量保留给客户端兼容引用（实际收发走对应 payload type）
     val REACTOR_HEAT_INFO_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_heat_info")
@@ -151,7 +139,7 @@ object NetworkManager {
         s2c.register(WindRotorStatePacket.ID, WindRotorStatePacket.CODEC)
         s2c.register(WaterRotorStatePacket.ID, WaterRotorStatePacket.CODEC)
         s2c.register(TeleporterVisualStatePacket.ID, TeleporterVisualStatePacket.CODEC)
-        s2c.register(ReactorLayoutLockPacketPayload.ID, ReactorLayoutLockPacketPayload.CODEC)
+        s2c.register(ReactorLayoutLockPacket.ID, ReactorLayoutLockPacket.CODEC)
         s2c.register(SemifluidGeneratorFuelStatePacketPayload.ID, SemifluidGeneratorFuelStatePacketPayload.CODEC)
 
         // TODO(1.21.1): chainsaw shear 切换暂无独立 payload，待客户端迁移后注册接收器。
@@ -322,7 +310,7 @@ object NetworkManager {
     }
 
     fun sendToClient(player: ServerPlayer, packet: ReactorLayoutLockPacket) {
-        ServerPlayNetworking.send(player, ReactorLayoutLockPacketPayload(packet))
+        ServerPlayNetworking.send(player, packet)
     }
 
     // 发送风力发电机转子状态到附近玩家

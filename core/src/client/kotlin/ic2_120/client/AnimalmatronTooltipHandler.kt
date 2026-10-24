@@ -32,7 +32,7 @@ object AnimalmatronTooltipHandler {
                 AnimalFoodMapping.getFoodMap().forEach { (id, food) ->
                     val animalKey = "entity.${id.namespace}.${id.path}"
                     val animalName = Component.translatable(animalKey).string
-                    val foodName = Component.translatable(food.first().translationKey).string
+                    val foodName = Component.translatable(food.first().descriptionId).string
                     lines.add(Component.literal("  ${animalName}: ${foodName}").withStyle(ChatFormatting.DARK_GRAY))
                 }
                 lines.add(Component.translatable("item.ic2_120.animalmatron.tooltip.breeding_limit").withStyle(ChatFormatting.DARK_GRAY))
@@ -41,8 +41,8 @@ object AnimalmatronTooltipHandler {
                 EXTRA_PRODUCTS.forEach { (entityId, productId, needsShears) ->
                     val animalKey = "entity.${entityId.namespace}.${entityId.path}"
                     val animalName = Component.translatable(animalKey).string
-                    val productItem = BuiltInRegistries.ITEM.getValue(productId)
-                    val productName = Component.translatable(productItem.translationKey).string
+                    val productItem = BuiltInRegistries.ITEM.get(productId)
+                    val productName = Component.translatable(productItem.descriptionId).string
                     val noteKey = if (needsShears)
                         "item.ic2_120.animalmatron.tooltip.extra_product_shears"
                     else

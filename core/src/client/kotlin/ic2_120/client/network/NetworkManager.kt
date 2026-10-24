@@ -21,8 +21,8 @@ import net.minecraft.resources.ResourceLocation
 private val minecraft = net.minecraft.client.Minecraft.getInstance()
 
 object NetworkManager {
-    private val REACTOR_HEAT_INFO_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_heat_info")
-    private val REACTOR_LAYOUT_LOCK_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_layout_lock")
+    private val REACTOR_HEAT_INFO_PACKET = ReactorHeatInfoPacket.ID
+    private val REACTOR_LAYOUT_LOCK_PACKET = ReactorLayoutLockPacket.ID
     private val WIND_ROTOR_STATE_PACKET = WindRotorStatePacket.ID
     private val WATER_ROTOR_STATE_PACKET = WaterRotorStatePacket.ID
     

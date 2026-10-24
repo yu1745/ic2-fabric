@@ -66,7 +66,7 @@ class ItemUpgradeScreen(
 
         // 过滤文本 (9,18)-(104,32)
         val filterName = if (menu.itemRawId > 0) {
-            BuiltInRegistries.ITEM.getValue(andler.itemRawId).name.string
+            BuiltInRegistries.ITEM.get(andler.itemRawId).name.string
         } else {
             t("gui.ic2_120.item_upgrade.no_filter")
         }
@@ -101,7 +101,7 @@ class ItemUpgradeScreen(
 
     private fun drawFilterItem(context: GuiGraphics) {
         if (menu.itemRawId <= 0) return
-        val item = BuiltInRegistries.ITEM.getValue(andler.itemRawId)
+        val item = BuiltInRegistries.ITEM.get(andler.itemRawId)
         if (item != net.minecraft.world.item.Items.AIR) context.renderItem(item.defaultStack, leftPos + 8, topPos + 35)
     }
 

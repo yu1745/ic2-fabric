@@ -64,7 +64,7 @@ class UuScannerScreen(
             val cost = menu.sync.currentCostUb
             val rawId = menu.sync.cachedItemRawId
             if (rawId > 0 && cost > 0) {
-                val item = BuiltInRegistries.ITEM.getValue(rawId)
+                val item = BuiltInRegistries.ITEM.get(rawId)
                 val name = item.name.string
                 val scale = 7f / font.lineHeight
                 val infoX = left + 102

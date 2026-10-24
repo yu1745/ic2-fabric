@@ -152,7 +152,7 @@ class CropnalyzerScreen(
 
         val harvestFirst = CropSystem.harvestItems(type).firstOrNull()
         val harvestName = harvestFirst?.let {
-            McText.translatable(it.item.asItem().translationKey).string
+            McText.translatable(it.item.asItem().descriptionId).string
         } ?: "-"
 
         val x0 = left + RESULT_X
