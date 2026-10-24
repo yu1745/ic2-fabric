@@ -9,6 +9,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
+import ic2_120.compat.nbt
 
 /**
  * 电池模型 Predicate 注册
@@ -27,7 +28,7 @@ object BatteryModelPredicates {
      */
     fun register() {
         // 遍历所有已注册的物品，找到电池物品并注册 predicate
-        BuiltInRegistries.ITEM.ids.forEach { id ->
+        BuiltInRegistries.ITEM.keySet().forEach { id ->
             if (id.namespace == "ic2_120") {
                 val item = BuiltInRegistries.ITEM.get(id)
                 if (item is IBatteryItem) {

@@ -23,7 +23,7 @@ class AnimalSlaughtererScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 剪刀纹理 (180,21)-(198,39) = 18x18，常渲染至 15,17（物品层之下）
@@ -36,7 +36,7 @@ class AnimalSlaughtererScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -110,7 +110,7 @@ class AnimalSlaughtererScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY

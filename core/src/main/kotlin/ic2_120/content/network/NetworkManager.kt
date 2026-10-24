@@ -8,6 +8,7 @@ import ic2_120.content.block.machines.ReplicatorBlockEntity
 import ic2_120.content.screen.FluidUpgradeScreenHandler
 import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.content.screen.PumpAttachmentScreenHandler
+import ic2_120.content.item.Chainsaw
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.MiningLaserItem
@@ -119,6 +120,7 @@ object NetworkManager {
         c2s.register(SelectTemplatePayload.ID, SelectTemplatePayload.CODEC)
         c2s.register(SetFluidFilterPayload.ID, SetFluidFilterPayload.CODEC)
         c2s.register(SetItemFilterPayload.ID, SetItemFilterPayload.CODEC)
+        c2s.register(ToggleChainsawShearPayload.ID, ToggleChainsawShearPayload.CODEC)
 
         val s2c = PayloadTypeRegistry.playS2C()
         s2c.register(ReactorHeatInfoPacket.ID, ReactorHeatInfoPacket.CODEC)
@@ -127,8 +129,7 @@ object NetworkManager {
         s2c.register(TeleporterVisualStatePacket.ID, TeleporterVisualStatePacket.CODEC)
         s2c.register(ReactorLayoutLockPacket.ID, ReactorLayoutLockPacket.CODEC)
         s2c.register(SemifluidGeneratorFuelStatePacket.ID, SemifluidGeneratorFuelStatePacket.CODEC)
-
-        // TODO(1.21.1): chainsaw shear 切换暂无独立 payload，待客户端迁移后注册接收器。
+        s2c.register(ConfigSyncChunkPayload.ID, ConfigSyncChunkPayload.CODEC)
 
         // ---- C2S 接收器 ----
         ServerPlayNetworking.registerGlobalReceiver(ToggleNightVisionGogglesPayload.ID) { _, context ->
@@ -250,6 +251,24 @@ object NetworkManager {
                         player.setItemInHand(hand, stack)
                         player.displayClientMessage(
                             Component.translatable(newMode.translationKey),
+                            true
+                        )
+                        return@execute
+                    }
+                }
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(ToggleChainsawShearPayload.ID) { _, context ->
+            val player = context.player()
+            context.server().execute {
+                for (hand in arrayOf(InteractionHand.MAIN_HAND, InteractionHand.OFF_HAND)) {
+                    val stack = player.getItemInHand(hand)
+                    if (stack.item is Chainsaw) {
+                        val enabled = Chainsaw.toggleShear(stack)
+                        player.setItemInHand(hand, stack)
+                        player.displayClientMessage(
+                            Component.literal(if (enabled) "链锯剪刀模式：开启" else "链锯剪刀模式：关闭"),
                             true
                         )
                         return@execute

@@ -34,7 +34,7 @@ class ComposeDebugScreen(
         imageHeight = GuiSize.DEBUG.height
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
@@ -76,10 +76,11 @@ class ComposeDebugScreen(
     override fun mouseScrolled(
         mouseX: Double,
         mouseY: Double,
-        amount: Double
+        xAmount: Double,
+        yAmount: Double
     ): Boolean =
-        ui.mouseScrolled(mouseX, mouseY, 0.0, amount)
-            || super.mouseScrolled(mouseX, mouseY, amount)
+        ui.mouseScrolled(mouseX, mouseY, xAmount, yAmount)
+            || super.mouseScrolled(mouseX, mouseY, xAmount, yAmount)
 
     override fun mouseDragged(
         mouseX: Double,

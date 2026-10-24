@@ -23,12 +23,12 @@ class KineticGeneratorScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val energy = menu.sync.energy.toLong().coerceAtLeast(0)
@@ -58,7 +58,7 @@ class KineticGeneratorScreen(
 
         // 能量条悬停 (60,23)-(117,37) = 57×14
         if (mouseX in leftPos + 60 until leftPos + 117 && mouseY in topPos + 23 until topPos + 37) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY

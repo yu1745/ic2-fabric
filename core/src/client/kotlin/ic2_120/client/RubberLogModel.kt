@@ -34,15 +34,15 @@ class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
 
     private var sprites: Array<TextureAtlasSprite?> = arrayOfNulls(6)
 
-    override fun getModelDependencies() = emptySet<ResourceLocation>()
-    override fun setParents(modelLoader: Function<ResourceLocation, UnbakedModel>) {}
+    override fun getDependencies() = emptySet<ResourceLocation>()
+    override fun resolveParents(modelLoader: Function<ResourceLocation, UnbakedModel>) {}
 
     override fun bake(
         baker: ModelBaker,
         textureGetter: Function<Material, TextureAtlasSprite>,
         rotationContainer: ModelState
     ): BakedModel {
-        val atlas = InventoryMenu.BLOCK_ATLAS_TEXTURE
+        val atlas = InventoryMenu.BLOCK_ATLAS
         val tex = { path: String -> Material(atlas, ResourceLocation.fromNamespaceAndPath("ic2", "block/resource/$path")) }
         sprites[0] = textureGetter.apply(tex("rubber_wood_wet_front"))
         sprites[1] = textureGetter.apply(tex("rubber_wood_dry_front"))
@@ -62,11 +62,11 @@ class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
     override fun getQuads(state: BlockState?, face: Direction?, random: RandomSource) = emptyList<net.minecraft.client.renderer.block.model.BakedQuad>()
 
     override fun useAmbientOcclusion() = true
-    override fun hasDepth() = false
-    override fun isSideLit() = true
-    override fun isBuiltin() = false
-    override fun getParticleSprite() = sprites[2]!!
-    override fun getTransformation() = ItemTransforms.NONE
+    override fun isGui3d() = false
+    override fun usesBlockLight() = true
+    override fun isCustomRenderer() = false
+    override fun getParticleIcon() = sprites[2]!!
+    override fun getTransforms() = ItemTransforms.NO_TRANSFORMS
     override fun getOverrides() = ItemOverrides.EMPTY
 
     override fun isVanillaAdapter() = false

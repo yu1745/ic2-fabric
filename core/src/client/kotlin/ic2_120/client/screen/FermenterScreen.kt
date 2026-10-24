@@ -29,12 +29,12 @@ class FermenterScreen(
         imageHeight = 184
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 175, 184, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val inputBiomassMb = menu.sync.inputBiomass.coerceAtLeast(0)
@@ -92,7 +92,7 @@ class FermenterScreen(
             context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
         if (mouseX in heatX until (heatX + heatW) && mouseY in heatY until (heatY + heatH)) {
-            context.renderComponentTooltip(font, Component.literal("热量: ${bufferedHeat} / 40000 HU"), mouseX, mouseY)
+            context.renderTooltip(font, Component.literal("热量: ${bufferedHeat} / 40000 HU"), mouseX, mouseY)
         }
         if (mouseX in biofuelX until (biofuelX + biofuelW) && mouseY in biofuelY until (biofuelY + biofuelH)) {
             val lines = if (outputBiogasMb > 0) listOf(Component.literal("生物燃料"), Component.literal("${"%,d".format(outputBiogasMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
@@ -115,7 +115,7 @@ class FermenterScreen(
     private fun getFluidSprite(fluid: Fluid?): TextureAtlasSprite? {
         if (fluid == null) return null
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-        return handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+        return handler.getFluidSprites(null, null, fluid.defaultFluidState())?.getOrNull(0)
     }
 
     /** 平铺流体纹理在槽内，自下而上 scissor 限制不超出区域，调用流体颜色渲染 */

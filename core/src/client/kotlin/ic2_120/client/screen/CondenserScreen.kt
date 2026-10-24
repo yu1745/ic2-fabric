@@ -41,8 +41,8 @@ class CondenserScreen(
 
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        renderBackground(context)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        renderBackground(context, mouseX, mouseY, delta)
         // 背景: guicondenser.png (0,0) 到 (176,184)
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256)
         // 标题: 居中, 颜色 0x404040 (4210752) — 与 Ic2Gui.drawXCenteredString 一致
@@ -113,12 +113,12 @@ class CondenserScreen(
         val my = mouseY - top
         var handled = false
         val hoveredSlot = menu.slots.firstOrNull { s ->
-            mx >= s.leftPos - 1 && mx < s.leftPos + 17 && my >= s.topPos - 1 && my < s.topPos + 17
+            mx >= s.x - 1 && mx < s.x + 17 && my >= s.y - 1 && my < s.y + 17
         }
         if (hoveredSlot != null && !hoveredSlot .hasItem()) {
             for ((sx, sy, key) in SLOT_TOOLTIPS) {
-                if (hoveredSlot.leftPos == sx && hoveredSlot.topPos == sy) {
-                    context.renderComponentTooltip(font, McText.translatable(key), mouseX, mouseY)
+                if (hoveredSlot.x == sx && hoveredSlot.y == sy) {
+                    context.renderTooltip(font, McText.translatable(key), mouseX, mouseY)
                     handled = true
                     break
                 }
@@ -130,7 +130,7 @@ class CondenserScreen(
         if (mx in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             my in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 McText.literal("储能：$energy / ${CondenserSync.ENERGY_CAPACITY} EU"),
                 mouseX, mouseY
@@ -139,7 +139,7 @@ class CondenserScreen(
 
         // 蒸汽槽悬停 (46,26)-(130,59)
         if (mx in 46 until 130 && my in 26 until 59) {
-            val name = ModFluids.STEAM_STILL.defaultFluidState().createLegacyBlock().blockState.block.name
+            val name = ModFluids.STEAM_STILL.defaultFluidState().createLegacyBlock().block.name
             val lines = if (steamAmount > 0) listOf(name, McText.literal("${"%,d".format(steamAmount / DROPLETS_PER_MB)} / ${"%,d".format(STEAM_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(McText.literal("空"))
             context.renderComponentTooltip(font, lines, mouseX, mouseY)
@@ -147,7 +147,7 @@ class CondenserScreen(
 
         // 蒸馏水槽悬停 (46,73)-(130,88)
         if (mx in 46 until 130 && my in 73 until 88) {
-            val name = ModFluids.DISTILLED_WATER_STILL.defaultFluidState().createLegacyBlock().blockState.block.name
+            val name = ModFluids.DISTILLED_WATER_STILL.defaultFluidState().createLegacyBlock().block.name
             val lines = if (waterAmount > 0) listOf(name, McText.literal("${"%,d".format(waterAmount / DROPLETS_PER_MB)} / ${"%,d".format(WATER_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(McText.literal("空"))
             context.renderComponentTooltip(font, lines, mouseX, mouseY)
@@ -160,7 +160,7 @@ class CondenserScreen(
         if (fillH <= 0) return
 
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()) ?: return
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState()) ?: return
         val sprite = sprites[0]
 
         val color = FluidUtils.getFluidColor(fluid)

@@ -17,7 +17,7 @@ object PeatOreTooltipHandler {
 
     fun register() {
         ItemTooltipCallback.EVENT.register { stack, _, _, lines ->
-            val itemId = BuiltInRegistries.ITEM.getId(stack.item)
+            val itemId = BuiltInRegistries.ITEM.getKey(stack.item)
             if (itemId != PEAT_ORE_ID) return@register
 
             if (Screen.hasShiftDown()) {

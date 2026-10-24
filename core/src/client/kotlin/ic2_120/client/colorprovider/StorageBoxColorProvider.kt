@@ -52,7 +52,7 @@ object StorageBoxColorProvider {
 
     fun register() {
         val blockProvider = BlockColor { state, world, pos, tintIndex ->
-            val blockId = BuiltInRegistries.BLOCK.getId(state.block)
+            val blockId = BuiltInRegistries.BLOCK.getKey(state.block)
             when (blockId.path) {
                 "wooden_storage_box" -> WOODEN_COLOR
                 "iron_storage_box" -> IRON_COLOR
@@ -65,7 +65,7 @@ object StorageBoxColorProvider {
 
         val itemProvider = ItemColor { stack, tintIndex ->
             val item = stack.item
-            val itemId = BuiltInRegistries.ITEM.getId(item)
+            val itemId = BuiltInRegistries.ITEM.getKey(item)
             when (itemId.path) {
                 "wooden_storage_box" -> WOODEN_COLOR
                 "iron_storage_box" -> IRON_COLOR

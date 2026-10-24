@@ -92,7 +92,7 @@ class ComposeUI {
         }
         if (btnHit != null) {
             Minecraft.getInstance().soundManager.play(
-                SimpleSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+                SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f)
             )
             btnHit.onClick()
             return true
@@ -186,7 +186,7 @@ class ComposeUI {
         val idGen: () -> Int = { counter++ }
 
         renderCtx.drawContext = drawContext
-        renderCtx.font = font
+        renderCtx.font = textRenderer
         renderCtx.mouseX = mouseX
         renderCtx.mouseY = mouseY
         renderCtx.drawEnabled = draw
@@ -202,8 +202,8 @@ class ComposeUI {
         val root = RootNode(scope.children)
 
         val constraints = Constraints(
-            maxWidth = drawContext.scaledWindowWidth,
-            maxHeight = drawContext.scaledWindowHeight
+            maxWidth = Minecraft.getInstance().window.guiScaledWidth,
+            maxHeight = Minecraft.getInstance().window.guiScaledHeight
         )
         root.measure(renderCtx, constraints)
         root.render(renderCtx, 0, 0)

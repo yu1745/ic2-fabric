@@ -20,11 +20,11 @@ class LeashKineticGeneratorBlockEntityRenderer(
 ) : BlockEntityRenderer<LeashKineticGeneratorBlockEntity> {
 
     companion object {
-        private val LEASH_KNOT_TEXTURE = ResourceLocation.fromNamespaceAndPath("textures/entity/lead_knot.png")
+        private val LEASH_KNOT_TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/lead_knot.png")
     }
 
     private val leashKnotModel = LeashKnotModel<Entity>(
-        LeashKnotModel.getTexturedModelData().createModel()
+        LeashKnotModel.createBodyLayer().bakeRoot()
     )
 
     override fun render(
@@ -37,9 +37,9 @@ class LeashKineticGeneratorBlockEntityRenderer(
     ) {
         if (!entity.sync.hasAnimal) return
 
-        val world = entity.level() as? ClientLevel ?: return
-        val renderPos = entity.pos.above()
-        val renderLight = net.minecraft.client.renderer.LevelRenderer.getLightmapCoordinates(world, renderPos)
+        val world = entity.level as? ClientLevel ?: return
+        val renderPos = entity.blockPos.above()
+        val renderLight = net.minecraft.client.renderer.LevelRenderer.getLightColor(world, renderPos)
 
         val angle = entity.sync.animalAngle
 
@@ -50,7 +50,7 @@ class LeashKineticGeneratorBlockEntityRenderer(
         // Render single oak fence post (centered, no connections in default state)
         matrices.pushPose()
         matrices.translate(-0.5, -0.5, -0.5)
-        Minecraft.getInstance().blockRenderManager.renderBlockAsEntity(
+        Minecraft.getInstance().blockRenderer.renderSingleBlock(
             Blocks.OAK_FENCE.defaultBlockState(),
             matrices,
             vertexConsumers,
@@ -63,8 +63,8 @@ class LeashKineticGeneratorBlockEntityRenderer(
         matrices.pushPose()
         matrices.translate(0.0, 0.4, 0.0)
         matrices.scale(-1.0f, -1.0f, 1.0f)
-        val vertexConsumer = vertexConsumers.getBuffer(leashKnotModel.getLayer(LEASH_KNOT_TEXTURE))
-        leashKnotModel.render(matrices, vertexConsumer, renderLight, OverlayTexture.NO_OVERLAY, 1f, 1f, 1f, 1f)
+        val vertexConsumer = vertexConsumers.getBuffer(leashKnotModel.renderType(LEASH_KNOT_TEXTURE))
+        leashKnotModel.renderToBuffer(matrices, vertexConsumer, renderLight, OverlayTexture.NO_OVERLAY)
         matrices.popPose()
 
         matrices.popPose()

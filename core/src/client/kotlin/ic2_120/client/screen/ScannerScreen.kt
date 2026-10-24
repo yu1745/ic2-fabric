@@ -15,6 +15,7 @@ import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(handler = "scanner")
 class ScannerScreen(
@@ -53,21 +54,21 @@ class ScannerScreen(
         scanBtn = addRenderableWidget(Button.builder(
             Component.literal("")
         ) {
-            minecraft.connection?.send(
+            Minecraft.getInstance().connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, ScannerScreenHandler.BUTTON_ID_SCAN)
             )
         }.bounds(leftPos + SCAN_BTN_X, topPos + SCAN_BTN_Y, SCAN_BTN_W, SCAN_BTN_H).build())
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
-        val stack = menu.playerInventory.getItem(menu.playerInventory.selectedSlot)
+        val stack = menu.playerInventory.getItem(menu.playerInventory.selected)
         val type = OdScannerItem.getScannerType(stack)
         val results = lastResults
 
@@ -109,7 +110,7 @@ class ScannerScreen(
                 if (rowY + 16 < scrollAreaTop) continue
                 if (rowY > scrollAreaTop + scrollAreaH) break
                 val oreStack = entryToItemStack(entry)
-                val label = "${oreStack.name.string}"
+                val label = "${oreStack.hoverName.string}"
 
                 context.drawString(font, Component.literal(label), scissorLeft, rowY + 4, 0xFFFFFF, false)
                 context.drawString(font, Component.literal("${entry.count}"), scissorLeft + RESULTS_W / 2, rowY + 4, 0xFFFFFF, false)
@@ -130,7 +131,7 @@ class ScannerScreen(
         scrollOffset = 0.0
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, xAmount: Double, yAmount: Double): Boolean {
         if (lastResults.isEmpty()) return false
 
         val relX = mouseX - leftPos
@@ -142,7 +143,7 @@ class ScannerScreen(
         val contentH = lastResults.size * 18
         val scrollAreaH = RESULTS_H - 22
         val maxScroll = (contentH - scrollAreaH).coerceAtLeast(0).toDouble()
-        scrollOffset = (scrollOffset - amount * 12.0).coerceIn(0.0, maxScroll)
+        scrollOffset = (scrollOffset - yAmount * 12.0).coerceIn(0.0, maxScroll)
         return true
     }
 

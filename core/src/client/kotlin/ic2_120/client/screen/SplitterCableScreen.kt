@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(handler = "splitter_cable")
 class SplitterCableScreen(
@@ -25,35 +26,35 @@ class SplitterCableScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun init() {
         super.init()
-        val client = client ?: return
+        val client = minecraft ?: return
 
         addRenderableWidget(Button.builder(Component.literal("-")) {
-            minecraft.getConnection()?.send(
+            Minecraft.getInstance().getConnection()?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, SplitterCableScreenHandler.BUTTON_THRESHOLD_MINUS)
             )
         }.bounds(leftPos + 35, topPos + 19, 24, 20).build())
 
         addRenderableWidget(Button.builder(Component.literal("+")) {
-            minecraft.getConnection()?.send(
+            Minecraft.getInstance().getConnection()?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, SplitterCableScreenHandler.BUTTON_THRESHOLD_PLUS)
             )
         }.bounds(leftPos + 117, topPos + 19, 24, 20).build())
 
         invertedButton = addRenderableWidget(Button.builder(invertedButtonText()) {
-            minecraft.getConnection()?.send(
+            Minecraft.getInstance().getConnection()?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, SplitterCableScreenHandler.BUTTON_TOGGLE_INVERTED)
             )
         }.bounds(leftPos + 48, topPos + 47, 80, 20).build())
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         if (::invertedButton.isInitialized) invertedButton.message = invertedButtonText()
         super.render(context, mouseX, mouseY, delta)
 

@@ -22,7 +22,7 @@ class FluidHeatGeneratorScreen(
 
     private val fluidSprite by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.BIOFUEL_STILL)
-            ?.getFluidSprites(null, null, ModFluids.BIOFUEL_STILL.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+            ?.getFluidSprites(null, null, ModFluids.BIOFUEL_STILL.defaultFluidState())?.getOrNull(0)
     }
 
     init {
@@ -30,12 +30,12 @@ class FluidHeatGeneratorScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val fuelAmount = menu.sync.fuelAmount.coerceAtLeast(0)

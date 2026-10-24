@@ -60,7 +60,7 @@ class TransmissionBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.level()
+        val world = entity.level
         val state = entity.cachedState
         val isItem = world == null
         val angle = if (isItem) 0.0f
@@ -105,13 +105,13 @@ class TransmissionBlockEntityRenderer(
                     drawGear8Teeth(matrices, vc, light, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                     matrices.popPose()
                 } else {
-                    val renderDirs = bevelRenderDirections(world, entity.pos)
+                    val renderDirs = bevelRenderDirections(world, entity.blockPos)
 
                     if (renderDirs.isEmpty()) {
                         val plane = state.getValue(BevelGearBlock.PLANE)
                         val (firstAxis, secondAxis) = plane.axes()
-                        val firstSideSign = gearSideSign(world, entity.pos, firstAxis, preferPositive = true)
-                        val secondSideSign = gearSideSign(world, entity.pos, secondAxis, preferPositive = false)
+                        val firstSideSign = gearSideSign(world, entity.blockPos, firstAxis, preferPositive = true)
+                        val secondSideSign = gearSideSign(world, entity.blockPos, secondAxis, preferPositive = false)
 
                         matrices.pushPose()
                         translateAlongAxis(matrices, firstAxis, gearOffset * firstSideSign)
@@ -161,7 +161,7 @@ class TransmissionBlockEntityRenderer(
         centerPos: net.minecraft.core.BlockPos,
         direction: Direction
     ): Boolean {
-        val neighborPos = centerPos.offset(direction)
+        val neighborPos = centerPos.relative(direction)
         val neighborState = world.getBlockState(neighborPos)
         return when {
             KineticConnectionRules.isTransmissionNode(neighborState) ->
@@ -239,7 +239,7 @@ class TransmissionBlockEntityRenderer(
         direction: Direction,
         axis: Direction.Axis
     ): Boolean {
-        val pos = centerPos.offset(direction)
+        val pos = centerPos.relative(direction)
         val state = world.getBlockState(pos)
         val block = state.block
 
@@ -247,7 +247,7 @@ class TransmissionBlockEntityRenderer(
             return state.getValue(BlockStateProperties.AXIS) == axis
         }
 
-        if (!state.contains(BlockStateProperties.HORIZONTAL_FACING)) return false
+        if (!state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) return false
         val facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING)
         return when (block) {
             // 风力动能发生机：吸附渲染放宽为相邻即识别，输出方向由服务端逻辑决定。

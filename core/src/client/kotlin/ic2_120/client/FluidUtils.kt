@@ -41,11 +41,11 @@ object FluidUtils {
      */
     private fun sampleColorFromFluidTexture(fluid: Fluid): Int {
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return -1
-        val sprites = handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())
+        val sprites = handler.getFluidSprites(null, null, fluid.defaultFluidState())
         if (sprites.isEmpty()) return -1
 
         val stillSprite = sprites[0]
-        val image = stillSprite.contents.image ?: return -1
+        val image = stillSprite.contents().originalImage ?: return -1
         return sampleAverageColor(image)
     }
 
@@ -70,7 +70,7 @@ object FluidUtils {
         // 全局采样：遍历所有非边缘像素
         for (y in edgeMargin until (h - edgeMargin)) {
             for (x in edgeMargin until (w - edgeMargin)) {
-                val color = image.getColor(x, y)
+                val color = image.getPixelRGBA(x, y)
 
                 // ABGR 格式解析
                 val a = (color shr 24) and 0xFF

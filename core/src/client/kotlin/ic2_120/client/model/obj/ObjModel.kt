@@ -57,7 +57,7 @@ object ObjParser {
         val textures = buildMap {
             json.getAsJsonObject("textures")?.entrySet()?.forEach { (k, v) -> put(k, ResourceLocation.parse(v.asString)) }
         }
-        val parent = json.get("parent")?.asString?.let(::ResourceLocation)
+        val parent = json.get("parent")?.asString?.let { ResourceLocation.parse(it) }
         val flipV = json.get("flip_v")?.asBoolean ?: false
         return ObjModelSpec(geometry, textures, parent, json, flipV)
     }

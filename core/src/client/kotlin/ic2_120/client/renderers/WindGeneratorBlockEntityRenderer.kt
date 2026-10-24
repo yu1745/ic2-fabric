@@ -41,7 +41,7 @@ class WindGeneratorBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.level() ?: return
+        val world = entity.level ?: return
         val state = entity.cachedState
         val facing = state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
@@ -176,7 +176,7 @@ class WindGeneratorBlockEntityRenderer(
             .setNormal(entry, nx, ny, nz)
     }
 
-    override fun rendersOutsideBoundingBox(blockEntity: WindGeneratorBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(blockEntity: WindGeneratorBlockEntity): Boolean = true
 
-    override fun getRenderDistance(): Int = 256
+    override fun getViewDistance(): Int = 256
 }

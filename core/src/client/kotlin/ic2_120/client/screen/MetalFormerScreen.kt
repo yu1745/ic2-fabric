@@ -15,6 +15,7 @@ import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(block = MetalFormerBlock::class)
 class MetalFormerScreen(
@@ -32,19 +33,19 @@ class MetalFormerScreen(
         super.init()
         addRenderableWidget(
             Button.builder(Component.empty()) {
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, MetalFormerScreenHandler.BUTTON_ID_MODE_CYCLE)
                 )
             }.bounds(leftPos + MODE_BUTTON_X, topPos + MODE_BUTTON_Y, MODE_BUTTON_SIZE, MODE_BUTTON_SIZE).build()
         )
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -132,7 +133,7 @@ class MetalFormerScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY

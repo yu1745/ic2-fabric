@@ -21,12 +21,12 @@ class SolarGeneratorScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val isGenerating = menu.sync.isGenerating != 0
@@ -45,7 +45,7 @@ class SolarGeneratorScreen(
         // 鼠标悬停太阳图标时显示发电量
         if (mouseX in sunX until (sunX + sunSize) && mouseY in sunY until (sunY + sunSize)) {
             val rate = menu.sync.getSyncedInsertedAmount()
-            context.renderComponentTooltip(font, Component.literal("发电：${rate} EU/t"), mouseX, mouseY)
+            context.renderTooltip(font, Component.literal("发电：${rate} EU/t"), mouseX, mouseY)
         }
 
         renderTooltip(context, mouseX, mouseY)

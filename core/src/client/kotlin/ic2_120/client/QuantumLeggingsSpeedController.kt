@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.phys.Vec3
+import ic2_120.content.network.QuantumLeggingsSpeedTickPayload
 
 /**
  * 在客户端复刻原版 IC2 量子护腿的定向推进。
@@ -20,17 +21,17 @@ import net.minecraft.world.phys.Vec3
 object QuantumLeggingsSpeedController {
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            val player = minecraft.player ?: return@register
+            val player = client.player ?: return@register
             if (player.isVehicle() || player.abilities.flying || player.isSpectator) return@register
 
             val stack = player.getItemBySlot(EquipmentSlot.LEGS)
             val leggings = stack.item as? QuantumLeggings ?: return@register
             val tier = QuantumLeggings.getSpeedTier(stack)
             if (tier <= 0 || leggings.getEnergy(stack) <= 0L) return@register
-            if (!player.input.pressingForward) return@register
+            if (!player.input.up) return@register
 
-            val inWater = player.isTouchingWater
-            if (!inWater && !player.isOnGround) return@register
+            val inWater = player.isInWater
+            if (!inWater && !player.onGround()) return@register
 
             val boost = if (inWater) {
                 QuantumLeggings.getWaterBoost(tier)
@@ -39,14 +40,11 @@ object QuantumLeggingsSpeedController {
             }
             if (boost <= 0.0) return@register
 
-            player.updateVelocity(boost.toFloat(), Vec3(0.0, 0.0, 1.0))
+            player.moveRelative(boost.toFloat(), Vec3(0.0, 0.0, 1.0))
             if (inWater && player.input.jumping) {
-                player.velocity = player.velocity.add(0.0, boost, 0.0)
+                player.deltaMovement = player.deltaMovement.add(0.0, boost, 0.0)
             }
-            ClientPlayNetworking.send(
-                NetworkManager.QUANTUM_LEGGINGS_SPEED_TICK_PACKET,
-                FriendlyByteBuf(Unpooled.buffer())
-            )
+            ClientPlayNetworking.send(QuantumLeggingsSpeedTickPayload)
         }
     }
 }

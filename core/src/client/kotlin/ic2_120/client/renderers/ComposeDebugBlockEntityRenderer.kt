@@ -35,7 +35,7 @@ class ComposeDebugBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.level() ?: return
+        val world = entity.level ?: return
         val time = world.gameTime + tickDelta
         val bob = sin(time * 0.08f) * 0.09f
         val spinDeg = time * 3.0f
@@ -214,5 +214,5 @@ class ComposeDebugBlockEntityRenderer(
             .setNormal(entry, nx, ny, nz)
     }
 
-    override fun rendersOutsideBoundingBox(blockEntity: ComposeDebugBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(blockEntity: ComposeDebugBlockEntity): Boolean = true
 }

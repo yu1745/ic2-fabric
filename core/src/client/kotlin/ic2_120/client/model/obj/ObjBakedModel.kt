@@ -33,11 +33,11 @@ import java.util.function.Supplier
 
 class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
 
-    private var transformation: ItemTransforms = ItemTransforms.NONE
+    private var transformation: ItemTransforms = ItemTransforms.NO_TRANSFORMS
 
     // 物品 overrides（电量档位、开关状态等）：借原版反序列化器解析，烘焙时交给 ItemOverrides
     private val overrideHolder: BlockModel? = spec.json.getAsJsonArray("overrides")?.let {
-        BlockModel.deserialize("{\"overrides\":$it}")
+        BlockModel.fromString("{\"overrides\":$it}")
     }
 
     override fun getDependencies(): Collection<ResourceLocation> =
@@ -54,7 +54,7 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
         textureGetter: Function<Material, TextureAtlasSprite>,
         rotationContainer: ModelState,
     ): BakedModel {
-        val atlas = InventoryMenu.BLOCK_ATLAS_TEXTURE
+        val atlas = InventoryMenu.BLOCK_ATLAS
         val sprite = { slot: String ->
             spec.textures[slot]?.let { textureGetter.apply(Material(atlas, it)) }
                 ?: textureGetter.apply(Material(atlas, MissingTextureAtlasSprite.getLocation()))

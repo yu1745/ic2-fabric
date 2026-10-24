@@ -127,13 +127,13 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
      */
     private fun surfaceNormal(mode: ItemDisplayContext, entry: PoseStack.Pose, client: Minecraft): Vector3f {
         if (mode == ItemDisplayContext.GUI || client.level == null) return Vector3f(0f, 1f, 0f)
-        val world = if (isFirstPerson(mode)) Slosh.normal(client.timer.gameTimeDeltaPartialTick(false)) else Vector3f(0f, 1f, 0f)
+        val world = if (isFirstPerson(mode)) Slosh.normal(client.getTimer().getGameTimeDeltaPartialTick(false)) else Vector3f(0f, 1f, 0f)
         val cam = client.gameRenderer.mainCamera
         val view = Quaternionf()
-            .rotationX(cam.pitch * Mth.DEG_TO_RAD)
-            .rotateY((cam.yaw + 180f) * Mth.DEG_TO_RAD)
+            .rotationX(cam.xRot * Mth.DEG_TO_RAD)
+            .rotateY((cam.yRot + 180f) * Mth.DEG_TO_RAD)
             .transform(world)
-        val local = Matrix3f(entry.setNormal()).invert().transform(view).normalize()
+        val local = Matrix3f(entry.normal()).invert().transform(view).normalize()
         // 倒置/横放时液面法线朝下会让液柱翻出，限制为至少略微朝上
         if (local.y < 0.3f) local.y = 0.3f
         return local.normalize()
@@ -149,7 +149,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
     ) {
         val pts = ring(FLUID_R)
         val center = Y0 + (Y1 - Y0) * FILL
-        val t = (Minecraft.getInstance().level?.gameTime ?: 0L) + Minecraft.getInstance().timer.gameTimeDeltaPartialTick(false)
+        val t = (Minecraft.getInstance().level?.gameTime ?: 0L) + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false)
         // 每个角点的液面高度：过中心点、法线为 up 的平面，叠加随晃动强度衰减的小波纹
         val h = FloatArray(SIDES) {
             val dx = pts[it][0] - 0.5f
@@ -164,7 +164,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, ny: Float, nz: Float) {
             vc.addVertex(entry.pose(), x, y, z).setColor(r, g, b, 255)
                 .setUv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
-                .setOverlay(overlay).setLight(light).setNormal(entry.setNormal(), nx, ny, nz)
+                .setOverlay(overlay).setLight(light).setNormal(entry, nx, ny, nz)
         }
         for (k in 0 until SIDES) {
             val a = pts[k]
@@ -195,7 +195,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, nz: Float) {
             vc.addVertex(entry.pose(), x, y, z).setColor(255, 255, 255, 64)
                 .setUv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
-                .setOverlay(overlay).setLight(light).setNormal(entry.setNormal(), nx, 0f, nz)
+                .setOverlay(overlay).setLight(light).setNormal(entry, nx, 0f, nz)
         }
         for (k in 0 until SIDES) {
             val a = pts[k]
@@ -235,11 +235,11 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val ripple get() = cfg.ripple.toFloat()
 
         fun tick(client: Minecraft) {
-            val player = minecraft.player ?: run { lastHand = null; return }
-            val right = Vec3.fromPolar(0f, player.yaw + 90f)
-            val hand = player.eyePos.add(player.rotationVector.multiply(0.6)).add(right.multiply(0.35))
+            val player = client.player ?: run { lastHand = null; return }
+            val right = Vec3.directionFromRotation(0f, player.yRot + 90f)
+            val hand = player.getEyePosition().add(player.getViewVector(1.0f).scale(0.6)).add(right.scale(0.35))
             // 传送/重生等瞬移不算运动
-            val vel = lastHand?.let { hand.subtract(it) }?.takeIf { it.lengthSquared() < 4.0 } ?: Vec3.ZERO
+            val vel = lastHand?.let { hand.subtract(it) }?.takeIf { it.lengthSqr() < 4.0 } ?: Vec3.ZERO
             val acc = vel.subtract(lastVel)
             lastHand = hand
             lastVel = vel

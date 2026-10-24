@@ -162,7 +162,7 @@ object ClientScreenRegistrar {
             // 为每个 handler 名称注册一次（多个方块共用同一个 UI）
             for (handlerName in handlersToRegister) {
                 val id = ResourceLocation.fromNamespaceAndPath(modId, handlerName)
-                val type = BuiltInRegistries.SCREEN_HANDLER.get(id)
+                val type = BuiltInRegistries.MENU.get(id)
                     ?: run {
                         logger.error("未找到 AbstractContainerMenu 类型: {}，请确保主端已注册 @ModScreenHandler(name = \"{}\")", id, handlerName)
                         return@processClass
@@ -187,7 +187,7 @@ object ClientScreenRegistrar {
         if (annotation.handler.isNotEmpty()) return annotation.handler
         if (annotation.block == Any::class) return null
         if (!annotation.block.isSubclassOf(Block::class)) return null
-        for (id in BuiltInRegistries.BLOCK.ids) {
+        for (id in BuiltInRegistries.BLOCK.keySet()) {
             if (id.namespace != modId) continue
             val block = BuiltInRegistries.BLOCK.get(id)
             if (block::class == annotation.block) return id.path

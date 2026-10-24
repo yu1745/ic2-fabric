@@ -28,12 +28,12 @@ class WaterGeneratorScreen(
         imageHeight = GUI_SIZE.height
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -47,7 +47,7 @@ class WaterGeneratorScreen(
         if (waterDroplets > 0) run {
             val fluid = Fluids.WATER
             val fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
-            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0) ?: return@run
+            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultFluidState()).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
             if (color == -1) return@run
             val r = ((color shr 16) and 0xFF) / 255f

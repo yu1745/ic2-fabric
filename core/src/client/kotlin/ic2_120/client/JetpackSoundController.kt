@@ -27,7 +27,7 @@ object JetpackSoundController {
     fun register() {
         logger.info("Jetpack sound controller registered. soundId={}", JETPACK_SOUND_ID)
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            val player = minecraft.player
+            val player = client.player
             val active = player != null && isJetpackFlightActive(player)
 
             if (active && !lastActive) {
@@ -58,7 +58,7 @@ object JetpackSoundController {
     private fun isJetpackFlightActive(player: LocalPlayer): Boolean {
         if (player.isSpectator || player.abilities.instabuild) return false
         if (!player.abilities.flying) return false
-        if (player.isOnGround || player.isInWater || player.onClimbable) return false
+        if (player.onGround() || player.isInWater || player.onClimbable()) return false
 
         val chest = player.getItemBySlot(EquipmentSlot.CHEST)
         return chest.item is JetpackItem || chest.item is ElectricJetpack

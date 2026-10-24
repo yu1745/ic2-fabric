@@ -24,8 +24,8 @@ class SolarDistillerScreen(
 ) : AbstractContainerScreen<SolarDistillerScreenHandler>(handler, playerInventory, title) {
 
     private val waterFlowSprite: TextureAtlasSprite? by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.get(luids.WATER)
-            ?.getFluidSprites(null, null, Fluids.Fluids.WATER.defaultFluidState().createLegacyBlock())
+        FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER)
+            ?.getFluidSprites(null, null, Fluids.WATER.defaultFluidState())
             ?.getOrNull(1)
     }
 
@@ -33,7 +33,7 @@ class SolarDistillerScreen(
 
     private val distilledFlowSprite: TextureAtlasSprite? by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.DISTILLED_WATER_STILL)
-            ?.getFluidSprites(null, null, ModFluids.DISTILLED_WATER_STILL.defaultFluidState().createLegacyBlock())
+            ?.getFluidSprites(null, null, ModFluids.DISTILLED_WATER_STILL.defaultFluidState())
             ?.getOrNull(1)
     }
 
@@ -44,12 +44,12 @@ class SolarDistillerScreen(
         imageHeight = 184
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos

@@ -23,7 +23,7 @@ class TeleporterBlockEntityRenderer(
 ) : BlockEntityRenderer<TeleporterBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.fromNamespaceAndPath("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
         private const val SEGMENTS = 36
         private data class RenderCache(
             var lastProgress: Float = 0f,
@@ -48,8 +48,8 @@ class TeleporterBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.level() ?: return
-        val key = entity.pos.asLong()
+        val world = entity.level ?: return
+        val key = entity.blockPos.asLong()
         if (!entity.clientCharging) {
             cacheByPos.remove(key)
             return
@@ -60,20 +60,20 @@ class TeleporterBlockEntityRenderer(
             TeleporterBlockEntity.TELEPORT_RANGE_MAX.toDouble()
         )
         val half = side / 2.0
-        val centerX = entity.pos.x + 0.5
-        val centerY = entity.pos.y + 1.5
-        val centerZ = entity.pos.z + 0.5
+        val centerX = entity.blockPos.x + 0.5
+        val centerY = entity.blockPos.y + 1.5
+        val centerZ = entity.blockPos.z + 0.5
 
         val sourceBox = net.minecraft.world.phys.AABB(
             centerX - half, centerY - half, centerZ - half,
             centerX + half, centerY + half, centerZ + half
         )
         val targetId = entity.clientChargingEntityId
-        val target: Entity = world.getEntityById(targetId) ?: run {
+        val target: Entity = world.getEntity(targetId) ?: run {
             cacheByPos.remove(key)
             return
         }
-        if (!target.isAlive || target.isVehicle() || target.hasPassengers()) {
+        if (!target.isAlive || target.isVehicle()) {
             cacheByPos.remove(key)
             return
         }
@@ -112,9 +112,9 @@ class TeleporterBlockEntityRenderer(
 
         matrices.pushPose()
         matrices.translate(
-            cache.sx - entity.pos.x,
-            cache.sy - entity.pos.y,
-            cache.sz - entity.pos.z
+            cache.sx - entity.blockPos.x,
+            cache.sy - entity.blockPos.y,
+            cache.sz - entity.blockPos.z
         )
 
         val vc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
@@ -124,7 +124,7 @@ class TeleporterBlockEntityRenderer(
         drawRingBand(matrices, vc, fullLight, overlay, radiusOuter * 0.68f, radiusInner * 0.58f, ringY + 0.03f, 120, 250, 255, alpha - 20)
 
         if (progress > 0.7f) {
-            val beamHeight = target.height + 0.6f
+            val beamHeight = target.bbHeight + 0.6f
             drawBeam(matrices, vc, fullLight, overlay, beamHeight, 70, 220, 255, (alpha + 20).coerceAtMost(230))
         }
 
@@ -145,8 +145,6 @@ class TeleporterBlockEntityRenderer(
         alpha: Int
     ) {
         val entry = matrices.last()
-        val pos = entry.pose()
-        val normal = entry.setNormal()
         val step = (2.0 * PI / SEGMENTS).toFloat()
 
         for (i in 0 until SEGMENTS) {
@@ -162,7 +160,7 @@ class TeleporterBlockEntityRenderer(
             val iz1 = sin(a1) * innerR
 
             quadColor(
-                vc, pos, normal, light, overlay,
+                vc, entry, light, overlay,
                 ox0, y, oz0,
                 ox1, y, oz1,
                 ix1, y, iz1,
@@ -188,19 +186,16 @@ class TeleporterBlockEntityRenderer(
         val y0 = 0.03f
         val y1 = y0 + height
         val entry = matrices.last()
-        val pos = entry.pose()
-        val normal = entry.setNormal()
 
-        quadColor(vc, pos, normal, light, overlay, -half, y0, -half, -half, y1, -half, half, y1, -half, half, y0, -half, red, green, blue, alpha, 0f, 0f, -1f)
-        quadColor(vc, pos, normal, light, overlay, half, y0, half, half, y1, half, -half, y1, half, -half, y0, half, red, green, blue, alpha, 0f, 0f, 1f)
-        quadColor(vc, pos, normal, light, overlay, -half, y0, half, -half, y1, half, -half, y1, -half, -half, y0, -half, red, green, blue, alpha, -1f, 0f, 0f)
-        quadColor(vc, pos, normal, light, overlay, half, y0, -half, half, y1, -half, half, y1, half, half, y0, half, red, green, blue, alpha, 1f, 0f, 0f)
+        quadColor(vc, entry, light, overlay, -half, y0, -half, -half, y1, -half, half, y1, -half, half, y0, -half, red, green, blue, alpha, 0f, 0f, -1f)
+        quadColor(vc, entry, light, overlay, half, y0, half, half, y1, half, -half, y1, half, -half, y0, half, red, green, blue, alpha, 0f, 0f, 1f)
+        quadColor(vc, entry, light, overlay, -half, y0, half, -half, y1, half, -half, y1, -half, -half, y0, -half, red, green, blue, alpha, -1f, 0f, 0f)
+        quadColor(vc, entry, light, overlay, half, y0, -half, half, y1, -half, half, y1, half, half, y0, half, red, green, blue, alpha, 1f, 0f, 0f)
     }
 
     private fun quadColor(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: PoseStack.Pose,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -210,16 +205,15 @@ class TeleporterBlockEntityRenderer(
         red: Int, green: Int, blue: Int, alpha: Int,
         nx: Float, ny: Float, nz: Float
     ) {
-        vertex(vc, pos, normal, x1, y1, z1, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x2, y2, z2, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x3, y3, z3, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x4, y4, z4, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x1, y1, z1, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x2, y2, z2, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x3, y3, z3, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x4, y4, z4, light, overlay, red, green, blue, alpha, nx, ny, nz)
     }
 
     private fun vertex(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: PoseStack.Pose,
         x: Float,
         y: Float,
         z: Float,
@@ -233,14 +227,14 @@ class TeleporterBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.addVertex(pos, x, y, z)
+        vc.addVertex(entry, x, y, z)
             .setColor(red, green, blue, alpha)
             .setUv(0f, 0f)
             .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
             .setLight(light)
-            .setNormal(normal, nx, ny, nz)
+            .setNormal(entry, nx, ny, nz)
             
     }
 
-    override fun rendersOutsideBoundingBox(blockEntity: TeleporterBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(blockEntity: TeleporterBlockEntity): Boolean = true
 }

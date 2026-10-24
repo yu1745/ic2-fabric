@@ -12,5 +12,5 @@ import net.minecraft.client.Minecraft
  */
 object ClientLiveRecipeSource : LiveRecipeSource {
     override fun clientRecipeManager() =
-        Minecraft.getInstance().world?.recipeManager
+        Minecraft.getInstance().level?.recipeManager
 }

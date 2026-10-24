@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResultHolder
+import ic2_120.content.network.ToggleChainsawShearPayload
 
 /** 链锯模式切换：按住 Alt 并右键切换剪刀功能。 */
 @Environment(EnvType.CLIENT)
@@ -40,9 +41,6 @@ object ChainsawModeHandler {
     private fun sendToggleOnceThisTick(playerAge: Int) {
         if (playerAge == lastToggleSentOnPlayerAge) return
         lastToggleSentOnPlayerAge = playerAge
-        ClientPlayNetworking.send(
-            NetworkManager.TOGGLE_CHAINSAW_SHEAR_PACKET,
-            FriendlyByteBuf(Unpooled.buffer())
-        )
+        ClientPlayNetworking.send(ToggleChainsawShearPayload)
     }
 }

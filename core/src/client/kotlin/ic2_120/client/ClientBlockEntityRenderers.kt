@@ -131,13 +131,9 @@ object ClientBlockEntityRenderers {
         for (block in shaftBlocks) {
             val dummyEntity = TransmissionBlockEntity(BlockPos.ZERO, block.defaultBlockState())
             BuiltinItemRendererRegistry.INSTANCE.register(block.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-                Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(
-                    dummyEntity,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay
-                )
+                Minecraft.getInstance().blockEntityRenderDispatcher
+                    .getRenderer(dummyEntity)!!
+                    .render(dummyEntity, 1.0f, matrices, vertexConsumers, light, overlay)
             }
         }
     }

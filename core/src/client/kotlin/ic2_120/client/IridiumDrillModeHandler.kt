@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionResultHolder
+import ic2_120.content.network.ToggleIridiumSilkTouchPayload
 
 /**
  * 铱钻头模式切换：

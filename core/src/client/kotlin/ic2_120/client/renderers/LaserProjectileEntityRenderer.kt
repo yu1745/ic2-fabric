@@ -42,7 +42,7 @@ class LaserProjectileEntityRenderer(
         val ignored = context
     }
 
-    override fun getTexture(entity: LaserProjectileEntity): ResourceLocation = WHITE_TEXTURE
+    override fun getTextureLocation(entity: LaserProjectileEntity): ResourceLocation = WHITE_TEXTURE
 
     override fun render(
         entity: LaserProjectileEntity,
@@ -53,10 +53,10 @@ class LaserProjectileEntityRenderer(
         light: Int
     ) {
         // 零距离渲染会占满屏幕，只有飞出一定距离后才显示
-        val renderX = entity.prevX + (entity.x - entity.prevX) * tickDelta
-        val renderY = entity.prevY + (entity.y - entity.prevY) * tickDelta
-        val renderZ = entity.prevZ + (entity.z - entity.prevZ) * tickDelta
-        val cam = this.dispatcher.camera.pos
+        val renderX = entity.xOld + (entity.x - entity.xOld) * tickDelta
+        val renderY = entity.yOld + (entity.y - entity.yOld) * tickDelta
+        val renderZ = entity.zOld + (entity.z - entity.zOld) * tickDelta
+        val cam = this.entityRenderDispatcher.camera.position
         val distSq = (renderX - cam.x) * (renderX - cam.x) +
                      (renderY - cam.y) * (renderY - cam.y) +
                      (renderZ - cam.z) * (renderZ - cam.z)
@@ -69,11 +69,11 @@ class LaserProjectileEntityRenderer(
         val b = (col and 0xFF) / 255f
 
         // 计算飞行方向
-        val vel = entity.velocity
+        val vel = entity.deltaMovement
         val speed = vel.length()
         if (speed < 0.001) return
 
-        val dir = vel.multiply(1.0 / speed)
+        val dir = vel.scale(1.0 / speed)
         val length = LaserProjectileEntity.VISUAL_LENGTH.toFloat()
 
         // 计算偏航和俯仰来对齐弹体

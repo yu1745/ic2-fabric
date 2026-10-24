@@ -33,12 +33,12 @@ class SemifluidGeneratorScreen(
         imageHeight = 161
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val energy = menu.sync.energy.toLong().coerceAtLeast(0)
@@ -71,7 +71,7 @@ class SemifluidGeneratorScreen(
 
         // 能量条悬停 (120,19)-(144,35) = 24×16
         if (mouseX in leftPos + 120 until leftPos + 144 && mouseY in topPos + 19 until topPos + 35) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
@@ -112,9 +112,9 @@ class SemifluidGeneratorScreen(
         if (fillH <= 0) return
 
         // 获取流体 sprite 和颜色
-        val fluid = if (fuelFluidRawId > 0) BuiltInRegistries.FLUID.get(fuelFluidRawId) else null
+        val fluid = if (fuelFluidRawId > 0) BuiltInRegistries.FLUID.byId(fuelFluidRawId) else null
         val fluidHandler = fluid?.let { FluidRenderHandlerRegistry.INSTANCE.get(it) }
-        val sprites = fluidHandler?.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())
+        val sprites = fluidHandler?.getFluidSprites(null, null, fluid.defaultFluidState())
         val sprite = sprites?.getOrNull(0)
         val color = fluid?.let { FluidUtils.getFluidColor(it) } ?: -1
 
@@ -172,18 +172,18 @@ class SemifluidGeneratorScreen(
         val fluids = mutableListOf<Fluid>()
         BuiltInRegistries.FLUID.forEach { fluid ->
             // Fluid.`is`(TagKey) 在 1.20.1 已 @Deprecated，改用未废弃的 FluidState.isIn。
-            if (fluid.defaultFluidState().createLegacyBlock().`is`(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
+            if (fluid.defaultFluidState().`is`(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
         }
         return fluids.sortedBy { BuiltInRegistries.FLUID.getKey(it).toString() }
     }
 
     private fun fluidDisplayText(fluid: Fluid): Component {
-        val id = BuiltInRegistries.FLUID.getId(fluid)
+        val id = BuiltInRegistries.FLUID.getKey(fluid)
         val fluidKey = "fluid.${id.namespace}.${id.path}"
         val blockKey = "block.${id.namespace}.${id.path}"
         val fluidName = when {
-            I18n.hasTranslation(fluidKey) -> Component.translatable(fluidKey)
-            I18n.hasTranslation(blockKey) -> Component.translatable(blockKey)
+            I18n.exists(fluidKey) -> Component.translatable(fluidKey)
+            I18n.exists(blockKey) -> Component.translatable(blockKey)
             else -> Component.literal(humanizeFluidPath(id.path))
         }.withStyle(ChatFormatting.DARK_AQUA)
         if (id.namespace == "ic2_120") return fluidName

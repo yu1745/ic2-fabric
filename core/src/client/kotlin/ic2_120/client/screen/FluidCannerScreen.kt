@@ -29,12 +29,12 @@ class FluidCannerScreen(
         imageHeight = 184
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -95,7 +95,7 @@ class FluidCannerScreen(
 
         // 流体纹理渲染 (82,38)-(94,85) = 12x47，自下而上
         if (fluidAmount > 0 && fluidRawId != -1) {
-            val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
+            val fluid = BuiltInRegistries.FLUID.byId(fluidRawId)
             val sprite = getFluidStillSprite(fluid)
             if (sprite != null) {
                 val fillHeight = (TANK_H * fluidFraction).toInt().coerceAtLeast(1)
@@ -151,7 +151,7 @@ class FluidCannerScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
@@ -163,8 +163,8 @@ class FluidCannerScreen(
             relY in TANK_Y until TANK_Y + TANK_H
         ) {
             val lines = if (fluidAmount > 0 && fluidRawId != -1) {
-                val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
-                val fluidName = fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string
+                val fluid = BuiltInRegistries.FLUID.byId(fluidRawId)
+                val fluidName = fluid.defaultFluidState().createLegacyBlock().block.name.string
                 listOf(Component.literal(fluidName), Component.literal("${"%,d".format(fluidAmount / DROPLETS_PER_MB)} / ${"%,d".format(fluidCapacity / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
@@ -235,5 +235,5 @@ class FluidCannerScreen(
 
 private fun getFluidStillSprite(fluid: Fluid): net.minecraft.client.renderer.texture.TextureAtlasSprite? {
     val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-    return handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0)
+    return handler.getFluidSprites(null, null, fluid.defaultFluidState()).getOrNull(0)
 }

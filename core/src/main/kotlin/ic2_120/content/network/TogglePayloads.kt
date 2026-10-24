@@ -59,6 +59,15 @@ object ToggleQuantumLeggingsSpeedPayload : CustomPacketPayload {
     override fun type() = ID
 }
 
+object ToggleChainsawShearPayload : CustomPacketPayload {
+    val ID = CustomPacketPayload.Type<ToggleChainsawShearPayload>(Ic2_120.id("toggle_chainsaw_shear"))
+    val CODEC: StreamCodec<FriendlyByteBuf, ToggleChainsawShearPayload> = StreamCodec.of(
+        { _, _ -> },
+        { ToggleChainsawShearPayload }
+    )
+    override fun type() = ID
+}
+
 object ToggleQuantumBootsJumpPayload : CustomPacketPayload {
     val ID = CustomPacketPayload.Type<ToggleQuantumBootsJumpPayload>(Ic2_120.id("toggle_quantum_boots_jump"))
     val CODEC: StreamCodec<FriendlyByteBuf, ToggleQuantumBootsJumpPayload> = StreamCodec.of(

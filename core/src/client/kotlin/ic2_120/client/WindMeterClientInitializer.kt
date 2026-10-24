@@ -13,7 +13,7 @@ object WindMeterClientInitializer {
             val we = WindKineticGeneratorBlockEntity
             val mean = we.meanWindFromY(user.blockY)
             val weather = we.weatherMultiplier(world)
-            val gust = we.worldGustFactor(world, user.blockPos)
+            val gust = we.worldGustFactor(world, user.blockPosition())
             val effective = mean * weather * gust
 
             fun ku(multiplier: Int): Int =
@@ -22,7 +22,7 @@ object WindMeterClientInitializer {
             fun requiredStartY(multiplier: Int): Int {
                 val threshold = we.startThresholdForMultiplier(multiplier)
                 if (effective >= threshold) return -2
-                val top = world.topY
+                val top = world.maxBuildHeight
                 for (y in 0..top) {
                     val windAtY = we.meanWindFromY(y) * weather * gust
                     if (windAtY >= threshold) return y
@@ -33,7 +33,7 @@ object WindMeterClientInitializer {
             fun permilleToPct(v: Double): String = String.format("%.1f%%", v * 100.0)
             fun permilleToMultiplier(v: Double): String = String.format("%.2fx", v)
 
-            val hud = Minecraft.getInstance().inGameHud.chatHud
+            val hud = Minecraft.getInstance().gui.chat
             hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.mean_wind", permilleToPct(mean)))
             hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.weather_bonus", permilleToMultiplier(weather)))
             hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.gust_bonus", permilleToMultiplier(gust)))

@@ -11,6 +11,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component as McText
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(block = TeleporterBlock::class)
 class TeleporterScreen(
@@ -56,7 +57,7 @@ class TeleporterScreen(
         range1Btn = addRenderableWidget(Button.builder(
             McText.literal("")
         ) {
-            minecraft.connection?.send(
+            Minecraft.getInstance().connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, TeleporterScreenHandler.BUTTON_ID_RANGE_1)
             )
         }.bounds(leftPos + 26, topPos + 15, 45, 20).build())
@@ -64,13 +65,13 @@ class TeleporterScreen(
         range3Btn = addRenderableWidget(Button.builder(
             McText.literal("")
         ) {
-            minecraft.connection?.send(
+            Minecraft.getInstance().connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, TeleporterScreenHandler.BUTTON_ID_RANGE_3)
             )
         }.bounds(leftPos + 26, topPos + 40, 45, 20).build())
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 升级槽背景
@@ -89,7 +90,7 @@ class TeleporterScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val isRange1 = menu.sync.teleportRange == TeleporterBlockEntity.TELEPORT_RANGE_MIN

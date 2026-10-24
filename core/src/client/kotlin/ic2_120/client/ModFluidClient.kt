@@ -115,7 +115,7 @@ object ModFluidClient {
 
         // 流体方块使用半透明渲染层
         BlockRenderLayerMap.INSTANCE.putFluids(
-            RenderType.getTranslucent(),
+            RenderType.translucent(),
             ModFluids.COOLANT_STILL,
             ModFluids.COOLANT_FLOWING,
             ModFluids.HOT_COOLANT_STILL,

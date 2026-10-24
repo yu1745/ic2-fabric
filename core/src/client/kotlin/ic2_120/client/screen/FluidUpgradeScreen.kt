@@ -16,6 +16,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.Direction
 import net.minecraft.client.renderer.Rect2i
+import net.minecraft.client.Minecraft
 
 @ModScreen(handler = "fluid_upgrade")
 class FluidUpgradeScreen(
@@ -29,22 +30,22 @@ class FluidUpgradeScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun init() {
         super.init()
-        val client = client ?: return
+        val client = minecraft ?: return
 
         addRenderableWidget(Button.builder(Component.empty()) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, FluidUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, FluidUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
         }.bounds(leftPos + 27, topPos + 37, 20, 14).build())
 
         // 六个方向分别独立开关，避免用一个循环按钮无法表达任意组合。
         for (dirIdx in Direction.entries.indices) {
             addRenderableWidget(Button.builder(Component.empty()) {
-                minecraft.getConnection()?.send(
+                Minecraft.getInstance().getConnection()?.send(
                     ServerboundContainerButtonClickPacket(
                         menu.containerId,
                         FluidUpgradeScreenHandler.BUTTON_TOGGLE_DIR + dirIdx
@@ -55,7 +56,7 @@ class FluidUpgradeScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         // 幽灵过滤区始终为空，只绘制所选流体纹理。
@@ -67,8 +68,8 @@ class FluidUpgradeScreen(
 
         // 流体限制文本 (9,18)-(104,32)
         val filterName = if (menu.fluidRawId > 0) {
-            val fluid = BuiltInRegistries.FLUID.get(handler.fluidRawId)
-            fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string
+            val fluid = BuiltInRegistries.FLUID.byId(handler.fluidRawId)
+            fluid.defaultFluidState().createLegacyBlock().block.name.string
         } else {
             t("gui.ic2_120.fluid_upgrade.no_filter")
         }
@@ -85,10 +86,10 @@ class FluidUpgradeScreen(
 
     private fun drawFilterFluid(context: GuiGraphics) {
         if (menu.fluidRawId <= 0) return
-        val fluid = BuiltInRegistries.FLUID.get(handler.fluidRawId)
+        val fluid = BuiltInRegistries.FLUID.byId(handler.fluidRawId)
         context.blit(TEXTURE, leftPos + 7, topPos + 34, 179f, 3f, 18, 18, TEX_SIZE, TEX_SIZE)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid)
-        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())?.getOrNull(0) ?: return
+        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultFluidState())?.getOrNull(0) ?: return
         val color = FluidUtils.getFluidColor(fluid)
         val (r, g, b) = if (color != -1) {
             Triple(((color shr 16) and 0xFF) / 255f, ((color shr 8) and 0xFF) / 255f, (color and 0xFF) / 255f)
@@ -102,7 +103,7 @@ class FluidUpgradeScreen(
         if (!FabricLoader.getInstance().isModLoaded("jei")) return
         context.blit(UPTIPS_TEXTURE, leftPos + HINT_X, topPos + HINT_Y, 0f, 0f, HINT_SIZE, HINT_SIZE, HINT_SIZE, HINT_SIZE)
         if (mouseX - leftPos in HINT_X until HINT_X + HINT_SIZE && mouseY - topPos in HINT_Y until HINT_Y + HINT_SIZE) {
-            context.renderComponentTooltip(font, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
+            context.renderTooltip(font, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
         }
     }
 

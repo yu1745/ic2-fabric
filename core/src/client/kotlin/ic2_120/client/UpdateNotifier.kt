@@ -80,7 +80,7 @@ object UpdateNotifier {
                 if (remoteRelease == null || remoteRelease.runNumber <= buildInfo.ciRunNumber) {
                     return@thenAccept
                 }
-                minecraft.execute {
+                Minecraft.getInstance().execute {
                     showUpdateMessage(client, remoteRelease, buildInfo.ciRunNumber)
                 }
             }
@@ -133,17 +133,17 @@ object UpdateNotifier {
 
     private fun showUpdateMessage(client: Minecraft, remoteRelease: RemoteRelease, localRunNumber: Int) {
         val localTag = "release-$localRunNumber"
-        client.inGameHud.setOverlayMessage(
+        client.gui.setOverlayMessage(
             Component.translatable("message.ic2_120.update_available.overlay", remoteRelease.tagName),
             false
         )
 
-        val player = minecraft.player ?: return
+        val player = client.player ?: return
         if (!remoteRelease.htmlUrl.isNullOrBlank()) {
             val clickableUrl = Component.literal(remoteRelease.htmlUrl)
-                .styled {
+                .withStyle {
                     it.withColor(ChatFormatting.AQUA)
-                        .withUnderline(true)
+                        .withUnderlined(true)
                         .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, remoteRelease.htmlUrl))
                         .withHoverEvent(
                             HoverEvent(
@@ -152,7 +152,7 @@ object UpdateNotifier {
                             )
                         )
                 }
-            player.sendMessage(
+            player.displayClientMessage(
                 Component.translatable("message.ic2_120.update_available.chat", remoteRelease.tagName, localTag)
                     .append(Component.literal(" "))
                     .append(clickableUrl),
@@ -161,7 +161,7 @@ object UpdateNotifier {
             return
         }
 
-        player.sendMessage(
+        player.displayClientMessage(
             Component.translatable(
                 "message.ic2_120.update_available.chat",
                 remoteRelease.tagName,

@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(block = EnergyOMatBlock::class)
 class EnergyOMatScreen(
@@ -45,7 +46,7 @@ class EnergyOMatScreen(
             val row = buttons.size / 3
             val col = buttons.size % 3
             val btn = Button.builder(Component.literal(label)) {
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, buttonId)
                 )
             }.bounds(leftPos + 88 + col * 30, topPos + 16 + row * 20, 28, 18).build()
@@ -53,7 +54,7 @@ class EnergyOMatScreen(
         }
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(
             if (isOwner) TEXTURE_OPEN else TEXTURE_CLOSED,
             leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256
@@ -61,7 +62,7 @@ class EnergyOMatScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         context.drawString(font, title,

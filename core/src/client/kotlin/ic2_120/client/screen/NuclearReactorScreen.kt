@@ -32,11 +32,11 @@ class NuclearReactorScreen(
 
     private val coolantSprite by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.COOLANT_STILL)
-            ?.getFluidSprites(null, null, ModFluids.COOLANT_STILL.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+            ?.getFluidSprites(null, null, ModFluids.COOLANT_STILL.defaultFluidState())?.getOrNull(0)
     }
     private val hotCoolantSprite by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.HOT_COOLANT_STILL)
-            ?.getFluidSprites(null, null, ModFluids.HOT_COOLANT_STILL.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+            ?.getFluidSprites(null, null, ModFluids.HOT_COOLANT_STILL.defaultFluidState())?.getOrNull(0)
     }
     private val coolantColor by lazy { FluidUtils.getFluidColor(ModFluids.COOLANT_STILL) }
     private val hotCoolantColor by lazy { FluidUtils.getFluidColor(ModFluids.HOT_COOLANT_STILL) }
@@ -50,7 +50,7 @@ class NuclearReactorScreen(
         imageWidth = NuclearReactorScreenHandler.FRAME_WIDTH
         imageHeight = frameH
         titleLabelY = -1000
-        playerInventoryTitleY = -1000
+        inventoryLabelY = -1000
     }
 
     override fun init() {
@@ -60,7 +60,7 @@ class NuclearReactorScreen(
         lockButton = Button.builder(
             Component.translatable("gui.ic2_120.nuclear_reactor.lock")
         ) {
-            Minecraft.getInstance().player?.networkHandler?.sendPacket(
+            Minecraft.getInstance().player?.connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, NuclearReactorScreenHandler.BUTTON_ID_TOGGLE_LOCK)
             )
         }.bounds(0, 0, btnW, btnH).build()
@@ -114,7 +114,7 @@ class NuclearReactorScreen(
         }
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         if (isThermal) {
             context.blit(TEXTURE, leftPos, topPos, TH_BG_U.toFloat(), TH_BG_V.toFloat(), TH_BG_W, TH_BG_H, TEX_W, TEX_H)
         } else {
@@ -189,7 +189,7 @@ class NuclearReactorScreen(
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         positionSlots()
         updateLockButton()
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
         drawTextOverlay(context)
         if (menu.sync.layoutLocked == 1) drawGhostItems(context)
@@ -231,8 +231,8 @@ class NuclearReactorScreen(
             if (slot .hasItem()) continue
             val lockedItem = reactor.getLockedItemForSlot(i) ?: continue
             val ghostStack = ItemStack(lockedItem)
-            val sx = leftPos + slot.leftPos
-            val sy = topPos + slot.topPos
+            val sx = leftPos + slot.x
+            val sy = topPos + slot.y
             context.renderItem(ghostStack, sx, sy)
             context.fill(sx, sy, sx + 16, sy + 16, 0x90000000.toInt())
         }
@@ -244,8 +244,7 @@ class NuclearReactorScreen(
                 mouseY in (topPos + TH_HEAT_Y) until (topPos + TH_HEAT_Y + HEAT_H)
             ) {
                 val temp = menu.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
-                context.renderComponentTooltip(font,
-                    listOf(Component.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
+                context.renderComponentTooltip(font, listOf(Component.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
                     mouseX, mouseY
                 )
             }
@@ -289,8 +288,7 @@ class NuclearReactorScreen(
                 mouseY in (topPos + NT_HEAT_Y) until (topPos + NT_HEAT_Y + HEAT_H)
             ) {
                 val temp = menu.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
-                context.renderComponentTooltip(font,
-                    listOf(Component.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
+                context.renderComponentTooltip(font, listOf(Component.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
                     mouseX, mouseY
                 )
             }

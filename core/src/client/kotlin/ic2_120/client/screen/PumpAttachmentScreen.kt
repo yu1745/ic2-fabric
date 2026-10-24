@@ -25,7 +25,7 @@ class PumpAttachmentScreen(
         imageHeight = 162
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 主 PNG 背景
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
         // 过滤器槽背景 (179,3)-(197,21) = 18×18，渲染至 (79,30)
@@ -45,7 +45,7 @@ class PumpAttachmentScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         // 幽灵过滤区始终为空，只绘制所选流体纹理。
@@ -59,7 +59,7 @@ class PumpAttachmentScreen(
         // 过滤器状态文本，7px，居中于文本区域 (52,55)-(129,70)
         val fluid = menu.filterFluid()
         val line = when {
-            fluid != null -> t("gui.ic2_120.pump_attachment.filter_current", fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string)
+            fluid != null -> t("gui.ic2_120.pump_attachment.filter_current", fluid.defaultFluidState().createLegacyBlock().block.name.string)
             else -> t("gui.ic2_120.pump_attachment.filter_any")
         }
         val textScale = 7f / font.lineHeight
@@ -84,7 +84,7 @@ class PumpAttachmentScreen(
             TEXTURE_SIZE, TEXTURE_SIZE
         )
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid)
-        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())?.getOrNull(0) ?: return
+        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultFluidState())?.getOrNull(0) ?: return
         val color = FluidUtils.getFluidColor(fluid)
         val (r, g, b) = if (color != -1) {
             Triple(((color shr 16) and 0xFF) / 255f, ((color shr 8) and 0xFF) / 255f, (color and 0xFF) / 255f)
@@ -98,7 +98,7 @@ class PumpAttachmentScreen(
         if (!FabricLoader.getInstance().isModLoaded("jei")) return
         context.blit(UPTIPS_TEXTURE, leftPos + HINT_X, topPos + HINT_Y, 0f, 0f, HINT_SIZE, HINT_SIZE, HINT_SIZE, HINT_SIZE)
         if (mouseX - leftPos in HINT_X until HINT_X + HINT_SIZE && mouseY - topPos in HINT_Y until HINT_Y + HINT_SIZE) {
-            context.renderComponentTooltip(font, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
+            context.renderTooltip(font, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
         }
     }
 

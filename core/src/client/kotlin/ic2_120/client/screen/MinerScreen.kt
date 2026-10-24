@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(handlers = ["miner", "advanced_miner"])
 class MinerScreen(
@@ -21,7 +22,7 @@ class MinerScreen(
         imageHeight = if (handler.isAdvanced) 203 else 165
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(
             if (menu.isAdvanced) TEX_ADVANCED else TEX_ORDINARY,
             leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE
@@ -29,7 +30,7 @@ class MinerScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -108,24 +109,24 @@ class MinerScreen(
         if (menu.isAdvanced) {
             // 电量条悬停
             if (relX in ADV_EB_X until ADV_EB_X + ADV_EB_W && relY in ADV_EB_Y until ADV_EB_Y + ADV_EB_H) {
-                context.renderComponentTooltip(font, Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"), mouseX, mouseY)
+                context.renderTooltip(font, Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"), mouseX, mouseY)
             }
             // 模式切换区域高亮 (123,27)-(141,42)
             if (relX in 123 until 142 && relY in 27 until 43) {
                 context.renderOutline(left + 123, top + 27, 19, 16, 0xFFFFFFFF.toInt())
-                context.renderComponentTooltip(font, Component.translatable("gui.ic2_120.miner.mode_switch"), mouseX, mouseY)
+                context.renderTooltip(font, Component.translatable("gui.ic2_120.miner.mode_switch"), mouseX, mouseY)
             }
             // 精准模式区域高亮 (129,45)-(147,60)
             if (relX in 129 until 148 && relY in 45 until 61) {
                 context.renderOutline(left + 129, top + 45, 19, 16, 0xFFFFFFFF.toInt())
                 val silkHoverText = if (menu.sync.silkTouch == 0)
                     t("gui.ic2_120.miner.silk_off") else t("gui.ic2_120.miner.silk_on")
-                context.renderComponentTooltip(font, Component.literal(silkHoverText), mouseX, mouseY)
+                context.renderTooltip(font, Component.literal(silkHoverText), mouseX, mouseY)
             }
             // 重置区域高亮 (133,101)-(169,116)
             if (relX in 133 until 170 && relY in 101 until 117) {
                 context.renderOutline(left + 133, top + 101, 37, 16, 0xFFFFFFFF.toInt())
-                context.renderComponentTooltip(font, Component.translatable("gui.ic2_120.miner.reset_tooltip"), mouseX, mouseY)
+                context.renderTooltip(font, Component.translatable("gui.ic2_120.miner.reset_tooltip"), mouseX, mouseY)
             }
             // uptips 悬停
             if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
@@ -141,7 +142,7 @@ class MinerScreen(
         } else {
             // 电量条悬停
             if (relX in ORD_EB_X until ORD_EB_X + ORD_EB_W && relY in ORD_EB_Y until ORD_EB_Y + ORD_EB_H) {
-                context.renderComponentTooltip(font, Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"), mouseX, mouseY)
+                context.renderTooltip(font, Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"), mouseX, mouseY)
             }
             // uptips 悬停
             if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
@@ -164,15 +165,15 @@ class MinerScreen(
             val relX = (mouseX - leftPos).toInt()
             val relY = (mouseY - topPos).toInt()
             if (relX in 123 until 142 && relY in 27 until 43) {
-                minecraft.connection?.send(ServerboundContainerButtonClickPacket(menu.containerId, MinerScreenHandler.BUTTON_TOGGLE_MODE))
+                Minecraft.getInstance().connection?.send(ServerboundContainerButtonClickPacket(menu.containerId, MinerScreenHandler.BUTTON_TOGGLE_MODE))
                 return true
             }
             if (relX in 129 until 148 && relY in 45 until 61) {
-                minecraft.connection?.send(ServerboundContainerButtonClickPacket(menu.containerId, MinerScreenHandler.BUTTON_TOGGLE_SILK))
+                Minecraft.getInstance().connection?.send(ServerboundContainerButtonClickPacket(menu.containerId, MinerScreenHandler.BUTTON_TOGGLE_SILK))
                 return true
             }
             if (relX in 133 until 170 && relY in 101 until 117) {
-                minecraft.connection?.send(ServerboundContainerButtonClickPacket(menu.containerId, MinerScreenHandler.BUTTON_RESTART))
+                Minecraft.getInstance().connection?.send(ServerboundContainerButtonClickPacket(menu.containerId, MinerScreenHandler.BUTTON_RESTART))
                 return true
             }
         }

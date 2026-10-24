@@ -9,6 +9,7 @@ import net.minecraft.client.KeyMapping
 import com.mojang.blaze3d.platform.InputConstants
 import net.minecraft.network.chat.Component
 import org.lwjgl.glfw.GLFW
+import net.minecraft.client.Minecraft
 
 @Environment(EnvType.CLIENT)
 object BandwidthHudKeybinds {
@@ -16,7 +17,7 @@ object BandwidthHudKeybinds {
         KeyMapping(
             "key.ic2_120.toggle_bandwidth_hud",
             InputConstants.Type.KEYSYM,
-            InputConstants.UNKNOWN_KEY.getCode(),
+            InputConstants.UNKNOWN.value,
             "category.ic2_120.ic2"
         )
     )
@@ -25,7 +26,7 @@ object BandwidthHudKeybinds {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
             while (toggleBandwidthHudKey.consumeClick()) {
                 BandwidthHudState.enabled = !BandwidthHudState.enabled
-                minecraft.player?.displayClientMessage(
+                client.player?.displayClientMessage(
                     Component.literal("Bandwidth HUD: " + if (BandwidthHudState.enabled) "ON" else "OFF"),
                     true
                 )

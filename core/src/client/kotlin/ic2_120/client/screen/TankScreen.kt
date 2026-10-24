@@ -23,7 +23,7 @@ class TankScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 与压缩机相同的升级提示图标，复用上游 uptips 资源。
@@ -45,7 +45,7 @@ class TankScreen(
         val fluidId = menu.sync.fluidId ?: return
         val fluid = BuiltInRegistries.FLUID.get(fluidId)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState())
         val sprite = sprites[0]
         val amount = menu.sync.fluidAmount
         if (amount <= 0) return
@@ -63,7 +63,7 @@ class TankScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)

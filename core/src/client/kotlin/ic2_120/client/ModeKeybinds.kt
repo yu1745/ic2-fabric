@@ -18,6 +18,10 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResultHolder
 import org.lwjgl.glfw.GLFW
+import ic2_120.content.network.ToggleChainsawShearPayload
+import ic2_120.content.network.ToggleIridiumSilkTouchPayload
+import ic2_120.content.network.ToggleMiningLaserModePayload
+import ic2_120.content.network.ToggleFoamSprayerModePayload
 
 /**
  * 手持工具模式切换：按住 Alt 并右键。
@@ -43,13 +47,13 @@ object ModeKeybinds {
 
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            if (!minecraft.options.useKey.isDown) {
+            if (!client.options.keyUse.isDown) {
                 modeToggleConsumedForCurrentUse = false
             }
 
             // GLFW may retain a modifier as pressed when focus is lost before its release event.
             // Reset our event-driven state while unfocused so Alt+Tab cannot leave mode switching stuck on.
-            if (!client.isWindowFocused) resetModifierState()
+            if (!client.isWindowActive()) resetModifierState()
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
@@ -104,10 +108,10 @@ object ModeKeybinds {
 
         val packet = InteractionHand.values().firstNotNullOfOrNull { hand ->
             when (player.getItemInHand(hand).item) {
-                is FoamSprayerItem -> NetworkManager.TOGGLE_FOAM_SPRAYER_MODE_PACKET
-                is MiningLaserItem -> NetworkManager.TOGGLE_MINING_LASER_MODE_PACKET
-                is IridiumDrill -> NetworkManager.TOGGLE_IRIDIUM_SILK_TOUCH_PACKET
-                is Chainsaw -> NetworkManager.TOGGLE_CHAINSAW_SHEAR_PACKET
+                is FoamSprayerItem -> ToggleFoamSprayerModePayload
+                is MiningLaserItem -> ToggleMiningLaserModePayload
+                is IridiumDrill -> ToggleIridiumSilkTouchPayload
+                is Chainsaw -> ToggleChainsawShearPayload
                 else -> null
             }
         } ?: return false
@@ -116,7 +120,7 @@ object ModeKeybinds {
         // but only send the mode packet on the initial press.
         if (modeToggleConsumedForCurrentUse) return true
         modeToggleConsumedForCurrentUse = true
-        ClientPlayNetworking.send(packet, FriendlyByteBuf(Unpooled.buffer()))
+        ClientPlayNetworking.send(packet)
         return true
     }
 

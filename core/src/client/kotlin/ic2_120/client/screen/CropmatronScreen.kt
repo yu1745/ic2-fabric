@@ -24,12 +24,12 @@ class CropmatronScreen(
 
     private val waterSprite by lazy {
         Minecraft.getInstance()
-            .getSpriteAtlas(ResourceLocation.fromNamespaceAndPath("minecraft", "textures/atlas/blocks.png"))
+            .getTextureAtlas(ResourceLocation.withDefaultNamespace("textures/atlas/blocks.png"))
             .apply(WATER_STILL_ID)
     }
     private val weedExSprite by lazy {
         Minecraft.getInstance()
-            .getSpriteAtlas(ResourceLocation.fromNamespaceAndPath("minecraft", "textures/atlas/blocks.png"))
+            .getTextureAtlas(ResourceLocation.withDefaultNamespace("textures/atlas/blocks.png"))
             .apply(WEED_EX_STILL_ID)
     }
 
@@ -38,7 +38,7 @@ class CropmatronScreen(
         imageHeight = 191
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 肥料纹理 (181,23)-(193,34) = 12x11，居中渲染至7个肥料槽
@@ -55,7 +55,7 @@ class CropmatronScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -158,7 +158,7 @@ class CropmatronScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY

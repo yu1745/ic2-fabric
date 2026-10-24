@@ -23,7 +23,7 @@ class TradeOMatScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(
             if (isOwner) TEXTURE_OPEN else TEXTURE_CLOSED,
             leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256
@@ -31,7 +31,7 @@ class TradeOMatScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
         context.drawString(font, title,
             leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)

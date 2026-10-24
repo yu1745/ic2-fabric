@@ -33,7 +33,7 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         val drill = entity.getItem(BaseMinerBlockEntity.SLOT_DRILL)
         if (drill.isEmpty) return
 
-        val world = entity.level() ?: return
+        val world = entity.level ?: return
         val targetPos = entity.getRenderDrillTarget(world.gameTime) ?: return
         val active = entity.cachedState.getOptionalValue(BaseMinerBlock.ACTIVE).orElse(false)
         val vibration = if (active) (sin((world.gameTime + tickDelta) * 1.2f) * 0.06f).toDouble() else 0.0
@@ -41,10 +41,10 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         val renderY = targetPos.y + 0.5 + vibration
         val renderZ = targetPos.z + 0.5
 
-        val camera = Minecraft.getInstance().gameRenderer.camera
-        val cx = camera.pos.x
-        val cy = camera.pos.y
-        val cz = camera.pos.z
+        val camera = Minecraft.getInstance().gameRenderer.mainCamera
+        val cx = camera.position.x
+        val cy = camera.position.y
+        val cz = camera.position.z
         val vx = cx - renderX
         val vy = cy - renderY
         val vz = cz - renderZ
@@ -54,9 +54,9 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
 
         matrices.pushPose()
         // 在“当前被挖掘目标方块”中心附近渲染钻头。
-        val dx = renderX - entity.pos.x
-        val dy = renderY - entity.pos.y
-        val dz = renderZ - entity.pos.z
+        val dx = renderX - entity.blockPos.x
+        val dy = renderY - entity.blockPos.y
+        val dz = renderZ - entity.blockPos.z
         matrices.translate(dx, dy, dz)
         // Billboard：始终朝向玩家视角，避免 2D 贴图在侧视角不可见。
         matrices.mulPose(Axis.YP.rotationDegrees(yawDeg))
@@ -64,7 +64,7 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         matrices.mulPose(Axis.YP.rotationDegrees(180.0f))
         matrices.scale(0.85f, 0.85f, 0.85f)
 
-        itemRenderer.renderItem(
+        itemRenderer.renderStatic(
             drill,
             ItemDisplayContext.FIXED,
             light,
@@ -77,5 +77,5 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         matrices.popPose()
     }
 
-    override fun rendersOutsideBoundingBox(blockEntity: T): Boolean = true
+    override fun shouldRenderOffScreen(blockEntity: T): Boolean = true
 }

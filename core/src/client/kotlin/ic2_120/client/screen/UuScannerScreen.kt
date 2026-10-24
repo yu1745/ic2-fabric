@@ -12,6 +12,7 @@ import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(block = UuScannerBlock::class)
 class UuScannerScreen(
@@ -23,12 +24,12 @@ class UuScannerScreen(
         imageHeight = 165
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -64,8 +65,8 @@ class UuScannerScreen(
             val cost = menu.sync.currentCostUb
             val rawId = menu.sync.cachedItemRawId
             if (rawId > 0 && cost > 0) {
-                val item = BuiltInRegistries.ITEM.get(rawId)
-                val name = item.name.string
+                val item = BuiltInRegistries.ITEM.byId(rawId)
+                val name = item.defaultInstance.hoverName.string
                 val scale = 7f / font.lineHeight
                 val infoX = left + 102
                 // 物品名称
@@ -97,8 +98,7 @@ class UuScannerScreen(
         if (relX in ENERGY_X until ENERGY_X + ENERGY_W && relY in ENERGY_Y until ENERGY_Y + ENERGY_H) {
             val energy = menu.sync.energy.toLong().coerceAtLeast(0)
             val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
-            context.renderComponentTooltip(font,
-                listOf(Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
+            context.renderComponentTooltip(font, listOf(Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
                 mouseX, mouseY)
         }
 
@@ -150,12 +150,12 @@ class UuScannerScreen(
             val relX = mouseX.toInt() - leftPos
             val relY = mouseY.toInt() - topPos
             if (relX in DEL_X until DEL_X + 12 && relY in DEL_Y until DEL_Y + 12) {
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, UuScannerScreenHandler.BUTTON_DELETE_TEMPLATE))
                 return true
             }
             if (relX in SAVE_X until SAVE_X + 24 && relY in SAVE_Y until SAVE_Y + 12) {
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, UuScannerScreenHandler.BUTTON_SAVE_TO_CRYSTAL))
                 return true
             }

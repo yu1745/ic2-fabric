@@ -22,12 +22,12 @@ class ElectricHeatGeneratorScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val energy = menu.sync.energy.toLong().coerceAtLeast(0)
@@ -46,7 +46,7 @@ class ElectricHeatGeneratorScreen(
 
         // 鼠标悬停能量条时显示储能
         if (mouseX in gaugeX until (gaugeX + gaugeSize) && mouseY in gaugeY until (gaugeY + gaugeSize)) {
-            context.renderComponentTooltip(font, Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU"), mouseX, mouseY)
+            context.renderTooltip(font, Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU"), mouseX, mouseY)
         }
 
         // 输出文本：区域 (29,65)-(149,79)，居中常显，缩放至 7px

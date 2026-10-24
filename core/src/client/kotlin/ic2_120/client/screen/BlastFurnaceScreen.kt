@@ -28,12 +28,12 @@ class BlastFurnaceScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val temperature = menu.sync.temperature.coerceIn(0, BlastFurnaceSync.TEMP_MAX)
@@ -103,7 +103,7 @@ class BlastFurnaceScreen(
         if (mouseX in (leftPos + 71) until (leftPos + 92) && mouseY in (topPos + 70) until (topPos + 77)) {
             val heatTooltip = Component.translatable("gui.ic2_120.blast_furnace.heat_tooltip",
                 temperature, BlastFurnaceSync.TEMP_MAX)
-            context.renderComponentTooltip(font, heatTooltip, mouseX, mouseY)
+            context.renderTooltip(font, heatTooltip, mouseX, mouseY)
         }
 
         // 升级提示工具提示
@@ -134,7 +134,7 @@ class BlastFurnaceScreen(
         if (fillH <= 0) return
         val fluid = ModFluids.COMPRESSED_AIR_FLOWING
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()) ?: return
+        val sprites = handler.getFluidSprites(null, null, fluid.defaultFluidState()) ?: return
         val sprite = sprites.getOrElse(1) { sprites[0] }
         val color = FluidUtils.getFluidColor(fluid)
         val a = ((color ushr 24) and 0xFF) / 255f

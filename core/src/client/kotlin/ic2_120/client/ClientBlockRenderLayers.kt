@@ -37,15 +37,15 @@ object ClientBlockRenderLayers {
         }
 
         if (cutout.isNotEmpty()) {
-            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.getCutout(), *cutout.toTypedArray())
+            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(), *cutout.toTypedArray())
             logger.info("已注册 {} 个方块到 cutout 渲染层", cutout.size)
         }
         if (cutoutMipped.isNotEmpty()) {
-            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.getCutoutMipped(), *cutoutMipped.toTypedArray())
+            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutoutMipped(), *cutoutMipped.toTypedArray())
             logger.info("已注册 {} 个方块到 cutout_mipped 渲染层", cutoutMipped.size)
         }
         if (translucent.isNotEmpty()) {
-            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.getTranslucent(), *translucent.toTypedArray())
+            BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.translucent(), *translucent.toTypedArray())
             logger.info("已注册 {} 个方块到 translucent 渲染层", translucent.size)
         }
     }

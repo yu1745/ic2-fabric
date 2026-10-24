@@ -28,11 +28,11 @@ object ObjModelLoadingPlugin {
 
     private fun load(manager: ResourceManager, executor: Executor): CompletableFuture<Map<ResourceLocation, ObjModelSpec>> =
         CompletableFuture.supplyAsync({
-            val read = { id: ResourceLocation -> manager.getResourceOrThrow(id).reader.use { it.readText() } }
+            val read = { id: ResourceLocation -> manager.getResource(id).orElseThrow().openAsReader().use { it.readText() } }
             val out = HashMap<ResourceLocation, ObjModelSpec>()
-            val found = manager.findResources("models") { it.namespace == Ic2_120.MOD_ID && it.path.endsWith(".json") }
+            val found = manager.listResources("models") { it.namespace == Ic2_120.MOD_ID && it.path.endsWith(".json") }
             for ((file, resource) in found) {
-                val text = resource.reader.use { it.readText() }
+                val text = resource.openAsReader().use { it.readText() }
                 if (!text.contains(ObjParser.LOADER_ID)) continue
                 val modelId = ResourceLocation.fromNamespaceAndPath(file.namespace, file.path.removePrefix("models/").removeSuffix(".json"))
                 try {

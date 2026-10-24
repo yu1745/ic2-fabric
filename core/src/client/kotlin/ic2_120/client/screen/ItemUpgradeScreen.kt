@@ -14,6 +14,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.Direction
+import net.minecraft.client.Minecraft
 
 @ModScreen(handler = "item_upgrade")
 class ItemUpgradeScreen(
@@ -30,22 +31,22 @@ class ItemUpgradeScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun init() {
         super.init()
-        val client = client ?: return
+        val client = minecraft ?: return
 
         addRenderableWidget(Button.builder(Component.empty()) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, ItemUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, ItemUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
         }.bounds(leftPos + 27, topPos + 37, 20, 14).build())
 
         // 六个方向分别独立开关，支持任意方向组合。
         for (dirIdx in Direction.entries.indices) {
             addRenderableWidget(Button.builder(Component.empty()) {
-                minecraft.getConnection()?.send(
+                Minecraft.getInstance().getConnection()?.send(
                     ServerboundContainerButtonClickPacket(
                         menu.containerId,
                         ItemUpgradeScreenHandler.BUTTON_TOGGLE_DIR + dirIdx
@@ -56,7 +57,7 @@ class ItemUpgradeScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         drawFilterItem(context)
@@ -66,7 +67,7 @@ class ItemUpgradeScreen(
 
         // 过滤文本 (9,18)-(104,32)
         val filterName = if (menu.itemRawId > 0) {
-            BuiltInRegistries.ITEM.get(andler.itemRawId).name.string
+            BuiltInRegistries.ITEM.byId(handler.itemRawId).defaultInstance.hoverName.string
         } else {
             t("gui.ic2_120.item_upgrade.no_filter")
         }
@@ -101,15 +102,15 @@ class ItemUpgradeScreen(
 
     private fun drawFilterItem(context: GuiGraphics) {
         if (menu.itemRawId <= 0) return
-        val item = BuiltInRegistries.ITEM.get(andler.itemRawId)
-        if (item != net.minecraft.world.item.Items.AIR) context.renderItem(item.defaultStack, leftPos + 8, topPos + 35)
+        val item = BuiltInRegistries.ITEM.byId(handler.itemRawId)
+        if (item != net.minecraft.world.item.Items.AIR) context.renderItem(item.defaultInstance, leftPos + 8, topPos + 35)
     }
 
     private fun drawJeiHint(context: GuiGraphics, mouseX: Int, mouseY: Int) {
         if (!FabricLoader.getInstance().isModLoaded("jei")) return
         context.blit(UPTIPS_TEXTURE, leftPos + HINT_X, topPos + HINT_Y, 0f, 0f, HINT_SIZE, HINT_SIZE, HINT_SIZE, HINT_SIZE)
         if (mouseX - leftPos in HINT_X until HINT_X + HINT_SIZE && mouseY - topPos in HINT_Y until HINT_Y + HINT_SIZE) {
-            context.renderComponentTooltip(font, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
+            context.renderTooltip(font, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
         }
     }
 

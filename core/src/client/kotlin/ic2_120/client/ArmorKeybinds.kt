@@ -63,7 +63,7 @@ object ArmorKeybinds {
 
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            val player = minecraft.player ?: return@register
+            val player = client.player ?: return@register
 
             while (toggleVisionKey.consumeClick()) {
                 if (!isAltDown()) continue
@@ -102,7 +102,7 @@ object ArmorKeybinds {
     }
 
     private fun isAltDown(): Boolean {
-        val window = minecraft.getWindow().handle
+        val window = Minecraft.getInstance().window.window
         return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_ALT) ||
                InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_ALT)
     }

@@ -27,7 +27,7 @@ class LeashKineticGeneratorScreen(
         titleLabelY = -1000
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 

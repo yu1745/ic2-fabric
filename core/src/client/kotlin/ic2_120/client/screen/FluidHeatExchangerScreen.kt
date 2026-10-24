@@ -25,12 +25,12 @@ class FluidHeatExchangerScreen(
         imageHeight = 204
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -101,7 +101,7 @@ class FluidHeatExchangerScreen(
         // 输入流体槽悬停
         if (relX in 19 until 31 && relY in 47 until 91) {
             val lines = if (inputMb > 0 && inputFluid != null) {
-                listOf(inputFluid.defaultBlockState().blockState.block.name, McText.literal("${"%,d".format(inputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
+                listOf(inputFluid.defaultFluidState().createLegacyBlock().block.name, McText.literal("${"%,d".format(inputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
@@ -111,7 +111,7 @@ class FluidHeatExchangerScreen(
         // 输出流体槽悬停
         if (relX in 145 until 157 && relY in 47 until 91) {
             val lines = if (outputMb > 0 && outputFluid != null) {
-                listOf(outputFluid.defaultFluidState().createLegacyBlock().blockState.block.name, McText.literal("${"%,d".format(outputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
+                listOf(outputFluid.defaultFluidState().createLegacyBlock().block.name, McText.literal("${"%,d".format(outputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
@@ -125,7 +125,7 @@ class FluidHeatExchangerScreen(
         if (fillH <= 0) return
 
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()) ?: return
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState()) ?: return
         val sprite = sprites[0]
 
         val color = FluidUtils.getFluidColor(fluid)

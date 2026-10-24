@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(handler = "limiter_cable")
 class LimiterCableScreen(
@@ -23,51 +24,51 @@ class LimiterCableScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun init() {
         super.init()
-        val client = client ?: return
+        val client = minecraft ?: return
 
         // Row 1: -1, -10, -100, -1000 (y=16)
         addRenderableWidget(Button.builder(Component.literal("-1")) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_MINUS_1))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_MINUS_1))
         }.bounds(leftPos + 6, topPos + 16, 15, 15).build())
 
         addRenderableWidget(Button.builder(Component.literal("-10")) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_MINUS_10))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_MINUS_10))
         }.bounds(leftPos + 24, topPos + 16, 25, 15).build())
 
         addRenderableWidget(Button.builder(Component.literal("-100")) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_MINUS_100))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_MINUS_100))
         }.bounds(leftPos + 52, topPos + 16, 30, 15).build())
 
         addRenderableWidget(Button.builder(Component.literal("-1000")) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_MINUS_1000))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_MINUS_1000))
         }.bounds(leftPos + 85, topPos + 16, 35, 15).build())
 
         // Row 2: +1, +10, +100, +1000 (y=41)
         addRenderableWidget(Button.builder(Component.literal("+1")) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_PLUS_1))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_PLUS_1))
         }.bounds(leftPos + 6, topPos + 41, 15, 15).build())
 
         addRenderableWidget(Button.builder(Component.literal("+10")) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_PLUS_10))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_PLUS_10))
         }.bounds(leftPos + 24, topPos + 41, 25, 15).build())
 
         addRenderableWidget(Button.builder(Component.literal("+100")) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_PLUS_100))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_PLUS_100))
         }.bounds(leftPos + 52, topPos + 41, 30, 15).build())
 
         addRenderableWidget(Button.builder(Component.literal("+1000")) {
-            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_PLUS_1000))
+            Minecraft.getInstance().getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, LimiterCableScreenHandler.BUTTON_PLUS_1000))
         }.bounds(leftPos + 85, topPos + 41, 35, 15).build())
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)

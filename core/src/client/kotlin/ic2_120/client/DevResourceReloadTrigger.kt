@@ -21,7 +21,7 @@ object DevResourceReloadTrigger {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
             if (--cooldown > 0) return@register
             cooldown = 10
-            if (Files.deleteIfExists(file)) client.reloadResources()
+            if (Files.deleteIfExists(file)) client.reloadResourcePacks()
         }
     }
 }

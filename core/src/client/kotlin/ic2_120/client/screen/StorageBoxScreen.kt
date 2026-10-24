@@ -22,7 +22,7 @@ class StorageBoxScreen(
         imageHeight = boxType.guiHeight
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         val type = boxType
         if (type.texture == null) return
 
@@ -43,7 +43,7 @@ class StorageBoxScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         if (boxType.texture != null) {

@@ -16,6 +16,7 @@ import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(block = CannerBlock::class)
 class CannerScreen(
@@ -26,15 +27,15 @@ class CannerScreen(
         imageWidth = 176
         imageHeight = 184
         titleLabelY = -1000
-        playerInventoryTitleY = -1000
+        inventoryLabelY = -1000
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -123,7 +124,7 @@ class CannerScreen(
         fluidRawId: Int, amountMb: Int, capacityMb: Int
     ) {
         if (fluidRawId <= 0 || amountMb <= 0) return
-        val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
+        val fluid = BuiltInRegistries.FLUID.byId(fluidRawId)
         val sprite = getFluidStillSprite(fluid) ?: return
         val color = FluidUtils.getFluidColor(fluid)
         if (color == -1) return
@@ -199,8 +200,7 @@ class CannerScreen(
         ) {
             val energy = menu.sync.energy.toLong().coerceAtLeast(0)
             val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
-            context.renderComponentTooltip(font,
-                listOf(Component.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU")),
+            context.renderComponentTooltip(font, listOf(Component.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU")),
                 mouseX, mouseY)
         }
 
@@ -209,7 +209,7 @@ class CannerScreen(
             val amt = menu.sync.leftFluidAmount.coerceAtLeast(0)
             val cap = menu.sync.leftFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = BuiltInRegistries.FLUID.get(handler.sync.leftFluidRawId).defaultBlockState().blockState.block.name.string
+                val name = BuiltInRegistries.FLUID.byId(handler.sync.leftFluidRawId).defaultFluidState().createLegacyBlock().block.name.string
                 listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
@@ -222,7 +222,7 @@ class CannerScreen(
             val amt = menu.sync.rightFluidAmount.coerceAtLeast(0)
             val cap = menu.sync.rightFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = BuiltInRegistries.FLUID.get(handler.sync.rightFluidRawId).defaultBlockState().blockState.block.name.string
+                val name = BuiltInRegistries.FLUID.byId(handler.sync.rightFluidRawId).defaultFluidState().createLegacyBlock().block.name.string
                 listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
@@ -249,12 +249,12 @@ class CannerScreen(
             val relX = mouseX.toInt() - leftPos
             val relY = mouseY.toInt() - topPos
             if (relX in SWAP_X1..SWAP_X2 && relY in SWAP_Y1..SWAP_Y2) {
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, CannerScreenHandler.BUTTON_ID_SWAP_TANKS))
                 return true
             }
             if (relX in MODE_CLICK_X1..MODE_CLICK_X2 && relY in MODE_CLICK_Y1..MODE_CLICK_Y2) {
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, CannerScreenHandler.BUTTON_ID_MODE_CYCLE))
                 return true
             }
@@ -339,7 +339,7 @@ class CannerScreen(
 
 private fun getFluidStillSprite(fluid: Fluid): net.minecraft.client.renderer.texture.TextureAtlasSprite? {
     val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-    return handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0)
+    return handler.getFluidSprites(null, null, fluid.defaultFluidState()).getOrNull(0)
 }
 
 private data class Quad(val u: Int, val v: Int, val w: Int, val h: Int)

@@ -42,14 +42,14 @@ class SteamGeneratorScreen(
     }
 
     private val waterSprite: TextureAtlasSprite? by lazy {
-        val handler = FluidRenderHandlerRegistry.INSTANCE.get(luids.WATER) ?: return@lazy null
-        handler.getFluidSprites(null, null, Fluids.Fluids.WATER.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.WATER.defaultFluidState())?.getOrNull(0)
     }
 
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        renderBackground(context)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        renderBackground(context, mouseX, mouseY, delta)
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256)
         // 标题居中，颜色 0x404040 — 与 Ic2Gui.drawXCenteredString 一致
         context.drawString(
@@ -122,7 +122,7 @@ class SteamGeneratorScreen(
         // ==== tooltips ====
         // 热量条 tooltip: 显示系统温度
         if (mouseX in (left + 13) until (left + 20) && mouseY in (top + 70) until (top + 70 + 76)) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 McText.literal("System Heat: ${"%.1f".format(sync.systemHeatMilli / 1000f)}°C / 500°C"),
                 mouseX, mouseY
@@ -169,7 +169,7 @@ class SteamGeneratorScreen(
     }
 
     private fun sendClick(id: Int) {
-        Minecraft.getInstance().player?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(menu.containerId, id))
+        Minecraft.getInstance().player?.connection?.send(ServerboundContainerButtonClickPacket(menu.containerId, id))
     }
 
     // ==== 绘制辅助 ====

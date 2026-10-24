@@ -23,6 +23,8 @@ import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
+import ic2_120.content.network.SetFluidFilterPayload
+import ic2_120.content.network.SetItemFilterPayload
 
 @JeiPlugin
 class Ic2JeiGhostPlugin : IModPlugin {
@@ -86,9 +88,7 @@ class Ic2JeiGhostPlugin : IModPlugin {
 
         private fun sendFluidFilter(fluid: Fluid) {
             if (fluid == Fluids.EMPTY) return
-            val buf = FriendlyByteBuf(Unpooled.buffer())
-            buf.writeIdentifier(BuiltInRegistries.FLUID.getId(fluid))
-            ClientPlayNetworking.send(NetworkManager.SET_FLUID_FILTER_PACKET, buf)
+            ClientPlayNetworking.send(SetFluidFilterPayload(fluid))
         }
     }
 
@@ -119,10 +119,7 @@ class Ic2JeiGhostPlugin : IModPlugin {
         }
 
         private fun sendItemFilter(slotIndex: Int, stack: ItemStack) {
-            val buf = FriendlyByteBuf(Unpooled.buffer())
-            buf.writeVarInt(slotIndex)
-            bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, stack)
-            ClientPlayNetworking.send(NetworkManager.SET_ITEM_FILTER_PACKET, buf)
+            ClientPlayNetworking.send(SetItemFilterPayload(slotIndex, stack))
         }
     }
 }

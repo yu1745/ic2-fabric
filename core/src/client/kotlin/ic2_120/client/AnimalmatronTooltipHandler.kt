@@ -24,7 +24,7 @@ object AnimalmatronTooltipHandler {
 
     fun register() {
         ItemTooltipCallback.EVENT.register { stack, _, _, lines ->
-            val itemId = BuiltInRegistries.ITEM.getId(stack.item)
+            val itemId = BuiltInRegistries.ITEM.getKey(stack.item)
             if (itemId != ANIMALMATRON_ID) return@register
 
             if (Screen.hasShiftDown()) {

@@ -190,7 +190,7 @@ class TextNode(
         val ty = originY + pad.top + if (center) ((contentH - textH) / 2).coerceAtLeast(0) else 0
         if (!ctx.drawEnabled) return
         if (shadow) {
-            ctx.drawContext.drawTextWithShadow(ctx.font, text, tx, ty, color)
+            ctx.drawContext.drawString(ctx.font, text, tx, ty, color)
         } else {
             ctx.drawContext.drawString(ctx.font, text, tx, ty, color, false)
         }
@@ -287,16 +287,16 @@ class ItemStackNode(
                 // 3. 或者使用 stencil buffer 而不是 scissor test
                 if (clippedHit != null && ctx.drawEnabled) {
                     ctx.drawContext.enableScissor(clippedHit.x, clippedHit.y, clippedHit.x + clippedHit.w, clippedHit.y + clippedHit.h)
-                    ctx.drawContext.drawItemWithoutEntity(stack, px, py)
+                    ctx.drawContext.renderItem(stack, px, py)
                     ctx.drawContext.disableScissor()
                 } else {
-                    ctx.drawContext.drawItemWithoutEntity(stack, px, py)
+                    ctx.drawContext.renderItem(stack, px, py)
                 }
             }
             if (ctx.interactionEnabled) {
                 val hit = clippedHit ?: RenderContext.TooltipHit(px, py, size, size, emptyList())
                 if (hit.w > 0 && hit.h > 0) {
-                    ctx.tooltipHits += hit.copy(lines = listOf(stack.getName()))
+                    ctx.tooltipHits += hit.copy(lines = listOf(stack.hoverName))
                 }
             }
         }
@@ -339,7 +339,7 @@ class ButtonNode(
         val hovered = mouseInButton && mouseInClip
 
         val mousePressed = GLFW.glfwGetMouseButton(
-            Minecraft.getInstance().window.handle,
+            Minecraft.getInstance().window.window,
             GLFW.GLFW_MOUSE_BUTTON_LEFT
         ) == GLFW.GLFW_PRESS
         val pressed = hovered && mousePressed
@@ -374,7 +374,7 @@ class ButtonNode(
         val tx = originX + pad.left + if (pressed) 1 else 0
         val ty = originY + pad.top + if (pressed) 1 else 0
         if (ctx.drawEnabled) {
-            ctx.drawContext.drawTextWithShadow(ctx.font, text, tx, ty, if (hovered) 0xFFFFE080.toInt() else 0xFFE0E0E0.toInt())
+            ctx.drawContext.drawString(ctx.font, text, tx, ty, if (hovered) 0xFFFFE080.toInt() else 0xFFE0E0E0.toInt())
         }
 
         if (ctx.interactionEnabled) {

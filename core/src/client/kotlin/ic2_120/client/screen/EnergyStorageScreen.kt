@@ -11,6 +11,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(
     handlers = [
@@ -28,17 +29,17 @@ class EnergyStorageScreen(
    private val useEquipmentSlots: Boolean = resolveUseEquipmentSlots()
 
     private fun resolveCapacity(): Long {
-        return menu.context.get({ world, pos ->
+        return menu.context.evaluate({ world, pos ->
             val block = world.getBlockState(pos).block
-            val id = BuiltInRegistries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getKey(block)
             EnergyStorageConfig.fromBlockPath(id.path)?.capacity ?: EnergyStorageConfig.BATBOX.capacity
         }, EnergyStorageConfig.BATBOX.capacity)
     }
 
     private fun resolveUseEquipmentSlots(): Boolean {
-        return menu.context.get({ world, pos ->
+        return menu.context.evaluate({ world, pos ->
             val block = world.getBlockState(pos).block
-            val id = BuiltInRegistries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getKey(block)
             EnergyStorageConfig.fromBlockPath(id.path)?.useEquipmentSlots ?: false
         }, false)
     }
@@ -53,7 +54,7 @@ class EnergyStorageScreen(
        if (menu.supportsRedstoneMode) {
            addRenderableWidget(
                net.minecraft.client.gui.components.Button.builder(Component.empty()) {
-                   minecraft.connection?.send(
+                   Minecraft.getInstance().connection?.send(
                        net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket(
                            menu.containerId, EnergyStorageScreenHandler.BUTTON_REDSTONE_MODE
                        )
@@ -69,7 +70,7 @@ class EnergyStorageScreen(
        val btnX = leftPos + imageWidth - 24
        val btnY = topPos + 4
        if (menu.supportsRedstoneMode && mouseX in btnX until btnX + 18 && mouseY in btnY until btnY + 14) {
-           context.renderComponentTooltip(
+           context.renderTooltip(
                font,
                Component.translatable("gui.ic2_120.eu_storage.redstone_mode${menu.currentRedstoneMode}"),
                mouseX, mouseY
@@ -77,12 +78,12 @@ class EnergyStorageScreen(
        }
    }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-       renderBackground(context)
+       renderBackground(context, mouseX, mouseY, delta)
        super.render(context, mouseX, mouseY, delta)
 
        val left = leftPos
@@ -119,7 +120,7 @@ class EnergyStorageScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY

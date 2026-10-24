@@ -21,7 +21,7 @@ class ReactorFluidPortScreen(
         imageHeight = 162
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 主 PNG 背景
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
         // 升级槽背景 (179,3)-(197,21) = 18×18，渲染至 (79,30) — 必须在 drawBackground 内，早于 super.render 的物品绘制
@@ -34,7 +34,7 @@ class ReactorFluidPortScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         // 标题居中

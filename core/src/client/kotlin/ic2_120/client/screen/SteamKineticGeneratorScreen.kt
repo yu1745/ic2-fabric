@@ -42,17 +42,17 @@ class SteamKineticGeneratorScreen(
 
     init {
         imageWidth = 176; imageHeight = 166
-        titleX = 999
+        titleLabelX = 999
     }
 
     private val waterSprite: TextureAtlasSprite? by lazy {
-        val handler = FluidRenderHandlerRegistry.INSTANCE.get(luids.WATER) ?: return@lazy null
-        handler.getFluidSprites(null, null, Fluids.Fluids.WATER.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.WATER.defaultFluidState())?.getOrNull(0)
     }
 
     // ==== 背景 — 先填充再纹理 ====
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        renderBackground(context)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        renderBackground(context, mouseX, mouseY, delta)
         val left = leftPos; val top = topPos
         val sync = menu.sync
 

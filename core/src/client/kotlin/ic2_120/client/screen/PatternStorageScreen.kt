@@ -17,10 +17,13 @@ import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import ic2_120.content.network.SelectTemplatePayload
+import net.minecraft.client.Minecraft
+import net.minecraft.world.entity.player.Inventory
 
 @ModScreen(block = PatternStorageBlock::class)
 class PatternStorageScreen(
-    val handler: PatternStorageScreenHandler, playerInventory: net.minecraft.world.entity.player.Container, title: Component
+    val handler: PatternStorageScreenHandler, playerInventory: Inventory, title: Component
 ) : AbstractContainerScreen<PatternStorageScreenHandler>(handler, playerInventory, title) {
 
     private var templates: List<UuTemplateEntry> = emptyList()
@@ -31,12 +34,12 @@ class PatternStorageScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -44,7 +47,7 @@ class PatternStorageScreen(
 
         context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val world = client?.world ?: client?.player?.world
+        val world = Minecraft.getInstance().level
         val storage = world?.let(menu::getPatternStorage)
         templates = storage?.getTemplatesSnapshot().orEmpty()
         selectedIndex = storage?.selectedTemplateIndex ?: -1
@@ -110,12 +113,12 @@ class PatternStorageScreen(
             val relY = mouseY.toInt() - topPos
 
             if (relX in READ_X1..READ_X2 && relY in READ_Y1..READ_Y2) {
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, PatternStorageScreenHandler.BUTTON_IMPORT_FROM_CRYSTAL))
                 return true
             }
             if (relX in WRITE_X1..WRITE_X2 && relY in WRITE_Y1..WRITE_Y2) {
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, PatternStorageScreenHandler.BUTTON_EXPORT_TO_CRYSTAL))
                 return true
             }
@@ -134,10 +137,7 @@ class PatternStorageScreen(
     private fun navigateTemplate(delta: Int) {
         if (templates.isEmpty()) return
         val newIndex = ((selectedIndex + delta) % templates.size + templates.size) % templates.size
-        val buf = FriendlyByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(menu.blockPos)
-        buf.writeVarInt(newIndex)
-        ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
+        ClientPlayNetworking.send(SelectTemplatePayload(menu.blockPos, newIndex))
     }
 
     private fun templateToStack(template: UuTemplateEntry): ItemStack {

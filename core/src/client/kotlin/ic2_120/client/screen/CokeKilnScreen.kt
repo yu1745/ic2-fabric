@@ -27,12 +27,12 @@ class CokeKilnScreen(
         imageHeight = GUI_SIZE.height
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -61,9 +61,9 @@ class CokeKilnScreen(
         // 流体槽 (115,41) 16×16，有流体时满平铺
         val fluidAmount = menu.sync.fluidAmount.coerceAtLeast(0)
         if (fluidAmount > 0) run {
-            val fluid = BuiltInRegistries.FLUID.get(handler.sync.fluidRawId)
+            val fluid = BuiltInRegistries.FLUID.byId(handler.sync.fluidRawId)
             val fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
-            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0) ?: return@run
+            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultFluidState()).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
             if (color == -1) return@run
             val r = ((color shr 16) and 0xFF) / 255f
@@ -88,10 +88,10 @@ class CokeKilnScreen(
         val relY = mouseY - top
         if (relX in TANK_X until TANK_X + SLOT_S && relY in TANK_Y until TANK_Y + SLOT_S) {
             val lines = if (fluidAmount > 0) {
-                val fluid = BuiltInRegistries.FLUID.get(handler.sync.fluidRawId)
+                val fluid = BuiltInRegistries.FLUID.byId(handler.sync.fluidRawId)
                 val mb = fluidAmount / DROPLETS_PER_MB
                 val capMb = 8 * FluidConstants.BUCKET / DROPLETS_PER_MB
-                listOf(Component.literal(fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string),
+                listOf(Component.literal(fluid.defaultFluidState().createLegacyBlock().block.name.string),
                     Component.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
             } else {
                 listOf(Component.literal("空"))

@@ -68,3 +68,7 @@ var ItemStack.orCreateNbt: CompoundTag
     set(value) {
         this.set(DataComponents.CUSTOM_DATA, CustomData.of(value))
     }
+
+/** yarn `ItemStack.nbt`（只读）：等价于 CUSTOM_DATA 组件的副本。 */
+val ItemStack.nbt: CompoundTag?
+    get() = this.get(DataComponents.CUSTOM_DATA)?.copyTag()

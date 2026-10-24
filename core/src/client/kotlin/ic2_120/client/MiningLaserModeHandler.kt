@@ -44,7 +44,7 @@ object MiningLaserModeHandler {
     }
 
     private fun sendToggleOnceThisTick() {
-        val age = Minecraft.getInstance().player?.age ?: return
+        val age = Minecraft.getInstance().player?.tickCount ?: return
         if (age == lastToggleSentOnPlayerAge) return
         lastToggleSentOnPlayerAge = age
         ClientPlayNetworking.send(ToggleMiningLaserModePayload)

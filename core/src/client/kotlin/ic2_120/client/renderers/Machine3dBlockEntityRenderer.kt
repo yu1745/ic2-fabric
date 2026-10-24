@@ -92,7 +92,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
         for (face in FACES) {
             for (quad in model.getQuads(null, face, random)) {
                 val n = quad.direction.normal
-                normal.set(n.x, n.y, n.z).mul(entry.setNormal())
+                normal.set(n.x.toFloat(), n.y.toFloat(), n.z.toFloat()).mul(entry.normal())
                 val shade = normal.x * normal.x * 0.6f + normal.z * normal.z * 0.8f +
                     normal.y * normal.y * (if (normal.y > 0) 1f else 0.5f)
                 brightness.fill(shade)
@@ -102,7 +102,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
     }
 
     override fun render(entity: T, tickDelta: Float, matrices: PoseStack, vertexConsumers: MultiBufferSource, light: Int, overlay: Int) {
-        val world = entity.level() ?: return
+        val world = entity.level ?: return
         val state = entity.cachedState
         val machine = BuiltInRegistries.BLOCK.getKey(state.block).path
         val parts = animations[machine] ?: return
@@ -116,12 +116,12 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
         val manager = client.modelManager
         val consumer = vertexConsumers.getBuffer(RenderType.solid())
         // 运动件从正面露出：取正前方方块的光照（机器自身格子光照会低一级）
-        val frontLight = LevelRenderer.getLightColor(world, entity.pos.relative(facing))
+        val frontLight = LevelRenderer.getLightColor(world, entity.blockPos.relative(facing))
 
         matrices.pushPose()
         // 与 blockstate 的 y 旋转一致：北为 0°，顺时针
         matrices.translate(0.5, 0.0, 0.5)
-        matrices.mulPose(Axis.YN.rotationDegrees(facing.asRotation() - 180f))
+        matrices.mulPose(Axis.YN.rotationDegrees(facing.toYRot() - 180f))
         matrices.translate(-0.5, 0.0, -0.5)
         for (part in parts) {
             matrices.pushPose()

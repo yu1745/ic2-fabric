@@ -33,7 +33,7 @@ object PipeColorProvider {
     fun register() {
         val blockProvider = BlockColor { state, world, pos, tintIndex ->
             if (tintIndex != 0) return@BlockColor 0xFFFFFF
-            val blockId = BuiltInRegistries.BLOCK.getId(state.block)
+            val blockId = BuiltInRegistries.BLOCK.getKey(state.block)
             when {
                 blockId.path.startsWith("bronze_pipe") || blockId.path == "bronze_pump_attachment" -> BRONZE_COLOR
                 blockId.path.startsWith("carbon_pipe") || blockId.path == "carbon_pump_attachment" -> CARBON_COLOR
@@ -44,7 +44,7 @@ object PipeColorProvider {
         val itemProvider = ItemColor { stack, tintIndex ->
             if (tintIndex != 0) return@ItemColor 0xFFFFFF
             val item = stack.item
-            val itemId = BuiltInRegistries.ITEM.getId(item)
+            val itemId = BuiltInRegistries.ITEM.getKey(item)
             when {
                 itemId.path.startsWith("bronze_pipe") || itemId.path == "bronze_pump_attachment" -> BRONZE_COLOR
                 itemId.path.startsWith("carbon_pipe") || itemId.path == "carbon_pump_attachment" -> CARBON_COLOR

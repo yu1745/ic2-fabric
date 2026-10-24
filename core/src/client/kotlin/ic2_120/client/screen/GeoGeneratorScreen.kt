@@ -30,16 +30,16 @@ class GeoGeneratorScreen(
     }
 
     private val lavaSprite: TextureAtlasSprite? by lazy {
-        val handler = FluidRenderHandlerRegistry.INSTANCE.get(luids.LAVA) ?: return@lazy null
-        handler.getFluidSprites(null, null, Fluids.Fluids.LAVA.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.LAVA) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.LAVA.defaultFluidState())?.getOrNull(0)
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val energy = menu.sync.energy.toLong().coerceAtLeast(0)
@@ -83,8 +83,7 @@ class GeoGeneratorScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.renderComponentTooltip(font,
-                listOf(Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
+            context.renderComponentTooltip(font, listOf(Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
                 mouseX, mouseY)
         }
         if (relX in LAVA_BAR_X until LAVA_BAR_X + LAVA_BAR_W &&

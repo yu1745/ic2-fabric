@@ -79,12 +79,12 @@ class ChunkLoaderScreen(
         setSlotPositions()
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -108,7 +108,7 @@ class ChunkLoaderScreen(
         ) {
             context.renderComponentTooltip(
                 font,
-                Component.translatable("gui.ic2_120.chunk_loader.restart_bootstrap_hint"),
+                listOf(Component.translatable("gui.ic2_120.chunk_loader.restart_bootstrap_hint")),
                 mouseX, mouseY
             )
         }
@@ -238,17 +238,17 @@ class ChunkLoaderScreen(
         val client = Minecraft.getInstance()
         val textureId = ResourceLocation.fromNamespaceAndPath("ic2_120", "chunk_map_${machinePos.asLong()}")
         // 主线程捕获 world 引用，避免后台线程访问 client 实例（client 非线程安全）
-        val world = minecraft.level
+        val world = client.level
         val centerX = machinePos.x shr 4
         val centerZ = machinePos.z shr 4
-        val bottomY = world?.bottomY ?: 0
+        val bottomY = world?.minBuildHeight ?: 0
 
         samplingExecutor.execute {
             try {
                 if (world == null) return@execute
                 val image = sampleMapImage(world, centerX, centerZ, bottomY)
                 // 上传必须在主线程：TextureManager.registerTexture 操作非并发 HashMap
-                minecraft.execute {
+                client.execute {
                     try {
                         if (mapTextureCache.containsKey(machinePos) && !force) {
                             // 期间已被其它路径填入，丢弃本次结果避免覆盖
@@ -301,7 +301,7 @@ class ChunkLoaderScreen(
     ): NativeImage {
         val image = NativeImage(MAP_SIZE, MAP_SIZE, false)
         val half = GRID / 2
-        val samplePos = BlockPos.Mutable()
+        val samplePos = BlockPos.MutableBlockPos()
 
         for (chunkRow in 0 until GRID) {
             for (chunkCol in 0 until GRID) {
@@ -313,15 +313,15 @@ class ChunkLoaderScreen(
                     for (bx in 0 until CELL_SIZE) {
                         val wx = cx * 16 + bx
                         val wz = cz * 16 + bz
-                        val topY = world.getTopY(Heightmap.Type.WORLD_SURFACE, wx, wz) - 1
+                        val topY = world.getHeight(Heightmap.Types.WORLD_SURFACE, wx, wz) - 1
                         val rgb = if (topY >= bottomY) {
                             samplePos.set(wx, topY, wz)
                             val state = world.getBlockState(samplePos)
-                            0xFF000000.toInt() or state.getMapColor(world, samplePos).color
+                            0xFF000000.toInt() or state.getMapColor(world, samplePos).col
                         } else {
                             0xFF404040.toInt()
                         }
-                        image.setColor(originX + bx, originY + bz, rgbToAbgr(rgb))
+                        image.setPixelRGBA(originX + bx, originY + bz, rgbToAbgr(rgb))
                     }
                 }
             }
@@ -351,7 +351,7 @@ class ChunkLoaderScreen(
                 if (col in 0 until GRID && row in 0 until GRID) {
                     val index = row * GRID + col
                     if (index != CENTER_INDEX) {
-                        minecraft.connection?.send(
+                        Minecraft.getInstance().connection?.send(
                             ServerboundContainerButtonClickPacket(menu.containerId, index)
                         )
                     }
@@ -365,14 +365,14 @@ class ChunkLoaderScreen(
     /**
      * 定时重采样：每 100 tick (5s) 强制重新采样当前机器周围的地图。
      *
-     * 用 `handledScreenTick` 而非 `tick`：AbstractContainerScreen.tick 在 vanilla 1.20.1 是 final，
+     * 用 `containerTick` 而非 `tick`：AbstractContainerScreen.tick 在 vanilla 1.20.1 是 final，
      * 它内部每 tick 调用本方法（仅当玩家存活且未移除时），语义等价、且是官方预留的子类钩子。
      *
      * 这解决了改造前"地图只生成一次、永不刷新"的问题——玩家在 ChunkLoader 周围修了建筑/挖了坑，
-     * 5 秒内地图会自动更新。Screen 关闭后 [handledScreenTick] 不再被调用，自然停止，无需取消逻辑。
+     * 5 秒内地图会自动更新。Screen 关闭后 [containerTick] 不再被调用，自然停止，无需取消逻辑。
      */
-    override fun handledScreenTick() {
-        super.handledScreenTick()
+    override fun containerTick() {
+        super.containerTick()
         tickCount++
         if (tickCount % 100L == 0L) {
             val bePos = menu.machinePos
@@ -397,7 +397,7 @@ class ChunkLoaderScreen(
         if (bePos == BlockPos.ZERO) return
         val id = mapTextureCache.remove(bePos) ?: return
         mapImageCache.remove(id)?.close()
-        Minecraft.getInstance().textureManager.destroyTexture(id)
+        Minecraft.getInstance().textureManager.release(id)
         if (currentTextureId == id) {
             currentTextureId = null
         }

@@ -90,7 +90,7 @@ object ModItemTooltip {
             if (item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))) {
                 val variant = stack.getFluidCellVariant()
                 if (variant != null && !variant.isBlank) {
-                    val fluidId = BuiltInRegistries.FLUID.getId(variant.fluid)
+                    val fluidId = BuiltInRegistries.FLUID.getKey(variant.fluid)
                     lines.add(Component.translatable("fluid.${fluidId.namespace}.${fluidId.path}").withStyle(ChatFormatting.GRAY))
                 }
             }
@@ -114,7 +114,7 @@ object ModItemTooltip {
                 item is BlockItem && item.block is ITiered -> (item.block as ITiered).tier
                 item is BlockItem -> {
                     val beType = ClassScanner.getBlockEntityTypeForBlock(item.block)
-                    val be = beType?.instantiate(BlockPos.ZERO, item.block.defaultBlockState())
+                    val be = beType?.create(BlockPos.ZERO, item.block.defaultBlockState())
                     (be as? ITieredMachine)?.tier
                 }
                 else -> null
@@ -131,7 +131,7 @@ object ModItemTooltip {
     }
 
     private fun isWrenchItem(item: net.minecraft.world.item.Item): Boolean {
-        val id = BuiltInRegistries.ITEM.getId(item)
+        val id = BuiltInRegistries.ITEM.getKey(item)
         return id.namespace == Ic2_120.MOD_ID && (id.path == "wrench" || id.path == "electric_wrench")
     }
 
@@ -141,7 +141,7 @@ object ModItemTooltip {
         lines.add(Component.translatable("tooltip.ic2_120.wrench.break_machine").withStyle(ChatFormatting.GRAY))
         lines.add(Component.translatable("tooltip.ic2_120.wrench.tank_retain").withStyle(ChatFormatting.DARK_GRAY))
 
-        val id = BuiltInRegistries.ITEM.getId(item)
+        val id = BuiltInRegistries.ITEM.getKey(item)
         if (id.path == "electric_wrench") {
             lines.add(Component.translatable("tooltip.ic2_120.wrench.cost_energy").withStyle(ChatFormatting.DARK_GRAY))
             lines.add(Component.translatable("tooltip.ic2_120.wrench.energy_required").withStyle(ChatFormatting.DARK_GRAY))

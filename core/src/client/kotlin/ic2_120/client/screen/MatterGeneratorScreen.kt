@@ -27,12 +27,12 @@ class MatterGeneratorScreen(
         imageHeight = 166
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -148,7 +148,7 @@ class MatterGeneratorScreen(
 
         private val uuMatterSprite by lazy {
             FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.UU_MATTER_STILL)
-                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultFluidState())?.getOrNull(0)
         }
     }
 }

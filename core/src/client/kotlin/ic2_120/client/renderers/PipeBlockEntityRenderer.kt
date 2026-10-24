@@ -105,7 +105,7 @@ class PipeBlockEntityRenderer(
         if (!state.getValue(BasePipeBlock.TRANSPARENT)) return
 
         val block = state.block as? BasePipeBlock ?: return
-        val world = entity.level() ?: return
+        val world = entity.level ?: return
 
         val radius = block.size.radius.toFloat()
         val min = 0.5f - radius
@@ -133,7 +133,7 @@ class PipeBlockEntityRenderer(
             state, entry, shellVc, light, overlay,
             min, max, matR, matG, matB
         )
-        if (block is PumpAttachmentBlock && state.contains(BlockStateProperties.FACING)) {
+        if (block is PumpAttachmentBlock && state.hasProperty(BlockStateProperties.FACING)) {
             drawPumpAttachmentPlate(
                 entry, shellVc, light, overlay,
                 state.getValue(BlockStateProperties.FACING),
@@ -145,10 +145,10 @@ class PipeBlockEntityRenderer(
         if (fluid != null) {
             val fluidSprites = FluidRenderHandlerRegistry.INSTANCE
                 .get(fluid)
-                ?.getFluidSprites(world, entity.pos, fluid.defaultFluidState().createLegacyBlock())
+                ?.getFluidSprites(world, entity.blockPos, fluid.defaultFluidState())
             val fluidSprite = fluidSprites?.firstOrNull()
             val fluidColor = getFluidTintColor(fluid)
-            val fluidVc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS_TEXTURE))
+            val fluidVc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS))
 
             val inset = FLUID_WALL_GAP
             val fMin = min + inset
@@ -162,7 +162,7 @@ class PipeBlockEntityRenderer(
 
                 // 臂（流体贴图）
                 for (dir in Direction.entries) {
-                    if (!state.get(BasePipeBlock.propertyFor(dir))) continue
+                    if (!state.getValue(BasePipeBlock.propertyFor(dir))) continue
                     drawArmFluid(entry, fluidVc, light, overlay,
                         radius, inset, dir, fluidSprite, fluidColor, fMin, fMax)
                 }
@@ -171,7 +171,7 @@ class PipeBlockEntityRenderer(
 
         // --- 渲染观察窗玻璃（纯代码着色，不使用图案贴图） ---
         val glassVc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
-        val connectionCount = Direction.entries.count { state.get(BasePipeBlock.propertyFor(it)) }
+        val connectionCount = Direction.entries.count { state.getValue(BasePipeBlock.propertyFor(it)) }
         val cutCenter = connectionCount > 2
         drawWindowGlass(
             state, entry, glassVc, light, overlay, min, max, cutCenter,
@@ -1000,10 +1000,10 @@ class PipeBlockEntityRenderer(
     }
 
     private fun getFluidTintColor(fluid: Fluid): Int {
-        val world = Minecraft.getInstance().world ?: return 0xFFFFFF
+        val world = Minecraft.getInstance().level ?: return 0xFFFFFF
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return 0xFFFFFF
-        return handler.getFluidColor(world, BlockPos.ZERO, fluid.defaultFluidState().createLegacyBlock())
+        return handler.getFluidColor(world, BlockPos.ZERO, fluid.defaultFluidState())
     }
 
-    override fun rendersOutsideBoundingBox(entity: PipeBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(entity: PipeBlockEntity): Boolean = true
 }

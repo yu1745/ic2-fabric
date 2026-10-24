@@ -28,7 +28,7 @@ object RubberLeavesColorProvider {
         ColorProviderRegistry.BLOCK.register({ _, world, pos, _ ->
             if (world != null && pos != null) {
                 // 获取群系的白桦树风格 foliage 亮度
-                val baseBrightness = BiomeColors.getFoliageColor(world, pos)
+                val baseBrightness = BiomeColors.getAverageFoliageColor(world, pos)
                 // 将橡胶树叶的基础黄色 (0xc4b848) 根据群系亮度进行调整
                 applyBiomeBrightness(DEFAULT_RUBBER_LEAVES_COLOR, baseBrightness)
             } else {

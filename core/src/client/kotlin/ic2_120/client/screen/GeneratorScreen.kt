@@ -24,12 +24,12 @@ class GeneratorScreen(
         imageHeight = 161
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val energy = menu.sync.energy.toLong().coerceAtLeast(0)
@@ -61,7 +61,7 @@ class GeneratorScreen(
 
         // 能量条悬停 (79,35)-(103,51) = 24×16
         if (mouseX in leftPos + 79 until leftPos + 103 && mouseY in topPos + 35 until topPos + 51) {
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(GeneratorSync.ENERGY_CAPACITY)} EU"),
                 mouseX, mouseY

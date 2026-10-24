@@ -14,6 +14,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(block = IronFurnaceBlock::class)
 class IronFurnaceScreen(
@@ -34,19 +35,19 @@ class IronFurnaceScreen(
 
         collectXpBtn = addRenderableWidget(
             Button.builder(Component.empty()) { btn ->
-                minecraft.connection?.send(
+                Minecraft.getInstance().connection?.send(
                     ServerboundContainerButtonClickPacket(menu.containerId, IronFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
                 )
             }.bounds(leftPos + XP_BTN_X, topPos + XP_BTN_Y, XP_BTN_SIZE, XP_BTN_SIZE).build()
         )
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -115,7 +116,7 @@ class IronFurnaceScreen(
             val xpRaw = menu.sync.experienceDisplay
             val xpWhole = xpRaw / 10
             val xpFrac = xpRaw % 10
-            context.renderComponentTooltip(
+            context.renderTooltip(
                 font,
                 Component.literal("XP: $xpWhole.$xpFrac"),
                 mouseX, mouseY

@@ -21,7 +21,7 @@ object SodiumCompatibilityWarning {
     fun register() {
         ClientPlayConnectionEvents.JOIN.register(ClientPlayConnectionEvents.Join { _, _, client ->
             if (!shouldWarn()) return@Join
-            minecraft.execute {
+            client.execute {
                 warnPlayer(client)
             }
         })
@@ -51,14 +51,14 @@ object SodiumCompatibilityWarning {
     }
 
     private fun warnPlayer(client: Minecraft) {
-        val player = minecraft.player ?: return
+        val player = client.player ?: return
         val warningText = Component.translatable("message.ic2_120.sodium_without_indium")
         logger.warn(
             "Detected Sodium without Indium. Rubber log rendering may be broken on this client. " +
                 "Install Indium for Sodium versions below 0.6."
         )
         warningUntilMs = System.currentTimeMillis() + WARNING_DURATION_MS
-        player.sendMessage(
+        player.displayClientMessage(
             warningText,
             false
         )
@@ -66,14 +66,14 @@ object SodiumCompatibilityWarning {
 
     private fun renderWarning(drawContext: net.minecraft.client.gui.GuiGraphics, client: Minecraft) {
         if (System.currentTimeMillis() >= warningUntilMs) return
-        if (minecraft.player == null) return
+        if (client.player == null) return
 
         val textRenderer = client.font
         val warningText = Component.translatable("message.ic2_120.sodium_without_indium")
         val warningLines = warningText.string.split('\n')
         val matrices = drawContext.pose()
-        val scaledWidth = minecraft.getWindow().scaledWidth
-        val scaledHeight = minecraft.getWindow().scaledHeight
+        val scaledWidth = client.getWindow().guiScaledWidth
+        val scaledHeight = client.getWindow().guiScaledHeight
         val scaledCenterX = scaledWidth / (2.0f * WARNING_SCALE)
         val scaledCenterY = scaledHeight / (2.0f * WARNING_SCALE)
         val drawX = scaledCenterX.toInt()
@@ -83,7 +83,7 @@ object SodiumCompatibilityWarning {
         matrices.pushPose()
         matrices.scale(WARNING_SCALE, WARNING_SCALE, 1.0f)
         warningLines.forEachIndexed { index, line ->
-            drawContext.drawCenteredTextWithShadow(
+            drawContext.drawCenteredString(
                 textRenderer,
                 line,
                 drawX,

@@ -27,6 +27,7 @@ import net.minecraft.network.chat.Component
 import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.resources.ResourceLocation
+import ic2_120.content.network.SelectTemplatePayload
 
 @ModScreen(block = ReplicatorBlock::class)
 class ReplicatorScreen(
@@ -50,17 +51,17 @@ class ReplicatorScreen(
     override fun init() {
         super.init()
         cancelBtn = Button.builder(Component.empty()) {
-            Minecraft.getInstance().player?.networkHandler?.sendPacket(
+            Minecraft.getInstance().player?.connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, ReplicatorScreenHandler.BUTTON_CANCEL)
             )
         }.bounds(0, 0, 18, 18).build()
         singleBtn = Button.builder(Component.empty()) {
-            Minecraft.getInstance().player?.networkHandler?.sendPacket(
+            Minecraft.getInstance().player?.connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, ReplicatorScreenHandler.BUTTON_MODE_SINGLE)
             )
         }.bounds(0, 0, 18, 18).build()
         repeatBtn = Button.builder(Component.empty()) {
-            Minecraft.getInstance().player?.networkHandler?.sendPacket(
+            Minecraft.getInstance().player?.connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, ReplicatorScreenHandler.BUTTON_MODE_REPEAT)
             )
         }.bounds(0, 0, 18, 18).build()
@@ -75,13 +76,13 @@ class ReplicatorScreen(
         repeatBtn?.setPosition(leftPos + 105, topPos + 81)
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         updateButtons()
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = leftPos
@@ -89,7 +90,7 @@ class ReplicatorScreen(
 
         context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val world = client?.world
+        val world = Minecraft.getInstance().level
         val storage = world?.let { findUniqueAdjacentPatternStorage(it, menu.blockPos) }
         templates = storage?.getTemplatesSnapshot().orEmpty()
         selectedIndex = storage?.selectedTemplateIndex ?: -1
@@ -144,8 +145,7 @@ class ReplicatorScreen(
         if (relX in ENERGY_X until ENERGY_X + ENERGY_W && relY in ENERGY_Y until ENERGY_Y + ENERGY_H) {
             val energy = menu.sync.energy.toLong().coerceAtLeast(0)
             val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
-            context.renderComponentTooltip(font,
-                listOf(Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
+            context.renderComponentTooltip(font, listOf(Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
                 mouseX, mouseY)
         }
 
@@ -274,10 +274,7 @@ class ReplicatorScreen(
     private fun navigateTemplate(delta: Int) {
         if (templates.isEmpty()) return
         val newIndex = ((selectedIndex + delta) % templates.size + templates.size) % templates.size
-        val buf = FriendlyByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(menu.blockPos)
-        buf.writeVarInt(newIndex)
-        ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
+        ClientPlayNetworking.send(SelectTemplatePayload(menu.blockPos, newIndex))
         // 更新本地显示
         val template = templates.getOrNull(newIndex)
         if (template != null) {
@@ -362,7 +359,7 @@ class ReplicatorScreen(
 
         private val uuMatterSprite by lazy {
             FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.UU_MATTER_STILL)
-                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultFluidState().createLegacyBlock())?.getOrNull(0)
+                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultFluidState())?.getOrNull(0)
         }
     }
 }

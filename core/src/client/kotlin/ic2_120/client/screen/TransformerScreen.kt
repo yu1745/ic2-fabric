@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 /**
  * 变压器的 GUI 界面。
@@ -41,7 +42,7 @@ class TransformerScreen(
             Component.literal("固定升压")
         ) { btn ->
             stepDownBtn.setFocused(false)
-            minecraft.connection?.send(
+            Minecraft.getInstance().connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, TransformerScreenHandler.BUTTON_ID_STEP_UP)
             )
         }.bounds(leftPos + 21, topPos + 69, 74, 20).build())
@@ -51,18 +52,18 @@ class TransformerScreen(
             Component.literal("固定降压")
         ) { btn ->
             stepUpBtn.setFocused(false)
-            minecraft.connection?.send(
+            Minecraft.getInstance().connection?.send(
                 ServerboundContainerButtonClickPacket(menu.containerId, TransformerScreenHandler.BUTTON_ID_STEP_DOWN)
             )
         }.bounds(leftPos + 21, topPos + 90, 74, 20).build())
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 219, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val currentMode = menu.sync.getMode()

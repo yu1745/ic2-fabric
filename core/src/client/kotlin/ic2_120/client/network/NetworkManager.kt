@@ -6,6 +6,7 @@ import ic2_120.content.network.ReactorHeatInfoPacket
 import ic2_120.content.network.ReactorLayoutLockPacket
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.network.TeleporterVisualStatePacket
+import ic2_120.content.network.ConfigSyncChunkPayload
 import ic2_120.content.network.ConfigSyncPacket
 import ic2_120.content.network.ConfigSyncReceiver
 import ic2_120.content.network.ReplicationCostsSyncReceiver
@@ -28,8 +29,6 @@ object NetworkManager {
     
     private val SCANNER_RESULT_PACKET = ScannerResultPacket.ID
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
-    private val CONFIG_SYNC_PACKET = ConfigSyncPacket.ID
-    private val REPLICATION_COSTS_SYNC_PACKET = ConfigSyncPacket.REPLICATION_COSTS_ID
     private val SEMIFLUID_GENERATOR_FUEL_STATE_PACKET = SemifluidGeneratorFuelStatePacket.ID
 
     fun register() {
@@ -110,19 +109,13 @@ object NetworkManager {
             }
         }
 
-        ClientPlayNetworking.registerGlobalReceiver(CONFIG_SYNC_PACKET) { payload, context ->
-
-        val packet = payload
+        ClientPlayNetworking.registerGlobalReceiver(ConfigSyncChunkPayload.ID) { payload, context ->
+            val packet = ConfigSyncPacket(payload.totalChunks, payload.chunkIndex, payload.chunkData)
             minecraft.execute {
-                ConfigSyncReceiver.accept(packet)
-            }
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(REPLICATION_COSTS_SYNC_PACKET) { payload, context ->
-
-        val packet = payload
-            minecraft.execute {
-                ReplicationCostsSyncReceiver.accept(packet)
+                when (payload.channelId) {
+                    ConfigSyncPacket.ID -> ConfigSyncReceiver.accept(packet)
+                    ConfigSyncPacket.REPLICATION_COSTS_ID -> ReplicationCostsSyncReceiver.accept(packet)
+                }
             }
         }
 

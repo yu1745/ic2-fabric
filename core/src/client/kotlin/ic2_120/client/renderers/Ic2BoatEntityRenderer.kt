@@ -4,23 +4,23 @@ import ic2_120.content.entity.BrokenRubberBoatEntity
 import ic2_120.content.entity.CarbonBoatEntity
 import ic2_120.content.entity.ElectricBoatEntity
 import ic2_120.content.entity.RubberBoatEntity
-import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.entity.EntityRenderer
-import net.minecraft.client.renderer.entity.EntityRendererProvider
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.math.Axis
 import net.minecraft.client.model.BoatModel
 import net.minecraft.client.model.ChestBoatModel
 import net.minecraft.client.model.ChestRaftModel
 import net.minecraft.client.model.ListModel
-import net.minecraft.client.model.geom.ModelLayers
-import net.minecraft.client.model.WaterPatchModel
 import net.minecraft.client.model.RaftModel
-import com.mojang.blaze3d.vertex.PoseStack
-import net.minecraft.world.entity.vehicle.Boat
-import net.minecraft.util.Mth
-import com.mojang.math.Axis
+import net.minecraft.client.model.WaterPatchModel
+import net.minecraft.client.model.geom.ModelLayers
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.entity.EntityRenderer
+import net.minecraft.client.renderer.entity.EntityRendererProvider
+import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.util.Mth
+import net.minecraft.world.entity.vehicle.Boat
 import org.joml.Quaternionf
 
 /**
@@ -36,17 +36,12 @@ class Ic2BoatEntityRenderer(
     private val models = mutableMapOf<Boat.Type, ListModel<Boat>>()
 
     private fun createModel(type: Boat.Type): ListModel<Boat> {
-        if (type == Boat.Type.BAMBOO) {
-            return if (hasChestBoat) {
-                ChestRaftModel(modelContext.bakeLayer(ModelLayers.createChestRaftModelName(type)))
-            } else {
-                RaftModel(modelContext.bakeLayer(ModelLayers.createRaftModelName(type)))
-            }
-        }
-        return if (hasChestBoat) {
-            ChestBoatModel(modelContext.bakeLayer(ModelLayers.createChestBoatModelName(type)))
+        val layer = if (hasChestBoat) ModelLayers.createChestBoatModelName(type) else ModelLayers.createBoatModelName(type)
+        val part = modelContext.bakeLayer(layer)
+        return if (type == Boat.Type.BAMBOO) {
+            if (hasChestBoat) ChestRaftModel(part) else RaftModel(part)
         } else {
-            BoatModel(modelContext.bakeLayer(ModelLayers.createBoatModelName(type)))
+            if (hasChestBoat) ChestBoatModel(part) else BoatModel(part)
         }
     }
 
@@ -85,7 +80,7 @@ class Ic2BoatEntityRenderer(
         if (wobbleTicks > 0.0f) {
             matrices.mulPose(
                 Axis.XP.rotationDegrees(
-                    Mth.sin(wobbleTicks) * wobbleTicks * wobbleStrength / 10.0f * boat.hurtDir.toFloat()
+                    Mth.sin(wobbleTicks) * wobbleTicks * wobbleStrength / 10.0f * boat.hurtDir
                 )
             )
         }
@@ -102,7 +97,7 @@ class Ic2BoatEntityRenderer(
         model.setupAnim(boat, tickDelta, 0.0f, -0.1f, 0.0f, 0.0f)
 
         val vertexConsumer = vertexConsumers.getBuffer(model.renderType(texture))
-        model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, -1)
+        model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY)
 
         if (!boat.isUnderWater && model is WaterPatchModel) {
             val waterMask = vertexConsumers.getBuffer(RenderType.waterMask())

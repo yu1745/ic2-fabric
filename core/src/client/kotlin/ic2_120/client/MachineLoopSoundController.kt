@@ -39,8 +39,8 @@ object MachineLoopSoundController {
 
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            val world = minecraft.level
-            val player = minecraft.player
+            val world = client.level
+            val player = client.player
             if (world == null || player == null) {
                 activeSounds.values.forEach { it.stop() }
                 activeSounds.clear()
@@ -96,19 +96,19 @@ object MachineLoopSoundController {
     }
 
     private fun fromActive(state: BlockState, prop: BooleanProperty, eventId: String): LoopDef? {
-        if (!state.contains(prop) || !state.get(prop)) return null
+        if (!state.hasProperty(prop) || !state.getValue(prop)) return null
         return LoopDef(eventId = eventId, volume = 0.5f, pitch = 1.0f)
     }
 
     private fun syncSounds(client: net.minecraft.client.Minecraft, desired: Map<Long, LoopDef>) {
         for ((key, def) in desired) {
             val existing = activeSounds[key]
-            if (existing == null || existing.isDone || existing.eventId != def.eventId) {
+            if (existing == null || existing.isStopped || existing.eventId != def.eventId) {
                 existing?.stop()
-                val pos = BlockPos.fromLong(key)
+                val pos = BlockPos.of(key)
                 val created = BlockLoopSoundInstance(pos, def)
                 activeSounds[key] = created
-                minecraft.getSoundManager().play(created)
+                client.soundManager.play(created)
             } else {
                 existing.setFadingOut(false)
             }
@@ -121,7 +121,7 @@ object MachineLoopSoundController {
     }
 
     private fun cleanupFinished() {
-        val toRemove = activeSounds.filterValues { it.isDone }.keys
+        val toRemove = activeSounds.filterValues { it.isStopped }.keys
         toRemove.forEach { activeSounds.remove(it) }
     }
 
@@ -136,8 +136,8 @@ object MachineLoopSoundController {
         private val baseVolume = def.volume
 
         init {
-            repeat = true
-            repeatDelay = 0
+            looping = true
+            delay = 0
             volume = baseVolume
             pitch = def.pitch
             x = pos.x + 0.5
