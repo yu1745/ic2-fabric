@@ -115,11 +115,11 @@ class UuScannerBlockEntity(
 
     override fun setItem(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
-        val previousId = if (slot == SLOT_INPUT) BuiltInRegistries.ITEM.getId(inventory[slot].item).toString() else ""
+        val previousId = if (slot == SLOT_INPUT) BuiltInRegistries.ITEM.getKey(inventory[slot].item).toString() else ""
         inventory[slot] = stack
         if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         if (slot == SLOT_INPUT) {
-            val newId = if (stack.isEmpty) "" else BuiltInRegistries.ITEM.getId(stack.item).toString()
+            val newId = if (stack.isEmpty) "" else BuiltInRegistries.ITEM.getKey(stack.item).toString()
             if (newId != previousId) {
                 lastCompletedItemId = ""
                 sync.progress = 0
@@ -238,7 +238,7 @@ class UuScannerBlockEntity(
             return
         }
 
-        val itemId = BuiltInRegistries.ITEM.getId(input.item).toString()
+        val itemId = BuiltInRegistries.ITEM.getKey(input.item).toString()
         val template = Ic2Config.getReplicationTemplate(itemId)
         if (template == null) {
             sync.progress = 0

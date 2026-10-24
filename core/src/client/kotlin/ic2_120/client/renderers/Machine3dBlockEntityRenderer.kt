@@ -104,7 +104,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
     override fun render(entity: T, tickDelta: Float, matrices: PoseStack, vertexConsumers: MultiBufferSource, light: Int, overlay: Int) {
         val world = entity.world ?: return
         val state = entity.cachedState
-        val machine = BuiltInRegistries.BLOCK.getId(state.block).path
+        val machine = BuiltInRegistries.BLOCK.getKey(state.block).path
         val parts = animations[machine] ?: return
         val activeProp = state.block.stateDefinition.getProperty("active") as? BooleanProperty
         val active = activeProp?.let { state.getValue(it) } ?: false

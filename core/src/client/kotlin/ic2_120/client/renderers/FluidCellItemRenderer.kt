@@ -76,8 +76,8 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
     private class Contents(val sprite: TextureAtlasSprite, val color: Int, val glow: Boolean)
 
     private fun contents(stack: ItemStack): Contents? {
-        val atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE)
-        val name = BuiltInRegistries.ITEM.getId(stack.item).path
+        val atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+        val name = BuiltInRegistries.ITEM.getKey(stack.item).path
         if (name in STATIC_FILL) return Contents(atlas.apply(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item/cell3d/$name")), -1, false)
         val fluid: Fluid = when (val item = stack.item) {
             is ModFluidCell -> item.getFluid()
@@ -86,9 +86,9 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         if (fluid == Fluids.EMPTY) return null
         val state = fluid.defaultFluidState().createLegacyBlock()
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-        val sprite = handler.getFluidSprites(null, null, state).firstOrNull() ?: return null
-        val color = handler.getFluidColor(null, null, state)
-        return Contents(sprite, color, state.createLegacyBlock().getLightEmission() > 0)
+        val sprite = handler.getFluidSprites(null, null, fluid.defaultFluidState()).firstOrNull() ?: return null
+        val color = handler.getFluidColor(null, null, fluid.defaultFluidState())
+        return Contents(sprite, color, state.getLightEmission() > 0)
     }
 
     override fun render(
@@ -102,20 +102,20 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val client = Minecraft.getInstance()
         val entry = matrices.last()
 
-        val solid = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS_TEXTURE))
+        val solid = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS))
         val shell = client.modelManager.getModel(SHELL) ?: return
         for (face in FACES) {
-            for (quad in shell.getQuads(null, face, random)) solid.putBulkData(entry, quad, 1f, 1f, 1f, light, overlay)
+            for (quad in shell.getQuads(null, face, random)) solid.putBulkData(entry, quad, 1f, 1f, 1f, 1f, light, overlay)
         }
 
         contents(stack)?.let { c ->
             val up = surfaceNormal(mode, entry, client)
-            val fluidLight = if (c.glow) LightTexture.MAX_LIGHT_COORDINATE else light
+            val fluidLight = if (c.glow) LightTexture.FULL_BRIGHT else light
             drawFluid(entry, solid, c, up, fluidLight, overlay, if (isFirstPerson(mode)) Slosh.agitation else 0f)
         }
 
-        val glass = client.getTextureAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE).apply(GLASS)
-        drawGlass(entry, vertexConsumers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS_TEXTURE)), glass, light, overlay)
+        val glass = client.getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(GLASS)
+        drawGlass(entry, vertexConsumers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS)), glass, light, overlay)
     }
 
     private fun isFirstPerson(mode: ItemDisplayContext) =
@@ -127,11 +127,11 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
      */
     private fun surfaceNormal(mode: ItemDisplayContext, entry: PoseStack.Pose, client: Minecraft): Vector3f {
         if (mode == ItemDisplayContext.GUI || client.level == null) return Vector3f(0f, 1f, 0f)
-        val world = if (isFirstPerson(mode)) Slosh.normal(client.frameTime) else Vector3f(0f, 1f, 0f)
-        val cam = client.gameRenderer.camera
+        val world = if (isFirstPerson(mode)) Slosh.normal(client.timer.gameTimeDeltaPartialTick(false)) else Vector3f(0f, 1f, 0f)
+        val cam = client.gameRenderer.mainCamera
         val view = Quaternionf()
-            .rotationX(cam.pitch * Mth.RADIANS_PER_DEGREE)
-            .rotateY((cam.yaw + 180f) * Mth.RADIANS_PER_DEGREE)
+            .rotationX(cam.pitch * Mth.DEG_TO_RAD)
+            .rotateY((cam.yaw + 180f) * Mth.DEG_TO_RAD)
             .transform(world)
         val local = Matrix3f(entry.normal()).invert().transform(view).normalize()
         // 倒置/横放时液面法线朝下会让液柱翻出，限制为至少略微朝上
@@ -149,7 +149,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
     ) {
         val pts = ring(FLUID_R)
         val center = Y0 + (Y1 - Y0) * FILL
-        val t = (Minecraft.getInstance().level?.gameTime ?: 0L) + Minecraft.getInstance().tickDelta
+        val t = (Minecraft.getInstance().level?.gameTime ?: 0L) + Minecraft.getInstance().timer.gameTimeDeltaPartialTick(false)
         // 每个角点的液面高度：过中心点、法线为 up 的平面，叠加随晃动强度衰减的小波纹
         val h = FloatArray(SIDES) {
             val dx = pts[it][0] - 0.5f

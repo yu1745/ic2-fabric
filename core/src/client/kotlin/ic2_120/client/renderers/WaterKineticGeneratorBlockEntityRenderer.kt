@@ -44,7 +44,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
     }
 
     private fun getRotorRadius(stack: ItemStack): Float {
-        return when (BuiltInRegistries.ITEM.getId(stack.item).path) {
+        return when (BuiltInRegistries.ITEM.getKey(stack.item).path) {
             "wooden_rotor" -> 1.0f
             "bronze_rotor" -> 1.5f
             "iron_rotor" -> 1.5f
@@ -124,7 +124,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
     }
 
     private fun textureForRotor(stack: ItemStack): ResourceLocation? =
-        when (BuiltInRegistries.ITEM.getId(stack.item).path) {
+        when (BuiltInRegistries.ITEM.getKey(stack.item).path) {
             "wooden_rotor" -> WOOD_ROTOR_TEXTURE
             "bronze_rotor" -> BRONZE_ROTOR_TEXTURE
             "iron_rotor" -> IRON_ROTOR_TEXTURE

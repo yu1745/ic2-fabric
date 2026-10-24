@@ -10,6 +10,6 @@ object PumpAttachmentFilter {
         if (stack.isEmpty) return null
         val storage = FluidStorage.ITEM.find(stack, ContainerItemContext.withConstant(stack)) ?: return null
         val view = storage.iterator().asSequence().firstOrNull { !it.resource.isBlank && it.amount > 0L } ?: return null
-        return BuiltInRegistries.FLUID.getId(view.resource.fluid).toString()
+        return BuiltInRegistries.FLUID.getKey(view.resource.fluid).toString()
     }
 }

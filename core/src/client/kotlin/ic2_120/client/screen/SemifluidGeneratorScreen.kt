@@ -174,7 +174,7 @@ class SemifluidGeneratorScreen(
             // Fluid.`is`(TagKey) 在 1.20.1 已 @Deprecated，改用未废弃的 FluidState.isIn。
             if (fluid.defaultFluidState().createLegacyBlock().`is`(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
         }
-        return fluids.sortedBy { BuiltInRegistries.FLUID.getId(it).toString() }
+        return fluids.sortedBy { BuiltInRegistries.FLUID.getKey(it).toString() }
     }
 
     private fun fluidDisplayText(fluid: Fluid): Component {
@@ -192,7 +192,7 @@ class SemifluidGeneratorScreen(
     }
 
     private fun isFlowingVariant(fluid: Fluid): Boolean {
-        val path = BuiltInRegistries.FLUID.getId(fluid).path
+        val path = BuiltInRegistries.FLUID.getKey(fluid).path
         return path.startsWith("flowing_") || path.endsWith("_flowing")
     }
 
