@@ -1,5 +1,8 @@
 package ic2_120.client.renderers
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.world
+
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PipeMaterial
@@ -102,7 +105,7 @@ class PipeBlockEntityRenderer(
         if (!state.getValue(BasePipeBlock.TRANSPARENT)) return
 
         val block = state.block as? BasePipeBlock ?: return
-        val world = entity.world ?: return
+        val world = entity.level() ?: return
 
         val radius = block.size.radius.toFloat()
         val min = 0.5f - radius
@@ -122,7 +125,7 @@ class PipeBlockEntityRenderer(
 
         // --- 渲染管道外壳（Cutout，不使用半透明） ---
         // pipe_white 贴图上的透明区域即“观察窗”，只有这些区域能看到内部流体。
-        val shellVc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(PIPE_TEXTURE))
+        val shellVc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(PIPE_TEXTURE))
         val entry = matrices.last()
 
         // 连续四角骨架：从截面看仅四角不透明，其余全部留空。
@@ -145,7 +148,7 @@ class PipeBlockEntityRenderer(
                 ?.getFluidSprites(world, entity.pos, fluid.defaultFluidState().createLegacyBlock())
             val fluidSprite = fluidSprites?.firstOrNull()
             val fluidColor = getFluidTintColor(fluid)
-            val fluidVc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(InventoryMenu.BLOCK_ATLAS_TEXTURE))
+            val fluidVc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS_TEXTURE))
 
             val inset = FLUID_WALL_GAP
             val fMin = min + inset
@@ -167,7 +170,7 @@ class PipeBlockEntityRenderer(
         }
 
         // --- 渲染观察窗玻璃（纯代码着色，不使用图案贴图） ---
-        val glassVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
+        val glassVc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
         val connectionCount = Direction.entries.count { state.get(BasePipeBlock.propertyFor(it)) }
         val cutCenter = connectionCount > 2
         drawWindowGlass(
@@ -878,10 +881,10 @@ class PipeBlockEntityRenderer(
         maxX: Float, maxY: Float, maxZ: Float,
         sprite: TextureAtlasSprite, color: Int
     ) {
-        val u0 = sprite.minU
-        val u1 = sprite.maxU
-        val v0 = sprite.minV
-        val v1 = sprite.maxV
+        val u0 = sprite.getU0()
+        val u1 = sprite.getU1()
+        val v0 = sprite.getV0()
+        val v1 = sprite.getV1()
         val r = (color shr 16 and 0xFF)
         val g = (color shr 8 and 0xFF)
         val b = (color and 0xFF)
@@ -972,12 +975,12 @@ class PipeBlockEntityRenderer(
         nx: Float, ny: Float, nz: Float,
         r: Int, g: Int, b: Int, a: Int
     ) {
-        vc.vertex(entry.pose(), x, y, z)
-            .color(r, g, b, a)
-            .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(entry, nx, ny, nz)
+        vc.addVertex(entry.pose(), x, y, z)
+            .setColor(r, g, b, a)
+            .setUv(u, v)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(entry, nx, ny, nz)
     }
 
     private fun vertexFluid(
@@ -988,12 +991,12 @@ class PipeBlockEntityRenderer(
         nx: Float, ny: Float, nz: Float,
         r: Int, g: Int, b: Int
     ) {
-        vc.vertex(entry.pose(), x, y, z)
-            .color(r, g, b, 255)
-            .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(entry, nx, ny, nz)
+        vc.addVertex(entry.pose(), x, y, z)
+            .setColor(r, g, b, 255)
+            .setUv(u, v)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(entry, nx, ny, nz)
     }
 
     private fun getFluidTintColor(fluid: Fluid): Int {

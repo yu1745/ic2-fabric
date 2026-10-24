@@ -25,7 +25,7 @@ class CannerScreen(
     init {
         imageWidth = 176
         imageHeight = 184
-        titleY = -1000
+        titleLabelY = -1000
         playerInventoryTitleY = -1000
     }
 
@@ -209,7 +209,7 @@ class CannerScreen(
             val amt = menu.sync.leftFluidAmount.coerceAtLeast(0)
             val cap = menu.sync.leftFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = BuiltInRegistries.FLUID.getValue(andler.sync.leftFluidRawId).defaultBlockState().blockState.block.name.string
+                val name = BuiltInRegistries.FLUID.get(handler.sync.leftFluidRawId).defaultBlockState().blockState.block.name.string
                 listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
@@ -222,7 +222,7 @@ class CannerScreen(
             val amt = menu.sync.rightFluidAmount.coerceAtLeast(0)
             val cap = menu.sync.rightFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = BuiltInRegistries.FLUID.getValue(andler.sync.rightFluidRawId).defaultBlockState().blockState.block.name.string
+                val name = BuiltInRegistries.FLUID.get(handler.sync.rightFluidRawId).defaultBlockState().blockState.block.name.string
                 listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))

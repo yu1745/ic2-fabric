@@ -67,7 +67,7 @@ class FluidUpgradeScreen(
 
         // 流体限制文本 (9,18)-(104,32)
         val filterName = if (menu.fluidRawId > 0) {
-            val fluid = BuiltInRegistries.FLUID.getValue(andler.fluidRawId)
+            val fluid = BuiltInRegistries.FLUID.get(handler.fluidRawId)
             fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string
         } else {
             t("gui.ic2_120.fluid_upgrade.no_filter")
@@ -85,7 +85,7 @@ class FluidUpgradeScreen(
 
     private fun drawFilterFluid(context: GuiGraphics) {
         if (menu.fluidRawId <= 0) return
-        val fluid = BuiltInRegistries.FLUID.getValue(andler.fluidRawId)
+        val fluid = BuiltInRegistries.FLUID.get(handler.fluidRawId)
         context.blit(TEXTURE, leftPos + 7, topPos + 34, 179f, 3f, 18, 18, TEX_SIZE, TEX_SIZE)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid)
         val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())?.getOrNull(0) ?: return

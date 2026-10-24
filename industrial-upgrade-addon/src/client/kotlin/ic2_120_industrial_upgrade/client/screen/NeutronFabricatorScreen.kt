@@ -32,7 +32,7 @@ class NeutronFabricatorScreen(
         imageHeight = 166
         // 隐藏父类 AbstractContainerScreen 默认绘制的容器 title（由本类 render 手动居中绘制，避免重复）
         titleX = -1000
-        titleY = -1000
+        titleLabelY = -1000
         // 玩家背包标题位置（贴图默认）
         playerInventoryTitleY = imageHeight - 94
     }

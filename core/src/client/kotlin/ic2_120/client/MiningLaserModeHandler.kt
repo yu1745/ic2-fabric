@@ -26,7 +26,7 @@ object MiningLaserModeHandler {
     fun register() {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getItemInHand(hand)
-            if (!world.isClient || stack.item !is MiningLaserItem || !ModeKeybinds.isAltDown()) {
+            if (!world.isClientSide || stack.item !is MiningLaserItem || !ModeKeybinds.isAltDown()) {
                 return@register InteractionResultHolder.pass(stack)
             }
             sendToggleOnceThisTick()
@@ -35,7 +35,7 @@ object MiningLaserModeHandler {
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
             val stack = player.getItemInHand(hand)
-            if (!world.isClient || stack.item !is MiningLaserItem || !ModeKeybinds.isAltDown()) {
+            if (!world.isClientSide || stack.item !is MiningLaserItem || !ModeKeybinds.isAltDown()) {
                 return@register InteractionResult.PASS
             }
             sendToggleOnceThisTick()

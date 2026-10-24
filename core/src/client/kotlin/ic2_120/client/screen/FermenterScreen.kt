@@ -104,7 +104,7 @@ class FermenterScreen(
             upgradeTooltip.add(Component.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
                 val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", id))
-                upgradeTooltip.add(item.name)
+                upgradeTooltip.add(item.description)
             }
             context.renderComponentTooltip(font, upgradeTooltip, mouseX, mouseY)
         }

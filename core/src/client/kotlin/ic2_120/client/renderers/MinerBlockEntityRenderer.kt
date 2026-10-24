@@ -1,5 +1,8 @@
 package ic2_120.client.renderers
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.world
+
 import ic2_120.content.block.BaseMinerBlock
 import ic2_120.content.block.machines.BaseMinerBlockEntity
 import net.minecraft.client.Minecraft
@@ -30,10 +33,10 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         val drill = entity.getItem(BaseMinerBlockEntity.SLOT_DRILL)
         if (drill.isEmpty) return
 
-        val world = entity.world ?: return
-        val targetPos = entity.getRenderDrillTarget(world.time) ?: return
-        val active = entity.cachedState.getOrEmpty(BaseMinerBlock.ACTIVE).orElse(false)
-        val vibration = if (active) (sin((world.time + tickDelta) * 1.2f) * 0.06f).toDouble() else 0.0
+        val world = entity.level() ?: return
+        val targetPos = entity.getRenderDrillTarget(world.gameTime) ?: return
+        val active = entity.cachedState.getOptionalValue(BaseMinerBlock.ACTIVE).orElse(false)
+        val vibration = if (active) (sin((world.gameTime + tickDelta) * 1.2f) * 0.06f).toDouble() else 0.0
         val renderX = targetPos.x + 0.5
         val renderY = targetPos.y + 0.5 + vibration
         val renderZ = targetPos.z + 0.5

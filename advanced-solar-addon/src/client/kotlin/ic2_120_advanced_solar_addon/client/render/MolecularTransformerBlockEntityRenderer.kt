@@ -192,12 +192,12 @@ class MolecularTransformerBlockEntityRenderer(
         nx: Float, ny: Float, nz: Float,
         light: Int, overlay: Int
     ) {
-        vc.vertex(pos, x, y, z)
-            .color(255, 255, 255, 255)
+        vc.addVertex(pos, x, y, z)
+            .setColor(255, 255, 255, 255)
             .texture(u, v)
-            .overlay(overlay)
-            .light(light)
-            .normal(norm, nx, ny, nz)
+            .setOverlay(overlay)
+            .setLight(light)
+            .setNormal(norm, nx, ny, nz)
             .next()
     }
 

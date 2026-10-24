@@ -1,5 +1,7 @@
 package ic2_120.integration.jei
 
+import ic2_120.compat.world
+
 import net.minecraft.client.Minecraft
 
 /**

@@ -51,7 +51,7 @@ class CropnalyzerScreen(
     init {
         imageWidth = GUI_WIDTH
         imageHeight = GUI_HEIGHT
-        titleY = 6
+        titleLabelY = 6
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {

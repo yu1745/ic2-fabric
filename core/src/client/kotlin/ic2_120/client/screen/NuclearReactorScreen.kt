@@ -49,7 +49,7 @@ class NuclearReactorScreen(
         }
         imageWidth = NuclearReactorScreenHandler.FRAME_WIDTH
         imageHeight = frameH
-        titleY = -1000
+        titleLabelY = -1000
         playerInventoryTitleY = -1000
     }
 

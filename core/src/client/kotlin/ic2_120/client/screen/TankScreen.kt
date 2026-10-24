@@ -43,7 +43,7 @@ class TankScreen(
 
         // 流体全铺渲染至 (79,27)-(97,45) = 18x18，使用 FluidUtils 着色
         val fluidId = menu.sync.fluidId ?: return
-        val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
+        val fluid = BuiltInRegistries.FLUID.get(fluidId)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
         val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())
         val sprite = sprites[0]
@@ -104,7 +104,7 @@ class TankScreen(
             val capacity = menu.sync.capacity
 
             val lines = if (fluidId != null && amount > 0) {
-                val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
+                val fluid = BuiltInRegistries.FLUID.get(fluidId)
                 val fluidName = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes.getName(
                     net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(fluid)
                 ).string

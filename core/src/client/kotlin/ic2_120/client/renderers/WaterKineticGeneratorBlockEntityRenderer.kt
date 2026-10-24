@@ -1,5 +1,8 @@
 package ic2_120.client.renderers
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.world
+
 import ic2_120.content.block.machines.WaterKineticGeneratorBlockEntity
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.renderer.RenderType
@@ -66,14 +69,14 @@ class WaterKineticGeneratorBlockEntityRenderer(
         if (rotor.isEmpty) return
         val rotorTexture = textureForRotor(rotor) ?: return
 
-        val world = entity.world ?: return
+        val world = entity.level() ?: return
         val state = entity.cachedState
-        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         val angle = if (entity.isStuck) {
             entity.stuckAngle
         } else {
-            ((world.time + tickDelta) * 1.8f) % 360.0f
+            ((world.gameTime + tickDelta) * 1.8f) % 360.0f
         }
 
         matrices.pushPose()
@@ -82,7 +85,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
         matrices.translate(0.0, 0.0, -FRONT_OFFSET_FROM_CENTER)
         matrices.mulPose(Axis.ZP.rotationDegrees(angle))
 
-        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(rotorTexture))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(rotorTexture))
 
         repeat(4) { i ->
             matrices.pushPose()
@@ -156,7 +159,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
     ) {
         val entry = matrices.last()
         val pos = entry.pose()
-        val normal = entry.normal()
+        val normal = entry.setNormal()
 
         quad(vc, pos, normal, light, overlay,
             minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ,
@@ -217,13 +220,13 @@ class WaterKineticGeneratorBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(pos, x, y, z)
-            .color(255, 255, 255, 255)
-            .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+        vc.addVertex(pos, x, y, z)
+            .setColor(255, 255, 255, 255)
+            .setUv(u, v)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(normal, nx, ny, nz)
+            
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: WaterKineticGeneratorBlockEntity): Boolean = true

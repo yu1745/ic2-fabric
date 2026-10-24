@@ -1,5 +1,8 @@
 package ic2_120.client.renderers
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.world
+
 import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.WaterKineticGeneratorBlock
@@ -57,15 +60,15 @@ class TransmissionBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.world
+        val world = entity.level()
         val state = entity.cachedState
         val isItem = world == null
         val angle = if (isItem) 0.0f
-            else ((world.time + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
+            else ((world.gameTime + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
         when (val block = state.block) {
             is TransmissionShaftBlock -> {
                 val axis = if (isItem) Direction.Axis.Y else state.getValue(BlockStateProperties.AXIS)
-                val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
+                val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = baseColorForMaterial(block.material)
                 matrices.pushPose()
                 matrices.translate(0.5, 0.5, 0.5)
@@ -79,7 +82,7 @@ class TransmissionBlockEntityRenderer(
                 val gearFaceWidthHalf = (gearThickness * 0.5f).coerceAtLeast(0.02f)
                 val pitchRadius = (0.5f - gearFaceWidthHalf).coerceAtLeast(0.05f)
                 val gearOffset = pitchRadius
-                val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
+                val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = intArrayOf(122, 126, 132)
 
                 matrices.pushPose()
@@ -667,11 +670,11 @@ class TransmissionBlockEntityRenderer(
         nz: Float,
         baseColor: IntArray
     ) {
-        vc.vertex(entry.pose(), x, y, z)
-            .color(baseColor[0], baseColor[1], baseColor[2], 255)
-            .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(entry, nx, ny, nz)
+        vc.addVertex(entry.pose(), x, y, z)
+            .setColor(baseColor[0], baseColor[1], baseColor[2], 255)
+            .setUv(u, v)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(entry, nx, ny, nz)
     }
 }

@@ -12,7 +12,7 @@ import org.lwjgl.glfw.GLFW
  * measure 阶段设置 textRenderer；render 阶段额外设置 drawContext / mouseX / mouseY。
  */
 class RenderContext {
-    lateinit var textRenderer: Font
+    lateinit var font: Font
     lateinit var drawContext: GuiGraphics
     var mouseX: Int = 0
     var mouseY: Int = 0

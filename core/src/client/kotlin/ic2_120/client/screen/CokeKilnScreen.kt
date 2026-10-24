@@ -61,7 +61,7 @@ class CokeKilnScreen(
         // 流体槽 (115,41) 16×16，有流体时满平铺
         val fluidAmount = menu.sync.fluidAmount.coerceAtLeast(0)
         if (fluidAmount > 0) run {
-            val fluid = BuiltInRegistries.FLUID.getValue(andler.sync.fluidRawId)
+            val fluid = BuiltInRegistries.FLUID.get(handler.sync.fluidRawId)
             val fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
             val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
@@ -88,7 +88,7 @@ class CokeKilnScreen(
         val relY = mouseY - top
         if (relX in TANK_X until TANK_X + SLOT_S && relY in TANK_Y until TANK_Y + SLOT_S) {
             val lines = if (fluidAmount > 0) {
-                val fluid = BuiltInRegistries.FLUID.getValue(andler.sync.fluidRawId)
+                val fluid = BuiltInRegistries.FLUID.get(handler.sync.fluidRawId)
                 val mb = fluidAmount / DROPLETS_PER_MB
                 val capMb = 8 * FluidConstants.BUCKET / DROPLETS_PER_MB
                 listOf(Component.literal(fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string),

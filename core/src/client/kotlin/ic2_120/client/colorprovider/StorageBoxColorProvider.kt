@@ -89,13 +89,13 @@ object StorageBoxColorProvider {
         var registeredItemCount = 0
         for (blockId in storageBoxIds) {
             val id = ResourceLocation.fromNamespaceAndPath("ic2_120", blockId)
-            val block = BuiltInRegistries.BLOCK.getOrEmpty(id)
+            val block = BuiltInRegistries.BLOCK.getOptional(id)
             if (block.isPresent) {
                 ColorProviderRegistry.BLOCK.register(blockProvider, block.get())
                 registeredBlockCount++
             }
 
-            val item = BuiltInRegistries.ITEM.getOrEmpty(id)
+            val item = BuiltInRegistries.ITEM.getOptional(id)
             if (item.isPresent) {
                 ColorProviderRegistry.ITEM.register(itemProvider, item.get())
                 registeredItemCount++

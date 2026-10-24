@@ -288,7 +288,7 @@ class ReplicatorScreen(
 
     private fun templateToStack(template: UuTemplateEntry): ItemStack {
         val id = ResourceLocation.tryParse(template.itemId) ?: return ItemStack.EMPTY
-        val item = BuiltInRegistries.ITEM.getOrEmpty(id).orElse(null) ?: return ItemStack.EMPTY
+        val item = BuiltInRegistries.ITEM.getOptional(id).orElse(null) ?: return ItemStack.EMPTY
         return if (item == net.minecraft.world.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
     }
 

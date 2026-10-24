@@ -27,7 +27,7 @@ class TransformerScreen(
     init {
         imageWidth = 176
         imageHeight = 219
-        titleY = 4
+        titleLabelY = 4
     }
 
     private lateinit var stepUpBtn: Button

@@ -21,7 +21,7 @@ object QuantumLeggingsSpeedController {
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
             val player = minecraft.player ?: return@register
-            if (player.hasVehicle() || player.abilities.flying || player.isSpectator) return@register
+            if (player.isVehicle() || player.abilities.flying || player.isSpectator) return@register
 
             val stack = player.getItemBySlot(EquipmentSlot.LEGS)
             val leggings = stack.item as? QuantumLeggings ?: return@register

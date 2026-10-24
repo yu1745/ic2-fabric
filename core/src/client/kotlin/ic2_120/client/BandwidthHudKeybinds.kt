@@ -25,7 +25,7 @@ object BandwidthHudKeybinds {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
             while (toggleBandwidthHudKey.consumeClick()) {
                 BandwidthHudState.enabled = !BandwidthHudState.enabled
-                minecraft.player?.sendMessage(
+                minecraft.player?.displayClientMessage(
                     Component.literal("Bandwidth HUD: " + if (BandwidthHudState.enabled) "ON" else "OFF"),
                     true
                 )

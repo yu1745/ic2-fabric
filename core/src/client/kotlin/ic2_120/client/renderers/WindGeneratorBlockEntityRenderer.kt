@@ -1,5 +1,8 @@
 package ic2_120.client.renderers
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.world
+
 import ic2_120.content.block.WindGeneratorBlock
 import ic2_120.content.block.machines.WindGeneratorBlockEntity
 import net.minecraft.client.renderer.texture.OverlayTexture
@@ -38,15 +41,15 @@ class WindGeneratorBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.world ?: return
+        val world = entity.level() ?: return
         val state = entity.cachedState
-        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         // 使用方块状态 ACTIVE 判断是否发电（sync 仅在有 GUI 时同步，方块状态始终同步）
         val generating = state.getValue(WindGeneratorBlock.ACTIVE)
         val outputEuPerTick = entity.sync.getSyncedInsertedAmount().coerceAtLeast(0L).toFloat()
         val speed = if (generating) BASE_SPEED_DEG_PER_TICK + outputEuPerTick * SPEED_PER_EU else 0.0f
-        val angle = if (speed > 0.0f) ((world.time + tickDelta) * speed) % 360.0f else 0.0f
+        val angle = if (speed > 0.0f) ((world.gameTime + tickDelta) * speed) % 360.0f else 0.0f
 
         matrices.pushPose()
         matrices.translate(0.5, 0.5, 0.5)
@@ -54,7 +57,7 @@ class WindGeneratorBlockEntityRenderer(
         matrices.translate(0.0, 0.0, -0.505)
         matrices.mulPose(Axis.ZP.rotationDegrees(angle))
 
-        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE))
 
         repeat(4) { i ->
             matrices.pushPose()
@@ -165,12 +168,12 @@ class WindGeneratorBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(pos, x, y, z)
-            .color(0, 0, 0, 255)
-            .uv(0f, 0f)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(entry, nx, ny, nz)
+        vc.addVertex(pos, x, y, z)
+            .setColor(0, 0, 0, 255)
+            .setUv(0f, 0f)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(entry, nx, ny, nz)
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: WindGeneratorBlockEntity): Boolean = true

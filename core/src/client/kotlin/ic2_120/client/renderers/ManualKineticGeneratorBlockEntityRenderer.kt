@@ -1,5 +1,8 @@
 package ic2_120.client.renderers
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.world
+
 import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
 import ic2_120.content.item.CrankMaterial
 import ic2_120.content.item.CrankHandleItem
@@ -54,13 +57,13 @@ class ManualKineticGeneratorBlockEntityRenderer(
         val crankStack = entity.getCrankStack()
         if (crankStack.isEmpty) return
 
-        val world = entity.world ?: return
+        val world = entity.level() ?: return
         val state = entity.cachedState
-        val facing = state.getOrEmpty(BlockStateProperties.FACING).orElse(Direction.NORTH)
+        val facing = state.getOptionalValue(BlockStateProperties.FACING).orElse(Direction.NORTH)
         
         val material = (crankStack.item as? CrankHandleItem)?.material ?: return
         val texture = getTextureForMaterial(material)
-        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(texture))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(texture))
 
         val angle = entity.clientTurnAngle + if (entity.sync.isTurning) tickDelta * 15f else 0f
 
@@ -157,7 +160,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
     ) {
         val entry = matrices.last()
         val pos = entry.pose()
-        val normal = entry.normal()
+        val normal = entry.setNormal()
 
         quad(vc, pos, normal, light, overlay,
             minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ,
@@ -218,12 +221,12 @@ class ManualKineticGeneratorBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(pos, x, y, z)
-            .color(255, 255, 255, 255)
-            .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+        vc.addVertex(pos, x, y, z)
+            .setColor(255, 255, 255, 255)
+            .setUv(u, v)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(normal, nx, ny, nz)
+            
     }
 }

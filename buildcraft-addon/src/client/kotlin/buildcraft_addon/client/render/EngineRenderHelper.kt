@@ -221,13 +221,13 @@ object EngineRenderHelper {
         fun mapU(u: Float) = minU + u * (maxU - minU)
         fun mapV(v: Float) = minV + v * (maxV - minV)
 
-        buffer.vertex(posMat, x0, y0, z0).color(255, 255, 255, 255)
-            .texture(mapU(u0), mapV(v0)).overlay(overlay).light(light).normal(normMat, nx, ny, nz).next()
-        buffer.vertex(posMat, x1, y1, z1).color(255, 255, 255, 255)
-            .texture(mapU(u1), mapV(v1)).overlay(overlay).light(light).normal(normMat, nx, ny, nz).next()
-        buffer.vertex(posMat, x2, y2, z2).color(255, 255, 255, 255)
-            .texture(mapU(u2), mapV(v2)).overlay(overlay).light(light).normal(normMat, nx, ny, nz).next()
-        buffer.vertex(posMat, x3, y3, z3).color(255, 255, 255, 255)
-            .texture(mapU(u3), mapV(v3)).overlay(overlay).light(light).normal(normMat, nx, ny, nz).next()
+        buffer.addVertex(posMat, x0, y0, z0).setColor(255, 255, 255, 255)
+            .texture(mapU(u0), mapV(v0)).setOverlay(overlay).setLight(light).setNormal(normMat, nx, ny, nz).next()
+        buffer.addVertex(posMat, x1, y1, z1).setColor(255, 255, 255, 255)
+            .texture(mapU(u1), mapV(v1)).setOverlay(overlay).setLight(light).setNormal(normMat, nx, ny, nz).next()
+        buffer.addVertex(posMat, x2, y2, z2).setColor(255, 255, 255, 255)
+            .texture(mapU(u2), mapV(v2)).setOverlay(overlay).setLight(light).setNormal(normMat, nx, ny, nz).next()
+        buffer.addVertex(posMat, x3, y3, z3).setColor(255, 255, 255, 255)
+            .texture(mapU(u3), mapV(v3)).setOverlay(overlay).setLight(light).setNormal(normMat, nx, ny, nz).next()
     }
 }

@@ -37,8 +37,8 @@ class LeashKineticGeneratorBlockEntityRenderer(
     ) {
         if (!entity.sync.hasAnimal) return
 
-        val world = entity.world as? ClientLevel ?: return
-        val renderPos = entity.pos.up()
+        val world = entity.level() as? ClientLevel ?: return
+        val renderPos = entity.pos.above()
         val renderLight = net.minecraft.client.renderer.LevelRenderer.getLightmapCoordinates(world, renderPos)
 
         val angle = entity.sync.animalAngle

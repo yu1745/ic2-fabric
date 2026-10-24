@@ -24,7 +24,7 @@ class LeashKineticGeneratorScreen(
     init {
         imageWidth = GUI_SIZE.width
         imageHeight = GUI_SIZE.height
-        titleY = -1000
+        titleLabelY = -1000
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {

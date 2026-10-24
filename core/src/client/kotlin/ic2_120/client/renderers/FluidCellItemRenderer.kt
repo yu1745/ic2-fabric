@@ -133,7 +133,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
             .rotationX(cam.pitch * Mth.DEG_TO_RAD)
             .rotateY((cam.yaw + 180f) * Mth.DEG_TO_RAD)
             .transform(world)
-        val local = Matrix3f(entry.normal()).invert().transform(view).normalize()
+        val local = Matrix3f(entry.setNormal()).invert().transform(view).normalize()
         // 倒置/横放时液面法线朝下会让液柱翻出，限制为至少略微朝上
         if (local.y < 0.3f) local.y = 0.3f
         return local.normalize()
@@ -162,9 +162,9 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val b = (c.color and 0xFF)
         val sp = c.sprite
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, ny: Float, nz: Float) {
-            vc.vertex(entry.pose(), x, y, z).color(r, g, b, 255)
-                .uv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
-                .overlay(overlay).light(light).normal(entry.normal(), nx, ny, nz).endVertex()
+            vc.addVertex(entry.pose(), x, y, z).setColor(r, g, b, 255)
+                .setUv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
+                .setOverlay(overlay).setLight(light).setNormal(entry.setNormal(), nx, ny, nz)
         }
         for (k in 0 until SIDES) {
             val a = pts[k]
@@ -193,9 +193,9 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
     private fun drawGlass(entry: PoseStack.Pose, vc: VertexConsumer, sp: TextureAtlasSprite, light: Int, overlay: Int) {
         val pts = ring(GLASS_R)
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, nz: Float) {
-            vc.vertex(entry.pose(), x, y, z).color(255, 255, 255, 64)
-                .uv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
-                .overlay(overlay).light(light).normal(entry.normal(), nx, 0f, nz).endVertex()
+            vc.addVertex(entry.pose(), x, y, z).setColor(255, 255, 255, 64)
+                .setUv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
+                .setOverlay(overlay).setLight(light).setNormal(entry.setNormal(), nx, 0f, nz)
         }
         for (k in 0 until SIDES) {
             val a = pts[k]

@@ -22,7 +22,7 @@ class TeleporterScreen(
     init {
         imageWidth = 176
         imageHeight = 162
-        titleY = 6
+        titleLabelY = 6
     }
 
     private lateinit var range1Btn: Button

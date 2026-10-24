@@ -40,7 +40,7 @@ class ComposeDebugBlockEntityRenderer(
         val bob = sin(time * 0.08f) * 0.09f
         val spinDeg = time * 3.0f
 
-        val vc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
 
         matrices.pushPose()
         matrices.translate(0.5, 0.0, 0.5)
@@ -206,12 +206,12 @@ class ComposeDebugBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(entry.pose(), x, y, z)
-            .color(red, green, blue, alpha)
-            .uv(0f, 0f)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(entry, nx, ny, nz)
+        vc.addVertex(entry.pose(), x, y, z)
+            .setColor(red, green, blue, alpha)
+            .setUv(0f, 0f)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(entry, nx, ny, nz)
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: ComposeDebugBlockEntity): Boolean = true

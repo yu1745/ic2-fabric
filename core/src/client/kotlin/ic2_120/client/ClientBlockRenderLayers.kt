@@ -23,7 +23,7 @@ object ClientBlockRenderLayers {
         val translucent = mutableListOf<Block>()
 
         for ((id, layerType) in entries) {
-            val block = BuiltInRegistries.BLOCK.getOrEmpty(id)
+            val block = BuiltInRegistries.BLOCK.getOptional(id)
             if (block.isEmpty) {
                 logger.warn("跳过渲染层注册：未找到方块 {}", id)
                 continue

@@ -48,7 +48,7 @@ class TeleporterBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.world ?: return
+        val world = entity.level() ?: return
         val key = entity.pos.asLong()
         if (!entity.clientCharging) {
             cacheByPos.remove(key)
@@ -73,7 +73,7 @@ class TeleporterBlockEntityRenderer(
             cacheByPos.remove(key)
             return
         }
-        if (!target.isAlive || target.hasVehicle() || target.hasPassengers()) {
+        if (!target.isAlive || target.isVehicle() || target.hasPassengers()) {
             cacheByPos.remove(key)
             return
         }
@@ -91,7 +91,7 @@ class TeleporterBlockEntityRenderer(
         val progress = if (rawProgress < 0.05f) rawProgress else max(rawProgress, cache.lastProgress)
         cache.lastProgress = progress
 
-        val time = world.time + tickDelta
+        val time = world.gameTime + tickDelta
         val pulse = (sin(time * 0.25f) * 0.5f + 0.5f)
         val radiusOuter = (1.1f - 0.85f * progress).coerceAtLeast(0.16f)
         val radiusInner = (radiusOuter - 0.10f).coerceAtLeast(0.08f)
@@ -117,8 +117,8 @@ class TeleporterBlockEntityRenderer(
             cache.sz - entity.pos.z
         )
 
-        val vc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
-        val fullLight = LightTexture.MAX_LIGHT_COORDINATE
+        val vc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
+        val fullLight = LightTexture.FULL_BRIGHT
 
         drawRingBand(matrices, vc, fullLight, overlay, radiusOuter, radiusInner, ringY, 80, 235, 255, alpha)
         drawRingBand(matrices, vc, fullLight, overlay, radiusOuter * 0.68f, radiusInner * 0.58f, ringY + 0.03f, 120, 250, 255, alpha - 20)
@@ -146,7 +146,7 @@ class TeleporterBlockEntityRenderer(
     ) {
         val entry = matrices.last()
         val pos = entry.pose()
-        val normal = entry.normal()
+        val normal = entry.setNormal()
         val step = (2.0 * PI / SEGMENTS).toFloat()
 
         for (i in 0 until SEGMENTS) {
@@ -189,7 +189,7 @@ class TeleporterBlockEntityRenderer(
         val y1 = y0 + height
         val entry = matrices.last()
         val pos = entry.pose()
-        val normal = entry.normal()
+        val normal = entry.setNormal()
 
         quadColor(vc, pos, normal, light, overlay, -half, y0, -half, -half, y1, -half, half, y1, -half, half, y0, -half, red, green, blue, alpha, 0f, 0f, -1f)
         quadColor(vc, pos, normal, light, overlay, half, y0, half, half, y1, half, -half, y1, half, -half, y0, half, red, green, blue, alpha, 0f, 0f, 1f)
@@ -233,13 +233,13 @@ class TeleporterBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(pos, x, y, z)
-            .color(red, green, blue, alpha)
-            .uv(0f, 0f)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+        vc.addVertex(pos, x, y, z)
+            .setColor(red, green, blue, alpha)
+            .setUv(0f, 0f)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(normal, nx, ny, nz)
+            
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: TeleporterBlockEntity): Boolean = true

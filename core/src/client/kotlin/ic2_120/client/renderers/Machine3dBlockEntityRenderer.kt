@@ -92,7 +92,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
         for (face in FACES) {
             for (quad in model.getQuads(null, face, random)) {
                 val n = quad.direction.normal
-                normal.set(n.x, n.y, n.z).mul(entry.normal())
+                normal.set(n.x, n.y, n.z).mul(entry.setNormal())
                 val shade = normal.x * normal.x * 0.6f + normal.z * normal.z * 0.8f +
                     normal.y * normal.y * (if (normal.y > 0) 1f else 0.5f)
                 brightness.fill(shade)
@@ -102,7 +102,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
     }
 
     override fun render(entity: T, tickDelta: Float, matrices: PoseStack, vertexConsumers: MultiBufferSource, light: Int, overlay: Int) {
-        val world = entity.world ?: return
+        val world = entity.level() ?: return
         val state = entity.cachedState
         val machine = BuiltInRegistries.BLOCK.getKey(state.block).path
         val parts = animations[machine] ?: return

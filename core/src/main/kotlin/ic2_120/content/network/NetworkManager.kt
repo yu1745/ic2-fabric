@@ -84,20 +84,6 @@ object QuantumLeggingsSpeedTickPayload : CustomPacketPayload {
     override fun type() = ID
 }
 
-/**
- * S2C 包装：把尚未迁移为 CustomPacketPayload 的旧包对象桥接为 payload 发送。
- */
-class SemifluidGeneratorFuelStatePacketPayload(val packet: SemifluidGeneratorFuelStatePacket) : CustomPacketPayload {
-    override fun type(): CustomPacketPayload.Type<SemifluidGeneratorFuelStatePacketPayload> = ID
-
-    companion object {
-        val ID = CustomPacketPayload.Type<SemifluidGeneratorFuelStatePacketPayload>(SemifluidGeneratorFuelStatePacket.ID)
-        val CODEC: StreamCodec<FriendlyByteBuf, SemifluidGeneratorFuelStatePacketPayload> = StreamCodec.of(
-            { buf, value -> SemifluidGeneratorFuelStatePacket.write(value.packet, buf) },
-            { buf -> SemifluidGeneratorFuelStatePacketPayload(SemifluidGeneratorFuelStatePacket.read(buf)) }
-        )
-    }
-}
 
 object NetworkManager {
     // 旧 ResourceLocation 常量保留给客户端兼容引用（实际收发走对应 payload type）
@@ -140,7 +126,7 @@ object NetworkManager {
         s2c.register(WaterRotorStatePacket.ID, WaterRotorStatePacket.CODEC)
         s2c.register(TeleporterVisualStatePacket.ID, TeleporterVisualStatePacket.CODEC)
         s2c.register(ReactorLayoutLockPacket.ID, ReactorLayoutLockPacket.CODEC)
-        s2c.register(SemifluidGeneratorFuelStatePacketPayload.ID, SemifluidGeneratorFuelStatePacketPayload.CODEC)
+        s2c.register(SemifluidGeneratorFuelStatePacket.ID, SemifluidGeneratorFuelStatePacket.CODEC)
 
         // TODO(1.21.1): chainsaw shear 切换暂无独立 payload，待客户端迁移后注册接收器。
 
@@ -363,7 +349,7 @@ object NetworkManager {
     }
 
     fun sendSemifluidGeneratorFuelState(world: ServerLevel, pos: BlockPos, fuelColorArgb: Int) {
-        val packet = SemifluidGeneratorFuelStatePacketPayload(SemifluidGeneratorFuelStatePacket(pos, fuelColorArgb))
+        val packet = SemifluidGeneratorFuelStatePacket(pos, fuelColorArgb)
         for (player in world.players()) {
             if (player.distanceToSqr(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
                 ServerPlayNetworking.send(player, packet)

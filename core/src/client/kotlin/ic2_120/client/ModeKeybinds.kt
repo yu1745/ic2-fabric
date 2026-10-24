@@ -53,8 +53,8 @@ object ModeKeybinds {
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
-            if (world.isClient && isAltDown() && player.getItemInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
-                toggleFoamModeOnceThisTick(player.age)
+            if (world.isClientSide && isAltDown() && player.getItemInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
+                toggleFoamModeOnceThisTick(player.tickCount)
                 InteractionResult.FAIL
             } else {
                 InteractionResult.PASS
@@ -62,8 +62,8 @@ object ModeKeybinds {
         }
 
         UseItemCallback.EVENT.register { player, world, hand ->
-            if (world.isClient && isAltDown() && player.getItemInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
-                toggleFoamModeOnceThisTick(player.age)
+            if (world.isClientSide && isAltDown() && player.getItemInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
+                toggleFoamModeOnceThisTick(player.tickCount)
                 InteractionResultHolder.fail(player.getItemInHand(hand))
             } else {
                 InteractionResultHolder.pass(player.getItemInHand(hand))

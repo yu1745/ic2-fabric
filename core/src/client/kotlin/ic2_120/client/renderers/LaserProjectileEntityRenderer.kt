@@ -92,19 +92,19 @@ class LaserProjectileEntityRenderer(
         matrices.mulPose(com.mojang.math.Axis.YP.rotationDegrees(dirYaw))
         matrices.mulPose(com.mojang.math.Axis.XP.rotationDegrees(dirPitch))
 
-        val fullLight = LightTexture.MAX_LIGHT_COORDINATE
+        val fullLight = LightTexture.FULL_BRIGHT
         val overlay = OverlayTexture.NO_OVERLAY
 
         // --- 外层辉光 ---
-        val glowVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
+        val glowVc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
         drawPrism(matrices, glowVc, fullLight, overlay, length, RADIUS * GLOW_RADIUS_MULT, r, g, b, GLOW_ALPHA)
 
         // --- 核心弹体 ---
-        val coreVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
+        val coreVc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
         drawPrism(matrices, coreVc, fullLight, overlay, length, RADIUS, r, g, b, 220)
 
         // --- 头部亮点 ---
-        val tipVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
+        val tipVc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
         drawTip(matrices, tipVc, fullLight, overlay, length, RADIUS, r, g, b, 220)
 
         matrices.popPose()
@@ -188,11 +188,11 @@ class LaserProjectileEntityRenderer(
         r: Float, g: Float, b: Float, a: Int,
         nx: Float, ny: Float, nz: Float
     ) {
-        vc.vertex(entry.pose(), x, y, z)
-            .color(r, g, b, a / 255f)
-            .uv(0f, 0f)
-            .overlay(overlay)
-            .light(light)
-            .normal(entry, nx, ny, nz)
+        vc.addVertex(entry.pose(), x, y, z)
+            .setColor(r, g, b, a / 255f)
+            .setUv(0f, 0f)
+            .setOverlay(overlay)
+            .setLight(light)
+            .setNormal(entry, nx, ny, nz)
     }
 }

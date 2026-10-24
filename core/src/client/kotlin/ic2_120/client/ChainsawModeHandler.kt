@@ -20,19 +20,19 @@ object ChainsawModeHandler {
     fun register() {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getItemInHand(hand)
-            if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
+            if (!world.isClientSide || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
                 return@register InteractionResultHolder.pass(stack)
             }
-            sendToggleOnceThisTick(player.age)
+            sendToggleOnceThisTick(player.tickCount)
             InteractionResultHolder.success(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
             val stack = player.getItemInHand(hand)
-            if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
+            if (!world.isClientSide || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
                 return@register InteractionResult.PASS
             }
-            sendToggleOnceThisTick(player.age)
+            sendToggleOnceThisTick(player.tickCount)
             InteractionResult.SUCCESS
         }
     }

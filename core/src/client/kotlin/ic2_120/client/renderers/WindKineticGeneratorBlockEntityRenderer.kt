@@ -1,5 +1,8 @@
 package ic2_120.client.renderers
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.world
+
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.machines.WindKineticGeneratorBlockEntity
 import net.minecraft.client.renderer.texture.OverlayTexture
@@ -71,17 +74,17 @@ class WindKineticGeneratorBlockEntityRenderer(
         if (rotor.isEmpty) return
         val rotorTexture = textureForRotor(rotor) ?: return
 
-        val world = entity.world ?: return
+        val world = entity.level() ?: return
         val state = entity.cachedState
-        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
-        val active = state.getOrEmpty(WindKineticGeneratorBlock.ACTIVE).orElse(false)
+        val active = state.getOptionalValue(WindKineticGeneratorBlock.ACTIVE).orElse(false)
         val angle = when {
             entity.isStuck -> {
                 entity.stuckAngle.also { entity.clientFrozenAngle = it }
             }
             active -> {
-                val a = ((world.time % CYCLE_TICKS) + tickDelta) * DEGREES_PER_TICK
+                val a = ((world.gameTime % CYCLE_TICKS) + tickDelta) * DEGREES_PER_TICK
                 entity.clientFrozenAngle = a
                 a
             }
@@ -95,7 +98,7 @@ class WindKineticGeneratorBlockEntityRenderer(
         matrices.translate(0.0, 0.0, -FRONT_OFFSET_FROM_CENTER)
         matrices.mulPose(Axis.ZP.rotationDegrees(angle))
 
-        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(rotorTexture))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(rotorTexture))
 
         // 四个扇叶：每片都是薄立方体，沿旋转轴每 90 度排布；绕 X 轴施加螺距角使叶片具有攻角。
         repeat(4) { i ->
@@ -172,7 +175,7 @@ class WindKineticGeneratorBlockEntityRenderer(
     ) {
         val entry = matrices.last()
         val pos = entry.pose()
-        val normal = entry.normal()
+        val normal = entry.setNormal()
 
         // Front (+Z)
         quad(vc, pos, normal, light, overlay,
@@ -239,13 +242,13 @@ class WindKineticGeneratorBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(pos, x, y, z)
-            .color(255, 255, 255, 255)
-            .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
-            .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+        vc.addVertex(pos, x, y, z)
+            .setColor(255, 255, 255, 255)
+            .setUv(u, v)
+            .setOverlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
+            .setLight(light)
+            .setNormal(normal, nx, ny, nz)
+            
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: WindKineticGeneratorBlockEntity): Boolean = true

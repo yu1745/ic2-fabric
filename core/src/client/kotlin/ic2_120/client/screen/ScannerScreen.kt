@@ -26,7 +26,7 @@ class ScannerScreen(
     init {
         imageWidth = 176
         imageHeight = 231
-        titleY = 6
+        titleLabelY = 6
     }
 
     private lateinit var scanBtn: Button
@@ -195,7 +195,7 @@ class ScannerScreen(
 
         private fun entryToItemStack(entry: OreScanEntry): ItemStack {
             val id = ResourceLocation.tryParse(entry.blockId) ?: return ItemStack.EMPTY
-            val block = BuiltInRegistries.BLOCK.getOrEmpty(id).orElse(null) ?: return ItemStack.EMPTY
+            val block = BuiltInRegistries.BLOCK.getOptional(id).orElse(null) ?: return ItemStack.EMPTY
             val item = block.asItem()
             if (item == net.minecraft.world.item.Items.AIR) return ItemStack.EMPTY
             return ItemStack(item, entry.count.coerceAtLeast(1))

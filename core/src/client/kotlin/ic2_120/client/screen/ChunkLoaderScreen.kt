@@ -75,7 +75,7 @@ class ChunkLoaderScreen(
     init {
         imageWidth = GUI_WIDTH
         imageHeight = GUI_HEIGHT
-        titleY = 6
+        titleLabelY = 6
         setSlotPositions()
     }
 

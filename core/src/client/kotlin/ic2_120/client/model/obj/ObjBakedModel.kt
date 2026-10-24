@@ -94,7 +94,7 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
                 val n = tri.normal?.let { rotateDir(it[k]) } ?: faceNormal
                 emitter.normal(i, n)
                 emitter.color(i, mat?.color ?: -1)
-                if (mat?.emissive == true) emitter.lightmap(i, LightTexture.MAX_LIGHT_COORDINATE)
+                if (mat?.emissive == true) emitter.lightmap(i, LightTexture.FULL_BRIGHT)
             }
             emitter.colorIndex(mat?.tintIndex ?: -1)
             emitter.nominalFace(Direction.getNearest(faceNormal.x.toDouble(), faceNormal.y.toDouble(), faceNormal.z.toDouble()))
