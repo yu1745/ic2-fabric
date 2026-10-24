@@ -29,7 +29,7 @@ object BlockCutterRecipeSerializer : RecipeSerializer<BlockCutterRecipe> {
         val inputCount = GsonHelper.getInt(json, "input_count", 1)
         val materialHardness = GsonHelper.getFloat(json, "material_hardness")
         val result = GsonHelper.getObject(json, "result")
-        val itemId = ResourceLocation(GsonHelper.getString(result, "item"))
+        val itemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
         val item = BuiltInRegistries.ITEM.get(itemId)
         val count = GsonHelper.getInt(result, "count", 1)
 

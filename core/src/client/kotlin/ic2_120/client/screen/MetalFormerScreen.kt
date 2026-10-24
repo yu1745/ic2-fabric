@@ -104,7 +104,7 @@ class MetalFormerScreen(
             MetalFormerSync.Mode.CUTTING -> "cutter"
             MetalFormerSync.Mode.EXTRUDING -> "copper_cable"
         }
-        val modeStack = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", modeItemId)))
+        val modeStack = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", modeItemId)))
         context.drawItem(modeStack, left + MODE_BUTTON_X + 2, top + MODE_BUTTON_Y + 2)
 
         // uptips 纹理
@@ -159,8 +159,8 @@ class MetalFormerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guimetalformer.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guimetalformer.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,3)-(193,17) = 14x14

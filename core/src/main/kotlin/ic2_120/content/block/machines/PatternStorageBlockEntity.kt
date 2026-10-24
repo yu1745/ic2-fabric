@@ -66,7 +66,7 @@ class PatternStorageBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val crystalMemoryId = ResourceLocation(Ic2_120.MOD_ID, "crystal_memory")
+    private val crystalMemoryId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "crystal_memory")
 
     private val templates = mutableListOf<UuTemplateEntry>()
 

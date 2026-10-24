@@ -301,5 +301,5 @@ object ChestLootInjector {
 
     private fun modItem(path: String): Item = BuiltInRegistries.ITEM.get(Ic2_120.id(path))
 
-    private fun chest(path: String): ResourceLocation = ResourceLocation.of("minecraft", "chests/$path")
+    private fun chest(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath("minecraft", "chests/$path")
 }

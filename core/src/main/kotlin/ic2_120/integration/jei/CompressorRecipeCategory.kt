@@ -19,11 +19,11 @@ import net.minecraft.resources.ResourceLocation
  */
 class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CompressorJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        ResourceLocation.of("ic2", "textures/gui/guicompressor.png"),
+        ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicompressor.png"),
         30, 5, 118, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "compressor")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "compressor")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.COMPRESSOR

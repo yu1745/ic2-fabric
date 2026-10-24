@@ -82,8 +82,8 @@ class TeleporterBlockEntity(
 
     companion object {
         const val TELEPORTER_TIER = 4
-        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.of("ic2", "machine.teleporter.charge"))
-        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.of("ic2", "machine.teleporter.use"))
+        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "machine.teleporter.charge"))
+        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "machine.teleporter.use"))
 
         const val SLOT_UPGRADE_0 = 0
         const val SLOT_UPGRADE_1 = 1

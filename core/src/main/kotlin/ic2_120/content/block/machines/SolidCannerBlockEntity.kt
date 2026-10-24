@@ -346,7 +346,7 @@ class SolidCannerBlockEntity(
 
     private fun isContainerInput(stack: ItemStack): Boolean =
         !stack.isEmpty && (
-            stack.item == BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "tin_can")) ||
+            stack.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "tin_can")) ||
             stack.item is EmptyFuelRodItem
         )
 

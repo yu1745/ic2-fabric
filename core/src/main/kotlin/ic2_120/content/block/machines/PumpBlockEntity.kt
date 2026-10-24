@@ -234,7 +234,7 @@ class PumpBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == SLOT_INPUT -> {
-            val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "empty_cell"))
+            val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell"))
             stack.item == emptyCell || stack.item is FluidCellItem
         }
         slot == SLOT_OUTPUT -> false
@@ -433,7 +433,7 @@ class PumpBlockEntity(
 
         val output = getStack(SLOT_OUTPUT)
         val filled = when {
-            input.item == BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) ->
+            input.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) ->
                 fluidToFilledCellStack(tankInternal.variant.fluid)
             input.item is FluidCellItem && input.isFluidCellEmpty() ->
                 ItemStack(input.item).apply { setFluidCellVariant(FluidVariant.of(tankInternal.variant.fluid)) }

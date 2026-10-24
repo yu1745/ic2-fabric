@@ -22,11 +22,11 @@ import net.minecraft.resources.ResourceLocation
  */
 class OreWashingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<OreWashingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        ResourceLocation.of("ic2", "textures/gui/guiorewashingplant.png"),
+        ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiorewashingplant.png"),
         4, 6, 144, 75
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "ore_washing_plant")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "ore_washing_plant")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.ORE_WASHING

@@ -172,7 +172,7 @@ class SolidHeatGeneratorBlockEntity(
         val item = stack.item
         val isSupported = item == Items.COAL ||
             item == Items.CHARCOAL ||
-            item == net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.of("ic2_120", "coke"))
+            item == net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "coke"))
         if (!isSupported) return 0
         val furnaceTicks = FuelRegistry.INSTANCE.get(item) ?: return 0
         return (furnaceTicks / SOLID_HEAT_BURN_DIVISOR).coerceAtLeast(1)

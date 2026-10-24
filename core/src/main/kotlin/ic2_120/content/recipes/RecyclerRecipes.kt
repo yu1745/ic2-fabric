@@ -47,7 +47,7 @@ object RecyclerRecipes {
 
     /** 内置黑名单（配置为空时兜底） */
     private val FALLBACK_BLOCKED_ITEMS: Set<Item> = setOf(
-        BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.of("minecraft", "stick"))
+        BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("minecraft", "stick"))
     )
 
     /*

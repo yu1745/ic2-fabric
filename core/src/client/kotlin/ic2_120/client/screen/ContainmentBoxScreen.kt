@@ -34,7 +34,7 @@ class ContainmentBoxScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guicontainmentbox.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicontainmentbox.png")
         private const val TEX_SIZE = 256
     }
 }

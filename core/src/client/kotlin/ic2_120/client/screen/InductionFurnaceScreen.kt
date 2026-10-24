@@ -137,8 +137,8 @@ class InductionFurnaceScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiinductionfurnace.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiinductionfurnace.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // uptips

@@ -105,7 +105,7 @@ class PumpAttachmentScreen(
     fun ghostFilterArea(): Rect2i = Rect2i(x + 80, y + 31, 16, 16)
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiother.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiother.png")
         private const val TEXTURE_SIZE = 256
 
         // 过滤器槽背景 (179,3)-(197,21) = 18×18
@@ -122,7 +122,7 @@ class PumpAttachmentScreen(
         private const val TEXT_AREA_H = 15
         private const val TEXT_AREA_X = 52
         private const val TEXT_AREA_Y = 55
-        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val HINT_X = 4
         private const val HINT_Y = 4
         private const val HINT_SIZE = 16

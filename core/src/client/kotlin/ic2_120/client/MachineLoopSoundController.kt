@@ -127,7 +127,7 @@ object MachineLoopSoundController {
 
     private class BlockLoopSoundInstance(pos: BlockPos, def: LoopDef) :
         AbstractTickableSoundInstance(
-            SoundEvent.of(ResourceLocation.of("ic2", def.eventId)),
+            SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", def.eventId)),
             SoundSource.BLOCKS,
             RandomSource.create()
         ) {

@@ -503,7 +503,7 @@ class OreWashingPlantBlockEntity(
         val emptyStack = when (waterInput.item) {
             Items.WATER_BUCKET -> ItemStack(Items.BUCKET)
             is WaterCell -> {
-                val cellId = ResourceLocation(Ic2_120.MOD_ID, "empty_cell")
+                val cellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")
                 ItemStack(BuiltInRegistries.ITEM.get(cellId))
             }
             else -> return

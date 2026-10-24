@@ -17,7 +17,7 @@ object ModTags {
      * 内容由 [ic2_120.content.recipes.ModItemTagProvider] 在 datagen 时填充。
      */
     val RUBBER_LOGS: TagKey<Item> =
-        TagKey.of(Registries.ITEM, ResourceLocation(Ic2_120.MOD_ID, "rubber_logs"))
+        TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_logs"))
 
     object Compat {
         object Items {
@@ -98,7 +98,7 @@ object ModTags {
             val RAW_MATERIALS_COPPER = item("raw_materials/copper")
 
             private fun item(path: String): TagKey<Item> =
-                TagKey.of(Registries.ITEM, ResourceLocation.of(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
         }
 
         object Blocks {
@@ -114,7 +114,7 @@ object ModTags {
             val STORAGE_BLOCKS_URANIUM = block("storage_blocks/uranium")
 
             private fun block(path: String): TagKey<Block> =
-                TagKey.of(Registries.BLOCK, ResourceLocation.of(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.of(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
         }
 
         object Fluids {
@@ -122,7 +122,7 @@ object ModTags {
             val SEMIFLUID_CREOSOTE_EQUIVALENT = fluid("semifluid_generator/creosote_equivalent")
 
             private fun fluid(path: String): TagKey<net.minecraft.world.level.material.Fluid> =
-                TagKey.of(Registries.FLUID, ResourceLocation.of(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.of(Registries.FLUID, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
         }
 
         object Fluids {
@@ -130,7 +130,7 @@ object ModTags {
             val SEMIFLUID_CREOSOTE_EQUIVALENT = fluid("semifluid_generator/creosote_equivalent")
 
             private fun fluid(path: String): TagKey<net.minecraft.world.level.material.Fluid> =
-                TagKey.of(Registries.FLUID, ResourceLocation(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.of(Registries.FLUID, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
         }
     }
 }

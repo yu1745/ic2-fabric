@@ -57,12 +57,12 @@ class ModBlockLootTableProvider(
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
-            BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "wrench")),
-            BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "electric_wrench"))
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "wrench")),
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_wrench"))
         )
 
     override fun generate() {
-        val reinforcedDoorId = ResourceLocation.of(Ic2_120.MOD_ID, "reinforced_door")
+        val reinforcedDoorId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reinforced_door")
 
         for (block in BuiltInRegistries.BLOCK) {
             val id = BuiltInRegistries.BLOCK.getId(block)

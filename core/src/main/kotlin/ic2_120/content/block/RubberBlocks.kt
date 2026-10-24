@@ -111,7 +111,7 @@ class RubberLogBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Settings
     override fun getDroppedStacks(state: BlockState, builder: LootParams.Builder): MutableList<ItemStack> {
         val drops = super.getDroppedStacks(state, builder)
         if (!hasNoRubberFaces(state) && builder.world.random.nextInt(6) == 0) {
-            val resinId = ResourceLocation(Ic2_120.MOD_ID, "resin")
+            val resinId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "resin")
             drops.add(ItemStack(BuiltInRegistries.ITEM.get(resinId)))
         }
         return drops
@@ -393,7 +393,7 @@ class RubberPressurePlateBlock(settings: BlockBehaviour.Settings = BlockBehaviou
 /** 橡胶树生成器，用于树苗生长与骨粉催熟。 */
 internal class RubberSaplingGenerator : net.minecraft.block.sapling.SaplingGenerator() {
     override fun getTreeFeature(random: net.minecraft.util.RandomSource, bees: Boolean): ResourceKey<ConfiguredFeature<*, *>>? =
-        ResourceKey.of(Registries.CONFIGURED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "rubber_tree"))
+        ResourceKey.of(Registries.CONFIGURED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
 
     /**
      * 覆写父类 [SaplingGenerator.generate]，目的有二：

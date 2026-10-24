@@ -1627,13 +1627,13 @@ class NuclearReactorBlockEntity(
         val registry = world.registryManager.get(net.minecraft.core.registries.BuiltInRegistries.DAMAGE_TYPE)
         val key = net.minecraft.resources.ResourceKey.of(
             net.minecraft.core.registries.BuiltInRegistries.DAMAGE_TYPE,
-            ResourceLocation(Ic2_120.MOD_ID, "nuclear_heat")
+            ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "nuclear_heat")
         )
         val entry = registry.getEntry(key).orElse(null)
             ?: registry.getEntry(
                 net.minecraft.resources.ResourceKey.of(
                     net.minecraft.core.registries.BuiltInRegistries.DAMAGE_TYPE,
-                    ResourceLocation.of("minecraft", "lava")
+                    ResourceLocation.fromNamespaceAndPath("minecraft", "lava")
                 )
             ).orElseThrow()
         return net.minecraft.world.damagesource.DamageSource(entry)

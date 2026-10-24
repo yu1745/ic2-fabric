@@ -25,11 +25,11 @@ class RadiationStatusEffect : MobEffect(MobEffectCategory.HARMFUL, 0x55FF55) {
         val registry = world.registryManager.get(Registries.DAMAGE_TYPE)
         val key = ResourceKey.of(
             Registries.DAMAGE_TYPE,
-            ResourceLocation.of(Ic2_120.MOD_ID, "radiation")
+            ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "radiation")
         )
         val entry = registry.getEntry(key).orElse(null)
             ?: registry.getEntry(
-                ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.of("minecraft", "magic"))
+                ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("minecraft", "magic"))
             ).orElse(null)
 
         return if (entry != null) {

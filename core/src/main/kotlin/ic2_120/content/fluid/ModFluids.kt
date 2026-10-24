@@ -71,80 +71,80 @@ object ModFluids {
     private const val TEXTURE_NS = "ic2"
 
     // Coolant - 冷却液（核反应堆）
-    val COOLANT_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "coolant")) as FlowingFluid }
-    val COOLANT_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_coolant")) as FlowingFluid }
+    val COOLANT_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "coolant")) as FlowingFluid }
+    val COOLANT_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_coolant")) as FlowingFluid }
     lateinit var COOLANT_BLOCK: Block
     lateinit var COOLANT_BUCKET: Item
 
     // Hot Coolant - 热冷却液
-    val HOT_COOLANT_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "hot_coolant")) as FlowingFluid }
-    val HOT_COOLANT_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_hot_coolant")) as FlowingFluid }
+    val HOT_COOLANT_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "hot_coolant")) as FlowingFluid }
+    val HOT_COOLANT_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_hot_coolant")) as FlowingFluid }
     lateinit var HOT_COOLANT_BLOCK: Block
     lateinit var HOT_COOLANT_BUCKET: Item
 
     // UU Matter - UU物质
-    val UU_MATTER_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "uu_matter")) as FlowingFluid }
-    val UU_MATTER_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_uu_matter")) as FlowingFluid }
+    val UU_MATTER_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "uu_matter")) as FlowingFluid }
+    val UU_MATTER_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_uu_matter")) as FlowingFluid }
     lateinit var UU_MATTER_BLOCK: Block
     lateinit var UU_MATTER_BUCKET: Item
 
     // Weed-EX - 除草剂
-    val WEED_EX_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "weed_ex")) as FlowingFluid }
-    val WEED_EX_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_weed_ex")) as FlowingFluid }
+    val WEED_EX_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex")) as FlowingFluid }
+    val WEED_EX_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_weed_ex")) as FlowingFluid }
     lateinit var WEED_EX_BLOCK: Block
     lateinit var WEED_EX_BUCKET: Item
 
     // Pahoehoe Lava - 熔岩岩浆
-    val PAHOEHOE_LAVA_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "pahoehoe_lava")) as FlowingFluid }
-    val PAHOEHOE_LAVA_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_pahoehoe_lava")) as FlowingFluid }
+    val PAHOEHOE_LAVA_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "pahoehoe_lava")) as FlowingFluid }
+    val PAHOEHOE_LAVA_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_pahoehoe_lava")) as FlowingFluid }
     lateinit var PAHOEHOE_LAVA_BLOCK: Block
     lateinit var PAHOEHOE_LAVA_BUCKET: Item
 
     // Biofuel - 生物燃料
-    val BIOFUEL_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "biofuel")) as FlowingFluid }
-    val BIOFUEL_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_biofuel")) as FlowingFluid }
+    val BIOFUEL_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "biofuel")) as FlowingFluid }
+    val BIOFUEL_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_biofuel")) as FlowingFluid }
     lateinit var BIOFUEL_BLOCK: Block
     lateinit var BIOFUEL_BUCKET: Item
 
     // Biomass - 生物质
-    val BIOMASS_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "biomass")) as FlowingFluid }
-    val BIOMASS_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_biomass")) as FlowingFluid }
+    val BIOMASS_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "biomass")) as FlowingFluid }
+    val BIOMASS_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_biomass")) as FlowingFluid }
     lateinit var BIOMASS_BLOCK: Block
     lateinit var BIOMASS_BUCKET: Item
 
     // Distilled Water - 蒸馏水
-    val DISTILLED_WATER_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "distilled_water")) as FlowingFluid }
-    val DISTILLED_WATER_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_distilled_water")) as FlowingFluid }
+    val DISTILLED_WATER_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water")) as FlowingFluid }
+    val DISTILLED_WATER_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_distilled_water")) as FlowingFluid }
     lateinit var DISTILLED_WATER_BLOCK: Block
     lateinit var DISTILLED_WATER_BUCKET: Item
 
     // Construction foam - 建筑泡沫（装罐机水+泡沫粉产出；桶由 registerFluid 注册，勿再 @ModItem 重复注册）
-    val CONSTRUCTION_FOAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "construction_foam")) as FlowingFluid }
-    val CONSTRUCTION_FOAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_construction_foam")) as FlowingFluid }
+    val CONSTRUCTION_FOAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "construction_foam")) as FlowingFluid }
+    val CONSTRUCTION_FOAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_construction_foam")) as FlowingFluid }
     lateinit var CONSTRUCTION_FOAM_BLOCK: Block
     lateinit var CONSTRUCTION_FOAM_BUCKET: Item
 
     // Creosote - 杂酚油
-    val CREOSOTE_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "creosote")) as FlowingFluid }
-    val CREOSOTE_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_creosote")) as FlowingFluid }
+    val CREOSOTE_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "creosote")) as FlowingFluid }
+    val CREOSOTE_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_creosote")) as FlowingFluid }
     lateinit var CREOSOTE_BLOCK: Block
     lateinit var CREOSOTE_BUCKET: Item
 
     // Compressed Air - 压缩空气（高炉）
-    val COMPRESSED_AIR_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "compressed_air")) as FlowingFluid }
-    val COMPRESSED_AIR_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_compressed_air")) as FlowingFluid }
+    val COMPRESSED_AIR_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "compressed_air")) as FlowingFluid }
+    val COMPRESSED_AIR_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_compressed_air")) as FlowingFluid }
     lateinit var COMPRESSED_AIR_BLOCK: Block
     lateinit var COMPRESSED_AIR_BUCKET: Item
 
     // Steam - 蒸汽
-    val STEAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "steam")) as FlowingFluid }
-    val STEAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_steam")) as FlowingFluid }
+    val STEAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "steam")) as FlowingFluid }
+    val STEAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_steam")) as FlowingFluid }
     lateinit var STEAM_BLOCK: Block
     lateinit var STEAM_BUCKET: Item
 
     // Superheated Steam - 过热蒸汽
-    val SUPERHEATED_STEAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "superheated_steam")) as FlowingFluid }
-    val SUPERHEATED_STEAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation(Ic2_120.MOD_ID, "flowing_superheated_steam")) as FlowingFluid }
+    val SUPERHEATED_STEAM_STILL: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "superheated_steam")) as FlowingFluid }
+    val SUPERHEATED_STEAM_FLOWING: FlowingFluid by lazy { BuiltInRegistries.FLUID.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "flowing_superheated_steam")) as FlowingFluid }
     lateinit var SUPERHEATED_STEAM_BLOCK: Block
     lateinit var SUPERHEATED_STEAM_BUCKET: Item
 
@@ -241,12 +241,12 @@ object ModFluids {
         // 1. 注册 Still 和 Flowing 流体
         val still = Registry.register(
             BuiltInRegistries.FLUID,
-            ResourceLocation(modId, name),
+            ResourceLocation.fromNamespaceAndPath(modId, name),
             Ic2Fluid.Still(name, stillTex, flowTex, rises)
         )
         val flowing = Registry.register(
             BuiltInRegistries.FLUID,
-            ResourceLocation(modId, "flowing_$name"),
+            ResourceLocation.fromNamespaceAndPath(modId, "flowing_$name"),
             Ic2Fluid.Flowing(name, stillTex, flowTex, rises)
         )
 
@@ -262,7 +262,7 @@ object ModFluids {
         // 2. 注册 LiquidBlock
         val block = Registry.register(
             BuiltInRegistries.BLOCK,
-            ResourceLocation(modId, name),
+            ResourceLocation.fromNamespaceAndPath(modId, name),
             if (rises) {
                 SteamFluidBlock(still as FlowingFluid, BlockBehaviour.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
             } else {
@@ -281,7 +281,7 @@ object ModFluids {
             )
             val b = Registry.register(
                 BuiltInRegistries.ITEM,
-                ResourceLocation(modId, "${name}_bucket"),
+                ResourceLocation.fromNamespaceAndPath(modId, "${name}_bucket"),
                 bucketItem
             )
             b
@@ -304,7 +304,7 @@ object ModFluids {
 
         // core 专属：把流体桶加入 IC2 材料创造栏
         if (withBucket && bucket !== Items.AIR) {
-            val ic2MaterialsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation(modId, CreativeTab.IC2_MATERIALS.id))
+            val ic2MaterialsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation.fromNamespaceAndPath(modId, CreativeTab.IC2_MATERIALS.id))
             ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
                 entries.add(bucket)
             }
@@ -590,7 +590,7 @@ object ModFluids {
             if (world.time % 20L >= 5L) return
             val entities = world.getEntitiesByClass(LivingEntity::class.java, AABB(pos)) { !it.isSpectator }
             if (entities.isEmpty()) return
-            val damageKey = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation(Ic2_120.MOD_ID, "steam"))
+            val damageKey = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "steam"))
             val source = DamageSource(world.registryManager.get(Registries.DAMAGE_TYPE).entryOf(damageKey))
             for (entity in entities) {
                 entity.damage(source, 2.0f)

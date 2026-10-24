@@ -18,7 +18,7 @@ object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
         val ingredient = Ingredient.fromJson(ingredientJson)
 
         val result = GsonHelper.getObject(json, "result")
-        val resultItemId = ResourceLocation(GsonHelper.getString(result, "item"))
+        val resultItemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
         val resultItem = BuiltInRegistries.ITEM.get(resultItemId)
         val resultCount = GsonHelper.getInt(result, "count", 1)
         return MaceratorRecipe(id, ingredient, ItemStack(resultItem, resultCount), count)

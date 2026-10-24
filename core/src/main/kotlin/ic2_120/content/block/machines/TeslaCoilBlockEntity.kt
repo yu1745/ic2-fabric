@@ -161,7 +161,7 @@ class TeslaCoilBlockEntity(
 
     private fun createTeslaDamageSource(world: ServerLevel): DamageSource {
         val registry = world.registryManager.get(Registries.DAMAGE_TYPE)
-        val key = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.of("ic2_120", "tesla_coil"))
+        val key = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "tesla_coil"))
         val entry = registry.getEntry(key).orElseThrow { IllegalStateException("Tesla coil damage type not registered") }
         return DamageSource(entry)
     }

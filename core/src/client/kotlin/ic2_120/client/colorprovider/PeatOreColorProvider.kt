@@ -17,8 +17,8 @@ object PeatOreColorProvider {
     private const val PEAT_COLOR = 0x4A3728
 
     fun register() {
-        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.of(Ic2_120.MOD_ID, "peat_ore"))
-        val item = BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "peat_ore"))
+        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "peat_ore"))
+        val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "peat_ore"))
 
         ColorProviderRegistry.BLOCK.register({ _, _, _, _ ->
             PEAT_COLOR

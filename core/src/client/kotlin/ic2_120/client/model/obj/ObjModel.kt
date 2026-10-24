@@ -52,10 +52,10 @@ object ObjParser {
     const val LOADER_ID = "ic2_120:obj"
 
     fun parseSpec(json: JsonObject, readText: (ResourceLocation) -> String): ObjModelSpec {
-        val objId = ResourceLocation(json.get("model").asString)
+        val objId = ResourceLocation.parse(json.get("model").asString)
         val geometry = parseObj(readText(objId), objId, readText)
         val textures = buildMap {
-            json.getAsJsonObject("textures")?.entrySet()?.forEach { (k, v) -> put(k, ResourceLocation(v.asString)) }
+            json.getAsJsonObject("textures")?.entrySet()?.forEach { (k, v) -> put(k, ResourceLocation.parse(v.asString)) }
         }
         val parent = json.get("parent")?.asString?.let(::ResourceLocation)
         val flipV = json.get("flip_v")?.asBoolean ?: false
@@ -81,7 +81,7 @@ object ObjParser {
                 "usemtl" -> current = p[1]
                 "mtllib" -> {
                     val dir = objId.path.substringBeforeLast('/', "")
-                    val mtlId = ResourceLocation(objId.namespace, if (dir.isEmpty()) p[1] else "$dir/${p[1]}")
+                    val mtlId = ResourceLocation.fromNamespaceAndPath(objId.namespace, if (dir.isEmpty()) p[1] else "$dir/${p[1]}")
                     materials += parseMtl(readText(mtlId))
                 }
                 "f" -> {

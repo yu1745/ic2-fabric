@@ -134,7 +134,7 @@ class GeoGeneratorScreen(
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val LAVA_TANK_DROPLETS = (FluidConstants.BUCKET * 8).toInt()
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiheatsourcegenerator.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiheatsourcegenerator.png")
         private const val ENERGY_BAR_X = 120
         private const val ENERGY_BAR_Y = 19
         private const val ENERGY_BAR_W = 24

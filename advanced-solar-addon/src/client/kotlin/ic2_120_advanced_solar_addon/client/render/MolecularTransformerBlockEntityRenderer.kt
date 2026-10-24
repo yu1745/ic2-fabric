@@ -19,8 +19,8 @@ class MolecularTransformerBlockEntityRenderer(
 ) : BlockEntityRenderer<MolecularTransformerBlockEntity> {
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2_120_advanced_solar_addon", "textures/models/texturemoleculartransformer.png")
-        private val PLAZMA_TEXTURE = ResourceLocation.of("ic2_120_advanced_solar_addon", "textures/models/plazma.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/models/texturemoleculartransformer.png")
+        private val PLAZMA_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/models/plazma.png")
         private const val TW = 128f
         private const val TH = 64f
 

@@ -19,11 +19,11 @@ import net.minecraft.resources.ResourceLocation
  */
 class BlastFurnaceRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlastFurnaceJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        ResourceLocation.of("ic2", "textures/gui/guiblockcutter.png"),
+        ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiblockcutter.png"),
         0, 0, 170, 80
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "blast_furnace")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "blast_furnace")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.BLAST_FURNACE

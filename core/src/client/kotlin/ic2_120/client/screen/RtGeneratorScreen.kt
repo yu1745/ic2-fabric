@@ -76,6 +76,6 @@ class RtGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guinucleargeneration.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guinucleargeneration.png")
     }
 }

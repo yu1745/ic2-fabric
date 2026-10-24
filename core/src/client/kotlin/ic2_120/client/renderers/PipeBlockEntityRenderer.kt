@@ -27,7 +27,7 @@ class PipeBlockEntityRenderer(
 ) : BlockEntityRenderer<PipeBlockEntity> {
 
     companion object {
-        private val PIPE_TEXTURE = ResourceLocation.of("ic2_120", "textures/block/transport/pipe_white.png")
+        private val PIPE_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/block/transport/pipe_white.png")
 
         private const val BRONZE_COLOR_R = 133
         private const val BRONZE_COLOR_G = 66
@@ -82,7 +82,7 @@ class PipeBlockEntityRenderer(
         private const val GLASS_PARTICLE_ALPHA_VARIATION_MIN = 0.72f
         private const val GLASS_PARTICLE_ALPHA_VARIATION_MAX = 1.0f
 
-        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
     }
 
     init {

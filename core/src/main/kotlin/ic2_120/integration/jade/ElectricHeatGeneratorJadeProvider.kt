@@ -26,7 +26,7 @@ import snownee.jade.api.config.IPluginConfig
  */
 object ElectricHeatGeneratorJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val ELECTRIC_HEAT = ResourceLocation.of("ic2_120", "electric_heat_generator")
+    private val ELECTRIC_HEAT = ResourceLocation.fromNamespaceAndPath("ic2_120", "electric_heat_generator")
 
     override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val be = accessor.blockEntity as? ElectricHeatGeneratorBlockEntity ?: return

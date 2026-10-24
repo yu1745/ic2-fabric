@@ -19,11 +19,11 @@ import net.minecraft.resources.ResourceLocation
  */
 class ExtractorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<ExtractorJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        ResourceLocation.of("ic2", "textures/gui/guiextractor.png"),
+        ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiextractor.png"),
         33, 5, 112, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "extractor")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "extractor")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.EXTRACTOR

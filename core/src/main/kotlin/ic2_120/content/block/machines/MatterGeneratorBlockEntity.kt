@@ -143,11 +143,11 @@ class MatterGeneratorBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val uuMatterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "uu_matter_cell")) }
-    private val scrapItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "scrap")) }
-    private val scrapBoxItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "scrap_box")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val uuMatterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "uu_matter_cell")) }
+    private val scrapItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "scrap")) }
+    private val scrapBoxItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "scrap_box")) }
 
     private val outputPerCycle = mbToDroplets(1)
     /** 当前 1 mB 生成周期内已经消耗的废料数量。 */
@@ -289,9 +289,9 @@ class MatterGeneratorBlockEntity(
     private fun matterGenIsFillableContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = BuiltInRegistries.ITEM.getId(stack.item)
-        return itemId == ResourceLocation(Ic2_120.MOD_ID, "empty_cell") ||
+        return itemId == ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell") ||
             stack.item == Items.BUCKET ||
-            (itemId == ResourceLocation(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
+            (itemId == ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {

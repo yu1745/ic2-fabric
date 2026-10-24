@@ -39,7 +39,7 @@ class TradeOMatScreen(
     }
 
     companion object {
-        private val TEXTURE_OPEN = ResourceLocation.of("ic2_120", "textures/gui/guitradeomatopen.png")
-        private val TEXTURE_CLOSED = ResourceLocation.of("ic2_120", "textures/gui/guitradeomatclosed.png")
+        private val TEXTURE_OPEN = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/gui/guitradeomatopen.png")
+        private val TEXTURE_CLOSED = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/gui/guitradeomatclosed.png")
     }
 }

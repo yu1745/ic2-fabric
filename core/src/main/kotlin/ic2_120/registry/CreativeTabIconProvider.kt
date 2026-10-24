@@ -25,7 +25,7 @@ object CreativeTabIconProvider {
         val key = resourcePath.trim()
         val iconName = TEXTURE_PATH_TO_ICON_ITEM[key]
         if (iconName != null) {
-            val id = if (iconName.contains(':')) ResourceLocation(iconName) else ResourceLocation(Ic2_120.MOD_ID, iconName)
+            val id = if (iconName.contains(':')) ResourceLocation.parse(iconName) else ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, iconName)
             val item = BuiltInRegistries.ITEM.get(id)
             if (item !== Items.AIR) return ItemStack(item)
         }

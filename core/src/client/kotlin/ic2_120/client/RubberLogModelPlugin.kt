@@ -11,8 +11,8 @@ import net.minecraft.client.resources.model.UnbakedModel
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 
-private val RUBBER_LOG_ID = ResourceLocation.of(Ic2_120.MOD_ID, "rubber_log")
-private val MODEL_ID = ResourceLocation.of(Ic2_120.MOD_ID, "block/rubber_log")
+private val RUBBER_LOG_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_log")
+private val MODEL_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "block/rubber_log")
 
 /**
  * 为橡胶树原木注册动态模型，替代 243 个 blockstate 变体和 81 个静态模型文件。

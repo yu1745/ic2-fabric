@@ -46,7 +46,7 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         println("[MT-BER] Registration complete")
 
         // Register item renderer for Molecular Transformer
-        val mtBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.of("ic2_120_advanced_solar_addon", "molecular_transformer"))
+        val mtBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "molecular_transformer"))
         val mtItemEntity = MolecularTransformerBlockEntity(
             BlockPos.ORIGIN,
             mtBlock.defaultState.with(MolecularTransformerBlock.ACTIVE, false)

@@ -52,14 +52,14 @@ class ModItemTagProvider(
                 val parts = tagId.split(":", limit = 2)
                 val namespace = parts[0]
                 val path = if (parts.size == 2) parts[1] else parts[0]
-                val tagKey = TagKey.of(Registries.ITEM, ResourceLocation(namespace, path))
+                val tagKey = TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(namespace, path))
                 getOrCreateTagBuilder(tagKey).add(item)
             }
         }
 
         // 橡胶木系列原木（含 stripped 变体）：填入原版方块/物品标签，并保留 IC2 自用标签。
         listOf("rubber_log", "rubber_wood", "stripped_rubber_log", "stripped_rubber_wood").forEach { path ->
-            val block = BuiltInRegistries.BLOCK.get(ResourceLocation(Ic2_120.MOD_ID, path))
+            val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, path))
             if (block !== Blocks.AIR && block.asItem() !== Items.AIR) {
                 val item = block.asItem()
                 getOrCreateTagBuilder(ItemTags.LOGS).setReplace(false).add(item)
@@ -70,7 +70,7 @@ class ModItemTagProvider(
 
         // 橡胶树苗和树叶同步加入原版物品标签，供 Create 等兼容方块使用。
         listOf("rubber_sapling", "rubber_leaves").forEach { path ->
-            val block = BuiltInRegistries.BLOCK.get(ResourceLocation(Ic2_120.MOD_ID, path))
+            val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, path))
             if (block !== Blocks.AIR && block.asItem() !== Items.AIR) {
                 val item = block.asItem()
                 if (path == "rubber_sapling") {
@@ -131,11 +131,11 @@ class ModItemTagProvider(
     }
 
     private fun cItem(path: String): TagKey<Item> =
-        TagKey.of(Registries.ITEM, ResourceLocation.of("c", path))
+        TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", path))
 
     private fun forgeItem(path: String): TagKey<Item> =
-        TagKey.of(Registries.ITEM, ResourceLocation.of("forge", path))
+        TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("forge", path))
 
     private fun compatItem(path: String): TagKey<Item> =
-        TagKey.of(Registries.ITEM, ResourceLocation.of("ic2_120", "compat/$path"))
+        TagKey.of(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
 }

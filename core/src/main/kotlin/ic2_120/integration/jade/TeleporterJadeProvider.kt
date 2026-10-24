@@ -14,7 +14,7 @@ import snownee.jade.api.config.IPluginConfig
 
 object TeleporterJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val TELEPORTER_DIAG: ResourceLocation = ResourceLocation.of("ic2_120", "teleporter_diag")!!
+    private val TELEPORTER_DIAG: ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "teleporter_diag")!!
 
     override fun appendServerData(data: CompoundTag, accessor: BlockAccessor) {
         val be = accessor.blockEntity as? TeleporterBlockEntity ?: return

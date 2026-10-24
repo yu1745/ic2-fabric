@@ -14,6 +14,6 @@ class TabIconIc2ToolsItem : Item(Item.Settings())
 
 object CreativeTabIconItemsRegistration {
     fun register(modId: String) {
-        Registry.register(BuiltInRegistries.ITEM, ResourceLocation.of(modId, "tab_icon_ic2_tools"), TabIconIc2ToolsItem())
+        Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath(modId, "tab_icon_ic2_tools"), TabIconIc2ToolsItem())
     }
 }

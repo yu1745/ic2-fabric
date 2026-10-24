@@ -26,7 +26,7 @@ class CropnalyzerScreen(
 ) : AbstractContainerScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guicropnalyzer.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicropnalyzer.png")
         private const val TEXTURE_SIZE = 256
         private const val GUI_WIDTH = 176
         private const val GUI_HEIGHT = 223

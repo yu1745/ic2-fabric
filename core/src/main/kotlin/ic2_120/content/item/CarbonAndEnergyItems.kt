@@ -470,43 +470,43 @@ class PlantBall : Item(Item.Settings()) {
                 .pattern("RRR").pattern("R R").pattern("RRR")
                 .input('R', Items.SUGAR_CANE)
                 .criterion(hasItem(Items.SUGAR_CANE), conditionsFromItem(Items.SUGAR_CANE))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "plant_ball_from_sugar_cane"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_sugar_cane"))
 
             // 仙人掌配方
             ShapedRecipeBuilder.create(RecipeCategory.MISC, PlantBall::class.instance(), 1)
                 .pattern("CCC").pattern("C C").pattern("CCC")
                 .input('C', Items.CACTUS)
                 .criterion(hasItem(Items.CACTUS), conditionsFromItem(Items.CACTUS))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "plant_ball_from_cactus"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_cactus"))
 
             // 小麦种子配方
             ShapedRecipeBuilder.create(RecipeCategory.MISC, PlantBall::class.instance(), 1)
                 .pattern("SSS").pattern("S S").pattern("SSS")
                 .input('S', Items.WHEAT_SEEDS)
                 .criterion(hasItem(Items.WHEAT_SEEDS), conditionsFromItem(Items.WHEAT_SEEDS))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "plant_ball_from_wheat_seeds"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_wheat_seeds"))
 
             // 小麦配方
             ShapedRecipeBuilder.create(RecipeCategory.MISC, PlantBall::class.instance(), 1)
                 .pattern("WWW").pattern("W W").pattern("WWW")
                 .input('W', Items.WHEAT)
                 .criterion(hasItem(Items.WHEAT), conditionsFromItem(Items.WHEAT))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "plant_ball_from_wheat"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_wheat"))
 
             // 蕨配方
             ShapedRecipeBuilder.create(RecipeCategory.MISC, PlantBall::class.instance(), 1)
                 .pattern("FFF").pattern("F F").pattern("FFF")
                 .input('F', Items.FERN)
                 .criterion(hasItem(Items.FERN), conditionsFromItem(Items.FERN))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "plant_ball_from_fern"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_fern"))
 
             // 草配方（使用 Tag，因为 1.20.1 中草可能有多个变体）
-            val grassIngredient = Ingredient.fromTag(TagKey.of(BuiltInRegistries.ITEM.key, ResourceLocation.of("minecraft", "tall_grass")))
+            val grassIngredient = Ingredient.fromTag(TagKey.of(BuiltInRegistries.ITEM.key, ResourceLocation.fromNamespaceAndPath("minecraft", "tall_grass")))
             ShapedRecipeBuilder.create(RecipeCategory.MISC, PlantBall::class.instance(), 1)
                 .pattern("GGG").pattern("G G").pattern("GGG")
                 .input('G', grassIngredient)
                 .criterion(hasItem(Items.WHEAT), conditionsFromItem(Items.WHEAT))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "plant_ball_from_grass"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_grass"))
 
             // 树叶配方（使用 Tag）
             val leavesIngredient = Ingredient.fromTag(ItemTags.LEAVES)
@@ -514,7 +514,7 @@ class PlantBall : Item(Item.Settings()) {
                 .pattern("LLL").pattern("L L").pattern("LLL")
                 .input('L', leavesIngredient)
                 .criterion(hasItem(Items.OAK_LEAVES), conditionsFromItem(Items.OAK_LEAVES))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "plant_ball_from_leaves"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_leaves"))
 
             // 树苗配方（使用 Tag）
             val saplingIngredient = Ingredient.fromTag(ItemTags.SAPLINGS)
@@ -522,7 +522,7 @@ class PlantBall : Item(Item.Settings()) {
                 .pattern("SSS").pattern("S S").pattern("SSS")
                 .input('S', saplingIngredient)
                 .criterion(hasItem(Items.OAK_SAPLING), conditionsFromItem(Items.OAK_SAPLING))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "plant_ball_from_saplings"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_saplings"))
         }
     }
 }

@@ -48,7 +48,7 @@ class LaserProjectileEntity(
         /** 最大存活 tick 数 */
         private val MAX_LIFE: Int get() = Ic2Config.current.miningLaser.maxLife
 
-        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.of("ic2", "item.laser.hit"))
+        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.laser.hit"))
 
         private val MODE: EntityDataAccessor<String> = SynchedEntityData.registerData(
             LaserProjectileEntity::class.java, EntityDataSerializers.STRING

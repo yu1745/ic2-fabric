@@ -147,7 +147,7 @@ public final class GuidebookValidationTool {
 
         try {
             String content = Files.readString(page, StandardCharsets.UTF_8);
-            ParsedGuidePage parsed = PageCompiler.parse("ic2_120-dev", new ResourceLocation(namespace, pageIdPath), content);
+            ParsedGuidePage parsed = PageCompiler.parse("ic2_120-dev", ResourceLocation.fromNamespaceAndPath(namespace, pageIdPath), content);
 
             if (content.startsWith("---") && parsed.getFrontmatter().navigationEntry() == null) {
                 errors.add(rel + ": Guidebook parser did not produce a navigation entry from frontmatter");
@@ -187,7 +187,7 @@ public final class GuidebookValidationTool {
 
             String normalized = itemIdText.contains(":") ? itemIdText : namespace + ":" + itemIdText;
             try {
-                ResourceLocation identifier = new ResourceLocation(normalized);
+                ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath(normalized);
                 normalized = identifier.toString();
             } catch (Exception e) {
                 errors.add(rel + ": malformed item_ids entry: " + itemIdText);

@@ -87,7 +87,7 @@ object ModItemTooltip {
                 }
             }
             // 流体单元 tooltip：显示所含流体
-            if (item == BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "fluid_cell"))) {
+            if (item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))) {
                 val variant = stack.getFluidCellVariant()
                 if (variant != null && !variant.isBlank) {
                     val fluidId = BuiltInRegistries.FLUID.getId(variant.fluid)

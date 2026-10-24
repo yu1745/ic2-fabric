@@ -38,7 +38,7 @@ class ScannerScreenHandler(
 
     private val syncedData = SyncedData()
     val sync = ScannerSync(syncedData)
-    private val scannerUseSound: SoundEvent = SoundEvent.of(ResourceLocation.of("ic2", "item.scanner.use"))
+    private val scannerUseSound: SoundEvent = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.scanner.use"))
 
     init {
         addProperties(syncedData)

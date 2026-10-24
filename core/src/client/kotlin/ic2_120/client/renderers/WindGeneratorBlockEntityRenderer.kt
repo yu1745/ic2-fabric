@@ -20,7 +20,7 @@ class WindGeneratorBlockEntityRenderer(
 ) : BlockEntityRenderer<WindGeneratorBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
         private const val BASE_SPEED_DEG_PER_TICK = 6.0f
         private const val SPEED_PER_EU = 3.0f
     }

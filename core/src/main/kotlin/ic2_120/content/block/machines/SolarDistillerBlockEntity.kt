@@ -509,7 +509,7 @@ class SolarDistillerBlockEntity(
         if (input.isEmpty) return
 
         val emptyOutput = getStack(SLOT_OUTPUT_EMPTY)
-        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
 
         // 确定输入容器类型和对应的空容器
         val emptyContainer = when {
@@ -552,11 +552,11 @@ class SolarDistillerBlockEntity(
         val input = getStack(SLOT_INPUT_CELL)
         if (input.isEmpty) return
 
-        val distilledCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "distilled_water_cell")))
+        val distilledCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")))
 
         // 确定输出电池类型
         val outputCell = when {
-            input.item == BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) -> distilledCell
+            input.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) -> distilledCell
             input.item is FluidCellItem && input.isFluidCellEmpty() -> {
                 ItemStack(input.item).apply { setFluidCellVariant(FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)) }
             }
@@ -599,7 +599,7 @@ class SolarDistillerBlockEntity(
 
     private fun isInputCellStack(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
         return stack.item == emptyCell || (stack.item is FluidCellItem && stack.isFluidCellEmpty())
     }
 }

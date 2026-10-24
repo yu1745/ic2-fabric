@@ -22,17 +22,17 @@ object OreGeneration {
     private val logger = LoggerFactory.getLogger("ic2_120.oregen")
 
     val ORE_TIN_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_tin"))
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "ore_tin"))
     val ORE_TIN_DEEP_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_tin_deep"))
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "ore_tin_deep"))
     val ORE_TIN_UPPER_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_tin_upper"))
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "ore_tin_upper"))
     val ORE_LEAD_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_lead"))
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "ore_lead"))
     val ORE_URANIUM_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_uranium"))
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "ore_uranium"))
     val ORE_PEAT_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation(Ic2_120.MOD_ID, "ore_peat"))
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "ore_peat"))
 
     fun register() {
         BiomeModifications.addFeature(

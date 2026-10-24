@@ -15,7 +15,7 @@ object IC2AdvancedSolarAddon : ModInitializer {
     const val MOD_ID = "ic2_120_advanced_solar_addon"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
-    fun id(path: String): ResourceLocation = ResourceLocation(MOD_ID, path)
+    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
 
     override fun onInitialize() {
         LOGGER.info("Initializing IC2 Advanced Solar Addon...")

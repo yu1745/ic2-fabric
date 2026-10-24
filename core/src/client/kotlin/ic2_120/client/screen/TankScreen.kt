@@ -120,8 +120,8 @@ class TankScreen(
     private fun formatRate(rate: Int): String = "%+d mB/s".format(rate)
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiother.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiother.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val UPTIPS_SIZE = 16
         private const val UPTIPS_X = 4

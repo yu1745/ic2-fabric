@@ -168,7 +168,7 @@ class ScannerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guitoolscanner.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guitoolscanner.png")
         private const val TEXTURE_SIZE = 256
 
         private const val SCAN_BTN_X = 148

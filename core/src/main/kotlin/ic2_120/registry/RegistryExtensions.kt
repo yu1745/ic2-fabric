@@ -56,7 +56,7 @@ fun <T : Item> KClass<T>.id(): ResourceLocation =
 @JvmName("itemRecipeId")
 fun <T : Item> KClass<T>.recipeId(suffix: String = ""): ResourceLocation {
     val baseId = BuiltInRegistries.ITEM.getId(instance()).path
-    return ResourceLocation.of(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
+    return ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
 }
 
 /**
@@ -66,7 +66,7 @@ fun <T : Item> KClass<T>.recipeId(suffix: String = ""): ResourceLocation {
 @JvmName("blockRecipeId")
 fun <T : Block> KClass<T>.recipeId(suffix: String = ""): ResourceLocation {
     val baseId = BuiltInRegistries.BLOCK.getId(instance()).path
-    return ResourceLocation.of(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
+    return ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
 }
 
 // ========== BlockEntity 扩展 ==========

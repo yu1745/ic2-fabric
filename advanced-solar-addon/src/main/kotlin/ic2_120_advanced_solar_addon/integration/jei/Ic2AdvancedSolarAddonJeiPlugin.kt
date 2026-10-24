@@ -46,7 +46,7 @@ class Ic2AdvancedSolarAddonJeiPlugin : IModPlugin {
     }
 
     override fun getPluginUid(): ResourceLocation {
-        return ResourceLocation.of("ic2_120_advanced_solar_addon", "jei")
+        return ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "jei")
     }
 
     override fun onRuntimeAvailable(runtime: IJeiRuntime) {
@@ -72,7 +72,7 @@ class Ic2AdvancedSolarAddonJeiPlugin : IModPlugin {
 
     override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
         registration.addRecipeCatalyst(
-            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120_advanced_solar_addon", "molecular_transformer"))),
+            ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "molecular_transformer"))),
             Ic2AdvancedSolarAddonJeiRecipeTypes.MOLECULAR_TRANSFORMER
         )
     }

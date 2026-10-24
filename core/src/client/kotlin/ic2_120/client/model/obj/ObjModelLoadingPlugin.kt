@@ -34,7 +34,7 @@ object ObjModelLoadingPlugin {
             for ((file, resource) in found) {
                 val text = resource.reader.use { it.readText() }
                 if (!text.contains(ObjParser.LOADER_ID)) continue
-                val modelId = ResourceLocation(file.namespace, file.path.removePrefix("models/").removeSuffix(".json"))
+                val modelId = ResourceLocation.fromNamespaceAndPath(file.namespace, file.path.removePrefix("models/").removeSuffix(".json"))
                 try {
                     val json = ObjParser.parseJson(text)
                     if (json.get("loader")?.asString != ObjParser.LOADER_ID) continue

@@ -27,7 +27,7 @@ class ScannerResultPacket(
     override fun getId(): CustomPacketPayload.Id<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<ScannerResultPacket>(net.minecraft.resources.ResourceLocation.of("ic2_120", "scanner_result"))
+        val ID = CustomPacketPayload.Id<ScannerResultPacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "scanner_result"))
         val CODEC: StreamCodec<FriendlyByteBuf, ScannerResultPacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }

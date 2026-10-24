@@ -79,7 +79,7 @@ class ElectricHeatGeneratorBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val coilItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "coil")) }
+    private val coilItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "coil")) }
 
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,

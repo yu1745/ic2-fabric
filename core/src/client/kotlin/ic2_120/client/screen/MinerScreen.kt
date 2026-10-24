@@ -180,9 +180,9 @@ class MinerScreen(
     }
 
     companion object {
-        private val TEX_ORDINARY = ResourceLocation.of("ic2", "textures/gui/guiminer.png")
-        private val TEX_ADVANCED = ResourceLocation.of("ic2", "textures/gui/guiadvminer.png")
-        private val UPTIPS_TEX = ResourceLocation.of("ic2", "textures/gui/uptips.png")
+        private val TEX_ORDINARY = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiminer.png")
+        private val TEX_ADVANCED = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiadvminer.png")
+        private val UPTIPS_TEX = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4

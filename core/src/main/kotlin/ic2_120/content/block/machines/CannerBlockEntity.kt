@@ -137,7 +137,7 @@ class CannerBlockEntity(
         private const val TANK_CAPACITY_BUCKETS = 8
         private val TANK_CAPACITY = FluidConstants.BUCKET * TANK_CAPACITY_BUCKETS
 
-        private val tinCanItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "tin_can")) }
+        private val tinCanItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "tin_can")) }
 
         @Volatile
         private var fluidLookupRegistered = false

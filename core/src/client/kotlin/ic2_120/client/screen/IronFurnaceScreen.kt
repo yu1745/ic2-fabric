@@ -124,7 +124,7 @@ class IronFurnaceScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiironfurnace.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiironfurnace.png")
         private const val TEXTURE_SIZE = 256
 
         // 燃烧值纹理 (180,5)-(193,18) = 13×13

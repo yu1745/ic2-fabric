@@ -11,7 +11,7 @@ class ReactorLayoutLockPacket(
     val lockedSlots: Map<Int, Item>
 ) {
     companion object {
-        val ID: ResourceLocation = ResourceLocation.of("ic2_120", "reactor_layout_lock")
+        val ID: ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "reactor_layout_lock")
 
         fun read(buf: FriendlyByteBuf): ReactorLayoutLockPacket {
             val pos = buf.readBlockPos()

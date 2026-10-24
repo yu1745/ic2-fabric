@@ -33,11 +33,11 @@ import net.minecraft.resources.ResourceLocation
         val inputFluidBuckets: Int = 1
     )
 
-    private val lapisDust by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "lapis_dust")) }
-    private val bioChaff by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "bio_chaff")) }
-    private val cfPowder by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "cf_powder")) }
-    private val grinPowder by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "grin_powder")) }
-    private val peatOre by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "peat_ore")) }
+    private val lapisDust by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "lapis_dust")) }
+    private val bioChaff by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "bio_chaff")) }
+    private val cfPowder by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "cf_powder")) }
+    private val grinPowder by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "grin_powder")) }
+    private val peatOre by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "peat_ore")) }
 
     private val recipes: List<Recipe> by lazy {
         listOf(

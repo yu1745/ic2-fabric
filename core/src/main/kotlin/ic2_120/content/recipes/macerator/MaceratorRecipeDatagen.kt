@@ -149,13 +149,13 @@ object MaceratorRecipeDatagen {
         // Applied Energistics 2：两种水晶分别打成对应的 AE2 粉尘。
         ExternalEntry(
             "ae2_certus_quartz_crystal_to_dust",
-            ResourceLocation.of("ae2", "certus_quartz_crystal"),
-            ResourceLocation.of("ae2", "certus_quartz_dust")
+            ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+            ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_dust")
         ),
         ExternalEntry(
             "ae2_fluix_crystal_to_dust",
-            ResourceLocation.of("ae2", "fluix_crystal"),
-            ResourceLocation.of("ae2", "fluix_dust")
+            ResourceLocation.fromNamespaceAndPath("ae2", "fluix_crystal"),
+            ResourceLocation.fromNamespaceAndPath("ae2", "fluix_dust")
         )
     )
 
@@ -164,7 +164,7 @@ object MaceratorRecipeDatagen {
     fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             MaceratorRecipeJsonProvider(
-                recipeId = ResourceLocation.of("ic2_120", "macerating/${entry.name}"),
+                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}"),
                 input = entry.input,
                 outputItem = entry.output,
                 outputCount = entry.count,
@@ -173,7 +173,7 @@ object MaceratorRecipeDatagen {
         }
         externalEntries.forEach { entry ->
             ExternalMaceratorRecipeJsonProvider(
-                recipeId = ResourceLocation.of("ic2_120", "macerating/${entry.name}"),
+                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}"),
                 input = entry.input,
                 output = entry.output,
                 outputCount = entry.count,

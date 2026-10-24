@@ -45,7 +45,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
 
     companion object {
         private val FACES = arrayOf(*Direction.values(), null)
-        private val ANIMATIONS_ID = ResourceLocation(Ic2_120.MOD_ID, "machine3d/animations.json")
+        private val ANIMATIONS_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine3d/animations.json")
 
         @Volatile
         private var animations: Map<String, List<Part>> = emptyMap()
@@ -130,7 +130,7 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
                 val k = part.amplitude * (0.5f - 0.5f * cos((2.0 * Math.PI * t / part.period).toFloat()))
                 matrices.translate(part.axis.x * k, part.axis.y * k, part.axis.z * k)
             }
-            val id = ResourceLocation(Ic2_120.MOD_ID, "block/machine3d/${machine}_rotor_${part.index}" + if (active) "_active" else "")
+            val id = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "block/machine3d/${machine}_rotor_${part.index}" + if (active) "_active" else "")
             manager.getModel(id)?.let { emitShaded(matrices.peek(), consumer, it, frontLight) }
             matrices.pop()
         }

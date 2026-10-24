@@ -101,7 +101,7 @@ class MolecularTransformerScreen(
     private fun formatNum(n: Long): String = String.format("%,d", n)
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2_120_advanced_solar_addon", "textures/gui/moleculartransformer.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/gui/moleculartransformer.png")
 
         private const val TEX_WIDTH = 256
         private const val TEX_HEIGHT = 256

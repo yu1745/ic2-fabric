@@ -103,7 +103,7 @@ class WaterGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiwatergenerator.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiwatergenerator.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

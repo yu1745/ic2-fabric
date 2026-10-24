@@ -27,13 +27,13 @@ object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
         val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
 
         val steelOutputJson = GsonHelper.getObject(json, "steel_output")
-        val steelItemId = ResourceLocation(GsonHelper.getString(steelOutputJson, "item"))
+        val steelItemId = ResourceLocation.parse(GsonHelper.getString(steelOutputJson, "item"))
         val steelItem = BuiltInRegistries.ITEM.get(steelItemId)
         val steelCount = GsonHelper.getInt(steelOutputJson, "count", 1)
         val steelOutput = ItemStack(steelItem, steelCount)
 
         val slagOutputJson = GsonHelper.getObject(json, "slag_output")
-        val slagItemId = ResourceLocation(GsonHelper.getString(slagOutputJson, "item"))
+        val slagItemId = ResourceLocation.parse(GsonHelper.getString(slagOutputJson, "item"))
         val slagItem = BuiltInRegistries.ITEM.get(slagItemId)
         val slagCount = GsonHelper.getInt(slagOutputJson, "count", 1)
         val slagOutput = ItemStack(slagItem, slagCount)

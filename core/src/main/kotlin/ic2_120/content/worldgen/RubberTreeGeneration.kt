@@ -22,7 +22,7 @@ object RubberTreeGeneration {
     private val logger = LoggerFactory.getLogger("ic2_120.rubber_tree")
 
     val RUBBER_TREE_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.of(Ic2_120.MOD_ID, "rubber_tree"))
+        ResourceKey.of(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
 
     fun register() {
         val config = Ic2Config.current.worldgen.rubberTree.normalized()

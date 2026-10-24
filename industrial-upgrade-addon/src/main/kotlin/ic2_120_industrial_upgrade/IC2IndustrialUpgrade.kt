@@ -12,7 +12,7 @@ object IC2IndustrialUpgrade : ModInitializer {
     const val MOD_ID = "ic2_120_industrial_upgrade"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
-    fun id(path: String): ResourceLocation = ResourceLocation(MOD_ID, path)
+    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
 
     override fun onInitialize() {
         LOGGER.info("Initializing IC2 Industrial Upgrade addon...")

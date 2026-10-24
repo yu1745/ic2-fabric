@@ -29,8 +29,8 @@ class ChunkLoaderScreen(
 ) : AbstractContainerScreen<ChunkLoaderScreenHandler>(handler, playerInventory, title) {
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guichunkloader.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guichunkloader.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val GUI_WIDTH = 176
         private const val GUI_HEIGHT = 250
@@ -236,7 +236,7 @@ class ChunkLoaderScreen(
         samplingInProgress = true
 
         val client = Minecraft.getInstance()
-        val textureId = ResourceLocation.of("ic2_120", "chunk_map_${machinePos.asLong()}")
+        val textureId = ResourceLocation.fromNamespaceAndPath("ic2_120", "chunk_map_${machinePos.asLong()}")
         // 主线程捕获 world 引用，避免后台线程访问 client 实例（client 非线程安全）
         val world = client.world
         val centerX = machinePos.x shr 4

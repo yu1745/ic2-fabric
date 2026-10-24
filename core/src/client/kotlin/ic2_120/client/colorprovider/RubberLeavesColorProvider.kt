@@ -22,8 +22,8 @@ object RubberLeavesColorProvider {
     private const val DEFAULT_RUBBER_LEAVES_COLOR = 0xc4b848
 
     fun register() {
-        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.of(Ic2_120.MOD_ID, "rubber_leaves"))
-        val item = BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "rubber_leaves"))
+        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_leaves"))
+        val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_leaves"))
 
         ColorProviderRegistry.BLOCK.register({ _, world, pos, _ ->
             if (world != null && pos != null) {

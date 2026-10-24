@@ -15,7 +15,7 @@ object ExtractorRecipeSerializer : RecipeSerializer<ExtractorRecipe> {
     override fun read(id: ResourceLocation, json: JsonObject): ExtractorRecipe {
         val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
         val result = GsonHelper.getObject(json, "result")
-        val itemId = ResourceLocation(GsonHelper.getString(result, "item"))
+        val itemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
         val item = BuiltInRegistries.ITEM.get(itemId)
         val count = GsonHelper.getInt(result, "count", 1)
         return ExtractorRecipe(id, ingredient, ItemStack(item, count))

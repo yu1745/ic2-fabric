@@ -226,7 +226,7 @@ object UuCostIndex {
         val merged = HashMap<String, String>()
         val rm = server.resourceManager
         for (ns in listOf("minecraft", "ic2", "ic2_120")) {
-            val id = ResourceLocation(ns, "lang/zh_cn.json")
+            val id = ResourceLocation.fromNamespaceAndPath(ns, "lang/zh_cn.json")
             try {
                 val res = rm.getResource(id)
                 if (res.isPresent) {

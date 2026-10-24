@@ -19,11 +19,11 @@ import net.minecraft.resources.ResourceLocation
  */
 class SolidCannerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<SolidCannerJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        ResourceLocation.of("ic2", "textures/gui/guisolidcanner.png"),
+        ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisolidcanner.png"),
         25, 21, 112, 45
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "solid_canner")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "solid_canner")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.SOLID_CANNER

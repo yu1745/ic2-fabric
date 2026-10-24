@@ -19,11 +19,11 @@ import java.util.function.Supplier
 object ModArmorMaterials {
 
     // ========== 修复原料 ==========
-    private val bronzeIngot = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "bronze_ingot")))
-    private val rubber = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "rubber")))
-    private val carbonFibre = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "carbon_fibre")))
-    private val advancedAlloy = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "alloy")))
-    private val iridium = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "iridium")))
+    private val bronzeIngot = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bronze_ingot")))
+    private val rubber = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber")))
+    private val carbonFibre = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "carbon_fibre")))
+    private val advancedAlloy = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "alloy")))
+    private val iridium = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "iridium")))
 
     /**
      * 创建自定义护甲材料
@@ -42,7 +42,7 @@ object ModArmorMaterials {
             enchantability,
             equipSound,
             Supplier { repairIngredient },
-            listOf(ArmorMaterial.Layer(ResourceLocation.ofVanilla(name))),
+            listOf(ArmorMaterial.Layer(ResourceLocation.withDefaultNamespace(name))),
             toughness,
             knockbackResistance
         )

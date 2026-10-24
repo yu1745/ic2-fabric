@@ -20,7 +20,7 @@ class LeashKineticGeneratorBlockEntityRenderer(
 ) : BlockEntityRenderer<LeashKineticGeneratorBlockEntity> {
 
     companion object {
-        private val LEASH_KNOT_TEXTURE = ResourceLocation.of("textures/entity/lead_knot.png")
+        private val LEASH_KNOT_TEXTURE = ResourceLocation.fromNamespaceAndPath("textures/entity/lead_knot.png")
     }
 
     private val leashKnotModel = LeashKnotModel<Entity>(

@@ -172,11 +172,11 @@ class FluidHeatExchangerBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val heatConductorItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "heat_conductor")) }
-    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val lavaCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "lava_cell")) }
-    private val hotCoolantCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "hot_coolant_cell")) }
+    private val heatConductorItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "heat_conductor")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val lavaCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "lava_cell")) }
+    private val hotCoolantCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "hot_coolant_cell")) }
 
     val syncedData = SyncedData()
     override val heatFlow = HeatFlowSync(syncedData, this)
@@ -437,8 +437,8 @@ class FluidHeatExchangerBlockEntity(
     private fun fheMatchesInputFilledContainer(stack: ItemStack): Boolean = when {
         stack.item == Items.LAVA_BUCKET -> true
         stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-        BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.of("ic2_120", "lava_cell") -> true
-        BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.of("ic2_120", "hot_coolant_cell") -> true
+        BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "lava_cell") -> true
+        BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "hot_coolant_cell") -> true
         stack.item is FluidCellItem -> {
             val fluid = stack.getFluidCellVariant()?.fluid
             fluid == Fluids.LAVA || fluid == Fluids.FLOWING_LAVA ||
@@ -449,7 +449,7 @@ class FluidHeatExchangerBlockEntity(
 
     private fun fheMatchesOutputEmptyContainer(stack: ItemStack): Boolean =
         stack.item == Items.BUCKET ||
-            BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.of("ic2_120", "empty_cell") ||
+            BuiltInRegistries.ITEM.getId(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
             (stack.item is FluidCellItem && stack.isFluidCellEmpty())
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {

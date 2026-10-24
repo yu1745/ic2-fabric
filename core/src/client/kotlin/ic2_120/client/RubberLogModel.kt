@@ -43,7 +43,7 @@ class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
         rotationContainer: ModelState
     ): BakedModel {
         val atlas = InventoryMenu.BLOCK_ATLAS_TEXTURE
-        val tex = { path: String -> Material(atlas, ResourceLocation.of("ic2", "block/resource/$path")) }
+        val tex = { path: String -> Material(atlas, ResourceLocation.fromNamespaceAndPath("ic2", "block/resource/$path")) }
         sprites[0] = textureGetter.apply(tex("rubber_wood_wet_front"))
         sprites[1] = textureGetter.apply(tex("rubber_wood_dry_front"))
         sprites[2] = textureGetter.apply(tex("rubber_wood_wet_leftrightback"))

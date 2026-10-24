@@ -167,7 +167,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
             TYPE = FabricBlockEntityTypeBuilder.create(factory, *cableBlocks.toTypedArray())
                 .build() as BlockEntityType<CableBlockEntity>
 
-            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ResourceLocation(modId, "cable"), TYPE)
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(modId, "cable"), TYPE)
             EnergyStorage.SIDED.registerForBlockEntity({ be, _ -> be.energyStorage }, TYPE)
 
             logger.info("已注册 CableBlockEntity（电网模型），关联 {} 种导线方块", cableBlocks.size)

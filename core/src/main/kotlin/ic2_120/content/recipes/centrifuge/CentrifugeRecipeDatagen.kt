@@ -277,7 +277,7 @@ object CentrifugeRecipeDatagen {
         // 泥炭矿 200 -> 煤炭 + 糠
         Entry(
             "peat_ore",
-            IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "peat_ore"))), 1, 200,
+            IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "peat_ore"))), 1, 200,
             listOf(
                 OutputEntry(Items.COAL, 1),
                 OutputEntry(BioChaff::class.instance(), 1)
@@ -290,7 +290,7 @@ object CentrifugeRecipeDatagen {
     fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             CentrifugeRecipeJsonProvider(
-                recipeId = ResourceLocation.of("ic2_120", "centrifuging/${entry.name}"),
+                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "centrifuging/${entry.name}"),
                 input = entry.input,
                 inputCount = entry.inputCount,
                 minHeat = entry.minHeat,

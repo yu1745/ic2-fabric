@@ -92,6 +92,6 @@ class GeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guipowergenerator.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guipowergenerator.png")
     }
 }

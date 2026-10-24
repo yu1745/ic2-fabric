@@ -30,7 +30,7 @@ object UUFluidEffectHandler {
 
     /** UU 物质流体专属 tag（both still + flowing），由 ModFluidTagProvider datagen 生成。 */
     val UU_MATTER: TagKey<net.minecraft.world.level.material.Fluid> =
-        TagKey.of(Registries.FLUID, ResourceLocation.of("ic2_120", "uu_matter"))
+        TagKey.of(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("ic2_120", "uu_matter"))
 
     private var tickCounter = 0
 

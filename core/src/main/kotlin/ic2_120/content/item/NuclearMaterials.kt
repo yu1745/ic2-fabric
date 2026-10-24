@@ -97,12 +97,12 @@ class SmallUranium235 : Item(Item.Settings()) {
                 .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
                 .input(SmallUranium235::class.instance()).criterion(
                     hasItem(SmallUranium235::class.instance()), conditionsFromItem(SmallUranium235::class.instance())
-                ).offerTo(exporter, ResourceLocation.of("ic2_120", "small_uranium_235_to_uranium_235"))
+                ).offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_uranium_235_to_uranium_235"))
             // 1 铀-235 -> 9 小撮
             ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallUranium235::class.instance(), 9)
                 .input(Uranium235::class.instance())
                 .criterion(hasItem(Uranium235::class.instance()), conditionsFromItem(Uranium235::class.instance()))
-                .offerTo(exporter, ResourceLocation.of("ic2_120", "uranium_235_to_small_uranium_235"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "uranium_235_to_small_uranium_235"))
         }
     }
 }
@@ -121,12 +121,12 @@ class SmallUranium238 : Item(Item.Settings()) {
                 .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
                 .input(SmallUranium238::class.instance()).criterion(
                     hasItem(SmallUranium238::class.instance()), conditionsFromItem(SmallUranium238::class.instance())
-                ).offerTo(exporter, ResourceLocation.of("ic2_120", "small_uranium_238_to_uranium_238"))
+                ).offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_uranium_238_to_uranium_238"))
             // 1 铀-238 -> 9 小撮
             ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallUranium238::class.instance(), 9)
                 .input(Uranium238::class.instance())
                 .criterion(hasItem(Uranium238::class.instance()), conditionsFromItem(Uranium238::class.instance()))
-                .offerTo(exporter, ResourceLocation.of("ic2_120", "uranium_238_to_small_uranium_238"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "uranium_238_to_small_uranium_238"))
         }
     }
 }
@@ -145,12 +145,12 @@ class SmallPlutonium : Item(Item.Settings()) {
                 .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
                 .input(SmallPlutonium::class.instance()).criterion(
                     hasItem(SmallPlutonium::class.instance()), conditionsFromItem(SmallPlutonium::class.instance())
-                ).offerTo(exporter, ResourceLocation.of("ic2_120", "small_plutonium_to_plutonium"))
+                ).offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_plutonium_to_plutonium"))
             // 1 钚 -> 9 小撮
             ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallPlutonium::class.instance(), 9)
                 .input(Plutonium::class.instance())
                 .criterion(hasItem(Plutonium::class.instance()), conditionsFromItem(Plutonium::class.instance()))
-                .offerTo(exporter, ResourceLocation.of("ic2_120", "plutonium_to_small_plutonium"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "plutonium_to_small_plutonium"))
         }
     }
 }

@@ -16,7 +16,7 @@ class TeleporterVisualStatePacket(
     override fun getId(): CustomPacketPayload.Id<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<TeleporterVisualStatePacket>(net.minecraft.resources.ResourceLocation.of("ic2_120", "teleporter_visual_state"))
+        val ID = CustomPacketPayload.Id<TeleporterVisualStatePacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "teleporter_visual_state"))
         val CODEC: StreamCodec<FriendlyByteBuf, TeleporterVisualStatePacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }

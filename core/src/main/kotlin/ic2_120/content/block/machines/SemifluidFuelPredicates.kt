@@ -17,11 +17,11 @@ fun ItemStack.getSemifluidFuelFluid(): Fluid? {
 
     ModFluids.getFluidFromModBucket(item)?.let { return it }
 
-    if (item == BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "biofuel_cell"))) {
+    if (item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "biofuel_cell"))) {
         return ModFluids.BIOFUEL_STILL
     }
 
-    if (item == BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell"))) {
+    if (item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))) {
         return getFluidCellVariant()?.fluid
     }
 

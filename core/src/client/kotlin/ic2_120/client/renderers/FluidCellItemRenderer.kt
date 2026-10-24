@@ -43,8 +43,8 @@ import kotlin.math.sin
  */
 object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
 
-    private val SHELL = ResourceLocation(Ic2_120.MOD_ID, "item/cell3d/shell")
-    private val GLASS = ResourceLocation(Ic2_120.MOD_ID, "item/cell3d/glass")
+    private val SHELL = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item/cell3d/shell")
+    private val GLASS = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item/cell3d/glass")
 
     private const val SIDES = 8
     private const val PHASE = PI / 8
@@ -68,7 +68,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
 
     fun register() {
         for (name in CELLS) {
-            BuiltinItemRendererRegistry.INSTANCE.register(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, name)), this)
+            BuiltinItemRendererRegistry.INSTANCE.register(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, name)), this)
         }
         ClientTickEvents.END_CLIENT_TICK.register { Slosh.tick(it) }
     }
@@ -78,7 +78,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
     private fun contents(stack: ItemStack): Contents? {
         val atlas = Minecraft.getInstance().getSpriteAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE)
         val name = BuiltInRegistries.ITEM.getId(stack.item).path
-        if (name in STATIC_FILL) return Contents(atlas.apply(ResourceLocation(Ic2_120.MOD_ID, "item/cell3d/$name")), -1, false)
+        if (name in STATIC_FILL) return Contents(atlas.apply(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item/cell3d/$name")), -1, false)
         val fluid: Fluid = when (val item = stack.item) {
             is ModFluidCell -> item.getFluid()
             else -> stack.getFluidCellVariant()?.fluid ?: return null

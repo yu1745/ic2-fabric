@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation
 @Environment(EnvType.CLIENT)
 object PeatOreTooltipHandler {
 
-    private val PEAT_ORE_ID = ResourceLocation.of("ic2_120", "peat_ore")
+    private val PEAT_ORE_ID = ResourceLocation.fromNamespaceAndPath("ic2_120", "peat_ore")
 
     fun register() {
         ItemTooltipCallback.EVENT.register { stack, _, lines ->

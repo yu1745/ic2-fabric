@@ -185,7 +185,7 @@ class CondenserScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guicondenser.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicondenser.png")
         private const val PROGRESS_WIDTH = 82
 
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

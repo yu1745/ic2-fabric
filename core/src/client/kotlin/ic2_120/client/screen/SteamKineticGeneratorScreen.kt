@@ -144,8 +144,8 @@ class SteamKineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guisteamkineticgenerator.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.of("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisteamkineticgenerator.png")
+        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private val DISTILLED_WATER_TANK_DROPLETS = FluidConstants.BUCKET.toInt()
         private const val PLAYER_INV_Y = 84
         private const val HOTBAR_Y = 142

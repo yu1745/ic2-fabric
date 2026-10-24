@@ -19,8 +19,8 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "wrench")),
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "electric_wrench"))
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "wrench")),
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "electric_wrench"))
         )
 
     override fun generate() {

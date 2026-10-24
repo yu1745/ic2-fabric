@@ -10,7 +10,7 @@ object AddonTemplate : ModInitializer {
     const val MOD_ID = "addon_template"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
-    fun id(path: String): ResourceLocation = ResourceLocation(MOD_ID, path)
+    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
 
     override fun onInitialize() {
         ClassScanner.scanAndRegister(

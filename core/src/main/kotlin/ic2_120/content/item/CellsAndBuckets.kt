@@ -91,8 +91,8 @@ fun ItemStack.isFluidCellEmpty(): Boolean = getFluidCellVariant() == null || get
 fun ItemStack.isLavaFuel(): Boolean {
     return when (item) {
         Items.LAVA_BUCKET -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "lava_cell")) -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) -> {
+        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "lava_cell")) -> true
+        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) -> {
             val fluid = getFluidCellVariant()?.fluid ?: return false
             fluid == Fluids.LAVA || fluid == Fluids.FLOWING_LAVA
         }
@@ -104,9 +104,9 @@ fun ItemStack.isLavaFuel(): Boolean {
 fun ItemStack.isWaterFuel(): Boolean {
     return when (item) {
         Items.WATER_BUCKET -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "water_cell")) -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "distilled_water_cell")) -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) -> {
+        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")) -> true
+        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")) -> true
+        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) -> {
             val fluid = getFluidCellVariant()?.fluid ?: return false
             fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||
                 fluid == ModFluids.DISTILLED_WATER_STILL || fluid == ModFluids.DISTILLED_WATER_FLOWING
@@ -328,7 +328,7 @@ class FluidCellItem : Item(Item.Settings()), DispensibleContainerItem {
 
 // ========== 容器类 - 单元 ==========
 
-private fun cellItem(id: String): Item = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, id))
+private fun cellItem(id: String): Item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, id))
 
 /**
  * 空单元：通过 Fabric FluidStorage 与世界/方块流体交互（收集与转移）。
@@ -785,8 +785,8 @@ private class ModFluidCellStorage(
  */
 private class FluidCellStorage(private val ctx: ContainerItemContext) : Storage<FluidVariant> {
 
-    private val fluidCell = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell"))
-    private val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
+    private val fluidCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))
+    private val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
 
     override fun supportsInsertion(): Boolean = true
 
@@ -847,8 +847,8 @@ object CellAndBucketFluidRegistration {
 
     fun register() {
         val modId = Ic2_120.MOD_ID
-        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation(modId, "empty_cell"))
-        val fluidCell = BuiltInRegistries.ITEM.get(ResourceLocation(modId, "fluid_cell"))
+        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "empty_cell"))
+        val fluidCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "fluid_cell"))
 
         // 空单元 + 满流体单元：通用 FluidStorage（支持任意流体）
         FluidStorage.ITEM.registerForItems({ _, ctx -> FluidCellStorage(ctx) }, emptyCell)
@@ -861,19 +861,19 @@ object CellAndBucketFluidRegistration {
             "construction_foam_cell", "steam_cell", "superheated_steam_cell"
         )
         for (id in modFluidCellIds) {
-            val item = BuiltInRegistries.ITEM.get(ResourceLocation(modId, id))
+            val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, id))
             if (item is ModFluidCell) {
                 FluidStorage.ITEM.registerForItems({ _, ctx -> ModFluidCellStorage(ctx, item) }, item)
             }
         }
 
-        val foamSprayer = BuiltInRegistries.ITEM.get(ResourceLocation(modId, "foam_sprayer"))
+        val foamSprayer = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "foam_sprayer"))
         FluidStorage.ITEM.registerForItems({ _, ctx -> FoamSprayerFluidStorage(ctx) }, foamSprayer)
 
-        val cfPack = BuiltInRegistries.ITEM.get(ResourceLocation.of(modId, "cf_pack"))
+        val cfPack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "cf_pack"))
         FluidStorage.ITEM.registerForItems({ _, ctx -> CfPackFluidStorage(ctx) }, cfPack)
 
-        val jetpack = BuiltInRegistries.ITEM.get(ResourceLocation.of(modId, "jetpack"))
+        val jetpack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "jetpack"))
         FluidStorage.ITEM.registerForItems({ _, ctx -> JetpackFluidStorage(ctx) }, jetpack)
 
         // 遍历所有流体，将满流体单元注册到创造模式物品栏（IC2 材料）
@@ -895,7 +895,7 @@ object CellAndBucketFluidRegistration {
             ModFluids.COMPRESSED_AIR_STILL, ModFluids.COMPRESSED_AIR_FLOWING
         )
 
-        val ic2MaterialsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation(modId, CreativeTab.IC2_MATERIALS.id))
+        val ic2MaterialsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation.fromNamespaceAndPath(modId, CreativeTab.IC2_MATERIALS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
             val fluids = BuiltInRegistries.FLUID.filter { fluid ->
                 fluid != Fluids.EMPTY &&

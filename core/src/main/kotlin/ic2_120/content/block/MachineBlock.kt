@@ -48,7 +48,7 @@ abstract class MachineBlock(settings: BlockBehaviour.Settings = defaultMachineSe
      * 子类可覆写以改为高级机器外壳或其他物品。
      */
     open fun getCasingDrop(): Item =
-        BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "machine"))
+        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
         defaultState = stateManager.defaultState.with(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
@@ -120,7 +120,7 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Settings = defau
      * 子类可覆写以改为高级机器外壳或其他物品。
      */
     open fun getCasingDrop(): Item =
-        BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "machine"))
+        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
         defaultState = stateManager.defaultState.with(BlockStateProperties.FACING, Direction.NORTH)

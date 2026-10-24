@@ -88,7 +88,7 @@ class EnergyOMatScreen(
     }
 
     companion object {
-        private val TEXTURE_OPEN = ResourceLocation.of("ic2_120", "textures/gui/guienergyomatopen.png")
-        private val TEXTURE_CLOSED = ResourceLocation.of("ic2_120", "textures/gui/guienergyomatclosed.png")
+        private val TEXTURE_OPEN = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/gui/guienergyomatopen.png")
+        private val TEXTURE_CLOSED = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/gui/guienergyomatclosed.png")
     }
 }

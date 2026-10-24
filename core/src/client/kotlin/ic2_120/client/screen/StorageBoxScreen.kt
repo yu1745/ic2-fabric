@@ -69,10 +69,10 @@ class StorageBoxScreen(
         val slotBgV: Int,
         val textureSize: Int
     ) {
-        WOODEN(ResourceLocation.of("ic2", "textures/gui/guiwoodenbox.png"), 224, 162, 3, 9, 31, 18, 227, 3, 256),
-        IRON(ResourceLocation.of("ic2", "textures/gui/guiironbox.png"), 224, 202, 5, 9, 31, 17, 227, 3, 256),
-        STEEL(ResourceLocation.of("ic2", "textures/gui/guisteelbox.png"), 224, 236, 7, 9, 31, 17, 227, 3, 256),
-        IRIDIUM(ResourceLocation.of("ic2", "textures/gui/guiiridiumbox.png"), 262, 275, 9, 14, 5, 18, 265, 3, 300),
+        WOODEN(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiwoodenbox.png"), 224, 162, 3, 9, 31, 18, 227, 3, 256),
+        IRON(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiironbox.png"), 224, 202, 5, 9, 31, 17, 227, 3, 256),
+        STEEL(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisteelbox.png"), 224, 236, 7, 9, 31, 17, 227, 3, 256),
+        IRIDIUM(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiiridiumbox.png"), 262, 275, 9, 14, 5, 18, 265, 3, 300),
         OTHER(null, 176, 166, 0, 0, 0, 0, 0, 0, 256);
 
         companion object {

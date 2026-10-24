@@ -490,7 +490,7 @@ class BlastFurnaceBlockEntity(
         if (airItem is AirCell || airItem is FluidCellItem) {
             if (airItem is FluidCellItem && !isCompressedAirFluidCellCached(airSlot)) return
             val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
-            val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")))
+            val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")))
             val canAcceptEmpty = emptySlot.isEmpty ||
                 (ItemStack.areItemsEqual(emptySlot, emptyCell) && emptySlot.count + 1 <= emptyCell.maxCount)
             if (!canAcceptEmpty) return

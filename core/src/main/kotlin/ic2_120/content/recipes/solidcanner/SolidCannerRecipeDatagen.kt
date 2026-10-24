@@ -51,7 +51,7 @@ object SolidCannerRecipeDatagen {
     fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             SolidCannerRecipeJsonProvider(
-                recipeId = ResourceLocation.of("ic2_120", "solid_canning/${entry.name}"),
+                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "solid_canning/${entry.name}"),
                 slot0Ingredient = entry.slot0Ingredient,
                 slot0Count = entry.slot0Count,
                 slot1Ingredient = entry.slot1Ingredient,

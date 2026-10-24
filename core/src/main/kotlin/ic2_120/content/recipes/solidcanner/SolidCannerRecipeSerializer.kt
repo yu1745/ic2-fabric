@@ -18,7 +18,7 @@ object SolidCannerRecipeSerializer : RecipeSerializer<SolidCannerRecipe> {
         val slot1Ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "slot1_ingredient"))
         val slot1Count = GsonHelper.getInt(json, "slot1_count")
         val result = GsonHelper.getObject(json, "result")
-        val itemId = ResourceLocation(GsonHelper.getString(result, "item"))
+        val itemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
         val item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(itemId)
         val count = GsonHelper.getInt(result, "count", 1)
         return SolidCannerRecipe(id, slot0Ingredient, slot0Count, slot1Ingredient, slot1Count, ItemStack(item, count))

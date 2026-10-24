@@ -76,7 +76,7 @@ class WindKineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiwindkineticgenerator.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiwindkineticgenerator.png")
         private val TEXT_COLOR = 0xFF90EE90.toInt()
     }
 }

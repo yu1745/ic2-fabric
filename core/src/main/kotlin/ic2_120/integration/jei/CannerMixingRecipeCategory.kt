@@ -21,11 +21,11 @@ import net.minecraft.resources.ResourceLocation
  */
 class CannerMixingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CannerMixingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        ResourceLocation.of("ic2", "textures/gui/guicanner.png"),
+        ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicanner.png"),
         33, 8, 104, 90
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "canner")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "canner")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.CANNER_MIXING

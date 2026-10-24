@@ -60,11 +60,11 @@ class Ic2BoatEntityRenderer(
     }
 
     override fun getTexture(boat: Boat): ResourceLocation = when (boat) {
-        is BrokenRubberBoatEntity -> ResourceLocation.of("ic2", "textures/entity/boat/boat_rubber.png")
-        is CarbonBoatEntity -> ResourceLocation.of("ic2", "textures/entity/boat/boat_carbon.png")
-        is RubberBoatEntity -> ResourceLocation.of("ic2", "textures/entity/boat/boat_rubber.png")
-        is ElectricBoatEntity -> ResourceLocation.of("ic2", "textures/entity/boat/boat_electric.png")
-        else -> ResourceLocation.ofVanilla("textures/entity/boat/oak.png")
+        is BrokenRubberBoatEntity -> ResourceLocation.fromNamespaceAndPath("ic2", "textures/entity/boat/boat_rubber.png")
+        is CarbonBoatEntity -> ResourceLocation.fromNamespaceAndPath("ic2", "textures/entity/boat/boat_carbon.png")
+        is RubberBoatEntity -> ResourceLocation.fromNamespaceAndPath("ic2", "textures/entity/boat/boat_rubber.png")
+        is ElectricBoatEntity -> ResourceLocation.fromNamespaceAndPath("ic2", "textures/entity/boat/boat_electric.png")
+        else -> ResourceLocation.withDefaultNamespace("textures/entity/boat/oak.png")
     }
 
     override fun render(

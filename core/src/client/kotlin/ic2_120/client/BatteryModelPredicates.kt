@@ -18,9 +18,9 @@ import net.minecraft.resources.ResourceLocation
 object BatteryModelPredicates {
 
     private const val NBT_HAS_BIND = "HasBind"
-    private val CHARGE_ID = ResourceLocation.of("ic2", "charge")
-    private val NANO_SABER_ACTIVE_ID = ResourceLocation(Ic2_120.MOD_ID, "nano_saber_active")
-    private val SCROLL_BOUND_ID = ResourceLocation(Ic2_120.MOD_ID, "bound")
+    private val CHARGE_ID = ResourceLocation.fromNamespaceAndPath("ic2", "charge")
+    private val NANO_SABER_ACTIVE_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "nano_saber_active")
+    private val SCROLL_BOUND_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bound")
 
     /**
      * 注册所有电池物品的模型 predicate
@@ -40,7 +40,7 @@ object BatteryModelPredicates {
     }
 
     private fun registerNanoSaberPredicate() {
-        val saber = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "nano_saber"))
+        val saber = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "nano_saber"))
         ItemProperties.register(
             saber,
             NANO_SABER_ACTIVE_ID
@@ -72,7 +72,7 @@ object BatteryModelPredicates {
     }
 
     private fun registerRecallScrollPredicate() {
-        val scroll = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "recall_scroll"))
+        val scroll = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "recall_scroll"))
         if (scroll !is RecallScrollItem) return
         ItemProperties.register(
             scroll,

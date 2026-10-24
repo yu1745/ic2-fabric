@@ -24,7 +24,7 @@ class LaserProjectileEntityRenderer(
 ) : EntityRenderer<LaserProjectileEntity>(context) {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
 
         /** 弹体截面半径 */
         private val RADIUS: Float get() = Ic2Config.current.miningLaser.bulletRadius.toFloat()

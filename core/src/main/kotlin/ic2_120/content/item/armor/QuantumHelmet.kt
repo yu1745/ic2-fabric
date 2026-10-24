@@ -195,8 +195,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
     }
 
     private fun consumeAirCellIfAvailable(player: Player): Boolean {
-        val airCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "air_cell"))
-        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
+        val airCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "air_cell"))
+        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
         val slot = player.inventory.main.find { !it.isEmpty && it.item === airCellItem }
         if (slot != null) {
             slot.decrement(1)
@@ -210,8 +210,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
     }
 
     private fun consumeFilledTinCanIfAvailable(player: Player): Boolean {
-        val filledCanItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "filled_tin_can"))
-        val emptyCanItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "tin_can"))
+        val filledCanItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "filled_tin_can"))
+        val emptyCanItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
         val slot = player.inventory.main.find { !it.isEmpty && it.item === filledCanItem }
         if (slot != null) {
             slot.decrement(1)

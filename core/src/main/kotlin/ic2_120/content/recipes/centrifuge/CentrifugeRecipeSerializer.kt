@@ -38,7 +38,7 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
 
         resultsArray.forEach { element ->
             val resultObj = element.asJsonObject
-            val itemId = ResourceLocation(GsonHelper.getString(resultObj, "item"))
+            val itemId = ResourceLocation.parse(GsonHelper.getString(resultObj, "item"))
             val item = BuiltInRegistries.ITEM.get(itemId)
             val count = GsonHelper.getInt(resultObj, "count", 1)
             outputs.add(ItemStack(item, count))

@@ -9,7 +9,7 @@ class SemifluidGeneratorFuelStatePacket(
     val fuelColorArgb: Int
 ) {
     companion object {
-        val ID: ResourceLocation = ResourceLocation.of("ic2_120", "semifluid_generator_fuel_state")
+        val ID: ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "semifluid_generator_fuel_state")
 
         fun read(buf: FriendlyByteBuf): SemifluidGeneratorFuelStatePacket {
             val pos = buf.readBlockPos()

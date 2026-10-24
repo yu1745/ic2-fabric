@@ -55,7 +55,7 @@ class RtHeatGeneratorBlockEntity(
         const val INVENTORY_SIZE = FUEL_SLOT_COUNT
 
         private val RTG_PELLET_ITEM = lazy {
-            BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "rtg_pellet"))
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rtg_pellet"))
         }
 
         fun isRtgPellet(stack: ItemStack): Boolean =

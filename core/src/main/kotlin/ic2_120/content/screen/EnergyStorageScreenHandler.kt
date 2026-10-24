@@ -206,7 +206,7 @@ class EnergyStorageScreenHandler(
             val ctx = ContainerLevelAccess.create(playerInventory.player.world, pos)
             val blockInv = SimpleContainer(slotCount.coerceAtLeast(1))
             val blockId = BuiltInRegistries.BLOCK.getId(playerInventory.player.world.getBlockState(pos).block)
-            val screenHandlerType = BuiltInRegistries.SCREEN_HANDLER.get(ResourceLocation(blockId.namespace, blockId.path))
+            val screenHandlerType = BuiltInRegistries.SCREEN_HANDLER.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
                 ?: error("AbstractContainerMenu type not found for $blockId")
             @Suppress("UNCHECKED_CAST")
             return EnergyStorageScreenHandler(

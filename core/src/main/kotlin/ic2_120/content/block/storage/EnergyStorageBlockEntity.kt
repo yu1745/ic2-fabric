@@ -163,7 +163,7 @@ abstract class EnergyStorageBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
         val blockId = BuiltInRegistries.BLOCK.getId(world!!.getBlockState(pos).block)
-        val screenHandlerType = BuiltInRegistries.SCREEN_HANDLER.get(ResourceLocation(blockId.namespace, blockId.path))
+        val screenHandlerType = BuiltInRegistries.SCREEN_HANDLER.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
             ?: error("AbstractContainerMenu type not found for $blockId")
         @Suppress("UNCHECKED_CAST")
         return ic2_120.content.screen.EnergyStorageScreenHandler(

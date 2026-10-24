@@ -146,8 +146,8 @@ class FermenterScreenHandler(
         const val PLAYER_INV_START = 7
         const val HOTBAR_END = 42
 
-        private val biomassCellId = ResourceLocation.of("ic2_120", "biomass_cell")
-        private val emptyCellId = ResourceLocation.of("ic2_120", "empty_cell")
+        private val biomassCellId = ResourceLocation.fromNamespaceAndPath("ic2_120", "biomass_cell")
+        private val emptyCellId = ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell")
 
         private val INPUT_FILLED_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->

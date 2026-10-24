@@ -18,7 +18,7 @@ class ComposeDebugBlockEntityRenderer(
 ) : BlockEntityRenderer<ComposeDebugBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
         private const val RING_SEGMENTS = 24
     }
 

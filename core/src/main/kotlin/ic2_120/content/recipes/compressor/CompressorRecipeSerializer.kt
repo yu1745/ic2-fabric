@@ -16,12 +16,12 @@ object CompressorRecipeSerializer : RecipeSerializer<CompressorRecipe> {
         val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
         val inputCount = GsonHelper.getInt(json, "input_count", 1)
         val result = GsonHelper.getObject(json, "result")
-        val itemId = ResourceLocation(GsonHelper.getString(result, "item"))
+        val itemId = ResourceLocation.parse(GsonHelper.getString(result, "item"))
         val item = BuiltInRegistries.ITEM.get(itemId)
         val count = GsonHelper.getInt(result, "count", 1)
         val containerReturn = if (json.has("container_return")) {
             val containerObj = json.getAsJsonObject("container_return")
-            val containerId = ResourceLocation(GsonHelper.getString(containerObj, "item"))
+            val containerId = ResourceLocation.parse(GsonHelper.getString(containerObj, "item"))
             val containerCount = GsonHelper.getInt(containerObj, "count", 1)
             ItemStack(BuiltInRegistries.ITEM.get(containerId), containerCount)
         } else ItemStack.EMPTY

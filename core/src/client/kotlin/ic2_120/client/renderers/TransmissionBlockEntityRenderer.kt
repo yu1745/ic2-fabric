@@ -31,7 +31,7 @@ class TransmissionBlockEntityRenderer(
     context: BlockEntityRendererProvider.Context
 ) : BlockEntityRenderer<TransmissionBlockEntity> {
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.ofVanilla("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
         private const val SHAFT_HALF = 1.0f / 6.0f
         private const val SHAFT_LENGTH_HALF = 0.5f
         private const val BEVEL_GEAR_TOOTH_COUNT = 8

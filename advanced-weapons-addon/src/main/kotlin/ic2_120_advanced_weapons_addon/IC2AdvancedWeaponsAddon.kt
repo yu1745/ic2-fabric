@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation
 object IC2AdvancedWeaponsAddon : ModInitializer {
     const val MOD_ID = "ic2_120_advanced_weapons_addon"
 
-    fun id(path: String): ResourceLocation = ResourceLocation(MOD_ID, path)
+    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
 
     override fun onInitialize() {
         CreativeTabIconItemsRegistration.register(MOD_ID)

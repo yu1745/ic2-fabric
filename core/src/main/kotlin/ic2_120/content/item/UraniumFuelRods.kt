@@ -139,13 +139,13 @@ abstract class AbstractUraniumFuelRodItem(settings: Item.Settings, maxUse: Int, 
 @ModItem(name = "uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class UraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_000, 1) {
     override fun getDepletedStack(): ItemStack =
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "depleted_uranium_fuel_rod")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_uranium_fuel_rod")))
 }
 
 @ModItem(name = "dual_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class DualUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_000, 2) {
     override fun getDepletedStack(): ItemStack =
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "depleted_dual_uranium_fuel_rod")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_dual_uranium_fuel_rod")))
 
     companion object {
         @RecipeProvider
@@ -164,7 +164,7 @@ class DualUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
 @ModItem(name = "quad_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_000, 4) {
     override fun getDepletedStack(): ItemStack =
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "depleted_quad_uranium_fuel_rod")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_quad_uranium_fuel_rod")))
 
     companion object {
         @RecipeProvider
@@ -185,7 +185,7 @@ class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
                 .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "quad_uranium_fuel_rod_from_single"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quad_uranium_fuel_rod_from_single"))
         }
     }
 }
@@ -294,7 +294,7 @@ abstract class AbstractMoxFuelRodItem(settings: Item.Settings, maxUse: Int, val 
 @ModItem(name = "mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class MoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 1) {
     override fun getDepletedStack(): ItemStack =
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "depleted_mox_fuel_rod")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_mox_fuel_rod")))
 
     companion object {
         @RecipeProvider
@@ -313,7 +313,7 @@ class MoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 1) {
 @ModItem(name = "dual_mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 2) {
     override fun getDepletedStack(): ItemStack =
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "depleted_dual_mox_fuel_rod")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_dual_mox_fuel_rod")))
 
     companion object {
         @RecipeProvider
@@ -334,7 +334,7 @@ class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 2) {
                 .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, ResourceLocation.of(Ic2_120.MOD_ID, "quad_mox_fuel_rod_from_single"))
+                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quad_mox_fuel_rod_from_single"))
         }
     }
 }
@@ -342,7 +342,7 @@ class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 2) {
 @ModItem(name = "quad_mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class QuadMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 4) {
     override fun getDepletedStack(): ItemStack =
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "depleted_quad_mox_fuel_rod")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_quad_mox_fuel_rod")))
 }
 
 // ========== 枯竭 MOX 燃料棒 ==========

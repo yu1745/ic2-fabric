@@ -19,7 +19,7 @@ class BandwidthHudPacket(
     override fun getId(): CustomPacketPayload.Id<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<BandwidthHudPacket>(ResourceLocation.of(Ic2_120.MOD_ID, "bandwidth_hud"))
+        val ID = CustomPacketPayload.Id<BandwidthHudPacket>(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bandwidth_hud"))
         val CODEC: StreamCodec<FriendlyByteBuf, BandwidthHudPacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }

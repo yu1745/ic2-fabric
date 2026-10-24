@@ -28,15 +28,15 @@ import java.util.stream.Stream
 object RubberTreeBiomeTags {
     /** 入口层：所有允许生成橡胶树的群系（= forest ∪ swamp）。 */
     val GENERATES_RUBBER_TREES: TagKey<Biome> =
-        TagKey.of(Registries.BIOME, ResourceLocation.of("ic2_120", "generates_rubber_trees"))
+        TagKey.of(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "generates_rubber_trees"))
 
     /** 概率层：森林/丛林类（Forge FOREST + JUNGLE）。 */
     val FOREST: TagKey<Biome> =
-        TagKey.of(Registries.BIOME, ResourceLocation.of("ic2_120", "rubber_tree_forest"))
+        TagKey.of(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_tree_forest"))
 
     /** 概率层：沼泽类（Forge SWAMP）。 */
     val SWAMP: TagKey<Biome> =
-        TagKey.of(Registries.BIOME, ResourceLocation.of("ic2_120", "rubber_tree_swamp"))
+        TagKey.of(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_tree_swamp"))
 }
 
 /**

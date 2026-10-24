@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation
 
 /** Selects one of IC2's complete painter textures from the stored dye color. */
 object PainterModelPredicates {
-    private val COLOR_ID = ResourceLocation(Ic2_120.MOD_ID, "painter_color")
+    private val COLOR_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "painter_color")
 
     fun register() {
         ItemProperties.register(

@@ -79,6 +79,6 @@ class ElectricHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiheatingmachine.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiheatingmachine.png")
     }
 }

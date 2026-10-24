@@ -9,6 +9,6 @@ class TabIconIc2AdvancedWeaponsItem : Item(Item.Settings())
 
 object CreativeTabIconItemsRegistration {
     fun register(modId: String) {
-        Registry.register(BuiltInRegistries.ITEM, ResourceLocation(modId, "tab_icon_ic2_advanced_weapons"), TabIconIc2AdvancedWeaponsItem())
+        Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath(modId, "tab_icon_ic2_advanced_weapons"), TabIconIc2AdvancedWeaponsItem())
     }
 }

@@ -19,11 +19,11 @@ import net.minecraft.resources.ResourceLocation
  */
 class CentrifugeRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CentrifugeJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        ResourceLocation.of("ic2", "textures/gui/guicentrifuge.png"),
+        ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicentrifuge.png"),
         0, 11, 150, 72
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "centrifuge")))
+        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "centrifuge")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.CENTRIFUGE

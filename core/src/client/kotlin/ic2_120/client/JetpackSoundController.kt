@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 
 object JetpackSoundController {
     private val logger = LoggerFactory.getLogger("ic2_120/JetpackSoundController")
-    private val JETPACK_SOUND_ID = ResourceLocation.of(Ic2_120.MOD_ID, "item.jetpack.loop")
+    private val JETPACK_SOUND_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item.jetpack.loop")
     private val JETPACK_SOUND = SoundEvent.of(JETPACK_SOUND_ID)
 
     private var loopSound: JetpackLoopSoundInstance? = null

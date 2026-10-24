@@ -174,9 +174,9 @@ object ModFluidClient {
 
     private fun parseTextureId(path: String): ResourceLocation {
         return if (path.contains(':')) {
-            ResourceLocation.tryParse(path) ?: ResourceLocation.of(TEXTURE_NS, path)
+            ResourceLocation.tryParse(path) ?: ResourceLocation.fromNamespaceAndPath(TEXTURE_NS, path)
         } else {
-            ResourceLocation.of(TEXTURE_NS, path)
+            ResourceLocation.fromNamespaceAndPath(TEXTURE_NS, path)
         }
     }
 

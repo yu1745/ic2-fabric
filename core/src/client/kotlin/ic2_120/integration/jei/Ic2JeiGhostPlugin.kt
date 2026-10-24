@@ -26,7 +26,7 @@ import net.minecraft.resources.ResourceLocation
 
 @JeiPlugin
 class Ic2JeiGhostPlugin : IModPlugin {
-    override fun getPluginUid(): ResourceLocation = ResourceLocation.of("ic2_120", "ghost_filters")
+    override fun getPluginUid(): ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "ghost_filters")
 
     override fun registerGuiHandlers(registration: IGuiHandlerRegistration) {
         val fluidIngredientType = registration.jeiHelpers.platformFluidHelper.fluidIngredientType

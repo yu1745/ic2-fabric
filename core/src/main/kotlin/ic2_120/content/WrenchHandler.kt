@@ -52,9 +52,9 @@ import net.minecraft.world.level.Level
  */
 object WrenchHandler {
 
-    private val WRENCH_ID = ResourceLocation(Ic2_120.MOD_ID, "wrench")
-    private val ELECTRIC_WRENCH_ID = ResourceLocation(Ic2_120.MOD_ID, "electric_wrench")
-    private val WRENCH_USE_SOUND = SoundEvent.of(ResourceLocation.of("ic2", "item.wrench.use"))
+    private val WRENCH_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "wrench")
+    private val ELECTRIC_WRENCH_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_wrench")
+    private val WRENCH_USE_SOUND = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.wrench.use"))
     private const val ENERGY_RETAIN_RATIO = 0.8
 
     fun isWrench(stack: ItemStack): Boolean {

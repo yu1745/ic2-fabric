@@ -131,7 +131,7 @@ object Ic2_120 : ModInitializer {
 
         // 焦炭作为固体燃料：燃烧时间为煤炭 2 倍（影响原版熔炉、铁炉、发电机等读取 FuelRegistry 的设备）
         val coalBurnTicks = FuelRegistry.INSTANCE.get(Items.COAL) ?: 1600
-        BuiltInRegistries.ITEM.getOrEmpty(ResourceLocation(MOD_ID, "coke")).ifPresent { cokeItem ->
+        BuiltInRegistries.ITEM.getOrEmpty(ResourceLocation.fromNamespaceAndPath(MOD_ID, "coke")).ifPresent { cokeItem ->
             FuelRegistry.INSTANCE.add(cokeItem, coalBurnTicks * 2)
         }
 
@@ -214,9 +214,9 @@ object Ic2_120 : ModInitializer {
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
-        val ic2CropSeedsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
+        val ic2CropSeedsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries ->
-            val seedBag = BuiltInRegistries.ITEM.get(ResourceLocation(MOD_ID, "crop_seed_bag"))
+            val seedBag = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(MOD_ID, "crop_seed_bag"))
             val initialSeeds = CropSeedBagItem.createInitialSeedStacks()
             if (seedBag != net.minecraft.world.item.Items.AIR) {
                 for (stack in initialSeeds) entries.addAfter(seedBag, stack)
@@ -226,9 +226,9 @@ object Ic2_120 : ModInitializer {
         }
 
         // 刷子 16 色变体（基础未染色刷子由 @ModItem 自动加入）
-        val ic2ToolsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation(MOD_ID, CreativeTab.IC2_TOOLS.id))
+        val ic2ToolsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_TOOLS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2ToolsKey).register { entries ->
-            val painter = BuiltInRegistries.ITEM.get(ResourceLocation(MOD_ID, "painter"))
+            val painter = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(MOD_ID, "painter"))
             val coloredPainters = PainterItem.createColoredStacks()
             if (painter != Items.AIR) {
                 for (stack in coloredPainters) entries.addAfter(painter, stack)
@@ -288,5 +288,5 @@ object Ic2_120 : ModInitializer {
     /**
      * 创建模组内的标识符
      */
-    fun id(path: String): ResourceLocation = ResourceLocation(MOD_ID, path)
+    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
 }

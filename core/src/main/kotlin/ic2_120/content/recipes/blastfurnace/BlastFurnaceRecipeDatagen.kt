@@ -30,23 +30,23 @@ object BlastFurnaceRecipeDatagen {
 
     private val entries = listOf(
         Entry("iron_dust", IngredientInput.tag(ModTags.Compat.Items.DUSTS_IRON, IronDust::class.instance()),
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "steel_ingot")), 1,
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "slag")), 1),
-        Entry("crushed_iron", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "crushed_iron"))),
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "steel_ingot")), 1,
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "slag")), 1),
-        Entry("purified_iron", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "purified_iron"))),
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "steel_ingot")), 1,
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "slag")), 1),
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "steel_ingot")), 1,
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "slag")), 1),
+        Entry("crushed_iron", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "crushed_iron"))),
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "steel_ingot")), 1,
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "slag")), 1),
+        Entry("purified_iron", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "purified_iron"))),
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "steel_ingot")), 1,
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "slag")), 1),
         Entry("iron_ingot", IngredientInput.tag(ModTags.Compat.Items.INGOTS_IRON, Items.IRON_INGOT),
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "steel_ingot")), 1,
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "slag")), 1),
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "steel_ingot")), 1,
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "slag")), 1),
         Entry("iron_ore", IngredientInput.tag(ModTags.Compat.Items.ORES_IRON, Items.IRON_ORE),
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "steel_ingot")), 1,
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "slag")), 1),
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "steel_ingot")), 1,
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "slag")), 1),
         Entry("raw_iron", IngredientInput.tag(ModTags.Compat.Items.RAW_MATERIALS_IRON, Items.RAW_IRON),
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "steel_ingot")), 1,
-            BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "slag")), 1)
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "steel_ingot")), 1,
+            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "slag")), 1)
     )
 
     fun allEntries(): List<Entry> = entries
@@ -54,7 +54,7 @@ object BlastFurnaceRecipeDatagen {
     fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             BlastFurnaceRecipeJsonProvider(
-                recipeId = ResourceLocation.of("ic2_120", "blast_furnacing/${entry.name}"),
+                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "blast_furnacing/${entry.name}"),
                 input = entry.input,
                 steelOutputItem = entry.steelOutput,
                 steelOutputCount = entry.steelCount,

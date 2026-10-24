@@ -62,7 +62,7 @@ object ExtractorRecipeDatagen {
     fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             ExtractorRecipeJsonProvider(
-                recipeId = ResourceLocation.of("ic2_120", "extracting/${entry.name}"),
+                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "extracting/${entry.name}"),
                 input = entry.input,
                 outputItem = entry.output,
                 outputCount = entry.count

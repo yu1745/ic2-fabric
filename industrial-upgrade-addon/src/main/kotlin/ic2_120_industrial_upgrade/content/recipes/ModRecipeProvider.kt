@@ -69,8 +69,8 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
             containerReturn = Items.BUCKET)
 
         // 中子碎片：1×中子流体单元 → 1×中子碎片（返还空流体单元），与桶等效
-        val fluidCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "fluid_cell"))
-        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.of("ic2_120", "empty_cell"))
+        val fluidCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "fluid_cell"))
+        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell"))
         val neutronFluidCell = ItemStack(fluidCellItem).apply {
             setFluidCellVariant(FluidVariant.of(NeutronFluid.NEUTRON_STILL))
         }

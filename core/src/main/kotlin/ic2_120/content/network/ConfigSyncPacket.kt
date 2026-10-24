@@ -9,8 +9,8 @@ class ConfigSyncPacket(
     val chunkData: ByteArray
 ) {
     companion object {
-        val ID: ResourceLocation = ResourceLocation.of("ic2_120", "config_sync")
-        val REPLICATION_COSTS_ID: ResourceLocation = ResourceLocation.of("ic2_120", "replication_costs_sync")
+        val ID: ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "config_sync")
+        val REPLICATION_COSTS_ID: ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "replication_costs_sync")
         const val MAX_CHUNK_BYTES = 20000
 
         fun read(buf: FriendlyByteBuf): ConfigSyncPacket {

@@ -30,24 +30,24 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 
 object NetworkManager {
-    private val REACTOR_HEAT_INFO_PACKET = ResourceLocation(Ic2_120.MOD_ID, "reactor_heat_info")
-    private val WIND_ROTOR_STATE_PACKET = ResourceLocation(Ic2_120.MOD_ID, "wind_rotor_state")
-    private val WATER_ROTOR_STATE_PACKET = ResourceLocation(Ic2_120.MOD_ID, "water_rotor_state")
-    private val REACTOR_LAYOUT_LOCK_PACKET = ResourceLocation(Ic2_120.MOD_ID, "reactor_layout_lock")
+    private val REACTOR_HEAT_INFO_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_heat_info")
+    private val WIND_ROTOR_STATE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "wind_rotor_state")
+    private val WATER_ROTOR_STATE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_rotor_state")
+    private val REACTOR_LAYOUT_LOCK_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_layout_lock")
 
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
-    val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = ResourceLocation(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
-    val TOGGLE_NANO_VISION_PACKET = ResourceLocation(Ic2_120.MOD_ID, "toggle_nano_vision")
-    val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = ResourceLocation(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
-    val TOGGLE_CHAINSAW_SHEAR_PACKET = ResourceLocation(Ic2_120.MOD_ID, "toggle_chainsaw_shear")
-    val TOGGLE_FOAM_SPRAYER_MODE_PACKET = ResourceLocation(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
-    val TOGGLE_MINING_LASER_MODE_PACKET = ResourceLocation(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
-    val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = ResourceLocation(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
-    val QUANTUM_LEGGINGS_SPEED_TICK_PACKET = ResourceLocation(Ic2_120.MOD_ID, "quantum_leggings_speed_tick")
-    val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = ResourceLocation(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
-    val SELECT_TEMPLATE_PACKET = ResourceLocation(Ic2_120.MOD_ID, "select_template")
-    val SET_FLUID_FILTER_PACKET = ResourceLocation(Ic2_120.MOD_ID, "set_fluid_filter")
-    val SET_ITEM_FILTER_PACKET = ResourceLocation(Ic2_120.MOD_ID, "set_item_filter")
+    val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
+    val TOGGLE_NANO_VISION_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_nano_vision")
+    val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
+    val TOGGLE_CHAINSAW_SHEAR_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_chainsaw_shear")
+    val TOGGLE_FOAM_SPRAYER_MODE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
+    val TOGGLE_MINING_LASER_MODE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
+    val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
+    val QUANTUM_LEGGINGS_SPEED_TICK_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quantum_leggings_speed_tick")
+    val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
+    val SELECT_TEMPLATE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "select_template")
+    val SET_FLUID_FILTER_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "set_fluid_filter")
+    val SET_ITEM_FILTER_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "set_item_filter")
 
     fun register() {
         // 注册服务端接收处理器（如果需要）

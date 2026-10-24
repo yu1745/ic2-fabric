@@ -308,7 +308,7 @@ class SemifluidGeneratorBlockEntity(
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
         val fluidId = nbt.getString("FuelFluid")
-        val fluid = if (fluidId.isNullOrBlank()) null else BuiltInRegistries.FLUID.get(ResourceLocation(fluidId))
+        val fluid = if (fluidId.isNullOrBlank()) null else BuiltInRegistries.FLUID.get(ResourceLocation.parse(fluidId))
         fuelTankInternal.setStoredFuel(nbt.getLong(NBT_FUEL_AMOUNT), fluid)
     }
 
@@ -352,9 +352,9 @@ class SemifluidGeneratorBlockEntity(
             val fuelProfile = fuelFluid?.let { FluidFuelRegistry.getProfile(it) }
             if (fuelFluid != null && fuelProfile != null) {
                 val emptyContainer = when (fuelStack.item) {
-                    BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "biofuel_cell")),
-                    BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) ->
-                        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")))
+                    BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "biofuel_cell")),
+                    BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) ->
+                        ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")))
                     else -> fuelStack.item.getRecipeRemainder(fuelStack)
                 }
                 if (canInsertEmptyContainer(emptyContainer)) {

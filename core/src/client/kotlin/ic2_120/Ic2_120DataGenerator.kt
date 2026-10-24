@@ -17,7 +17,7 @@ object Ic2_120DataGenerator : DataGeneratorEntrypoint {
 	override fun onInitializeDataGenerator(fabricDataGenerator: FabricDataGenerator) {
 		// datagen 可能在 ModInitializer 之前执行；若注解矿辞表为空且物品未注册，则先完成扫描注册。
 		if (MaterialTagRegistry.itemEntries.isEmpty()) {
-			val tinId = ResourceLocation.of(Ic2_120.MOD_ID, "tin_ingot")
+			val tinId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_ingot")
 			if (!BuiltInRegistries.ITEM.containsId(tinId)) {
 			ModFluids.register()
 			ClassScanner.scanAndRegister(

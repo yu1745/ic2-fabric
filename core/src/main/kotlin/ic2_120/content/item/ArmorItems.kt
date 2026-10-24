@@ -119,11 +119,11 @@ private fun createArmorMaterial(
 
 // ========== 修复原料 ==========
 // 各护甲材料对应的修复物品（通过模组 ID 加载）
-private val bronzeIngot = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "bronze_ingot")))
-private val rubber = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "rubber")))
-private val carbonFibre = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "carbon_fibre")))
-private val advancedAlloy = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "alloy")))
-private val iridium = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "iridium")))
+private val bronzeIngot = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bronze_ingot")))
+private val rubber = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber")))
+private val carbonFibre = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "carbon_fibre")))
+private val advancedAlloy = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "alloy")))
+private val iridium = Ingredient.ofItems(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "iridium")))
 
 // ========== 护甲材料定义 ==========
 
@@ -623,8 +623,8 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
 
         // 当气泡值低于阈值时（<= 60，约 3 秒）
         if (player.air <= AIR_THRESHOLD) {
-            val airCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "air_cell"))
-            val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell"))
+            val airCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "air_cell"))
+            val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
 
             // 查找背包中的压缩空气单元
             val airCellSlot = player.inventory.main.find { slot ->

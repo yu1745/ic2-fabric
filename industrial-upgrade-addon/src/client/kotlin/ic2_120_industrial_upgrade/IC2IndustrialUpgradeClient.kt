@@ -28,8 +28,8 @@ object IC2IndustrialUpgradeClient : ClientModInitializer {
             NeutronFluid.NEUTRON_STILL,
             NeutronFluid.NEUTRON_FLOWING,
             SimpleFluidRenderHandler(
-                ResourceLocation.of("ic2", "block/fluid/fluid_still"),
-                ResourceLocation.of("ic2", "block/fluid/fluid_flow"),
+                ResourceLocation.fromNamespaceAndPath("ic2", "block/fluid/fluid_still"),
+                ResourceLocation.fromNamespaceAndPath("ic2", "block/fluid/fluid_flow"),
                 tint
             )
         )

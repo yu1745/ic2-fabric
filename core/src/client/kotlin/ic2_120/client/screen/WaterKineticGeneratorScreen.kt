@@ -81,6 +81,6 @@ class WaterKineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guiwaterkineticgenerator.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiwaterkineticgenerator.png")
     }
 }

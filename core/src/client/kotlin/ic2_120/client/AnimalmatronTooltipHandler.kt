@@ -13,13 +13,13 @@ import net.minecraft.resources.ResourceLocation
 @Environment(EnvType.CLIENT)
 object AnimalmatronTooltipHandler {
 
-    private val ANIMALMATRON_ID = ResourceLocation.of("ic2_120", "animalmatron")
+    private val ANIMALMATRON_ID = ResourceLocation.fromNamespaceAndPath("ic2_120", "animalmatron")
 
     private data class ExtraProductInfo(val entityId: ResourceLocation, val productId: ResourceLocation, val needsShears: Boolean)
 
     private val EXTRA_PRODUCTS = listOf(
-        ExtraProductInfo(ResourceLocation.of("minecraft", "chicken"), ResourceLocation.of("minecraft", "egg"), false),
-        ExtraProductInfo(ResourceLocation.of("minecraft", "sheep"), ResourceLocation.of("minecraft", "white_wool"), true),
+        ExtraProductInfo(ResourceLocation.fromNamespaceAndPath("minecraft", "chicken"), ResourceLocation.fromNamespaceAndPath("minecraft", "egg"), false),
+        ExtraProductInfo(ResourceLocation.fromNamespaceAndPath("minecraft", "sheep"), ResourceLocation.fromNamespaceAndPath("minecraft", "white_wool"), true),
     )
 
     fun register() {

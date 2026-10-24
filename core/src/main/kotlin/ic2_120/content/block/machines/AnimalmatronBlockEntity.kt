@@ -291,11 +291,11 @@ class AnimalmatronBlockEntity(
 
     private var workOffset: Int = random.nextBetween(0, WORK_INTERVAL_TICKS - 1)
 
-    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val waterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "water_cell")) }
-    private val distilledWaterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "distilled_water_cell")) }
-    private val weedExCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "weed_ex_cell")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val waterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")) }
+    private val distilledWaterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")) }
+    private val weedExCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex_cell")) }
 
     constructor(pos: BlockPos, state: BlockState) : this(AnimalmatronBlockEntity::class.type(), pos, state)
 
@@ -317,9 +317,9 @@ class AnimalmatronBlockEntity(
 
     private fun matchesWaterInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val fluidCellId = ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")
-        val waterCellId = ResourceLocation(Ic2_120.MOD_ID, "water_cell")
-        val distilledWaterCellId = ResourceLocation(Ic2_120.MOD_ID, "distilled_water_cell")
+        val fluidCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")
+        val waterCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")
+        val distilledWaterCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")
         return when {
             stack.item == Items.WATER_BUCKET || stack.item == ModFluids.DISTILLED_WATER_BUCKET -> true
             BuiltInRegistries.ITEM.getId(stack.item) == waterCellId -> true
@@ -335,8 +335,8 @@ class AnimalmatronBlockEntity(
 
     private fun matchesWeedExInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val fluidCellId = ResourceLocation(Ic2_120.MOD_ID, "fluid_cell")
-        val weedExCellId = ResourceLocation(Ic2_120.MOD_ID, "weed_ex_cell")
+        val fluidCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")
+        val weedExCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex_cell")
         return when {
             stack.item == ModFluids.WEED_EX_BUCKET -> true
             BuiltInRegistries.ITEM.getId(stack.item) == weedExCellId -> true
@@ -780,7 +780,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             "minecraft:sheep" -> {
                 if (animal is Sheep && !animal.isSheared) {
                     val colorName = animal.color.asString()
-                    val woolItem = BuiltInRegistries.ITEM.get(ResourceLocation.of("minecraft", "${colorName}_wool"))
+                    val woolItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "${colorName}_wool"))
                     ItemStack(woolItem, 1)
                 } else null
             }

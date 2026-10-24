@@ -345,7 +345,7 @@ class GeoGeneratorBlockEntity(
             }
             fuelStack.item is LavaCell -> {
                 // 岩浆单元 = 1 桶 = 1000 mB
-                val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation(Ic2_120.MOD_ID, "empty_cell")))
+                val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")))
                 if (lavaTankInternal.canAcceptFullBucket() && canInsertEmptyContainer(emptyCell)) {
                     val inserted = lavaTankInternal.tryInsertLava(FluidConstants.BUCKET)
                     if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {

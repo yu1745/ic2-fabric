@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation
  */
 object CreativeGeneratorItemEntityHandler {
 
-    private val CREATIVE_GENERATOR_ID = ResourceLocation.of(Ic2_120.MOD_ID, "creative_generator")
+    private val CREATIVE_GENERATOR_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "creative_generator")
 
     fun register() {
         ServerEntityEvents.ENTITY_LOAD.register { entity, _ ->

@@ -23,7 +23,7 @@ class TeleporterBlockEntityRenderer(
 ) : BlockEntityRenderer<TeleporterBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.of("textures/misc/white.png")
+        private val WHITE_TEXTURE = ResourceLocation.fromNamespaceAndPath("textures/misc/white.png")
         private const val SEGMENTS = 36
         private data class RenderCache(
             var lastProgress: Float = 0f,

@@ -85,7 +85,7 @@ open class JetpackItem : ArmorItem(
         fun getFuelFluid(stack: ItemStack): net.minecraft.world.level.material.Fluid? {
             val id = stack.nbt?.getString(FUEL_FLUID_KEY)
             if (!id.isNullOrBlank()) {
-                val fluid = net.minecraft.core.registries.BuiltInRegistries.FLUID.get(net.minecraft.resources.ResourceLocation(id))
+                val fluid = net.minecraft.core.registries.BuiltInRegistries.FLUID.get(net.minecraft.resources.ResourceLocation.parse(id))
                 if (FluidFuelRegistry.isSupported(fluid)) return fluid
             }
             // 兼容旧版只有 Fuel 数值的背包：旧燃料就是生物燃料。

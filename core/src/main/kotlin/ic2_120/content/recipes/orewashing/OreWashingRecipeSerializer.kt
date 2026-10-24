@@ -34,7 +34,7 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
         val outputsArray = GsonHelper.getArray(json, "outputs")
         val outputs = outputsArray.map { element ->
             val outputObj = element.asJsonObject
-            val itemId = ResourceLocation(GsonHelper.getString(outputObj, "item"))
+            val itemId = ResourceLocation.parse(GsonHelper.getString(outputObj, "item"))
             val item = BuiltInRegistries.ITEM.get(itemId)
             val count = GsonHelper.getInt(outputObj, "count", 1)
             ItemStack(item, count)

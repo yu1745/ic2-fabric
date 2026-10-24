@@ -25,11 +25,11 @@ import net.minecraft.world.level.Level
  */
 object RubberTreetapHandler {
 
-    private val TREETAP_ID = ResourceLocation(Ic2_120.MOD_ID, "treetap")
-    private val ELECTRIC_TREETAP_ID = ResourceLocation(Ic2_120.MOD_ID, "electric_treetap")
-    private val RESIN_ID = ResourceLocation(Ic2_120.MOD_ID, "resin")
-    private val TREETAP_SOUND = SoundEvent.of(ResourceLocation.of("ic2", "item.treetap.use"))
-    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(ResourceLocation.of("ic2", "item.treetap.electric.use"))
+    private val TREETAP_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "treetap")
+    private val ELECTRIC_TREETAP_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_treetap")
+    private val RESIN_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "resin")
+    private val TREETAP_SOUND = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.treetap.use"))
+    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.treetap.electric.use"))
     private const val EU_PER_USE = 50L
 
     fun isTreetap(stack: ItemStack): Boolean {

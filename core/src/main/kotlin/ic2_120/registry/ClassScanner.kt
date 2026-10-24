@@ -176,7 +176,7 @@ object ClassScanner {
         group: String = "cable",
         renderLayer: String = "cutout_mipped"
     ): BaseCableBlock {
-        val id = ResourceLocation(modId, name)
+        val id = ResourceLocation.fromNamespaceAndPath(modId, name)
         Registry.register(BuiltInRegistries.BLOCK, id, block)
         blockInstances[block::class] = block
         blockClassToName[block::class] = name
@@ -598,7 +598,7 @@ object ClassScanner {
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = ResourceLocation(modId, name)
+                val id = ResourceLocation.fromNamespaceAndPath(modId, name)
 
                 // 创建 ResourceKey
                 val tabKey = ResourceKey.of(Registries.ITEM_GROUP, id)
@@ -625,7 +625,7 @@ object ClassScanner {
                     }
                     annotation.iconItem.isNotEmpty() -> {
                         // 使用已注册的物品作为图标
-                        val iconId = ResourceLocation(modId, annotation.iconItem)
+                        val iconId = ResourceLocation.fromNamespaceAndPath(modId, annotation.iconItem)
                         iconStackSupplier = { ItemStack(BuiltInRegistries.ITEM.get(iconId)) }
                     }
                     else -> {
@@ -745,7 +745,7 @@ object ClassScanner {
                         name
                     }
 
-                    val id = ResourceLocation(modId, finalName)
+                    val id = ResourceLocation.fromNamespaceAndPath(modId, finalName)
 
                     val type = ExtendedScreenHandlerType { syncId, playerInventory, buf ->
                         createFromBuffer(syncId, playerInventory, buf)
@@ -873,7 +873,7 @@ object ClassScanner {
         for ((clazz, annotation) in blockEntityClasses) {
             try {
                 val name = resolveNameFromBlockOrAnnotation(annotation.name, annotation.block, clazz.simpleName ?: "unknown")
-                val id = ResourceLocation(modId, name)
+                val id = ResourceLocation.fromNamespaceAndPath(modId, name)
                 val targetBlocks = resolveBlockEntityTargets(modId, clazz, annotation, id)
                 if (targetBlocks.isEmpty()) {
                     logger.error("注册方块实体类型 {} 失败: 未解析到任何目标方块", clazz.simpleName)
@@ -1006,7 +1006,7 @@ object ClassScanner {
                     )
                     return@mapNotNull null
                 }
-                val blockId = ResourceLocation(modId, blockName)
+                val blockId = ResourceLocation.fromNamespaceAndPath(modId, blockName)
                 val block = BuiltInRegistries.BLOCK.get(blockId)
                 if (block == net.minecraft.world.level.block.Blocks.AIR && blockId.path != "air") {
                     logger.warn("方块实体 {} 对应的方块未找到: {}，请确保方块先于方块实体注册", clazz.simpleName, blockId)
@@ -1037,7 +1037,7 @@ object ClassScanner {
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = ResourceLocation(modId, name)
+                val id = ResourceLocation.fromNamespaceAndPath(modId, name)
 
                 // 注册方块
                 Registry.register(BuiltInRegistries.BLOCK, id, instance)
@@ -1118,7 +1118,7 @@ object ClassScanner {
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = ResourceLocation(modId, name)
+                val id = ResourceLocation.fromNamespaceAndPath(modId, name)
 
                 // 注册物品
                Registry.register(BuiltInRegistries.ITEM, id, instance)
@@ -1252,7 +1252,7 @@ object ClassScanner {
     }
 
     private fun parseItemGroupKey(modId: String, tab: CreativeTab): ResourceKey<CreativeModeTab> {
-        val id = ResourceLocation(tab.getNamespacedId(modId))
+        val id = ResourceLocation.parse(tab.getNamespacedId(modId))
         return ResourceKey.of(Registries.ITEM_GROUP, id)
     }
 
@@ -1421,7 +1421,7 @@ object ClassScanner {
     private fun <T : BlockEntity> resolveBlockEntityTypeFromRegistry(clazz: kotlin.reflect.KClass<T>): BlockEntityType<T>? {
         val annotation = clazz.findAnnotation<ModBlockEntity>() ?: return null
         val name = resolveNameFromBlockOrAnnotation(annotation.name, annotation.block, clazz.simpleName ?: "unknown")
-        val id = ResourceLocation(currentModId, name)
+        val id = ResourceLocation.fromNamespaceAndPath(currentModId, name)
         val type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getOrEmpty(id).orElse(null) ?: return null
         blockEntityTypes[clazz] = type
         return type as? BlockEntityType<T>
@@ -1458,7 +1458,7 @@ object ClassScanner {
             try {
                 val instance = clazz.createInstance() as MobEffect
                 val ns = if (annotation.namespace.isNotEmpty()) annotation.namespace else modId
-                val id = ResourceLocation(ns, annotation.name)
+                val id = ResourceLocation.fromNamespaceAndPath(ns, annotation.name)
                 Registry.register(BuiltInRegistries.STATUS_EFFECT, id, instance)
                 logger.debug("已注册效果: {}", id)
             } catch (e: Exception) {
@@ -1502,7 +1502,7 @@ object ClassScanner {
                 }
 
                 val type = builder.build(annotation.dataFixerType) as EntityType<Entity>
-                Registry.register(BuiltInRegistries.ENTITY_TYPE, ResourceLocation(modId, annotation.name), type)
+                Registry.register(BuiltInRegistries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(modId, annotation.name), type)
                 logger.debug("已注册实体: {}:{}", modId, annotation.name)
             } catch (e: Exception) {
                 logger.error("注册实体 {} 失败: {}", clazz.simpleName, e.message, e)

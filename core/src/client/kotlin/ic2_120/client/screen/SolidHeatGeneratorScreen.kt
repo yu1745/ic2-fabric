@@ -70,6 +70,6 @@ class SolidHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guisolidheatengine.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisolidheatengine.png")
     }
 }

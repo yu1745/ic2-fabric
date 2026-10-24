@@ -103,8 +103,8 @@ class TransformerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.of("ic2", "textures/gui/guitransfomer.png")
-        private val WRENCH = ResourceLocation.of("ic2_120", "textures/item/tool/wrench.png")
+        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guitransfomer.png")
+        private val WRENCH = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/tool/wrench.png")
         private const val INPUT_OUTPUT_COLOR = 0xFF90EE90.toInt()
     }
 }

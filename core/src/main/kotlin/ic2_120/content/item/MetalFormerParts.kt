@@ -72,7 +72,7 @@ class FilledTinCanItem : Item(
 ) {
 
     private val emptyTinCanItem: Item
-        get() = BuiltInRegistries.ITEM.get(ResourceLocation.of(Ic2_120.MOD_ID, "tin_can"))
+        get() = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
 
     /** 10 tick ≈ 1秒吃2个） */
     override fun getMaxUseTime(stack: ItemStack, user: LivingEntity): Int = 10

@@ -135,7 +135,7 @@ object CompressorRecipeDatagen {
     fun generateRecipes(exporter: Consumer<RecipeOutput>) {
         entries.forEach { entry ->
             CompressorRecipeJsonProvider(
-                recipeId = ResourceLocation.of("ic2_120", "compressing/${entry.name}"),
+                recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "compressing/${entry.name}"),
                 input = entry.input,
                 inputCount = entry.inputCount,
                 outputItem = entry.output,

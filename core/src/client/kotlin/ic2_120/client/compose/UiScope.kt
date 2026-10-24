@@ -99,7 +99,7 @@ class UiScope {
      *
      * 最简用法（完整纹理）：
      * ```
-     * Image(ResourceLocation.of("ic2", "textures/gui/icon.png"), width = 16, height = 16)
+     * Image(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/icon.png"), width = 16, height = 16)
      * ```
      *
      * TextureAtlasSprite sheet 裁剪：

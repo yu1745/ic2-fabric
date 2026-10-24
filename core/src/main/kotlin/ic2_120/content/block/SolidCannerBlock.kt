@@ -111,7 +111,7 @@ class SolidCannerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
             //         .pattern("TCT").pattern("TMT").pattern("TTT")
             //         .input('T', tinIngot).input('C', circuit).input('M', machine)
             //         .criterion(hasItem(machine), conditionsFromItem(machine))
-            //         .offerTo(exporter, ResourceLocation(Ic2_120.MOD_ID, "solid_canner_lf"))
+            //         .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "solid_canner_lf"))
             // }
         }
     }

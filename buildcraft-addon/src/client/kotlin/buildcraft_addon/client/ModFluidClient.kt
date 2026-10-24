@@ -14,8 +14,8 @@ import net.minecraft.resources.ResourceLocation
  */
 object ModFluidClient {
 
-    private val STILL_TEX = ResourceLocation.of("ic2", "block/fluid/fluid_still")
-    private val FLOW_TEX = ResourceLocation.of("ic2", "block/fluid/fluid_flow")
+    private val STILL_TEX = ResourceLocation.fromNamespaceAndPath("ic2", "block/fluid/fluid_still")
+    private val FLOW_TEX = ResourceLocation.fromNamespaceAndPath("ic2", "block/fluid/fluid_flow")
 
     fun register() {
         val fluids = listOf(

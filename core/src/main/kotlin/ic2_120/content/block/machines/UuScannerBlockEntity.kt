@@ -57,7 +57,7 @@ class UuScannerBlockEntity(
         const val SLOT_CRYSTAL = 2
         const val INVENTORY_SIZE = 3
         private const val NBT_LAST_COMPLETED_ITEM = "LastCompletedItem"
-        private val crystalMemoryId = ResourceLocation(Ic2_120.MOD_ID, "crystal_memory")
+        private val crystalMemoryId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "crystal_memory")
     }
 
     private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
