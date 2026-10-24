@@ -38,15 +38,15 @@ class Ic2BoatEntityRenderer(
     private fun createModel(type: Boat.Type): ListModel<Boat> {
         if (type == Boat.Type.BAMBOO) {
             return if (hasChestBoat) {
-                ChestRaftModel(modelContext.getPart(ModelLayers.createChestRaft(type)))
+                ChestRaftModel(modelContext.bakeLayer(ModelLayers.createChestRaftModelName(type)))
             } else {
-                RaftModel(modelContext.getPart(ModelLayers.createRaft(type)))
+                RaftModel(modelContext.bakeLayer(ModelLayers.createRaftModelName(type)))
             }
         }
         return if (hasChestBoat) {
-            ChestBoatModel(modelContext.getPart(ModelLayers.createChestBoat(type)))
+            ChestBoatModel(modelContext.bakeLayer(ModelLayers.createChestBoatModelName(type)))
         } else {
-            BoatModel(modelContext.getPart(ModelLayers.createBoat(type)))
+            BoatModel(modelContext.bakeLayer(ModelLayers.createBoatModelName(type)))
         }
     }
 
@@ -59,7 +59,7 @@ class Ic2BoatEntityRenderer(
         }
     }
 
-    override fun getTexture(boat: Boat): ResourceLocation = when (boat) {
+    override fun getTextureLocation(boat: Boat): ResourceLocation = when (boat) {
         is BrokenRubberBoatEntity -> ResourceLocation.fromNamespaceAndPath("ic2", "textures/entity/boat/boat_rubber.png")
         is CarbonBoatEntity -> ResourceLocation.fromNamespaceAndPath("ic2", "textures/entity/boat/boat_carbon.png")
         is RubberBoatEntity -> ResourceLocation.fromNamespaceAndPath("ic2", "textures/entity/boat/boat_rubber.png")
@@ -79,34 +79,34 @@ class Ic2BoatEntityRenderer(
         matrices.translate(0.0, 0.375, 0.0)
         matrices.mulPose(Axis.YP.rotationDegrees(180.0f - entityYaw))
 
-        val wobbleTicks = boat.damageWobbleTicks.toFloat() - tickDelta
-        var wobbleStrength = boat.damageWobbleStrength - tickDelta
+        val wobbleTicks = boat.hurtTime - tickDelta
+        var wobbleStrength = boat.damage - tickDelta
         if (wobbleStrength < 0.0f) wobbleStrength = 0.0f
         if (wobbleTicks > 0.0f) {
             matrices.mulPose(
                 Axis.XP.rotationDegrees(
-                    Mth.sin(wobbleTicks) * wobbleTicks * wobbleStrength / 10.0f * boat.damageWobbleSide.toFloat()
+                    Mth.sin(wobbleTicks) * wobbleTicks * wobbleStrength / 10.0f * boat.hurtDir.toFloat()
                 )
             )
         }
 
-        val bubbleWobble = boat.interpolateBubbleWobble(tickDelta)
-        if (!Mth.approximatelyEquals(bubbleWobble, 0.0f)) {
+        val bubbleWobble = boat.getBubbleAngle(tickDelta)
+        if (!Mth.equal(bubbleWobble, 0.0f)) {
             matrices.mulPose(Quaternionf().setAngleAxis((bubbleWobble * (Math.PI.toFloat() / 180.0f)).toDouble(), 1.0, 0.0, 1.0))
         }
 
         val model = getOrCreateModel(boat.variant)
-        val texture = getTexture(boat)
+        val texture = getTextureLocation(boat)
         matrices.scale(-1.0f, -1.0f, 1.0f)
         matrices.mulPose(Axis.YP.rotationDegrees(90.0f))
-        model.setAngles(boat, tickDelta, 0.0f, -0.1f, 0.0f, 0.0f)
+        model.setupAnim(boat, tickDelta, 0.0f, -0.1f, 0.0f, 0.0f)
 
-        val vertexConsumer = vertexConsumers.getBuffer(model.getLayer(texture))
-        model.render(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, -1)
+        val vertexConsumer = vertexConsumers.getBuffer(model.renderType(texture))
+        model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, -1)
 
-        if (!boat.isSubmergedInWater && model is WaterPatchModel) {
-            val waterMask = vertexConsumers.getBuffer(RenderType.getWaterMask())
-            model.waterPatch.render(matrices, waterMask, light, OverlayTexture.NO_OVERLAY)
+        if (!boat.isUnderWater && model is WaterPatchModel) {
+            val waterMask = vertexConsumers.getBuffer(RenderType.waterMask())
+            model.waterPatch().render(matrices, waterMask, light, OverlayTexture.NO_OVERLAY)
         }
 
         matrices.popPose()
