@@ -93,9 +93,10 @@ abstract class EnergyStorageBlock(
         }
 
         override fun place(context: BlockPlaceContext): InteractionResult {
+            val nbt = context.itemInHand.get(DataComponents.CUSTOM_DATA)?.copyTag()
             val result = super.place(context)
             if (result.consumesAction() && !context.level.isClientSide) {
-                val nbt = context.itemInHand.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return result
+                if (nbt == null) return result
                 val be = context.level.getBlockEntity(context.clickedPos) as? EnergyStorageBlockEntity ?: return result
                 val blockEntityTag = nbt.getCompound(NBT_BLOCK_ENTITY_TAG)
                 if (!blockEntityTag.isEmpty && blockEntityTag.contains(EnergyStorageSync.NBT_ENERGY_STORED)) {

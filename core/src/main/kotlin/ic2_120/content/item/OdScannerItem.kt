@@ -112,19 +112,19 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
          * 打开扫描仪 GUI（OD 与 OV 共用）。
          */
         fun openScannerScreen(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-            val stack = player.getItemInHand(player.usedItemHand)
+            val stack = player.getItemInHand(hand)
             if (world.isClient) return InteractionResultHolder.pass(stack)
 
             player.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
                 override fun getDisplayName(): Component {
                     // OD/OV 共用 GUI：标题必须跟随实际扫描仪类型，不能写死 OD 的 key
-                    val t = getScannerType(player.getItemInHand(player.usedItemHand))
+                    val t = getScannerType(player.getItemInHand(hand))
                     val key = if (t == ScannerType.OV) "item.ic2_120.advanced_scanner" else "item.ic2_120.scanner"
                     return Component.translatable(key)
                 }
                 override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                     val buf = FriendlyByteBuf(Unpooled.buffer())
-                        val s = player.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND)
+                        val s = player.getItemInHand(hand)
                         val t = getScannerType(s)
                         buf.writeInt(IElectricTool.getEnergy(s).toInt().coerceAtMost(Int.MAX_VALUE))
                         buf.writeInt(t.energyCapacity.toInt().coerceAtMost(Int.MAX_VALUE))
@@ -133,7 +133,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
                     return buf
                 }
                 override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): net.minecraft.world.inventory.AbstractContainerMenu {
-                    val s = player.getItemInHand(player.usedItemHand)
+                    val s = player.getItemInHand(hand)
                     val t = getScannerType(s)
                     val buf = FriendlyByteBuf(Unpooled.buffer())
                     buf.writeInt(IElectricTool.getEnergy(s).toInt().coerceAtMost(Int.MAX_VALUE))

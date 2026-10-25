@@ -5,7 +5,9 @@ import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.compat.isClient
-import ic2_120.compat.orCreateNbt
+import net.minecraft.core.component.DataComponents
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.item.BlockItem
 
 import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.item.AdvancedCircuit
@@ -85,8 +87,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
         type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
-        // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
-        val blockEntityTag = stack.orCreateNbt.getCompound("BlockEntityTag")
+        val blockEntityTag = stack.get(DataComponents.BLOCK_ENTITY_DATA)?.copyTag() ?: CompoundTag()
         val templateCount = blockEntityTag.getList("UuTemplates", 10).size
         tooltip.add(Component.literal("模板数量: $templateCount").withStyle(ChatFormatting.GRAY))
     }
@@ -97,7 +98,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
         val provider = blockEntity.level?.registryAccess() ?: return itemStack
         val nbt = blockEntity.saveWithoutMetadata(provider)
         if (!nbt.isEmpty) {
-            itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
+            BlockItem.setBlockEntityData(itemStack, blockEntity.type, nbt)
         }
         return itemStack
     }

@@ -2,7 +2,7 @@ package ic2_120.content.block.storage
 
 import net.minecraft.core.registries.BuiltInRegistries
 
-import ic2_120.compat.orCreateNbt
+import net.minecraft.core.component.DataComponents
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
@@ -80,7 +80,7 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
 
         val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return InteractionResult.PASS
         val storage = FluidStorage.SIDED.find(world, pos, hit.direction)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, player.usedItemHand)) {
+        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, InteractionHand.MAIN_HAND)) {
             return InteractionResult.SUCCESS
         }
 
@@ -100,7 +100,7 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
         if (!be.fluidVariant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, encodeFluidVariant(be.fluidVariant))
         }
-        stack.orCreateNbt = stack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
+        BlockItem.setBlockEntityData(stack, be.type, nbt)
     }
 
     @Deprecated("override deprecated method", level = DeprecationLevel.WARNING)
@@ -186,8 +186,7 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
         if (block !is TankBlock) return
 
         val capMb = fluidCapacityMbForBlock(block)
-        // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
-        val beTag = stack.orCreateNbt.getCompound("BlockEntityTag")
+        val beTag = stack.get(DataComponents.BLOCK_ENTITY_DATA)?.copyTag() ?: CompoundTag()
         val amountRaw = beTag.getLong(NBT_FLUID_AMOUNT)
         val variantTag = beTag.getCompound(NBT_FLUID_VARIANT)
         val variant = decodeFluidVariant(variantTag)

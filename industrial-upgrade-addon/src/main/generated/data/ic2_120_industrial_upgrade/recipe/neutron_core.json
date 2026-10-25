@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_industrial_upgrade:neutron"
+    },
+    "B": {
+      "item": "ic2_120_industrial_upgrade:quant_core2"
+    }
+  },
+  "pattern": [
+    " A ",
+    "ABA",
+    " A "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:neutron_core"
+  }
+}

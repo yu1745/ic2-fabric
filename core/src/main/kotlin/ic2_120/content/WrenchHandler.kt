@@ -29,6 +29,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.BlockItem
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.item.Items
 import net.minecraft.server.level.ServerPlayer
@@ -208,10 +209,10 @@ object WrenchHandler {
                     val nbt = patternBe?.saveWithoutMetadata(world.registryAccess())
                     world.removeBlockEntity(pos)
                     val didBreak = world.destroyBlock(pos, false, player)
-                    if (didBreak && nbt != null) {
+                    if (didBreak && nbt != null && patternBe != null) {
                         val dropped = ItemStack(block.asItem())
                         if (!nbt.isEmpty) {
-                            dropped.orCreateNbt = dropped.orCreateNbt.apply { put("BlockEntityTag", nbt) }
+                            BlockItem.setBlockEntityData(dropped, patternBe.type, nbt)
                         }
                         val patternEntity = net.minecraft.world.entity.item.ItemEntity(
                             world,

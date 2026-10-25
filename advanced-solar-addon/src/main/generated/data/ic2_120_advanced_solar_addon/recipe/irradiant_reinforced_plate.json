@@ -19,9 +19,9 @@
     }
   },
   "pattern": [
-    "RDR",
-    "LPL",
-    "RIR"
+    "RPR",
+    "LIL",
+    "RDR"
   ],
   "result": {
     "count": 1,

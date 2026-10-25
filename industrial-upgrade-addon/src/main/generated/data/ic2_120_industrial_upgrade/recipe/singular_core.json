@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_industrial_upgrade:ender_quantum_component"
+    },
+    "B": {
+      "item": "ic2_120_advanced_solar_addon:photovoltaic_iridium_plate"
+    },
+    "C": {
+      "item": "ic2_120_industrial_upgrade:photoniy_ingot"
+    },
+    "D": {
+      "item": "ic2_120_advanced_solar_addon:enriched_sunnarium_alloy"
+    }
+  },
+  "pattern": [
+    "ABA",
+    "DCD",
+    "ABA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:singular_core"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_industrial_upgrade:red_component"
+    },
+    "B": {
+      "item": "ic2_120_industrial_upgrade:green_component"
+    },
+    "C": {
+      "item": "ic2_120_industrial_upgrade:blue_component"
+    }
+  },
+  "pattern": [
+    "ABC",
+    "ABC",
+    "ABC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:solar_splitter"
+  }
+}

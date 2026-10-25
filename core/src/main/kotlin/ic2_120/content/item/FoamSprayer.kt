@@ -80,7 +80,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
             return InteractionResult.SUCCESS
         }
 
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(hand)
         if (stack.item != this) return InteractionResult.PASS
 
         val placed = tryPlaceFoam(world, player, stack, hit)

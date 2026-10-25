@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_industrial_upgrade:neutron_cable"
+    },
+    "B": {
+      "item": "ic2_120:dense_lapis_plate"
+    },
+    "C": {
+      "item": "ic2_120:dense_bronze_plate"
+    }
+  },
+  "pattern": [
+    " A ",
+    "BCB",
+    " A "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:perfect_cable"
+  }
+}

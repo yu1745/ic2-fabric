@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120_industrial_upgrade:admin_solar_panelsun"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:admin_solar_panel"
+  }
+}

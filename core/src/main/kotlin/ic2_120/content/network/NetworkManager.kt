@@ -8,6 +8,8 @@ import ic2_120.content.block.machines.ReplicatorBlockEntity
 import ic2_120.content.screen.FluidUpgradeScreenHandler
 import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.content.screen.PumpAttachmentScreenHandler
+import ic2_120.content.screen.ReplicatorScreenHandler
+import ic2_120.content.screen.PatternStorageScreenHandler
 import ic2_120.content.item.Chainsaw
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.IridiumDrill
@@ -225,7 +227,7 @@ object NetworkManager {
             val player = context.player()
             context.server().execute {
                 for (hand in arrayOf(InteractionHand.MAIN_HAND, InteractionHand.OFF_HAND)) {
-                    val stack = player.getItemInHand(player.usedItemHand)
+                    val stack = player.getItemInHand(hand)
                     if (stack.item is FoamSprayerItem) {
                         val multi = FoamSprayerItem.toggleMultiMode(stack)
                         player.setItemInHand(hand, stack)
@@ -245,7 +247,7 @@ object NetworkManager {
             val player = context.player()
             context.server().execute {
                 for (hand in arrayOf(InteractionHand.MAIN_HAND, InteractionHand.OFF_HAND)) {
-                    val stack = player.getItemInHand(player.usedItemHand)
+                    val stack = player.getItemInHand(hand)
                     if (stack.item is MiningLaserItem) {
                         MiningLaserServerSuppress.onMiningLaserModeToggled(player)
                         val newMode = MiningLaserItem.cycleMode(stack)
@@ -282,10 +284,17 @@ object NetworkManager {
         ServerPlayNetworking.registerGlobalReceiver(SelectTemplatePayload.ID) { payload, context ->
             val player = context.player()
             context.server().execute {
-                val be = player.level().getBlockEntity(payload.pos)
-                when (be) {
-                    is ReplicatorBlockEntity -> be.selectTemplate(payload.index)
-                    is PatternStorageBlockEntity -> be.selectTemplate(payload.index)
+                val menu = player.containerMenu
+                if (!menu.stillValid(player)) return@execute
+                when (menu) {
+                    is ReplicatorScreenHandler -> {
+                        if (menu.blockPos != payload.pos) return@execute
+                        (player.level().getBlockEntity(payload.pos) as? ReplicatorBlockEntity)?.selectTemplate(payload.index)
+                    }
+                    is PatternStorageScreenHandler -> {
+                        if (menu.blockPos != payload.pos) return@execute
+                        (player.level().getBlockEntity(payload.pos) as? PatternStorageBlockEntity)?.selectTemplate(payload.index)
+                    }
                 }
             }
         }

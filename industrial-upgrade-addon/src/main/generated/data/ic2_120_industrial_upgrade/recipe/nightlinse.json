@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "minecraft:coal"
+    },
+    "S": {
+      "item": "ic2_120:reinforced_glass"
+    }
+  },
+  "pattern": [
+    " C ",
+    "CSC",
+    " C "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:nightlinse"
+  }
+}

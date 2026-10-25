@@ -89,7 +89,9 @@ class PumpAttachmentScreenHandler(
         val returning = carried.copy()
         if (returning.isEmpty) return
         playerInventory.placeItemBackInInventory(returning)
-        carried = if (returning.isEmpty) ItemStack.EMPTY else returning
+        // Inventory may drop a full remainder without consuming the passed stack.
+        // In that case keeping it on the cursor would duplicate the dropped item.
+        setCarried(ItemStack.EMPTY)
     }
 
     companion object {

@@ -181,13 +181,27 @@ object BatteryEnergyShapedRecipeSerializer : RecipeSerializer<BatteryEnergyShape
         ::encodeBatteryEnergyShapedJson
     )
 
-    // TODO(1.21.1): 配方不走网络同步（双端各自读 datapack），流编解码仅做占位实现
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BatteryEnergyShapedRecipe> {
-        val delegate = RecipeSerializer.SHAPED_RECIPE.streamCodec()
         return StreamCodec.ofMember(
-            { recipe: BatteryEnergyShapedRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
+            { recipe: BatteryEnergyShapedRecipe, buf: RegistryFriendlyByteBuf ->
+                buf.writeUtf(recipe.group)
+                buf.writeVarInt(recipe.patternRows.size)
+                recipe.patternRows.forEach(buf::writeUtf)
+                buf.writeVarInt(recipe.patternKeys.size)
+                recipe.patternKeys.forEach { (key, ingredient) ->
+                    buf.writeChar(key.code)
+                    Ingredient.CONTENTS_STREAM_CODEC.encode(buf, ingredient)
+                }
+                ItemStack.STREAM_CODEC.encode(buf, recipe.getResultItem(buf.registryAccess()))
+            },
             { buf: RegistryFriendlyByteBuf ->
-                BatteryEnergyShapedRecipe(listOf("X"), linkedMapOf('X' to Ingredient.EMPTY), ItemStack.EMPTY)
+                val group = buf.readUtf()
+                val rows = List(buf.readVarInt()) { buf.readUtf() }
+                val keys = linkedMapOf<Char, Ingredient>()
+                repeat(buf.readVarInt()) {
+                    keys[buf.readChar()] = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
+                }
+                BatteryEnergyShapedRecipe(rows, keys, ItemStack.STREAM_CODEC.decode(buf), group)
             }
         )
     }

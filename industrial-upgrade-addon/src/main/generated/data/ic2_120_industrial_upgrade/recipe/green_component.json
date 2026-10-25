@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_advanced_solar_addon:irradiant_glass_pane"
+    }
+  },
+  "pattern": [
+    "A  "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:green_component"
+  }
+}

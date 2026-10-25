@@ -163,7 +163,7 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         val storage = FluidStorage.SIDED.find(world, pos, hit.direction) ?: FluidStorage.SIDED.find(world, pos, null)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, player.usedItemHand)) {
+        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, InteractionHand.MAIN_HAND)) {
             return InteractionResult.SUCCESS
         }
         return InteractionResult.PASS

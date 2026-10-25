@@ -244,7 +244,7 @@ class WindKineticGeneratorBlockEntity(
     }
 
     fun useWithoutItem(player: Player, hand: InteractionHand): InteractionResult {
-        val held = player.getItemInHand(player.usedItemHand)
+        val held = player.getItemInHand(hand)
         val rotor = inventory[ROTOR_SLOT]
 
         // 空手右键取出转子

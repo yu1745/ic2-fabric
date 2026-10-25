@@ -1,6 +1,7 @@
 package ic2_120.content.block.storage
 
-import ic2_120.compat.orCreateNbt
+import net.minecraft.core.component.DataComponents
+import net.minecraft.nbt.CompoundTag
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
@@ -89,8 +90,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
     ) {
         super.appendHoverText(stack, context, tooltip, type)
 
-        // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
-        val blockEntityTag = stack.orCreateNbt.getCompound("BlockEntityTag")
+        val blockEntityTag = stack.get(DataComponents.BLOCK_ENTITY_DATA)?.copyTag() ?: CompoundTag()
         if (!blockEntityTag.contains("Container")) {
             tooltip.add(Component.literal("物品数量: 0").withStyle(ChatFormatting.GRAY))
             return
@@ -150,7 +150,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
                 val itemStack = ItemStack(this.asItem())
                 val nbt = blockEntity.saveWithFullMetadata(world.registryAccess())
                 if (!nbt.isEmpty) {
-                    itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
+                    BlockItem.setBlockEntityData(itemStack, blockEntity.type, nbt)
                 }
 
                 // 掉落物品
@@ -191,7 +191,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
         if (blockEntity is StorageBoxBlockEntity) {
             val nbt = blockEntity.saveWithFullMetadata(world.registryAccess())
             if (!nbt.isEmpty) {
-                itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
+                BlockItem.setBlockEntityData(itemStack, blockEntity.type, nbt)
             }
         }
 

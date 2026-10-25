@@ -192,7 +192,7 @@ class FoamBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClientSide) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(InteractionHand.MAIN_HAND)
         if (!stack.`is`(Items.SAND)) return InteractionResult.PASS
         val wall = LightGrayWallBlock::class.instance().defaultBlockState()
         world.setBlock(pos, wall, Block.UPDATE_ALL)
@@ -228,7 +228,7 @@ class ReinforcedFoamBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClientSide) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(InteractionHand.MAIN_HAND)
         if (!stack.`is`(Items.SAND)) return InteractionResult.PASS
         val stone = ReinforcedStoneBlock::class.instance().defaultBlockState()
         world.setBlock(pos, stone, Block.UPDATE_ALL)
@@ -610,7 +610,7 @@ abstract class Ic2ScaffoldBlock(
         if (world.isClientSide) return InteractionResult.SUCCESS
         if (player.isCrouching || !isVerticalPillar(world, pos)) return InteractionResult.PASS
 
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(InteractionHand.MAIN_HAND)
         val target: BlockState
         val required: Int
         val sound: net.minecraft.sounds.SoundEvent

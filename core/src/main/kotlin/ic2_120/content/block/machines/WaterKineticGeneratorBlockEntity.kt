@@ -182,7 +182,7 @@ class WaterKineticGeneratorBlockEntity(
     }
 
     fun useWithoutItem(player: Player, hand: InteractionHand): InteractionResult {
-        val held = player.getItemInHand(player.usedItemHand)
+        val held = player.getItemInHand(hand)
         val rotor = inventory[ROTOR_SLOT]
 
         if (held.isEmpty) {

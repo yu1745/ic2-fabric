@@ -100,13 +100,18 @@ object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapeles
         ::encodeDamageToolShapelessJson
     )
 
-    // TODO(1.21.1): 配方不走网络同步（双端各自读 datapack），流编解码仅做占位实现
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, DamageToolShapelessRecipe> {
-        val delegate = RecipeSerializer.SHAPELESS_RECIPE.streamCodec()
         return StreamCodec.ofMember(
-            { recipe: DamageToolShapelessRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
-            { _ ->
-                DamageToolShapelessRecipe(listOf(Ingredient.EMPTY), ItemStack.EMPTY)
+            { recipe: DamageToolShapelessRecipe, buf: RegistryFriendlyByteBuf ->
+                buf.writeUtf(recipe.group)
+                buf.writeVarInt(recipe.recipeIngredients.size)
+                recipe.recipeIngredients.forEach { Ingredient.CONTENTS_STREAM_CODEC.encode(buf, it) }
+                ItemStack.STREAM_CODEC.encode(buf, recipe.getResultItem(buf.registryAccess()))
+            },
+            { buf: RegistryFriendlyByteBuf ->
+                val group = buf.readUtf()
+                val ingredients = List(buf.readVarInt()) { Ingredient.CONTENTS_STREAM_CODEC.decode(buf) }
+                DamageToolShapelessRecipe(ingredients, ItemStack.STREAM_CODEC.decode(buf), group)
             }
         )
     }

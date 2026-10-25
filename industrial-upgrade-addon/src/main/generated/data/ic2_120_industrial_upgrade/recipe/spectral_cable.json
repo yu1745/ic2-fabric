@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:glass_fibre_cable"
+    },
+    "B": {
+      "item": "ic2_120:mixed_metal_ingot"
+    },
+    "C": {
+      "item": "ic2_120:rubber"
+    }
+  },
+  "pattern": [
+    " A ",
+    "BBB",
+    " C "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:spectral_cable"
+  }
+}

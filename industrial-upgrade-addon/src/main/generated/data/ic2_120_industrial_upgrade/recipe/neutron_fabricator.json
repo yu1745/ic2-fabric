@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_industrial_upgrade:ender_quantum_component"
+    },
+    "B": {
+      "item": "ic2_120:advanced_machine"
+    },
+    "C": {
+      "item": "minecraft:nether_star"
+    }
+  },
+  "pattern": [
+    " A ",
+    "BCB",
+    " A "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:neutron_fabricator"
+  }
+}

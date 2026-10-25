@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_industrial_upgrade:enriched_sunnarium_alloy2"
+    },
+    "B": {
+      "item": "ic2_120_industrial_upgrade:photoniy_ingot"
+    }
+  },
+  "pattern": [
+    "ABA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:enriched_sunnarium_alloy3"
+  }
+}

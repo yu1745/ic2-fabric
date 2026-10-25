@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_industrial_upgrade:rainlinse"
+    },
+    "B": {
+      "item": "ic2_120_advanced_solar_addon:hybrid_solar_panel"
+    }
+  },
+  "pattern": [
+    "B",
+    "A"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:hybrid_solar_panelrain"
+  }
+}

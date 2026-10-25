@@ -137,7 +137,7 @@ class CropBlock : BaseEntityBlock(
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(InteractionHand.MAIN_HAND)
         // 手持种子扫描仪时，优先走物品 useOnBlock（扫描）逻辑，不触发作物采摘。
         if (stack.item is CropnalyzerItem) return InteractionResult.PASS
         // 除草铲：由物品 useOnBlock 清除杂草，不走采摘逻辑

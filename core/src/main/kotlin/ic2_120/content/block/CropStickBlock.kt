@@ -121,7 +121,7 @@ class CropStickBlock : BaseEntityBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(InteractionHand.MAIN_HAND)
         val isCreative = player.abilities.instabuild
 
         // 放置第二根作物架：变为杂交底座

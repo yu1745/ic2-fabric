@@ -26,7 +26,7 @@ import net.minecraft.world.level.Level
  * 需要覆写余物逻辑，避免 fluid_cell 自带余物再次返还 empty_cell。
  */
 class EmptyFluidCellToEmptyCellRecipe(
-    private val recipeIngredients: List<Ingredient>,
+    internal val recipeIngredients: List<Ingredient>,
     result: ItemStack,
     group: String = "",
 ) : ShapelessRecipe(group, CraftingBookCategory.MISC, result, NonNullList.of(Ingredient.EMPTY, *recipeIngredients.toTypedArray())) {
@@ -89,13 +89,18 @@ object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCe
         ::encodeEmptyFluidCellToEmptyCellJson
     )
 
-    // TODO(1.21.1): 配方不走网络同步（双端各自读 datapack），流编解码仅做占位实现
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, EmptyFluidCellToEmptyCellRecipe> {
-        val delegate = RecipeSerializer.SHAPELESS_RECIPE.streamCodec()
         return StreamCodec.ofMember(
-            { recipe: EmptyFluidCellToEmptyCellRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
-            { _ ->
-                EmptyFluidCellToEmptyCellRecipe(listOf(Ingredient.EMPTY), ItemStack.EMPTY)
+            { recipe: EmptyFluidCellToEmptyCellRecipe, buf: RegistryFriendlyByteBuf ->
+                buf.writeUtf(recipe.group)
+                buf.writeVarInt(recipe.recipeIngredients.size)
+                recipe.recipeIngredients.forEach { Ingredient.CONTENTS_STREAM_CODEC.encode(buf, it) }
+                ItemStack.STREAM_CODEC.encode(buf, recipe.getResultItem(buf.registryAccess()))
+            },
+            { buf: RegistryFriendlyByteBuf ->
+                val group = buf.readUtf()
+                val ingredients = List(buf.readVarInt()) { Ingredient.CONTENTS_STREAM_CODEC.decode(buf) }
+                EmptyFluidCellToEmptyCellRecipe(ingredients, ItemStack.STREAM_CODEC.decode(buf), group)
             }
         )
     }

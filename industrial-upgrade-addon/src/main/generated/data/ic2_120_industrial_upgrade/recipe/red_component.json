@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:reinforced_glass"
+    },
+    "B": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "AAA",
+    "BBB",
+    "AAA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:red_component"
+  }
+}

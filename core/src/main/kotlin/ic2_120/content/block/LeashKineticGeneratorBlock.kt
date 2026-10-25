@@ -90,7 +90,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity ?: return InteractionResult.PASS
 
-        val heldStack = player.getItemInHand(player.usedItemHand)
+        val heldStack = player.getItemInHand(InteractionHand.MAIN_HAND)
 
         if (heldStack.item === Items.LEAD) {
             if (world.isClient) return InteractionResult.SUCCESS

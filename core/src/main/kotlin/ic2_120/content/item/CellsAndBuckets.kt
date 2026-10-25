@@ -100,7 +100,7 @@ fun ItemStack.getFluidCellVariant(): FluidVariant? {
 
 /** 将 FluidVariant 写入 NBT */
 fun ItemStack.setFluidCellVariant(variant: FluidVariant) {
-    orCreateNbt.put(FLUID_CELL_NBT_KEY, encodeFluidVariant(variant))
+    orCreateNbt = orCreateNbt.apply { put(FLUID_CELL_NBT_KEY, encodeFluidVariant(variant)) }
 }
 
 /** 判断流体单元是否为空 */
@@ -239,7 +239,7 @@ class FluidCellItem : Item(Item.Properties()), DispensibleContainerItem {
         val pos = context.clickedPos
         val player = context.player ?: return InteractionResult.PASS
         val hand = context.hand
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(hand)
         if (world.isClient) return InteractionResult.SUCCESS
 
         val fluid = stack.getFluidCellVariant()?.fluid ?: return InteractionResult.PASS
@@ -476,7 +476,7 @@ abstract class ModFluidCell(settings: Item.Properties) : Item(settings), Dispens
         val pos = context.clickedPos
         val player = context.player ?: return InteractionResult.PASS
         val hand = context.hand
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(hand)
         if (world.isClient) return InteractionResult.SUCCESS
 
         // 先尝试与方块的 FluidStorage 交互（如流体储罐），命中则优先交给储罐接管，

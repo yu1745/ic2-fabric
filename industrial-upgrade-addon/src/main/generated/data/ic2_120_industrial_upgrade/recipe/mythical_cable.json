@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120_industrial_upgrade:singular_cable"
+    },
+    "B": {
+      "item": "ic2_120:dense_lead_plate"
+    },
+    "C": {
+      "item": "ic2_120:alloy"
+    },
+    "D": {
+      "item": "ic2_120:dense_gold_plate"
+    }
+  },
+  "pattern": [
+    "DAD",
+    "BCB",
+    "DAD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_industrial_upgrade:mythical_cable"
+  }
+}
