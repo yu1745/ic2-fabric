@@ -87,9 +87,9 @@ abstract class EnergyStorageBlock(
         private fun getStoredEnergy(stack: ItemStack): Long {
             // TODO(1.21.1): 1.21.1 ItemStack 无 getTag/getSubTag，改走 CUSTOM_DATA 组件。
             val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return 0L
-            if (nbt.getBoolean(NBT_FULL)) return config.capacity
-            val blockEntityTag = nbt.getCompound(NBT_BLOCK_ENTITY_TAG)
-            return blockEntityTag.getLong(EnergyStorageSync.NBT_ENERGY_STORED).coerceIn(0L, config.capacity)
+            if (nbt.getBooleanOr(NBT_FULL, false)) return config.capacity
+            val blockEntityTag = nbt.getCompoundOrEmpty(NBT_BLOCK_ENTITY_TAG)
+            return blockEntityTag.getLongOr(EnergyStorageSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, config.capacity)
         }
 
         override fun place(context: BlockPlaceContext): InteractionResult {
@@ -97,12 +97,12 @@ abstract class EnergyStorageBlock(
             if (result.consumesAction() && !context.level.isClientSide) {
                 val nbt = context.itemInHand.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return result
                 val be = context.level.getBlockEntity(context.clickedPos) as? EnergyStorageBlockEntity ?: return result
-                val blockEntityTag = nbt.getCompound(NBT_BLOCK_ENTITY_TAG)
+                val blockEntityTag = nbt.getCompoundOrEmpty(NBT_BLOCK_ENTITY_TAG)
                 if (!blockEntityTag.isEmpty && blockEntityTag.contains(EnergyStorageSync.NBT_ENERGY_STORED)) {
-                    val stored = blockEntityTag.getLong(EnergyStorageSync.NBT_ENERGY_STORED).coerceIn(0L, config.capacity)
+                    val stored = blockEntityTag.getLongOr(EnergyStorageSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, config.capacity)
                     be.sync.restoreEnergy(stored)
                     be.setChanged()
-                } else if (nbt.getBoolean(NBT_FULL)) {
+                } else if (nbt.getBooleanOr(NBT_FULL, false)) {
                     be.sync.restoreEnergy(config.capacity)
                     be.setChanged()
                 }
@@ -111,14 +111,15 @@ abstract class EnergyStorageBlock(
         }
 
         override fun getName(stack: ItemStack): net.minecraft.network.chat.Component =
-            if (stack.get(DataComponents.CUSTOM_DATA)?.copyTag()?.getBoolean(NBT_FULL) == true)
+            if (stack.get(DataComponents.CUSTOM_DATA)?.copyTag()?.getBooleanOr(NBT_FULL, false) == true)
                 net.minecraft.network.chat.Component.translatable(translationKeyFull)
             else
                 super.getName(stack)
 
         @Environment(EnvType.CLIENT)
-        override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-            super.appendHoverText(stack, context, tooltip, type)
+        override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+            super.appendHoverText(stack, context, display, consumer, type)
             val stored = getStoredEnergy(stack)
             tooltip.add(Component.literal("能量: %,d / %,d EU".format(stored, config.capacity)).withStyle(ChatFormatting.GRAY))
         }

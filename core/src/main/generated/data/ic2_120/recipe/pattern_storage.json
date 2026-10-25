@@ -1,22 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "A": {
-      "item": "ic2_120:advanced_circuit"
-    },
-    "C": {
-      "item": "ic2_120:crystal_memory"
-    },
-    "L": {
-      "item": "ic2_120:mining_laser"
-    },
-    "M": {
-      "item": "ic2_120:advanced_machine"
-    },
-    "S": {
-      "item": "ic2_120:reinforced_stone"
-    }
+    "A": "ic2_120:advanced_circuit",
+    "C": "ic2_120:crystal_memory",
+    "L": "ic2_120:mining_laser",
+    "M": "ic2_120:advanced_machine",
+    "S": "ic2_120:reinforced_stone"
   },
   "pattern": [
     "SSS",
@@ -24,7 +13,6 @@
     "LAL"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:pattern_storage"
   }
 }

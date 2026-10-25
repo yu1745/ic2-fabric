@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer
  * FTB Chunks 领地保护集成（外观层）。
  *
  * 本类不包含任何 FTB Chunks API 的直接引用。
- * 实际保护检查通过 Fabric entrypoint 发现 [FTBChunksProtection] 实现完成，
+ * 实际保护检查由 [ClaimProtectionImpl] 完成，
  * 确保 FTB Chunks 未安装时不会触发 ClassNotFoundException。
  */
 object ClaimProtection {
@@ -26,9 +26,7 @@ object ClaimProtection {
 
     private val impl: FTBChunksProtection? by lazy {
         if (!FabricLoader.getInstance().isModLoaded("ftbchunks")) null
-        else FabricLoader.getInstance()
-            .getEntrypoints("ic2_120:ftbchunks_protection", FTBChunksProtection::class.java)
-            .firstOrNull()
+        else ClaimProtectionImpl()
     }
 
     @JvmStatic

@@ -38,7 +38,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
@@ -57,9 +57,9 @@ import net.minecraft.world.level.Level
  */
 object WrenchHandler {
 
-    private val WRENCH_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "wrench")
-    private val ELECTRIC_WRENCH_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_wrench")
-    private val WRENCH_USE_SOUND = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.wrench.use"))
+    private val WRENCH_ID = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "wrench")
+    private val ELECTRIC_WRENCH_ID = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_wrench")
+    private val WRENCH_USE_SOUND = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("ic2", "item.wrench.use"))
     private const val ENERGY_RETAIN_RATIO = 0.8
 
     fun isWrench(stack: ItemStack): Boolean {

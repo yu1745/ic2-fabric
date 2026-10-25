@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.content.fluid.ModFluids
@@ -18,7 +20,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: item.ic2_120_advanced_solar_addon.sunnarium
 // zh_cn: 阳光化合物
@@ -29,7 +31,7 @@ class Sunnarium : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 配方 1: UU物质 + 荧石粉
-//            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
+//            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, Sunnarium::class.instance(), 1)
 //                .pattern("UUU")
 //                .pattern("GGG")
 //                .pattern("UUU")
@@ -39,7 +41,7 @@ class Sunnarium : Item(Item.Properties()) {
 //                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_from_uu"))
 
             // 配方 2: 9个小块阳光化合物
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, Sunnarium::class.instance(), 1)
                 .pattern("SSS")
                 .pattern("SSS")
                 .pattern("SSS")
@@ -58,7 +60,7 @@ class SunnariumPart : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-//            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SunnariumPart::class.instance(), 1)
+//            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SunnariumPart::class.instance(), 1)
 //                .pattern(" U ")
 //                .pattern(" G ")
 //                .pattern(" U ")
@@ -78,7 +80,7 @@ class SunnariumAlloy : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SunnariumAlloy::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SunnariumAlloy::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
@@ -99,13 +101,13 @@ class PhotovoltaicIridiumPlate : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 与 core 强化铱板相同，仅将铱矿石替换为高级太阳能附属的铱锭
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PhotovoltaicIridiumPlate::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, PhotovoltaicIridiumPlate::class.instance(), 1)
                 .pattern("IAI")
                 .pattern("ADA")
                 .pattern("IAI")
                 .define('I', IridiumIngot::class.instance())
                 .define('A', Alloy::class.instance())
-                .define('D', Ingredient.of(ModTags.Compat.Items.GEMS_DIAMOND))
+                .define('D', ic2_120.compat.tagIngredient(ModTags.Compat.Items.GEMS_DIAMOND))
                 .unlockedBy(getHasName(IridiumIngot::class.instance()), has(IridiumIngot::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("photovoltaic_iridium_plate"))
         }
@@ -120,7 +122,7 @@ class IrradiantUranium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantUranium::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IrradiantUranium::class.instance(), 1)
                 .pattern(" G ")
                 .pattern("GUG")
                 .pattern(" G ")
@@ -140,7 +142,7 @@ class EnrichedSunnarium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnarium::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EnrichedSunnarium::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
@@ -160,7 +162,7 @@ class EnrichedSunnariumAlloy : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EnrichedSunnariumAlloy::class.instance(), 1)
                 .pattern(" E ")
                 .pattern("EAE")
                 .pattern(" E ")
@@ -180,7 +182,7 @@ class IrradiantGlassPane : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 6)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 6)
                 .pattern("GGG")
                 .pattern("IXI")
                 .pattern("GGG")
@@ -202,7 +204,7 @@ class IridiumIronPlate : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 配方 1: 铁锭 + 铱锭
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
                 .pattern("III")
                 .pattern("IOI")
                 .pattern("III")
@@ -212,7 +214,7 @@ class IridiumIronPlate : Item(Item.Properties()) {
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_iron_plate"))
 
             // // 配方 2: 铁板 + 铱锭 (简单模式)
-            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
+            // ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
             //     .pattern("III")
             //     .pattern("I I")
             //     .pattern("III")
@@ -231,7 +233,7 @@ class ReinforcedIridiumIronPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReinforcedIridiumIronPlate::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReinforcedIridiumIronPlate::class.instance(), 1)
                 .pattern("ACA")
                 .pattern("CPC")
                 .pattern("ACA")
@@ -252,7 +254,7 @@ class IrradiantReinforcedPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantReinforcedPlate::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IrradiantReinforcedPlate::class.instance(), 1)
                 .pattern("RPR")
                 .pattern("LIL")
                 .pattern("RDR")
@@ -276,7 +278,7 @@ class IridiumIngot : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // // 配方 1: 8个铱矿石杆
-            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
+            // ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
             //     .pattern("III")
             //     .pattern("I I")
             //     .pattern("III")
@@ -285,7 +287,7 @@ class IridiumIngot : Item(Item.Properties()) {
             //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_ingot_from_ore"))
 
            // // 配方 3: 强化铱板 + 充电电池
-            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
+            // ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
             //     .pattern(" I ")
             //     .pattern("   ")
             //     .pattern(" B ")
@@ -305,7 +307,7 @@ class MtCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MtCore::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MtCore::class.instance(), 1)
                 .pattern("GNG")
                 .pattern("G G")
                 .pattern("GNG")
@@ -325,7 +327,7 @@ class QuantumCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantumCore::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, QuantumCore::class.instance(), 1)
                 .pattern("ESE")
                 .pattern("SNS")
                 .pattern("ESE")

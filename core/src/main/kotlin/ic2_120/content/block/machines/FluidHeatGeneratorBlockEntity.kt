@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -29,7 +31,7 @@ import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -50,7 +52,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -67,7 +69,7 @@ class FluidHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = FluidHeatGeneratorBlock.ACTIVE
 
@@ -306,7 +308,7 @@ class FluidHeatGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.fluid_heat_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         FluidHeatGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -318,19 +320,19 @@ class FluidHeatGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        val fluidId = nbt.getString("FuelFluid")
-        val fluid = if (fluidId.isNullOrBlank()) null else BuiltInRegistries.FLUID.get(ResourceLocation.parse(fluidId))
-        fuelTankInternal.setStoredFuel(nbt.getLong(NBT_FUEL_AMOUNT), fluid)
-        val fuelTypeName = nbt.getString(NBT_FUEL_TYPE)
+        val fluidId = nbt.getStringOr("FuelFluid", "")
+        val fluid = if (fluidId.isNullOrBlank()) null else BuiltInRegistries.FLUID.getValue(Identifier.parse(fluidId))
+        fuelTankInternal.setStoredFuel(nbt.getLongOr(NBT_FUEL_AMOUNT, 0L), fluid)
+        val fuelTypeName = nbt.getStringOr(NBT_FUEL_TYPE, "")
         currentFuelType = if (fuelTypeName.isNotBlank()) FuelType.valueOf(fuelTypeName) else null
-        fuelDropletAccumulator = nbt.getLong(NBT_FUEL_DROPLET_ACCUMULATOR)
+        fuelDropletAccumulator = nbt.getLongOr(NBT_FUEL_DROPLET_ACCUMULATOR, 0L)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_FUEL_AMOUNT, fuelTankInternal.amount)
         if (fuelTankInternal.amount > 0L && !fuelTankInternal.variant.isBlank) {
@@ -388,7 +390,7 @@ class FluidHeatGeneratorBlockEntity(
         val space = 8 * FluidConstants.BUCKET - fuelTankInternal.amount
         if (space < FluidConstants.BUCKET) return
         when {
-            fuelStack.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "biofuel_bucket")) -> {
+            fuelStack.item == BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "biofuel_bucket")) -> {
                 val emptyBucket = ItemStack(Items.BUCKET)
                 if (canInsertEmptyContainer(emptyBucket)) {
                     val inserted = fuelTankInternal.tryInsertFuel(ModFluids.BIOFUEL_STILL, FluidConstants.BUCKET)
@@ -399,8 +401,8 @@ class FluidHeatGeneratorBlockEntity(
                     }
                 }
             }
-            fuelStack.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "biofuel_cell")) -> {
-                val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell")))
+            fuelStack.item == BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "biofuel_cell")) -> {
+                val emptyCell = ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "empty_cell")))
                 if (canInsertEmptyContainer(emptyCell)) {
                     val inserted = fuelTankInternal.tryInsertFuel(ModFluids.BIOFUEL_STILL, FluidConstants.BUCKET)
                     if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {
@@ -410,10 +412,10 @@ class FluidHeatGeneratorBlockEntity(
                     }
                 }
             }
-            fuelStack.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "fluid_cell")) -> {
+            fuelStack.item == BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "fluid_cell")) -> {
                 val fluid = fuelStack.getFluidCellVariant()?.fluid
                 if (fluid != null && isSupportedFuelFluid(fluid)) {
-                    val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell")))
+                    val emptyCell = ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "empty_cell")))
                     if (canInsertEmptyContainer(emptyCell)) {
                         val inserted = fuelTankInternal.tryInsertFuel(fluid, FluidConstants.BUCKET)
                         if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {

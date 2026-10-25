@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
@@ -19,7 +21,7 @@ class RubberLogBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state) {
+) : LegacyBlockEntity26(type, pos, state) {
 
     private val extractedAt = LongArray(4)
 
@@ -45,7 +47,7 @@ class RubberLogBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         for (i in 0..3) {
-            extractedAt[i] = nbt.getLong("extracted_$i")
+            extractedAt[i] = nbt.getLongOr("extracted_$i", 0L)
         }
     }
 

@@ -19,7 +19,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.level.Level
 
@@ -30,11 +30,11 @@ import net.minecraft.world.level.Level
  */
 object RubberTreetapHandler {
 
-    private val TREETAP_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "treetap")
-    private val ELECTRIC_TREETAP_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_treetap")
-    private val RESIN_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "resin")
-    private val TREETAP_SOUND = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.treetap.use"))
-    private val ELECTRIC_TREETAP_SOUND = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.treetap.electric.use"))
+    private val TREETAP_ID = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "treetap")
+    private val ELECTRIC_TREETAP_ID = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_treetap")
+    private val RESIN_ID = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "resin")
+    private val TREETAP_SOUND = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("ic2", "item.treetap.use"))
+    private val ELECTRIC_TREETAP_SOUND = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("ic2", "item.treetap.electric.use"))
     private const val EU_PER_USE = 50L
 
     fun isTreetap(stack: ItemStack): Boolean {
@@ -94,7 +94,7 @@ object RubberTreetapHandler {
             }
 
             if (resinCount != null) {
-                val resin = BuiltInRegistries.ITEM.get(RESIN_ID)
+                val resin = BuiltInRegistries.ITEM.getValue(RESIN_ID)
                 val resinStack = ItemStack(resin, resinCount)
                 val spawnX = pos.x + 0.5 + face.stepX * 0.6
                 val spawnY = pos.y + 0.5 + face.stepY * 0.35

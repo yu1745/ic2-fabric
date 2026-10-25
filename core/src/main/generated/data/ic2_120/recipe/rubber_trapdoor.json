@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "P": {
-      "item": "ic2_120:rubber_planks"
-    }
+    "P": "ic2_120:rubber_planks"
   },
   "pattern": [
     "PPP",

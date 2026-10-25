@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "H": {
-      "item": "ic2_120:heat_exchanger"
-    },
-    "P": {
-      "tag": "ic2_120:compat/plates/copper"
-    }
+    "H": "ic2_120:heat_exchanger",
+    "P": "#ic2_120:compat/plates/copper"
   },
   "pattern": [
     "PPP",
@@ -15,7 +10,6 @@
     "PPP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:reactor_heat_exchanger"
   }
 }

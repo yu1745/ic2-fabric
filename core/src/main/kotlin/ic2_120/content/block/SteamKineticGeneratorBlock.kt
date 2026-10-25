@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -79,7 +81,7 @@ class SteamKineticGeneratorBlock : DirectionalMachineBlock(MachineBlock.defaultM
             val ironIngot = net.minecraft.world.item.Items.IRON_INGOT
             val emptyCell = ic2_120.content.item.EmptyCell::class.instance()
             if (steelCasing != net.minecraft.world.item.Items.AIR && copperBoiler != net.minecraft.world.item.Items.AIR && emptyCell != net.minecraft.world.item.Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteamKineticGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SteamKineticGeneratorBlock::class.item(), 1)
                     .pattern("CBC")
                     .pattern("IEI")
                     .pattern("CIC")

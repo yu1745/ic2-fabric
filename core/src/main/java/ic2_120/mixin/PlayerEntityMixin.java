@@ -129,7 +129,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
     @Inject(method = "causeFallDamage", at = @At("HEAD"), cancellable = true)
     private void ic2$handleSuperJumpFallDamage(
-            float fallDistance,
+            double fallDistance,
             float damageMultiplier,
             DamageSource source,
             CallbackInfoReturnable<Boolean> cir
@@ -144,7 +144,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
                 this.ic2$clearSuperJumpProtection();
             }
             ItemStack equippedBoots = player.getItemBySlot(EquipmentSlot.FEET);
-            if (QuantumBoots.tryAbsorbPermanentFallDamage(equippedBoots, fallDistance)) {
+            if (QuantumBoots.tryAbsorbPermanentFallDamage(equippedBoots, (float) fallDistance)) {
                 cir.setReturnValue(false);
             }
             return;
@@ -166,7 +166,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     /**
      * 纳米剑对穿戴纳米套的玩家：替换为无视原版护甲的伤害类型；量子护甲时不替换（见 {@link NanoSaberDamageHelper}）。
      */
-    @ModifyVariable(method = "hurt", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    @ModifyVariable(method = "hurtServer", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private DamageSource ic2ReplaceDamageSourceForNanoSaber(DamageSource source) {
         Player player = (Player) (Object) this;
         if (NanoSaberDamageHelper.shouldReplaceWithPierce(player, source)) {
@@ -175,8 +175,8 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         return source;
     }
 
-    @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
-    private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
+    private void onDamage(net.minecraft.server.level.ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         Player player = (Player) (Object) this;
 
         if (IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.get()) {
@@ -279,7 +279,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
         IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(true);
         try {
-            cir.setReturnValue(player.hurt(source, reducedDamage));
+            cir.setReturnValue(player.hurtServer(level, source, reducedDamage));
         } finally {
             IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(false);
         }
@@ -301,10 +301,10 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
                 x = (Math.random() - Math.random()) * 0.01;
                 z = (Math.random() - Math.random()) * 0.01;
             }
-            player.knockback(0.4, x, z);
+            player.knockback(0.4, x, z, source, 0.0f);
         }
 
-        if (!player.level().isClientSide) {
+        if (!player.level().isClientSide()) {
             player.level().broadcastDamageEvent(player, source);
         }
     }

@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120_advanced_solar_addon.content.item.EnrichedSunnarium
@@ -35,7 +37,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_advanced_solar_addon.hybrid_solar_panel
 // zh_cn: 混合太阳能发电机
@@ -83,7 +85,7 @@ open class HybridSolarPanelBlock : MachineBlock() {
             val reinforcedPlate = ReinforcedIridiumIronPlate::class.instance()
             val enrichedSunnarium = EnrichedSunnarium::class.instance()
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HybridSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, HybridSolarPanelBlock::class.item(), 1)
                 .pattern("CLC")
                 .pattern("RAR")
                 .pattern("BEB")

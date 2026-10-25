@@ -3,25 +3,25 @@ package buildcraft_addon.client.screen
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.screen.StoneEngineScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import ic2_120.client.compat.*
+import ic2_120.client.screen.LegacyContainerScreen26
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = buildcraft_addon.content.block.StoneEngineBlock::class)
 class StoneEngineScreen(
     handler: StoneEngineScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<StoneEngineScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<StoneEngineScreenHandler>(handler, playerInventory, title, BG_WIDTH, BG_HEIGHT) {
     // yarn→mojmap 兼容别名
     private val x get() = leftPos
     private val y get() = topPos
     private val textRenderer get() = font
 
     companion object {
-        val TEXTURE: ResourceLocation = ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, "textures/gui/steam_engine_gui.png")
+        val TEXTURE: Identifier = Identifier.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, "textures/gui/steam_engine_gui.png")
         const val TEXTURE_SIZE = 256
         const val BG_WIDTH = 176
         const val BG_HEIGHT = 166
@@ -36,8 +36,6 @@ class StoneEngineScreen(
     }
 
     init {
-        imageWidth = BG_WIDTH
-        imageHeight = BG_HEIGHT
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -62,7 +60,7 @@ class StoneEngineScreen(
         renderTooltip(context, mouseX, mouseY)
     }
 
-    override fun renderLabels(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+    override fun extractLabels(context: GuiGraphics, mouseX: Int, mouseY: Int) {
         context.drawString(font, title, imageWidth / 2 - font.width(title) / 2, 6, 0x404040, false)
         context.drawString(font, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
     }

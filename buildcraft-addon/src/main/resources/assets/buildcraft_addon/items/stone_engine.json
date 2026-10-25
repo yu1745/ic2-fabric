@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "buildcraft_addon:item/stone_engine"
+  }
+}

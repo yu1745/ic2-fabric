@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -23,7 +25,7 @@ import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_industrial_upgrade.spectral_solar_panelsun
 // zh_cn: 光谱日光太阳能发电机  en_us: Spectral Sun Panel
@@ -44,7 +46,7 @@ class SpectralSolarPanelSunBlock : IndustrialSolarPanelBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：光谱太阳能发电机 + SunLinse（ASA）
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SpectralSolarPanelSunBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SpectralSolarPanelSunBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', SpectralSolarPanelBlock::class.item())
@@ -52,7 +54,7 @@ class SpectralSolarPanelSunBlock : IndustrialSolarPanelBlock() {
                 .unlockedBy(getHasName(SpectralSolarPanelBlock::class.item()), has(SpectralSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("spectral_solar_panelsun"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SpectralSolarPanelBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SpectralSolarPanelBlock::class.item(), 1)
                 .requires(SpectralSolarPanelSunBlock::class.item())
                 .unlockedBy(getHasName(SpectralSolarPanelSunBlock::class.item()), has(SpectralSolarPanelSunBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("spectral_solar_panelsun_revert"))

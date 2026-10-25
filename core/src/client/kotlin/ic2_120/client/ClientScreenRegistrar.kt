@@ -10,7 +10,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.MenuType
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -161,8 +161,8 @@ object ClientScreenRegistrar {
 
             // 为每个 handler 名称注册一次（多个方块共用同一个 UI）
             for (handlerName in handlersToRegister) {
-                val id = ResourceLocation.fromNamespaceAndPath(modId, handlerName)
-                val type = BuiltInRegistries.MENU.get(id)
+                val id = Identifier.fromNamespaceAndPath(modId, handlerName)
+                val type = BuiltInRegistries.MENU.getValue(id)
                     ?: run {
                         logger.error("未找到 AbstractContainerMenu 类型: {}，请确保主端已注册 @ModScreenHandler(name = \"{}\")", id, handlerName)
                         return@processClass
@@ -189,7 +189,7 @@ object ClientScreenRegistrar {
         if (!annotation.block.isSubclassOf(Block::class)) return null
         for (id in BuiltInRegistries.BLOCK.keySet()) {
             if (id.namespace != modId) continue
-            val block = BuiltInRegistries.BLOCK.get(id)
+            val block = BuiltInRegistries.BLOCK.getValue(id)
             if (block::class == annotation.block) return id.path
         }
         return null

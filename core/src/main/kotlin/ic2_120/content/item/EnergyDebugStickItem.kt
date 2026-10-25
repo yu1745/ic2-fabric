@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import ic2_120.compat.displayClientMessage
+
 import ic2_120.compat.isClient
 
 import ic2_120.compat.world

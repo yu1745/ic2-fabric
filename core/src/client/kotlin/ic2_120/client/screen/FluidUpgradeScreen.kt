@@ -4,16 +4,16 @@ import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.screen.FluidUpgradeScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.Direction
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.Minecraft
@@ -23,11 +23,9 @@ class FluidUpgradeScreen(
     val handler: FluidUpgradeScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<FluidUpgradeScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<FluidUpgradeScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -139,8 +137,8 @@ class FluidUpgradeScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiupgrade.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiupgrade.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
         private const val HINT_X = 4
         private const val HINT_Y = 4

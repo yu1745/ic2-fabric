@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "R": {
-      "item": "minecraft:sugar_cane"
-    }
+    "R": "minecraft:sugar_cane"
   },
   "pattern": [
     "RRR",
@@ -12,7 +9,6 @@
     "RRR"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:plant_ball"
   }
 }

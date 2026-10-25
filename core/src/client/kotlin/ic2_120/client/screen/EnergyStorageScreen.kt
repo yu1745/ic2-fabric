@@ -5,12 +5,12 @@ import ic2_120.client.t
 import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.screen.EnergyStorageScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(
@@ -23,7 +23,7 @@ class EnergyStorageScreen(
     val handler: EnergyStorageScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<EnergyStorageScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<EnergyStorageScreenHandler>(handler, playerInventory, title, 179, 196) {
 
    private val capacity: Long = resolveCapacity()
    private val useEquipmentSlots: Boolean = resolveUseEquipmentSlots()
@@ -45,8 +45,6 @@ class EnergyStorageScreen(
     }
 
     init {
-        imageWidth = 179
-        imageHeight = 196
     }
 
    override fun init() {
@@ -156,7 +154,7 @@ class EnergyStorageScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guielectricblock.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guielectricblock.png")
         private const val TEXTURE_SIZE = 256
         private const val ENERGY_BAR_U = 180
         private const val ENERGY_BAR_V = 4

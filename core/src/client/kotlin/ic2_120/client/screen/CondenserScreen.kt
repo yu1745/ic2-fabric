@@ -6,14 +6,14 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.CondenserScreenHandler
 import ic2_120.content.sync.CondenserSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.FluidRenderHandlerRegistry
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.network.chat.Component as McText
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 冷凝器 GUI — 对齐 ic2_origin GuiCondenser (176×184)。
@@ -32,11 +32,9 @@ class CondenserScreen(
     val handler: CondenserScreenHandler,
     playerInventory: Inventory,
     title: McText
-) : AbstractContainerScreen<CondenserScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<CondenserScreenHandler>(handler, playerInventory, title, 176, 184) {
 
     init {
-        imageWidth = 176
-        imageHeight = 184
     }
 
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
@@ -185,7 +183,7 @@ class CondenserScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicondenser.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guicondenser.png")
         private const val PROGRESS_WIDTH = 82
 
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

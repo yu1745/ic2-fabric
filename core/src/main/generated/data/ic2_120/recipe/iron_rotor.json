@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "B": {
-      "item": "ic2_120:iron_rotor_blade"
-    },
-    "I": {
-      "item": "ic2_120:iron_shaft"
-    }
+    "B": "ic2_120:iron_rotor_blade",
+    "I": "ic2_120:iron_shaft"
   },
   "pattern": [
     " B ",
@@ -15,7 +10,6 @@
     " B "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:iron_rotor"
   }
 }

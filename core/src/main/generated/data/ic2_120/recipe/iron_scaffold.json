@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "F": {
-      "item": "ic2_120:iron_fence"
-    },
-    "P": {
-      "tag": "ic2_120:compat/plates/iron"
-    }
+    "F": "ic2_120:iron_fence",
+    "P": "#ic2_120:compat/plates/iron"
   },
   "pattern": [
     "PPP",

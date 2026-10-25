@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "P": {
-      "item": "ic2_120:carbon_plate"
-    }
+    "P": "ic2_120:carbon_plate"
   },
   "pattern": [
     "   ",
@@ -12,7 +9,6 @@
     "PPP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:carbon_boat"
   }
 }

@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "L": {
-      "item": "minecraft:oak_log"
-    },
-    "P": {
-      "item": "minecraft:oak_planks"
-    }
+    "L": "minecraft:oak_log",
+    "P": "minecraft:oak_planks"
   },
   "pattern": [
     "LPL",
@@ -15,7 +10,6 @@
     "LPL"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:wooden_storage_box"
   }
 }

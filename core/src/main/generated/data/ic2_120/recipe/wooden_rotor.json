@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "B": {
-      "item": "ic2_120:wooden_rotor_blade"
-    },
-    "I": {
-      "tag": "ic2_120:compat/ingots/iron"
-    }
+    "B": "ic2_120:wooden_rotor_blade",
+    "I": "#ic2_120:compat/ingots/iron"
   },
   "pattern": [
     " B ",
@@ -15,7 +10,6 @@
     " B "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:wooden_rotor"
   }
 }

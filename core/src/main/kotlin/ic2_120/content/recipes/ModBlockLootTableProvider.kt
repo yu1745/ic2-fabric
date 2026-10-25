@@ -23,8 +23,8 @@ import ic2_120.content.item.RawTin
 import ic2_120.content.item.RawUranium
 import ic2_120.registry.ClassScanner
 import ic2_120.registry.instance
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootSubProvider
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.item.ItemStack
@@ -39,13 +39,13 @@ import net.minecraft.world.level.storage.loot.entries.LootItem
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount
 import net.minecraft.world.level.storage.loot.functions.ApplyExplosionDecay
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue
-import net.minecraft.advancements.critereon.MinMaxBounds
-import net.minecraft.advancements.critereon.StatePropertiesPredicate
-import net.minecraft.advancements.critereon.EnchantmentPredicate
-import net.minecraft.advancements.critereon.ItemPredicate
+import net.minecraft.advancements.predicates.MinMaxBounds
+import net.minecraft.advancements.predicates.StatePropertiesPredicate
+import net.minecraft.advancements.predicates.EnchantmentPredicate
+import net.minecraft.advancements.predicates.ItemPredicate
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -56,26 +56,28 @@ import java.util.concurrent.CompletableFuture
  *   橡胶叶（`resources` 自定义掉落）、储物箱/储罐（`onStateReplaced` 带 BE 标签）、作物（`onBreak`）等。
  */
 class ModBlockLootTableProvider(
-    output: FabricDataOutput,
+    output: FabricPackOutput,
     registryLookup: CompletableFuture<HolderLookup.Provider>
-) : FabricBlockLootTableProvider(output, registryLookup) {
+) : FabricBlockLootSubProvider(output, registryLookup) {
 
-    private val wrenchPredicateBuilder = ItemPredicate.Builder.item()
+    private val wrenchPredicateBuilder by lazy { ItemPredicate.Builder.item()
         .of(
-            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "wrench")),
-            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_wrench"))
-        )
+            registries.lookupOrThrow(Registries.ITEM),
+            BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "wrench")),
+            BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_wrench"))
+        ) }
 
     override fun generate() {
-        val reinforcedDoorId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reinforced_door")
+        val reinforcedDoorId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "reinforced_door")
 
         for (block in BuiltInRegistries.BLOCK) {
             val id = BuiltInRegistries.BLOCK.getKey(block)
             if (id.namespace != Ic2_120.MOD_ID) continue
+            if (block.lootTable.isEmpty) continue
             if (ClassScanner.shouldSkipGeneratedBlockLootTable(id.path)) continue
 
             when {
-                block is CreativeGeneratorBlock -> dropSelf(block)
+                block is CreativeGeneratorBlock -> dropRegisteredBlock(block)
                 block is MachineBlock -> add(block, createMachineLootTable(block))
                 block is LeadOreBlock -> addCustomOreDrop(block, RawLead::class.instance())
                 block is TinOreBlock -> addCustomOreDrop(block, RawTin::class.instance())
@@ -85,14 +87,14 @@ class ModBlockLootTableProvider(
                 block is DeepslateUraniumOreBlock -> addCustomOreDrop(block, RawUranium::class.instance())
                 block is RubberLeavesBlock -> add(block, rubberLeavesLootTable(block))
                 id == reinforcedDoorId -> add(block, createDoorTable(block))
-                else -> dropSelf(block)
+                else -> dropRegisteredBlock(block)
             }
         }
     }
 
     private fun createMachineLootTable(block: MachineBlock): LootTable.Builder {
-        val blockItem = block.asItem()
-        val casingItem = block.getCasingDrop()
+        val blockItem = registeredItem(block)
+        val casingItem = block.getCasingDrop().takeUnless { it == Items.AIR } ?: registeredItem(block)
 
         val wrenchConditionBuilder = MatchTool.toolMatches(wrenchPredicateBuilder)
         val notWrenchConditionBuilder = InvertedLootItemCondition.invert(wrenchConditionBuilder)
@@ -110,6 +112,17 @@ class ModBlockLootTableProvider(
                     .`when`(notWrenchConditionBuilder)
                     .add(LootItem.lootTableItem(casingItem).apply(ApplyExplosionDecay.explosionDecay()))
             )
+    }
+
+    private fun registeredItem(block: net.minecraft.world.level.block.Block): net.minecraft.world.item.Item {
+        val id = BuiltInRegistries.BLOCK.getKey(block)
+        val item = BuiltInRegistries.ITEM.getValue(id)
+        check(item != Items.AIR) { "方块 $id 没有同名物品，无法生成掉落表" }
+        return item
+    }
+
+    private fun dropRegisteredBlock(block: net.minecraft.world.level.block.Block) {
+        add(block, createSingleItemTable(registeredItem(block)))
     }
 
     /**
@@ -140,22 +153,12 @@ class ModBlockLootTableProvider(
      * 不保留任何随机 fallback——每棵保底树掉落树苗数精确等于配置期望 n（默认 1.25）。
      */
     private fun rubberLeavesLootTable(block: RubberLeavesBlock): LootTable.Builder {
-        val leafItem = block.asItem()
+        val leafItem = registeredItem(block)
         val saplingItem = RubberSaplingBlock::class.instance()
 
-        val enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT)
         val silkTouchOrShears = AnyOfCondition.anyOf(
-            MatchTool.toolMatches(ItemPredicate.Builder.item().of(Items.SHEARS)),
-            MatchTool.toolMatches(
-                ItemPredicate.Builder.item()
-                    .withSubPredicate(net.minecraft.advancements.critereon.ItemSubPredicates.ENCHANTMENTS,
-                        net.minecraft.advancements.critereon.ItemEnchantmentsPredicate.enchantments(
-                            listOf(
-                                EnchantmentPredicate(enchantmentLookup.getOrThrow(Enchantments.SILK_TOUCH), MinMaxBounds.Ints.atLeast(1))
-                            )
-                        )
-                    )
-            )
+            MatchTool.toolMatches(ItemPredicate.Builder.item().of(registries.lookupOrThrow(Registries.ITEM), Items.SHEARS)),
+            hasSilkTouch()
         )
         val boundLeaf = LootItemBlockStatePropertyCondition.hasBlockStateProperties(block)
             .setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(RubberLeavesBlock.RUBBER_SAPLING_DROP, true))

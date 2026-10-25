@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -33,7 +35,7 @@ import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
@@ -60,7 +62,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -79,7 +81,7 @@ class FluidHeatExchangerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, ic2_120.content.upgrade.IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, ic2_120.content.upgrade.IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = FluidHeatExchangerBlock.ACTIVE
 
@@ -180,11 +182,11 @@ class FluidHeatExchangerBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val heatConductorItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "heat_conductor")) }
-    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val lavaCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "lava_cell")) }
-    private val hotCoolantCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "hot_coolant_cell")) }
+    private val heatConductorItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "heat_conductor")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val lavaCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "lava_cell")) }
+    private val hotCoolantCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "hot_coolant_cell")) }
 
     val syncedData = SyncedData()
     override val heatFlow = HeatFlowSync(syncedData, this)
@@ -445,8 +447,8 @@ class FluidHeatExchangerBlockEntity(
     private fun fheMatchesInputFilledContainer(stack: ItemStack): Boolean = when {
         stack.item == Items.LAVA_BUCKET -> true
         stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-        BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "lava_cell") -> true
-        BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "hot_coolant_cell") -> true
+        BuiltInRegistries.ITEM.getKey(stack.item) == Identifier.fromNamespaceAndPath("ic2_120", "lava_cell") -> true
+        BuiltInRegistries.ITEM.getKey(stack.item) == Identifier.fromNamespaceAndPath("ic2_120", "hot_coolant_cell") -> true
         stack.item is FluidCellItem -> {
             val fluid = stack.getFluidCellVariant()?.fluid
             fluid == Fluids.LAVA || fluid == Fluids.FLOWING_LAVA ||
@@ -457,7 +459,7 @@ class FluidHeatExchangerBlockEntity(
 
     private fun fheMatchesOutputEmptyContainer(stack: ItemStack): Boolean =
         stack.item == Items.BUCKET ||
-            BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
+            BuiltInRegistries.ITEM.getKey(stack.item) == Identifier.fromNamespaceAndPath("ic2_120", "empty_cell") ||
             (stack.item is FluidCellItem && stack.isFluidCellEmpty())
 
     override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
@@ -480,7 +482,7 @@ class FluidHeatExchangerBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.liquid_heat_exchanger")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         FluidHeatExchangerScreenHandler(
             syncId,
             playerInventory,
@@ -492,24 +494,24 @@ class FluidHeatExchangerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
 
-        bufferedHeat = nbt.getLong(NBT_BUFFERED_HEAT).coerceAtLeast(0L)
-        heatFromFluidRemainder = nbt.getLong(NBT_HEAT_FROM_FLUID_REMAINDER).coerceIn(0L, FLUID_PROCESS_AMOUNT - 1L)
+        bufferedHeat = nbt.getLongOr(NBT_BUFFERED_HEAT, 0L).coerceAtLeast(0L)
+        heatFromFluidRemainder = nbt.getLongOr(NBT_HEAT_FROM_FLUID_REMAINDER, 0L).coerceIn(0L, FLUID_PROCESS_AMOUNT - 1L)
         inputTankInternal.setStoredFluid(
-            nbt.getLong(NBT_INPUT_TANK),
+            nbt.getLongOr(NBT_INPUT_TANK, 0L),
             readFluidId(nbt, NBT_INPUT_FLUID)
         )
         outputTankInternal.setStoredFluid(
-            nbt.getLong(NBT_OUTPUT_TANK),
+            nbt.getLongOr(NBT_OUTPUT_TANK, 0L),
             readFluidId(nbt, NBT_OUTPUT_FLUID)
         )
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
 
         nbt.putLong(NBT_BUFFERED_HEAT, bufferedHeat)
@@ -719,11 +721,11 @@ class FluidHeatExchangerBlockEntity(
 
     private fun readFluidId(nbt: CompoundTag, key: String): Fluid? {
         if (!nbt.contains(key)) return null
-        val raw = nbt.getString(key)
+        val raw = nbt.getStringOr(key, "")
         if (raw.isNullOrBlank()) return null
-        val id = ResourceLocation.tryParse(raw) ?: return null
+        val id = Identifier.tryParse(raw) ?: return null
         if (!BuiltInRegistries.FLUID.containsKey(id)) return null
-        return BuiltInRegistries.FLUID.get(id)
+        return BuiltInRegistries.FLUID.getValue(id)
     }
 
     private fun writeFluidId(nbt: CompoundTag, key: String, fluid: Fluid?) {

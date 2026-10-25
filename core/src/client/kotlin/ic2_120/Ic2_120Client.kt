@@ -10,13 +10,15 @@ import ic2_120.client.ModeKeybinds
 import ic2_120.client.BatteryModelPredicates
 import ic2_120.client.ModItemTooltip
 import ic2_120.client.ModFluidClient
-import ic2_120.client.ClientBlockRenderLayers
 import ic2_120.client.ClientEntityRenderers
 import ic2_120.client.ClientScreenRegistrar
 import ic2_120.client.RubberLogModelPlugin
 import ic2_120.client.colorprovider.StorageBoxColorProvider
 import ic2_120.client.colorprovider.PipeColorProvider
+import ic2_120.client.colorprovider.PeatOreColorProvider
+import ic2_120.client.colorprovider.RubberLeavesColorProvider
 import ic2_120.client.PainterModelPredicates
+import ic2_120.client.UpgradeDirectionModelProperty
 import ic2_120.client.PeatOreTooltipHandler
 import ic2_120.client.QuantumLeggingsSpeedController
 import ic2_120.client.ClientBlockEntityRenderers
@@ -26,6 +28,7 @@ import ic2_120.client.IridiumDrillModeHandler
 import ic2_120.client.ChainsawModeHandler
 import ic2_120.client.MiningLaserModeHandler
 import ic2_120.client.SodiumCompatibilityWarning
+import ic2_120.client.TransformerTooltipConfig
 import ic2_120.client.WindMeterClientInitializer
 import ic2_120.client.network.NetworkManager
 import ic2_120.analytics.AnalyticsClientReporter
@@ -63,7 +66,6 @@ object Ic2_120Client : ClientModInitializer {
 		ModItemTooltip.register()
 		ClientEntityRenderers.register()
 		ClientBlockEntityRenderers.register()
-		ClientBlockRenderLayers.register()
 		BatteryModelPredicates.register() // 注册电池模型 predicate
 
 		// 注册网络管理器
@@ -88,12 +90,15 @@ object Ic2_120Client : ClientModInitializer {
 		// 暂时禁用，待迁移到语义版本号比较后重新启用。
 		// UpdateNotifier.register()
 		SodiumCompatibilityWarning.register()
+		TransformerTooltipConfig.register()
 		JetpackSoundController.register()
 		MachineLoopSoundController.register()
 		WindMeterClientInitializer.init()
 
 		// 注册储物箱着色器
 		StorageBoxColorProvider.register()
+		PeatOreColorProvider.register()
+		RubberLeavesColorProvider.register()
 		// 注册通用流体单元着色器（流体颜色渲染到中心）
 		ic2_120.client.renderers.FluidCellItemRenderer.register()
 		ic2_120.client.DevResourceReloadTrigger.register()
@@ -103,5 +108,6 @@ object Ic2_120Client : ClientModInitializer {
 		// 注册管道着色器（青铜和碳纤维材质）
 		PipeColorProvider.register()
 		PainterModelPredicates.register()
+		UpgradeDirectionModelProperty.register()
 	}
 }

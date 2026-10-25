@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -23,7 +25,7 @@ import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_industrial_upgrade.admin_solar_panelrain
 // zh_cn: 管理员雨能太阳能发电机  en_us: Admin Rain Panel
@@ -44,7 +46,7 @@ class AdminSolarPanelRainBlock : IndustrialSolarPanelBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：管理员太阳能发电机 + RainLinse（ASA）
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdminSolarPanelRainBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdminSolarPanelRainBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', AdminSolarPanelBlock::class.item())
@@ -52,7 +54,7 @@ class AdminSolarPanelRainBlock : IndustrialSolarPanelBlock() {
                 .unlockedBy(getHasName(AdminSolarPanelBlock::class.item()), has(AdminSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("admin_solar_panelrain"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, AdminSolarPanelBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdminSolarPanelBlock::class.item(), 1)
                 .requires(AdminSolarPanelRainBlock::class.item())
                 .unlockedBy(getHasName(AdminSolarPanelRainBlock::class.item()), has(AdminSolarPanelRainBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("admin_solar_panelrain_revert"))

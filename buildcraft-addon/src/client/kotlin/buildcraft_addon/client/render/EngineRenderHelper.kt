@@ -54,12 +54,12 @@ object EngineRenderHelper {
         applyDirectionRotation(matrices, facing)
 
         val baseLight = if (world != null) {
-            LevelRenderer.getLightColor(world, pos)
+            lightCoords26(world, pos)
         } else {
             light
         }
         val topLight = if (world != null) {
-            LevelRenderer.getLightColor(world, pos.above())
+            lightCoords26(world, pos.above())
         } else {
             light
         }

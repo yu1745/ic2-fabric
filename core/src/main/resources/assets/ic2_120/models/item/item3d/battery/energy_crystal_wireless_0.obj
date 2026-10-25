@@ -1,5 +1,5 @@
 # ic2_120 tools/model3d/item3d 生成，勿手改
-mtllib battery/energy_crystal_wireless_0.mtl
+mtllib energy_crystal_wireless_0.mtl
 usemtl flat_393939
 v 0.45 0.0938 0.35
 vt 0.55 0.9062

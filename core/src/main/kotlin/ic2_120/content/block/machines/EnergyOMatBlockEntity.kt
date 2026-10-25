@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -33,7 +35,7 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
@@ -76,7 +78,7 @@ class EnergyOMatBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
-    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty = EnergyOMatBlock.ACTIVE
     override fun getInventory(): Container = this
@@ -173,13 +175,13 @@ class EnergyOMatBlockEntity(
 
     fun isOwner(player: Player): Boolean {
         val uuid = ownerUuid ?: return true
-        return player.uuid == uuid || player.hasPermissions(2)
+        return player.uuid == uuid || player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)
     }
 
-    fun getScreenHandlerFactory(player: Player): ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    fun getScreenHandlerFactory(player: Player): ExtendedMenuProvider<FriendlyByteBuf> {
         val owner = isOwner(player)
         val be = this
-        return object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+        return object : ExtendedMenuProvider<FriendlyByteBuf> {
             override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                 val buf = FriendlyByteBuf(Unpooled.buffer())
                     buf.writeBlockPos(pos)
@@ -188,7 +190,7 @@ class EnergyOMatBlockEntity(
                 return buf
             }
             override fun getDisplayName(): Component = be.getDisplayName()
-            override fun createMenu(syncId: Int, playerInventory: Inventory, p: Player?): AbstractContainerMenu =
+            override fun createMenu(syncId: Int, playerInventory: Inventory, p: Player): AbstractContainerMenu =
                 EnergyOMatScreenHandler(syncId, playerInventory, be,
                     ContainerLevelAccess.create(be.world!!, be.pos), be.syncedData, owner)
         }
@@ -196,7 +198,7 @@ class EnergyOMatBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.energy_o_mat")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         EnergyOMatScreenHandler(syncId, playerInventory, this,
             ContainerLevelAccess.create(world!!, pos), syncedData, player?.let { isOwner(it) } ?: false)
 
@@ -210,19 +212,19 @@ class EnergyOMatBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(EnergyOMatSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(EnergyOMatSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.euOffer = nbt.getInt(NBT_EU_OFFER).coerceAtLeast(100)
-        sync.paidFor = nbt.getInt(NBT_PAID_FOR).coerceAtLeast(0)
+        sync.euOffer = nbt.getIntOr(NBT_EU_OFFER, 0).coerceAtLeast(100)
+        sync.paidFor = nbt.getIntOr(NBT_PAID_FOR, 0).coerceAtLeast(0)
 
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyOMatSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_EU_OFFER, sync.euOffer)

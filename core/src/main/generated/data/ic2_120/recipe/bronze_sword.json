@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "M": {
-      "tag": "ic2_120:compat/ingots/bronze"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    }
+    "M": "#ic2_120:compat/ingots/bronze",
+    "S": "minecraft:stick"
   },
   "pattern": [
     "M",
@@ -15,7 +11,6 @@
     "S"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:bronze_sword"
   }
 }

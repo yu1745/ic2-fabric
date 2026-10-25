@@ -1,11 +1,13 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -44,7 +46,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val casing = MachineCasingBlock::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ManualKineticGeneratorBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ManualKineticGeneratorBlock::class.item(), 1)
                 .pattern("L")
                 .pattern("C")
                 .define('L', net.minecraft.world.item.Items.LEVER)

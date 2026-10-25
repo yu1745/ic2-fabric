@@ -9,14 +9,14 @@ import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.ChunkLoaderSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.levelgen.Heightmap
 import java.util.concurrent.Executors
@@ -26,11 +26,11 @@ class ChunkLoaderScreen(
     val handler: ChunkLoaderScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<ChunkLoaderScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<ChunkLoaderScreenHandler>(handler, playerInventory, title, GUI_WIDTH, GUI_HEIGHT) {
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guichunkloader.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guichunkloader.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val GUI_WIDTH = 176
         private const val GUI_HEIGHT = 250
@@ -47,10 +47,10 @@ class ChunkLoaderScreen(
         private const val MAP_SIZE = GRID * CELL_SIZE
         private const val CENTER_INDEX = GRID / 2 * GRID + GRID / 2
 
-        /** 缓存：BlockPos → ResourceLocation (注册纹理) */
-        private val mapTextureCache = mutableMapOf<BlockPos, ResourceLocation>()
+        /** 缓存：BlockPos → Identifier (注册纹理) */
+        private val mapTextureCache = mutableMapOf<BlockPos, Identifier>()
         /** NativeImage 引用，用于关闭释放 */
-        private val mapImageCache = mutableMapOf<ResourceLocation, NativeImage>()
+        private val mapImageCache = mutableMapOf<Identifier, NativeImage>()
 
         /**
          * 后台采样线程池（客户端单例，daemon 线程随 JVM 退出）。
@@ -67,14 +67,12 @@ class ChunkLoaderScreen(
     private var tickCount = 0
     /** 当前 GUI 实际使用的纹理 id（与 mapTextureCache 中对应条目一致；removed 时清理它） */
     @Volatile
-    private var currentTextureId: ResourceLocation? = null
+    private var currentTextureId: Identifier? = null
     /** 防重入：后台采样未完成时不接受新的采样请求 */
     @Volatile
     private var samplingInProgress = false
 
     init {
-        imageWidth = GUI_WIDTH
-        imageHeight = GUI_HEIGHT
         titleLabelY = 6
         setSlotPositions()
     }
@@ -212,7 +210,7 @@ class ChunkLoaderScreen(
      *
      * 改造前是主线程同步采样 20k 像素（卡首帧），现在后台跑，玩家看到的是"地图延迟 1-2 帧出现"。
      */
-    private fun getMapTexture(): ResourceLocation? {
+    private fun getMapTexture(): Identifier? {
         val bePos = menu.machinePos
         if (bePos == BlockPos.ZERO) return null
 
@@ -236,12 +234,12 @@ class ChunkLoaderScreen(
         samplingInProgress = true
 
         val client = Minecraft.getInstance()
-        val textureId = ResourceLocation.fromNamespaceAndPath("ic2_120", "chunk_map_${machinePos.asLong()}")
+        val textureId = Identifier.fromNamespaceAndPath("ic2_120", "chunk_map_${machinePos.asLong()}")
         // 主线程捕获 world 引用，避免后台线程访问 client 实例（client 非线程安全）
         val world = client.level
         val centerX = machinePos.x shr 4
         val centerZ = machinePos.z shr 4
-        val bottomY = world?.minBuildHeight ?: 0
+        val bottomY = world?.minY ?: 0
 
         samplingExecutor.execute {
             try {
@@ -264,9 +262,8 @@ class ChunkLoaderScreen(
                                 }
                             }
                         }
-                        val texture = DynamicTexture(image)
+                        val texture = DynamicTexture({ textureId.toString() }, image)
                         client.textureManager.register(textureId, texture)
-                        texture.upload()
                         mapTextureCache[machinePos] = textureId
                         mapImageCache[textureId] = image
                         currentTextureId = textureId
@@ -321,7 +318,7 @@ class ChunkLoaderScreen(
                         } else {
                             0xFF404040.toInt()
                         }
-                        image.setPixelRGBA(originX + bx, originY + bz, rgbToAbgr(rgb))
+                        image.setPixelABGR(originX + bx, originY + bz, rgbToAbgr(rgb))
                     }
                 }
             }

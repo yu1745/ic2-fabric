@@ -6,22 +6,20 @@ import ic2_120.content.block.RecyclerBlock
 import ic2_120.content.screen.RecyclerScreenHandler
 import ic2_120.content.sync.RecyclerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = RecyclerBlock::class)
 class RecyclerScreen(
     val handler: RecyclerScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<RecyclerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<RecyclerScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -134,8 +132,8 @@ class RecyclerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guirecycler.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guirecycler.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,22)-(193,36) = 14×14

@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "x": {
-      "tag": "ic2_120:compat/plates/bronze"
-    },
-    "y": {
-      "tag": "ic2_120:compat/ingots/bronze"
-    }
+    "x": "#ic2_120:compat/plates/bronze",
+    "y": "#ic2_120:compat/ingots/bronze"
   },
   "pattern": [
     "xxx",
@@ -15,7 +10,6 @@
     "xxx"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:bronze_rotor_blade"
   }
 }

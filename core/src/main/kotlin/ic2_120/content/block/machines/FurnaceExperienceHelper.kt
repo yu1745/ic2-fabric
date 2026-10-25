@@ -31,7 +31,7 @@ object FurnaceExperienceHelper {
      * 从烧制配方中获取经验值。
      */
     fun getExperienceFromRecipe(recipe: Recipe<*>?): Float {
-        if (recipe is AbstractCookingRecipe) return recipe.experience
+        if (recipe is AbstractCookingRecipe) return recipe.experience()
         return 0f
     }
 }

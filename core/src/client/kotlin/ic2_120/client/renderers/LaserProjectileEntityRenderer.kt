@@ -1,113 +1,78 @@
 package ic2_120.client.renderers
 
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.VertexConsumer
+import com.mojang.math.Axis
 import ic2_120.config.Ic2Config
 import ic2_120.content.entity.LaserProjectileEntity
-import net.minecraft.client.renderer.LightTexture
-import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
-import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.entity.EntityRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import com.mojang.blaze3d.vertex.PoseStack
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.phys.Vec3
-import org.joml.Matrix4f
+import net.minecraft.client.renderer.entity.state.EntityRenderState
+import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.client.renderer.state.level.CameraRenderState
+import net.minecraft.client.renderer.texture.OverlayTexture
+import net.minecraft.resources.Identifier
+import net.minecraft.util.LightCoordsUtil
 import kotlin.math.atan2
 
-/**
- * 采矿镭射枪弹射体渲染器。
- * 将弹射体渲染为沿飞行方向、长度为 VISUAL_LENGTH 的发光棱柱体（子弹形态）。
- */
-class LaserProjectileEntityRenderer(
-    context: EntityRendererProvider.Context
-) : EntityRenderer<LaserProjectileEntity>(context) {
+/** Mining laser beam rendered with the 26.2 entity render-state pipeline. */
+class LaserProjectileEntityRenderer(context: EntityRendererProvider.Context)
+    : EntityRenderer<LaserProjectileEntity, LaserProjectileEntityRenderer.State>(context) {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
-
-        /** 弹体截面半径 */
-        private val RADIUS: Float get() = Ic2Config.current.miningLaser.bulletRadius.toFloat()
-        /** 截面边数 */
+        private val WHITE_TEXTURE = Identifier.withDefaultNamespace("textures/misc/white.png")
         private const val SIDES = 6
-
-        /** 外层辉光半径倍数 */
         private const val GLOW_RADIUS_MULT = 2.5f
-        /** 外层辉光透明度 */
         private const val GLOW_ALPHA = 40
     }
 
-    init {
-        @Suppress("UNUSED_VARIABLE")
-        val ignored = context
+    class State : EntityRenderState() {
+        var visible = false
+        var yaw = 0f
+        var pitch = 0f
+        var length = 0f
+        var radius = 0f
+        var r = 1f
+        var g = 1f
+        var b = 1f
     }
 
-    override fun getTextureLocation(entity: LaserProjectileEntity): ResourceLocation = WHITE_TEXTURE
+    override fun createRenderState() = State()
 
-    override fun render(
-        entity: LaserProjectileEntity,
-        yaw: Float,
-        tickDelta: Float,
-        matrices: PoseStack,
-        vertexConsumers: MultiBufferSource,
-        light: Int
-    ) {
-        // 零距离渲染会占满屏幕，只有飞出一定距离后才显示
-        val renderX = entity.xOld + (entity.x - entity.xOld) * tickDelta
-        val renderY = entity.yOld + (entity.y - entity.yOld) * tickDelta
-        val renderZ = entity.zOld + (entity.z - entity.zOld) * tickDelta
-        val cam = this.entityRenderDispatcher.camera.position
-        val distSq = (renderX - cam.x) * (renderX - cam.x) +
-                     (renderY - cam.y) * (renderY - cam.y) +
-                     (renderZ - cam.z) * (renderZ - cam.z)
+    override fun extractRenderState(entity: LaserProjectileEntity, state: State, partialTicks: Float) {
+        super.extractRenderState(entity, state, partialTicks)
         val minDist = LaserProjectileEntity.VISUAL_LENGTH * 0.3f
-        if (distSq < minDist * minDist) return
-
-        val col = entity.color
-        val r = ((col shr 16) and 0xFF) / 255f
-        val g = ((col shr 8) and 0xFF) / 255f
-        val b = (col and 0xFF) / 255f
-
-        // 计算飞行方向
         val vel = entity.deltaMovement
         val speed = vel.length()
-        if (speed < 0.001) return
-
+        state.visible = state.distanceToCameraSq >= minDist * minDist && speed >= 0.001
+        if (!state.visible) return
+        val color = entity.color
+        state.r = ((color shr 16) and 255) / 255f
+        state.g = ((color shr 8) and 255) / 255f
+        state.b = (color and 255) / 255f
         val dir = vel.scale(1.0 / speed)
-        val length = LaserProjectileEntity.VISUAL_LENGTH.toFloat()
+        state.yaw = Math.toDegrees(atan2(dir.x, dir.z)).toFloat()
+        state.pitch = Math.toDegrees(atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z))).toFloat()
+        state.length = LaserProjectileEntity.VISUAL_LENGTH.toFloat()
+        state.radius = Ic2Config.current.miningLaser.bulletRadius.toFloat()
+    }
 
-        // 计算偏航和俯仰来对齐弹体
-        val dirYaw = Math.toDegrees(atan2(dir.x, dir.z)).toFloat()
-        val dirPitch = Math.toDegrees(atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z))).toFloat()
-
+    override fun submit(state: State, matrices: PoseStack, nodes: SubmitNodeCollector, camera: CameraRenderState) {
+        if (!state.visible) return
         matrices.pushPose()
-        matrices.translate(
-            renderX - entity.x,
-            renderY - entity.y,
-            renderZ - entity.z
-        )
-
-        // 弹体尾端对齐实体位置（头部朝飞行方向前方）
-        // 先旋转到飞行方向
-        matrices.mulPose(com.mojang.math.Axis.YP.rotationDegrees(dirYaw))
-        matrices.mulPose(com.mojang.math.Axis.XP.rotationDegrees(dirPitch))
-
-        val fullLight = LightTexture.FULL_BRIGHT
-        val overlay = OverlayTexture.NO_OVERLAY
-
-        // --- 外层辉光 ---
-        val glowVc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
-        drawPrism(matrices, glowVc, fullLight, overlay, length, RADIUS * GLOW_RADIUS_MULT, r, g, b, GLOW_ALPHA)
-
-        // --- 核心弹体 ---
-        val coreVc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
-        drawPrism(matrices, coreVc, fullLight, overlay, length, RADIUS, r, g, b, 220)
-
-        // --- 头部亮点 ---
-        val tipVc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
-        drawTip(matrices, tipVc, fullLight, overlay, length, RADIUS, r, g, b, 220)
-
+        matrices.mulPose(Axis.YP.rotationDegrees(state.yaw))
+        matrices.mulPose(Axis.XP.rotationDegrees(state.pitch))
+        nodes.submitCustomGeometry(matrices, RenderTypes.entityTranslucent(WHITE_TEXTURE)) { pose, consumer ->
+            drawPrism(pose, consumer, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
+                state.length, state.radius * GLOW_RADIUS_MULT, state.r, state.g, state.b, GLOW_ALPHA)
+            drawPrism(pose, consumer, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
+                state.length, state.radius, state.r, state.g, state.b, 220)
+            drawTip(pose, consumer, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
+                state.length, state.radius, state.r, state.g, state.b, 220)
+        }
         matrices.popPose()
+        super.submit(state, matrices, nodes, camera)
     }
 
     /**
@@ -115,7 +80,7 @@ class LaserProjectileEntityRenderer(
      * 在局部坐标系中，Z+ 为飞行方向。
      */
     private fun drawPrism(
-        matrices: PoseStack,
+        entry: PoseStack.Pose,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -123,7 +88,6 @@ class LaserProjectileEntityRenderer(
         radius: Float,
         r: Float, g: Float, b: Float, a: Int
     ) {
-        val entry = matrices.last()
         val step = (2.0 * Math.PI / SIDES).toFloat()
 
         for (i in 0 until SIDES) {
@@ -150,7 +114,7 @@ class LaserProjectileEntityRenderer(
      * 绘制头端锥形亮点，制造子弹头部高光效果。
      */
     private fun drawTip(
-        matrices: PoseStack,
+        entry: PoseStack.Pose,
         vc: VertexConsumer,
         light: Int,
         overlay: Int,
@@ -158,7 +122,6 @@ class LaserProjectileEntityRenderer(
         radius: Float,
         r: Float, g: Float, b: Float, a: Int
     ) {
-        val entry = matrices.last()
         val step = (2.0 * Math.PI / SIDES).toFloat()
         val tipZ = length + radius * 0.6f // 锥尖比弹体再伸出一点
 

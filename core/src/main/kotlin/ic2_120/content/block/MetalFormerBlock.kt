@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -86,7 +88,7 @@ class MetalFormerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val coil = Coil::class.instance()
             val toolBox = ToolBox::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR && coil != Items.AIR && toolBox != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MetalFormerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MetalFormerBlock::class.item(), 1)
                     .pattern(" c ")
                     .pattern("TMT")
                     .pattern("KKK")

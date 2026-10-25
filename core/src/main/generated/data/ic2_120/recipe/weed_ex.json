@@ -2,12 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "category": "equipment",
   "ingredients": [
-    {
-      "item": "ic2_120:weed_ex_cell"
-    }
+    "ic2_120:weed_ex_cell"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:weed_ex"
   }
 }

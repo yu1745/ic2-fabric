@@ -6,7 +6,7 @@ import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.screen.MetalFormerScreenHandler
 import ic2_120.content.sync.MetalFormerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
@@ -14,7 +14,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(block = MetalFormerBlock::class)
@@ -22,11 +22,9 @@ class MetalFormerScreen(
     val handler: MetalFormerScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<MetalFormerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<MetalFormerScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun init() {
@@ -105,7 +103,7 @@ class MetalFormerScreen(
             MetalFormerSync.Mode.CUTTING -> "cutter"
             MetalFormerSync.Mode.EXTRUDING -> "copper_cable"
         }
-        val modeStack = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", modeItemId)))
+        val modeStack = ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", modeItemId)))
         context.renderItem(modeStack, left + MODE_BUTTON_X + 2, top + MODE_BUTTON_Y + 2)
 
         // uptips 纹理
@@ -160,8 +158,8 @@ class MetalFormerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guimetalformer.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guimetalformer.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,3)-(193,17) = 14x14

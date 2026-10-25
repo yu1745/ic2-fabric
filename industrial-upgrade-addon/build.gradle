@@ -36,8 +36,9 @@ tasks.named('runDatagen') {
 }
 
 dependencies {
-	implementation project(path: ":core", configuration: "namedElements")
-	implementation project(path: ":advanced-solar-addon", configuration: "namedElements")
+	implementation project(":core")
+	implementation project(":advanced-solar-addon")
+	clientImplementation files(rootProject.project(':core').sourceSets.client.output)
 }
 
 processResources {

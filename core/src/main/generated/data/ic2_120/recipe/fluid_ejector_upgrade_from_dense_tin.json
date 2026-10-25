@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "M": {
-      "item": "ic2_120:electric_motor"
-    },
-    "T": {
-      "item": "ic2_120:dense_tin_plate"
-    }
+    "M": "ic2_120:electric_motor",
+    "T": "ic2_120:dense_tin_plate"
   },
   "pattern": [
     "T T",

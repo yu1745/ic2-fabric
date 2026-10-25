@@ -3,22 +3,20 @@ package ic2_120.client.screen
 import ic2_120.content.block.RtHeatGeneratorBlock
 import ic2_120.content.screen.RtHeatGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = RtHeatGeneratorBlock::class)
 class RtHeatGeneratorScreen(
     val handler: RtHeatGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<RtHeatGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<RtHeatGeneratorScreenHandler>(handler, playerInventory, title, 176, 161) {
 
     init {
-        imageWidth = 176
-        imageHeight = 161
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -51,6 +49,6 @@ class RtHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guinuclearheat.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guinuclearheat.png")
     }
 }

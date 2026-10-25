@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -34,7 +36,7 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -59,7 +61,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -78,7 +80,7 @@ class FermenterBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : HeatConsumerBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = FermenterBlock.ACTIVE
     override val tier: Int = 1
@@ -146,10 +148,10 @@ class FermenterBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val biomassCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "biomass_cell")) }
-    private val fertilizerItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fertilizer")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val biomassCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "biomass_cell")) }
+    private val fertilizerItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fertilizer")) }
 
     private val inputPerCycle = FermenterSync.INPUT_DROPLETS_PER_CYCLE.toLong()
     private val outputPerCycle = FermenterSync.OUTPUT_DROPLETS_PER_CYCLE.toLong()
@@ -373,7 +375,7 @@ class FermenterBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.fermenter")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         FermenterScreenHandler(
             syncId,
             playerInventory,
@@ -385,17 +387,17 @@ class FermenterBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        inputTankInternal.setStoredFluid(nbt.getLong(NBT_INPUT_TANK))
-        outputTankInternal.setStoredFluid(nbt.getLong(NBT_OUTPUT_TANK))
-        heatBuffer = nbt.getLong(NBT_HEAT_BUFFER).coerceIn(0L, MAX_HEAT_BUFFER)
+        inputTankInternal.setStoredFluid(nbt.getLongOr(NBT_INPUT_TANK, 0L))
+        outputTankInternal.setStoredFluid(nbt.getLongOr(NBT_OUTPUT_TANK, 0L))
+        heatBuffer = nbt.getLongOr(NBT_HEAT_BUFFER, 0L).coerceIn(0L, MAX_HEAT_BUFFER)
         sync.bufferedHeat = heatBuffer.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
@@ -555,7 +557,7 @@ class FermenterBlockEntity(
         if (stack.isEmpty) return false
         return when {
             stack.item == ModFluids.BIOMASS_BUCKET -> true
-            BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "biomass_cell") -> true
+            BuiltInRegistries.ITEM.getKey(stack.item) == Identifier.fromNamespaceAndPath("ic2_120", "biomass_cell") -> true
             stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid != null && isBiomass(fluid)
@@ -567,7 +569,7 @@ class FermenterBlockEntity(
     private fun isEmptyContainerForFermenter(stack: ItemStack): Boolean =
         !stack.isEmpty && (
             stack.item == Items.BUCKET ||
-                BuiltInRegistries.ITEM.getKey(stack.item) == ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell") ||
+                BuiltInRegistries.ITEM.getKey(stack.item) == Identifier.fromNamespaceAndPath("ic2_120", "empty_cell") ||
                 (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             )
 }

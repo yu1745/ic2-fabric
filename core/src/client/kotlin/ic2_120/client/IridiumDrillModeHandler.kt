@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionResultHolder
 import ic2_120.content.network.ToggleIridiumSilkTouchPayload
 
 /**
@@ -25,10 +24,10 @@ object IridiumDrillModeHandler {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getItemInHand(hand)
             if (!world.isClientSide || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
-                return@register InteractionResultHolder.pass(stack)
+                return@register InteractionResult.PASS
             }
             sendToggleOnceThisTick(player.tickCount)
-            InteractionResultHolder.success(stack)
+            InteractionResult.SUCCESS.heldItemTransformedTo(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->

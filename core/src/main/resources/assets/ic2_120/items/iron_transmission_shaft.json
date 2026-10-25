@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:special",
+    "base": "ic2_120:item/iron_transmission_shaft",
+    "model": {
+      "type": "ic2_120:transmission_item"
+    }
+  }
+}

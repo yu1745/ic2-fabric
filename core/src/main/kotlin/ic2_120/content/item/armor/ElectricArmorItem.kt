@@ -4,8 +4,8 @@ import ic2_120.compat.orCreateNbt
 
 import ic2_120.content.item.energy.IElectricTool
 import net.minecraft.core.Holder
-import net.minecraft.world.item.ArmorItem
-import net.minecraft.world.item.ArmorMaterial
+import ic2_120.compat.ArmorItem
+import net.minecraft.world.item.equipment.ArmorMaterial
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TooltipFlag
@@ -46,7 +46,7 @@ abstract class ElectricArmorItem(
     // ========== IElectricTool 实现 ==========
 
     override fun getEnergy(stack: ItemStack): Long =
-        stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY)
+        stack.orCreateNbt.getLongOr(IElectricTool.ENERGY_KEY, 0L)
 
     override fun setEnergy(stack: ItemStack, energy: Long) {
         stack.orCreateNbt = stack.orCreateNbt.apply { putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity)) }
@@ -82,10 +82,11 @@ abstract class ElectricArmorItem(
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         appendEnergyTooltip(stack, tooltip)
     }
 }

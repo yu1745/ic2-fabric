@@ -10,14 +10,14 @@ import net.minecraft.commands.Commands.argument
 import net.minecraft.commands.Commands.literal
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 object UuReplicationCommand {
     fun register() {
         CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback { dispatcher, registryAccess, _ ->
             dispatcher.register(
                 literal("ic2uu")
-                    .requires { source -> source.hasPermission(2) }
+                    .requires(net.minecraft.commands.Commands.hasPermission(net.minecraft.commands.Commands.LEVEL_GAMEMASTERS))
                     // 设置命令（主手）: /ic2uu setmainhand <uu_cost>
                     .then(
                         literal("setmainhand")
@@ -75,7 +75,7 @@ object UuReplicationCommand {
                                             .executes { context ->
                                                 val source = context.source
                                                 val itemArg = net.minecraft.commands.arguments.item.ItemArgument.getItem(context, "item")
-                                                val itemId = (BuiltInRegistries.ITEM.getKey(itemArg.item)?.toString() ?: "?")
+                                                val itemId = (BuiltInRegistries.ITEM.getKey(itemArg.item.value())?.toString() ?: "?")
                                                 val uuCost = IntegerArgumentType.getInteger(context, "uu_cost")
 
                                                 val success = Ic2Config.addOrUpdateReplicationCost(itemId, uuCost)
@@ -255,8 +255,8 @@ object UuReplicationCommand {
             val (itemId, cost) = allCosts[i]
             val isWhitelist = itemId in whitelistIds
             val source2 = if (isWhitelist) "白" else "动"
-            val itemDisplay: Component = ResourceLocation.tryParse(itemId)?.let {
-                val item = BuiltInRegistries.ITEM.get(it)
+            val itemDisplay: Component = Identifier.tryParse(itemId)?.let {
+                val item = BuiltInRegistries.ITEM.getValue(it)
                 if (item !== Items.AIR) {
                     Component.translatable(item.descriptionId)
                         .withStyle(ChatFormatting.YELLOW)

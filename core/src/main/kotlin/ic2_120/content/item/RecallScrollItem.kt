@@ -1,12 +1,16 @@
 package ic2_120.content.item
 
+import ic2_120.compat.displayClientMessage
+
+import ic2_120.compat.save
+
 import ic2_120.compat.orCreateNbt
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.compat.stack
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
@@ -35,7 +39,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.ChatFormatting
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.level.Level
@@ -60,7 +63,7 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
             val advancedCircuit = AdvancedCircuit::class.instance()
 
             if (teleporter != Items.AIR && advancedCircuit != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, RecallScrollItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.TOOLS, RecallScrollItem::class.instance(), 1)
                     .pattern("PAP")
                     .pattern("ATA")
                     .pattern("PAP")
@@ -86,7 +89,7 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
         if (player == null) return InteractionResult.SUCCESS
 
         val nbt = stack.orCreateNbt
-        val dim = world.dimension().location().toString()
+        val dim = world.dimension().identifier().toString()
 
         nbt.putBoolean(NBT_HAS_BIND, true)
         nbt.putInt(NBT_BIND_X, pos.x)
@@ -101,28 +104,28 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
 
     // ========== 使用：传送 ==========
 
-    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResult {
         val stack = player.getItemInHand(hand)
-        if (world.isClient) return InteractionResultHolder.success(stack)
+        if (world.isClient) return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
 
         val nbt = stack.orCreateNbt
-        if (!nbt.getBoolean(NBT_HAS_BIND)) {
+        if (!nbt.getBooleanOr(NBT_HAS_BIND, false)) {
             player.displayClientMessage(Component.literal("请先绑定传送机。"), true)
-            return InteractionResultHolder.fail(stack)
+            return InteractionResult.FAIL
         }
 
-        val dim = world.dimension().location().toString()
-        val bindDim = nbt.getString(NBT_BIND_DIM)
+        val dim = world.dimension().identifier().toString()
+        val bindDim = nbt.getStringOr(NBT_BIND_DIM, "")
         if (bindDim != dim) {
             player.displayClientMessage(Component.literal("维度不一致，无法传送。"), true)
-            return InteractionResultHolder.fail(stack)
+            return InteractionResult.FAIL
         }
 
-        val bindPos = BlockPos(nbt.getInt(NBT_BIND_X), nbt.getInt(NBT_BIND_Y), nbt.getInt(NBT_BIND_Z))
+        val bindPos = BlockPos(nbt.getIntOr(NBT_BIND_X, 0), nbt.getIntOr(NBT_BIND_Y, 0), nbt.getIntOr(NBT_BIND_Z, 0))
         @Suppress("DEPRECATION")
         if (!world.isLoaded(bindPos)) {
             player.displayClientMessage(Component.literal("目标坐标区块未加载。"), true)
-            return InteractionResultHolder.fail(stack)
+            return InteractionResult.FAIL
         }
 
         // 计算距离
@@ -138,7 +141,7 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
                 Component.literal("能量不足！需要 ${formatNumber(energyNeed)} EU，当前背包电池/工具共 ${formatNumber(availableEnergy)} EU"),
                 true
             )
-            return InteractionResultHolder.fail(stack)
+            return InteractionResult.FAIL
         }
 
         // 从背包放电
@@ -154,7 +157,6 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
         val destZ = bindPos.z + 0.5
         player.teleportTo(destX, destY, destZ)
         player.deltaMovement = Vec3.ZERO
-        player.hasImpulse = true
 
         if (teleporterExists) {
             player.displayClientMessage(Component.literal("传送成功！消耗 ${formatNumber(energyNeed)} EU"), true)
@@ -164,16 +166,17 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
             player.displayClientMessage(Component.literal("锚点已遗失！"), true)
         }
 
-        return InteractionResultHolder.success(stack)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
     }
 
     // ========== Tooltip ==========
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
 
         val nbt = stack.orCreateNbt
-        if (nbt != null && nbt.getBoolean(NBT_HAS_BIND)) {
+        if (nbt != null && nbt.getBooleanOr(NBT_HAS_BIND, false)) {
             val x = nbt.getInt(NBT_BIND_X)
             val y = nbt.getInt(NBT_BIND_Y)
             val z = nbt.getInt(NBT_BIND_Z)
@@ -186,15 +189,22 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
 
     // ========== 辅助方法 ==========
 
+    private fun armorStacks(player: Player): List<ItemStack> = listOf(
+        net.minecraft.world.entity.EquipmentSlot.FEET,
+        net.minecraft.world.entity.EquipmentSlot.LEGS,
+        net.minecraft.world.entity.EquipmentSlot.CHEST,
+        net.minecraft.world.entity.EquipmentSlot.HEAD,
+    ).map(player::getItemBySlot)
+
     private fun computeWeight(player: Player): Int {
         var weight = 1000
-        weight += player.inventory.armor.count { !it.isEmpty } * 100
+        weight += armorStacks(player).count { !it.isEmpty } * 100
 
         var invWeight = 0.0
-        for (stack in player.inventory.items) {
+        for (stack in player.inventory.nonEquipmentItems) {
             if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
         }
-        for (stack in player.inventory.offhand) {
+        for (stack in listOf(player.offhandItem)) {
             if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
         }
         weight += floor(invWeight).toInt()
@@ -215,19 +225,18 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
         var total = 0L
         // 优先 hotbar（0-8）
         for (slot in 0..8) {
-            val stack = player.inventory.items[slot]
+            val stack = player.inventory.nonEquipmentItems[slot]
             if (stack.isEmpty) continue
             total += extractEnergyFromStack(stack, dryRun = true)
         }
         // 护甲栏
-        for (slot in 0..<player.inventory.armor.size) {
-            val stack = player.inventory.armor[slot]
+        for (stack in armorStacks(player)) {
             if (stack.isEmpty) continue
             total += extractEnergyFromStack(stack, dryRun = true)
         }
         // 其余主背包（9-35）
-        for (slot in 9..<player.inventory.items.size) {
-            val stack = player.inventory.items[slot]
+        for (slot in 9..<player.inventory.nonEquipmentItems.size) {
+            val stack = player.inventory.nonEquipmentItems[slot]
             if (stack.isEmpty) continue
             total += extractEnergyFromStack(stack, dryRun = true)
         }
@@ -247,21 +256,20 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
         // 优先 hotbar（0-8）
         for (slot in 0..8) {
             if (remaining <= 0) return
-            val stack = player.inventory.items[slot]
+            val stack = player.inventory.nonEquipmentItems[slot]
             if (stack.isEmpty) continue
             remaining = doDrain(stack, remaining)
         }
         // 再扫护甲栏
-        for (slot in 0..<player.inventory.armor.size) {
+        for (stack in armorStacks(player)) {
             if (remaining <= 0) return
-            val stack = player.inventory.armor[slot]
             if (stack.isEmpty) continue
             remaining = doDrain(stack, remaining)
         }
         // 其余主背包（9-35）
-        for (slot in 9..<player.inventory.items.size) {
+        for (slot in 9..<player.inventory.nonEquipmentItems.size) {
             if (remaining <= 0) return
-            val stack = player.inventory.items[slot]
+            val stack = player.inventory.nonEquipmentItems[slot]
             if (stack.isEmpty) continue
             remaining = doDrain(stack, remaining)
         }
@@ -323,8 +331,7 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
         player.setHealth(1f)
 
         // 处理护甲
-        for (slot in 0..<player.inventory.armor.size) {
-            val stack = player.inventory.armor[slot]
+        for (stack in armorStacks(player)) {
             if (stack.isEmpty) continue
 
             val tool = stack.item as? IElectricTool

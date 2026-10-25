@@ -13,7 +13,7 @@ import net.minecraft.world.effect.MobEffectCategory
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModStatusEffect(name = "radiation", namespace = "ic2")
 class RadiationStatusEffect : MobEffect(MobEffectCategory.HARMFUL, 0x55FF55) {
@@ -22,18 +22,16 @@ class RadiationStatusEffect : MobEffect(MobEffectCategory.HARMFUL, 0x55FF55) {
         return duration % 20 == 0
     }
 
-    override fun applyEffectTick(entity: LivingEntity, amplifier: Int): Boolean {
-        val world = entity.level()
-        if (world !is ServerLevel) return false
+    override fun applyEffectTick(world: ServerLevel, entity: LivingEntity, amplifier: Int): Boolean {
 
-        val registry = world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
+        val registry = world.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE)
         val key = ResourceKey.create(
             Registries.DAMAGE_TYPE,
-            ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "radiation")
+            Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "radiation")
         )
-        val entry = registry.getHolder(key).orElse(null)
-            ?: registry.getHolder(
-                ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("minecraft", "magic"))
+        val entry = registry.get(key).orElse(null)
+            ?: registry.get(
+                ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.fromNamespaceAndPath("minecraft", "magic"))
             ).orElse(null)
 
         return if (entry != null) {

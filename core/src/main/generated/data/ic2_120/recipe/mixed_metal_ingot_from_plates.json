@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "B": {
-      "tag": "ic2_120:compat/plates/bronze"
-    },
-    "I": {
-      "tag": "ic2_120:compat/plates/iron"
-    },
-    "T": {
-      "tag": "ic2_120:compat/plates/tin"
-    }
+    "B": "#ic2_120:compat/plates/bronze",
+    "I": "#ic2_120:compat/plates/iron",
+    "T": "#ic2_120:compat/plates/tin"
   },
   "pattern": [
     "III",

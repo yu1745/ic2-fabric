@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "item": "ic2_120:generator"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    },
-    "W": {
-      "tag": "minecraft:planks"
-    }
+    "G": "ic2_120:generator",
+    "S": "minecraft:stick",
+    "W": "#minecraft:planks"
   },
   "pattern": [
     "SWS",

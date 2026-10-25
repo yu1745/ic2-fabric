@@ -1,5 +1,5 @@
 # ic2_120 tools/model3d/item3d 生成，勿手改
-mtllib upgrade/ejector_up.mtl
+mtllib ejector_up.mtl
 usemtl flat_27263d
 v 0.1062 0.5564 0.5625
 vt 0.1062 0.4436

@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "A": {
-      "tag": "ic2_120:compat/plates/steel"
-    },
-    "B": {
-      "tag": "ic2_120:compat/ingots/iron"
-    }
+    "A": "#ic2_120:compat/plates/steel",
+    "B": "#ic2_120:compat/ingots/iron"
   },
   "pattern": [
     "AAA",
@@ -15,7 +10,6 @@
     "AAA"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:steel_block_cutting_blade"
   }
 }

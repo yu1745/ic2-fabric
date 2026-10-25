@@ -1,5 +1,7 @@
 package buildcraft_addon.content.blockentity
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 import buildcraft_addon.content.block.SpringBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -15,7 +17,7 @@ class OilSpringBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state) {
+) : LegacyBlockEntity26(type, pos, state) {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         OilSpringBlockEntity::class.type(), pos, state
@@ -49,16 +51,16 @@ class OilSpringBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        totalSources = nbt.getInt("totalSources")
+        totalSources = nbt.getIntOr("totalSources", 0)
         pumpProgress.clear()
         if (nbt.contains("pumpProgress")) {
-            val progressList = nbt.getCompound("pumpProgress")
-            for (key in progressList.getAllKeys()) {
-                val entry = progressList.getCompound(key)
+            val progressList = nbt.getCompoundOrEmpty("pumpProgress")
+            for (key in progressList.keySet()) {
+                val entry = progressList.getCompoundOrEmpty(key)
                 pumpProgress[key] = PlayerPumpInfo(
-                    playerName = entry.getString("name"),
-                    sourcesPumped = entry.getInt("pumped"),
-                    lastPumpTime = entry.getLong("lastTime")
+                    playerName = entry.getStringOr("name", ""),
+                    sourcesPumped = entry.getIntOr("pumped", 0),
+                    lastPumpTime = entry.getLongOr("lastTime", 0L)
                 )
             }
         }

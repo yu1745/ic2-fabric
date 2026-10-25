@@ -29,14 +29,14 @@ import net.minecraft.world.effect.MobEffectCategory
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.player.Player
 import net.minecraft.data.recipes.RecipeOutput
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
 
@@ -85,7 +85,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
 
         fun toggleNightVision(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
-            val enabled = !nbt.getBoolean(NIGHT_VISION_KEY)
+            val enabled = !nbt.getBooleanOr(NIGHT_VISION_KEY, false)
             nbt.putBoolean(NIGHT_VISION_KEY, enabled)
             return enabled
         }
@@ -117,8 +117,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
-        super.inventoryTick(stack, world, entity, slot, selected)
+    override fun inventoryTick(stack: ItemStack, world: net.minecraft.server.level.ServerLevel, entity: net.minecraft.world.entity.Entity, slot: net.minecraft.world.entity.EquipmentSlot?) {
+        super.inventoryTick(stack, world, entity, slot)
         if (world.isClient) return
 
         val player = entity as? Player ?: return
@@ -129,9 +129,9 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
 
         // 功能 1: 水下呼吸（复用 HazmatHelmet 逻辑）
         if (player.isInWater && player.airSupply <= AIR_THRESHOLD) {
-            val cooldown = nbt.getInt(AIR_CHECK_COOLDOWN_KEY)
+            val cooldown = nbt.getIntOr(AIR_CHECK_COOLDOWN_KEY, 0)
             if (cooldown <= 0) {
-                if (consumeAirCellIfAvailable(player)) {
+                if (consumeAirCellIfAvailable(player, world)) {
                     player.airSupply = player.maxAirSupply
                     nbt.putInt(AIR_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
                 }
@@ -141,9 +141,9 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
 
         // 功能 2: 夜视（使用余数累加器精确消耗）
-        if (nbt.getBoolean(NIGHT_VISION_KEY)) {
+        if (nbt.getBooleanOr(NIGHT_VISION_KEY, false)) {
             if (energy > 0) {
-                var remainder = nbt.getDouble(NV_REMAINDER_KEY)
+                var remainder = nbt.getDoubleOr(NV_REMAINDER_KEY, 0.0)
                 remainder += nightVisionCostPerTick
                 val toConsume = remainder.toLong()
                 if (toConsume > 0) {
@@ -169,9 +169,9 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         if (player.foodData.foodLevel < 20 &&
             energy >= FOOD_FILL_COST
         ) {
-            val cooldown = nbt.getInt(FOOD_CHECK_COOLDOWN_KEY)
+            val cooldown = nbt.getIntOr(FOOD_CHECK_COOLDOWN_KEY, 0)
             if (cooldown <= 0) {
-                if (consumeFilledTinCanIfAvailable(player)) {
+                if (consumeFilledTinCanIfAvailable(player, world)) {
                     energy -= FOOD_FILL_COST
                     player.foodData.setFoodLevel(20)
                     player.foodData.setSaturation(5f)
@@ -200,30 +200,30 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         setEnergy(stack, energy)
     }
 
-    private fun consumeAirCellIfAvailable(player: Player): Boolean {
-        val airCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "air_cell"))
-        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
-        val slot = player.inventory.items.find { !it.isEmpty && it.item === airCellItem }
+    private fun consumeAirCellIfAvailable(player: Player, world: net.minecraft.server.level.ServerLevel): Boolean {
+        val airCellItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "air_cell"))
+        val emptyCellItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
+        val slot = player.inventory.nonEquipmentItems.find { !it.isEmpty && it.item === airCellItem }
         if (slot != null) {
             slot.shrink(1)
             val emptyCell = ItemStack(emptyCellItem)
             if (!player.inventory.add(emptyCell)) {
-                player.spawnAtLocation(emptyCell)
+                player.spawnAtLocation(world, emptyCell)
             }
             return true
         }
         return false
     }
 
-    private fun consumeFilledTinCanIfAvailable(player: Player): Boolean {
-        val filledCanItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "filled_tin_can"))
-        val emptyCanItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
-        val slot = player.inventory.items.find { !it.isEmpty && it.item === filledCanItem }
+    private fun consumeFilledTinCanIfAvailable(player: Player, world: net.minecraft.server.level.ServerLevel): Boolean {
+        val filledCanItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "filled_tin_can"))
+        val emptyCanItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
+        val slot = player.inventory.nonEquipmentItems.find { !it.isEmpty && it.item === filledCanItem }
         if (slot != null) {
             slot.shrink(1)
             val emptyCan = ItemStack(emptyCanItem)
             if (!player.inventory.add(emptyCan)) {
-                player.spawnAtLocation(emptyCan)
+                player.spawnAtLocation(world, emptyCan)
             }
             return true
         }
@@ -241,9 +241,10 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
     }
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
-        val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
+        val nvEnabled = stack.orCreateNbt.getBooleanOr(NIGHT_VISION_KEY, false)
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {

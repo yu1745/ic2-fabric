@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "ic2_120_industrial_upgrade:item/solar_splitter"
+  }
+}

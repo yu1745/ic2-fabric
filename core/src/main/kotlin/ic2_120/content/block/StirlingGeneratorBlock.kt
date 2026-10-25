@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -35,7 +37,7 @@ import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
@@ -73,16 +75,19 @@ class StirlingGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusio
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
         super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
-    @Environment(EnvType.CLIENT)
-    override fun appendHoverText(
-        stack: ItemStack,
-        context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
-        type: TooltipFlag
-    ) {
-        super.appendHoverText(stack, context, tooltip, type)
-        tooltip.add(Component.translatable("tooltip.ic2_120.stirling_generator.ratio").withStyle(ChatFormatting.GRAY))
-        tooltip.add(Component.translatable("tooltip.ic2_120.stirling_generator.max_output").withStyle(ChatFormatting.GRAY))
+    class StirlingGeneratorBlockItem(block: net.minecraft.world.level.block.Block, properties: Item.Properties) : net.minecraft.world.item.BlockItem(block, properties) {
+        @Environment(EnvType.CLIENT)
+        override fun appendHoverText(
+            stack: ItemStack,
+            context: Item.TooltipContext,
+            display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
+            type: TooltipFlag
+        ) {
+            val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+            super.appendHoverText(stack, context, display, consumer, type)
+            tooltip.add(Component.translatable("tooltip.ic2_120.stirling_generator.ratio").withStyle(ChatFormatting.GRAY))
+            tooltip.add(Component.translatable("tooltip.ic2_120.stirling_generator.max_output").withStyle(ChatFormatting.GRAY))
+        }
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -104,7 +109,7 @@ class StirlingGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusio
             val ironCasing = IronCasing::class.instance()
             val heatConductor = HeatConductor::class.instance()
             if (generator != Items.AIR && ironCasing != Items.AIR && heatConductor != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, StirlingGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, StirlingGeneratorBlock::class.item(), 1)
                     .pattern("CHC")
                     .pattern("CGC")
                     .pattern("CCC")

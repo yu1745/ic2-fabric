@@ -1,5 +1,7 @@
 package ic2_120.content.network
 
+import ic2_120.compat.displayClientMessage
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import ic2_120.Ic2_120
@@ -26,7 +28,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.EquipmentSlot
@@ -44,8 +46,8 @@ class SetFluidFilterPayload(val fluid: Fluid) : CustomPacketPayload {
     companion object {
         val ID = CustomPacketPayload.Type<SetFluidFilterPayload>(Ic2_120.id("set_fluid_filter"))
         val CODEC: StreamCodec<FriendlyByteBuf, SetFluidFilterPayload> = StreamCodec.of(
-            { buf, value -> buf.writeResourceLocation(BuiltInRegistries.FLUID.getKey(value.fluid)) },
-            { buf -> SetFluidFilterPayload(BuiltInRegistries.FLUID.get(buf.readResourceLocation())) }
+            { buf, value -> buf.writeIdentifier(BuiltInRegistries.FLUID.getKey(value.fluid)) },
+            { buf -> SetFluidFilterPayload(BuiltInRegistries.FLUID.getValue(buf.readIdentifier())) }
         )
     }
 }
@@ -87,28 +89,28 @@ object QuantumLeggingsSpeedTickPayload : CustomPacketPayload {
 
 
 object NetworkManager {
-    // 旧 ResourceLocation 常量保留给客户端兼容引用（实际收发走对应 payload type）
-    val REACTOR_HEAT_INFO_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_heat_info")
-    val WIND_ROTOR_STATE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "wind_rotor_state")
-    val WATER_ROTOR_STATE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_rotor_state")
-    val REACTOR_LAYOUT_LOCK_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_layout_lock")
+    // 旧 Identifier 常量保留给客户端兼容引用（实际收发走对应 payload type）
+    val REACTOR_HEAT_INFO_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_heat_info")
+    val WIND_ROTOR_STATE_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "wind_rotor_state")
+    val WATER_ROTOR_STATE_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_rotor_state")
+    val REACTOR_LAYOUT_LOCK_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_layout_lock")
     val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID.id
-    val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
-    val TOGGLE_NANO_VISION_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_nano_vision")
-    val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
-    val TOGGLE_CHAINSAW_SHEAR_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_chainsaw_shear")
-    val TOGGLE_FOAM_SPRAYER_MODE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
-    val TOGGLE_MINING_LASER_MODE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
-    val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
-    val QUANTUM_LEGGINGS_SPEED_TICK_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quantum_leggings_speed_tick")
-    val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
-    val SELECT_TEMPLATE_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "select_template")
-    val SET_FLUID_FILTER_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "set_fluid_filter")
-    val SET_ITEM_FILTER_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "set_item_filter")
+    val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
+    val TOGGLE_NANO_VISION_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_nano_vision")
+    val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
+    val TOGGLE_CHAINSAW_SHEAR_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_chainsaw_shear")
+    val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
+    val TOGGLE_MINING_LASER_MODE_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
+    val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
+    val QUANTUM_LEGGINGS_SPEED_TICK_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "quantum_leggings_speed_tick")
+    val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
+    val SELECT_TEMPLATE_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "select_template")
+    val SET_FLUID_FILTER_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "set_fluid_filter")
+    val SET_ITEM_FILTER_PACKET = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "set_item_filter")
 
     fun register() {
         // ---- payload 类型注册（fabric 1.21.1：收发前必须注册 codec）----
-        val c2s = PayloadTypeRegistry.playC2S()
+        val c2s = PayloadTypeRegistry.serverboundPlay()
         c2s.register(ToggleNightVisionGogglesPayload.ID, ToggleNightVisionGogglesPayload.CODEC)
         c2s.register(ToggleNanoVisionPayload.ID, ToggleNanoVisionPayload.CODEC)
         c2s.register(ToggleIridiumSilkTouchPayload.ID, ToggleIridiumSilkTouchPayload.CODEC)
@@ -122,7 +124,7 @@ object NetworkManager {
         c2s.register(SetItemFilterPayload.ID, SetItemFilterPayload.CODEC)
         c2s.register(ToggleChainsawShearPayload.ID, ToggleChainsawShearPayload.CODEC)
 
-        val s2c = PayloadTypeRegistry.playS2C()
+        val s2c = PayloadTypeRegistry.clientboundPlay()
         s2c.register(ReactorHeatInfoPacket.ID, ReactorHeatInfoPacket.CODEC)
         s2c.register(WindRotorStatePacket.ID, WindRotorStatePacket.CODEC)
         s2c.register(WaterRotorStatePacket.ID, WaterRotorStatePacket.CODEC)

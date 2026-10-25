@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "item": "ic2_120:generator"
-    },
-    "I": {
-      "item": "minecraft:iron_ingot"
-    }
+    "G": "ic2_120:generator",
+    "I": "minecraft:iron_ingot"
   },
   "pattern": [
     "I I",
@@ -15,7 +10,6 @@
     "I I"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:wind_generator"
   }
 }

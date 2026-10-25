@@ -22,7 +22,7 @@ import net.minecraft.world.item.BlockItem
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 
 /**
@@ -87,7 +87,7 @@ object ModItemTooltip {
                 }
             }
             // 流体单元 tooltip：显示所含流体
-            if (item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))) {
+            if (item == BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))) {
                 val variant = stack.getFluidCellVariant()
                 if (variant != null && !variant.isBlank) {
                     val fluidId = BuiltInRegistries.FLUID.getKey(variant.fluid)

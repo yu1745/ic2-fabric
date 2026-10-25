@@ -1,5 +1,7 @@
 package ic2_120.client
 
+import ic2_120.compat.displayClientMessage
+
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -133,7 +135,7 @@ object UpdateNotifier {
 
     private fun showUpdateMessage(client: Minecraft, remoteRelease: RemoteRelease, localRunNumber: Int) {
         val localTag = "release-$localRunNumber"
-        client.gui.setOverlayMessage(
+        client.gui.hud.setOverlayMessage(
             Component.translatable("message.ic2_120.update_available.overlay", remoteRelease.tagName),
             false
         )
@@ -144,10 +146,9 @@ object UpdateNotifier {
                 .withStyle {
                     it.withColor(ChatFormatting.AQUA)
                         .withUnderlined(true)
-                        .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, remoteRelease.htmlUrl))
+                        .withClickEvent(ClickEvent.OpenUrl(URI.create(remoteRelease.htmlUrl)))
                         .withHoverEvent(
-                            HoverEvent(
-                                HoverEvent.Action.SHOW_TEXT,
+                            HoverEvent.ShowText(
                                 Component.translatable("message.ic2_120.update_available.link_hover")
                             )
                         )

@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.AbstractFiniteNeutronReflectorItem
@@ -21,7 +23,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 // ========== 反应堆核心部件 ==========
 
@@ -32,14 +34,14 @@ private object CondensatorRepairRecipe {
     fun generate(exporter: RecipeOutput, condensator: Item, repairItem: Item, repairAmount: Int) {
         // 使用特殊配方类型，这里暂时用 ShapelessRecipeBuilder
         // 注意：这只是占位，实际修复逻辑需要在 CondensatorItem 中实现
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, condensator, 1)
+        ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, condensator, 1)
             .requires(condensator)
             .requires(repairItem)
             .unlockedBy(
-                FabricRecipeProvider.getHasName(condensator),
-                FabricRecipeProvider.has(condensator)
+                net.minecraft.data.recipes.RecipeProvider.getHasName(condensator),
+                ic2_120.compat.has(condensator)
             )
-            .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "${condensator.toString().replace(':','_')}_repair_with_${repairItem.toString().replace(':','_')}"))
+            .save(exporter, Identifier.fromNamespaceAndPath("ic2_120", "${condensator.toString().replace(':','_')}_repair_with_${repairItem.toString().replace(':','_')}"))
     }
 }
 
@@ -98,7 +100,7 @@ abstract class CondensatorItem(
      */
     abstract fun getRepairAmount(item: Item): Int
 
-    override fun getRecipeRemainder(stack: ItemStack): ItemStack {
+    fun getRecipeRemainder(stack: ItemStack): ItemStack {
         // 配方系统会调用此方法获取剩余物。
         // 修复配方语义：不消耗冷凝器本体，只消耗修复材料（红石/青金石），
         // 产出全新（满容量）冷凝器，原物品随格子保留。
@@ -168,13 +170,13 @@ class ReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(), 10_000)
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 十字形配方：中间冷却液单元，上下左右4个锡板
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorCoolantCellItem::class.instance(), 1)
                 .pattern(" T ")
                 .pattern("TCT")
                 .pattern(" T ")
-                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                 .define('C', CoolantCell::class.instance())
-                .unlockedBy(FabricRecipeProvider.getHasName(TinPlate::class.instance()), FabricRecipeProvider.has(TinPlate::class.instance()))
+                .unlockedBy(net.minecraft.data.recipes.RecipeProvider.getHasName(TinPlate::class.instance()), ic2_120.compat.has(TinPlate::class.instance()))
                 .save(exporter)
         }
     }
@@ -186,13 +188,13 @@ class TripleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(), 3
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 中间行3个10k，上下两行6个锡板
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TripleReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TripleReactorCoolantCellItem::class.instance(), 1)
                 .pattern("TTT")
                 .pattern("CCC")
                 .pattern("TTT")
-                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                 .define('C', ReactorCoolantCellItem::class.instance())
-                .unlockedBy(FabricRecipeProvider.getHasName(ReactorCoolantCellItem::class.instance()), FabricRecipeProvider.has(ReactorCoolantCellItem::class.instance()))
+                .unlockedBy(net.minecraft.data.recipes.RecipeProvider.getHasName(ReactorCoolantCellItem::class.instance()), ic2_120.compat.has(ReactorCoolantCellItem::class.instance()))
                 .save(exporter)
         }
     }
@@ -204,14 +206,14 @@ class SextupleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(),
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 上下两行6个锡板，中间行2个30k + 1个铁板
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SextupleReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SextupleReactorCoolantCellItem::class.instance(), 1)
                 .pattern("TTT")
                 .pattern("SIS")
                 .pattern("TTT")
-                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                 .define('S', TripleReactorCoolantCellItem::class.instance())
-                .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
-                .unlockedBy(FabricRecipeProvider.getHasName(TripleReactorCoolantCellItem::class.instance()), FabricRecipeProvider.has(TripleReactorCoolantCellItem::class.instance()))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON))
+                .unlockedBy(net.minecraft.data.recipes.RecipeProvider.getHasName(TripleReactorCoolantCellItem::class.instance()), ic2_120.compat.has(TripleReactorCoolantCellItem::class.instance()))
                 .save(exporter)
         }
     }
@@ -226,12 +228,12 @@ class ReactorPlatingItem : AbstractReactorComponent(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 1个铅板 + 1个高基合金（竖放）
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorPlatingItem::class.instance(), 1)
                 .pattern("L")
                 .pattern("A")
-                .define('L', Ingredient.of(ModTags.Compat.Items.PLATES_LEAD))
+                .define('L', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_LEAD))
                 .define('A', Alloy::class.instance())
-                .unlockedBy(FabricRecipeProvider.getHasName(LeadPlate::class.instance()), FabricRecipeProvider.has(LeadPlate::class.instance()))
+                .unlockedBy(net.minecraft.data.recipes.RecipeProvider.getHasName(LeadPlate::class.instance()), ic2_120.compat.has(LeadPlate::class.instance()))
                 .save(exporter)
         }
     }
@@ -254,13 +256,13 @@ class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 1个普通隔板（中间） + 8个铜板
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorHeatPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorHeatPlatingItem::class.instance(), 1)
                 .pattern("CCC")
                 .pattern("CPC")
                 .pattern("CCC")
-                .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .define('C', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_COPPER))
                 .define('P', ReactorPlatingItem::class.instance())
-                .unlockedBy(FabricRecipeProvider.getHasName(ReactorPlatingItem::class.instance()), FabricRecipeProvider.has(ReactorPlatingItem::class.instance()))
+                .unlockedBy(net.minecraft.data.recipes.RecipeProvider.getHasName(ReactorPlatingItem::class.instance()), ic2_120.compat.has(ReactorPlatingItem::class.instance()))
                 .save(exporter)
         }
     }
@@ -282,15 +284,15 @@ class ContainmentReactorPlatingItem : Item(Item.Properties()) {
             val plating = ReactorPlatingItem::class.instance()
             val alloy = Alloy::class.instance()
             if (plating == Items.AIR || alloy == Items.AIR) return
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ContainmentReactorPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ContainmentReactorPlatingItem::class.instance(), 1)
                 .pattern("   ")
                 .pattern("   ")
                 .pattern("PAA")
                 .define('P', plating)
                 .define('A', alloy)
                 .unlockedBy(
-                    FabricRecipeProvider.getHasName(plating),
-                    FabricRecipeProvider.has(plating)
+                    net.minecraft.data.recipes.RecipeProvider.getHasName(plating),
+                    ic2_120.compat.has(plating)
                 )
                 .save(exporter)
         }
@@ -303,16 +305,16 @@ class NeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Properties(
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // TCT / CPC / TCT — 锡粉、煤粉、铜板
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, NeutronReflectorItem::class.instance(), 1)
                 .pattern("TCT")
                 .pattern("CPC")
                 .pattern("TCT")
-                .define('T', Ingredient.of(ModTags.Compat.Items.DUSTS_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.DUSTS_TIN))
                 .define('C', CoalDust::class.instance())
-                .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .define('P', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_COPPER))
                 .unlockedBy(
-                    FabricRecipeProvider.getHasName(CopperPlate::class.instance()),
-                    FabricRecipeProvider.has(CopperPlate::class.instance())
+                    net.minecraft.data.recipes.RecipeProvider.getHasName(CopperPlate::class.instance()),
+                    ic2_120.compat.has(CopperPlate::class.instance())
                 )
                 .save(exporter)
         }
@@ -325,15 +327,15 @@ class ThickNeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Proper
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 四角+中心铜板，四边中子反射板
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ThickNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ThickNeutronReflectorItem::class.instance(), 1)
                 .pattern("CRC")
                 .pattern("RCR")
                 .pattern("CRC")
-                .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .define('C', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_COPPER))
                 .define('R', NeutronReflectorItem::class.instance())
                 .unlockedBy(
-                    FabricRecipeProvider.getHasName(NeutronReflectorItem::class.instance()),
-                    FabricRecipeProvider.has(NeutronReflectorItem::class.instance())
+                    net.minecraft.data.recipes.RecipeProvider.getHasName(NeutronReflectorItem::class.instance()),
+                    ic2_120.compat.has(NeutronReflectorItem::class.instance())
                 )
                 .save(exporter)
         }
@@ -348,11 +350,11 @@ class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Properties()) 
             val thick = ThickNeutronReflectorItem::class.instance()
             val denseCu = DenseCopperPlate::class.instance()
             val iridium = IridiumPlate::class.instance()
-            val hasThick = FabricRecipeProvider.getHasName(thick)
-            val unlockThick = FabricRecipeProvider.has(thick)
+            val hasThick = net.minecraft.data.recipes.RecipeProvider.getHasName(thick)
+            val unlockThick = ic2_120.compat.has(thick)
 
             // RRR / DID / RRR
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
                 .pattern("RRR")
                 .pattern("DID")
                 .pattern("RRR")
@@ -363,7 +365,7 @@ class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Properties()) 
                 .save(exporter, IridiumNeutronReflectorItem::class.recipeId("from_bands_horizontal"))
 
             // RDR / RIR / RDR
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
                 .pattern("RDR")
                 .pattern("RIR")
                 .pattern("RDR")
@@ -396,14 +398,14 @@ class RshCondensatorItem : CondensatorItem(Item.Properties(), 20_000) {
             // [R R R]
             // [R V R]
             // [R H R]
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RshCondensatorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RshCondensatorItem::class.instance(), 1)
                 .pattern("RRR")
                 .pattern("RVR")
                 .pattern("RHR")
                 .define('R', Items.REDSTONE)
                 .define('V', HeatVentItem::class.instance())
                 .define('H', HeatExchangerItem::class.instance())
-                .unlockedBy(FabricRecipeProvider.getHasName(Items.REDSTONE), FabricRecipeProvider.has(Items.REDSTONE))
+                .unlockedBy(net.minecraft.data.recipes.RecipeProvider.getHasName(Items.REDSTONE), ic2_120.compat.has(Items.REDSTONE))
                 .save(exporter)
 
             // 修复配方：红石冷凝器 + 红石 = 修复的冷凝器
@@ -424,7 +426,7 @@ class LzhCondensatorItem : CondensatorItem(Item.Properties(), 100_000) {
             // [R V R]
             // [L C L]
             // [R H R]
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LzhCondensatorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, LzhCondensatorItem::class.instance(), 1)
                 .pattern("RVR")
                 .pattern("LCL")
                 .pattern("RHR")
@@ -433,7 +435,7 @@ class LzhCondensatorItem : CondensatorItem(Item.Properties(), 100_000) {
                 .define('L', RshCondensatorItem::class.instance())
                 .define('C', Items.LAPIS_BLOCK)
                 .define('H', ReactorHeatExchangerItem::class.instance())
-                .unlockedBy(FabricRecipeProvider.getHasName(RshCondensatorItem::class.instance()), FabricRecipeProvider.has(RshCondensatorItem::class.instance()))
+                .unlockedBy(net.minecraft.data.recipes.RecipeProvider.getHasName(RshCondensatorItem::class.instance()), ic2_120.compat.has(RshCondensatorItem::class.instance()))
                 .save(exporter)
 
             // 修复配方：青金石冷凝器 + 红石

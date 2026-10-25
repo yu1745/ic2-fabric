@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -26,7 +30,7 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -56,7 +60,7 @@ class UvLampBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(type, pos, state), Container, IRoutedSidedInventory, ExtendedMenuProvider<FriendlyByteBuf> {
 
     private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
@@ -114,7 +118,7 @@ class UvLampBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.uv_lamp")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         UvLampScreenHandler(
             syncId,
             playerInventory,
@@ -128,16 +132,16 @@ class UvLampBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(UvLampSync.NBT_ENERGY_STORED, sync.amount)
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.restoreEnergy(nbt.getLong(UvLampSync.NBT_ENERGY_STORED))
+        sync.restoreEnergy(nbt.getLongOr(UvLampSync.NBT_ENERGY_STORED, 0L))
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 

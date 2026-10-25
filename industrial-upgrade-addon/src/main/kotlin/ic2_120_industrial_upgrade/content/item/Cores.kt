@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.content.item.IridiumOreItem
@@ -17,7 +19,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // ===== 光谱核心 spectral_core =====
 // zh_cn: 光谱核心  en_us: Spectral Core
@@ -27,7 +29,7 @@ class SpectralCore : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // CBC/CAC/CBC：1×量子核心 + 4×光子 + 4×分光器
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SpectralCore::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SpectralCore::class.instance(), 1)
                 .pattern("CBC")
                 .pattern("CAC")
                 .pattern("CBC")
@@ -48,7 +50,7 @@ class ProtonCore : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // +形：4×质子 + 2×富集阳光合金IV + 1×光谱核心
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ProtonCore::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ProtonCore::class.instance(), 1)
                 .pattern(" B ")
                 .pattern("ACA")
                 .pattern(" B ")
@@ -69,7 +71,7 @@ class SingularCore : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // ABA/DCD/ABA：4×末影量子组件 + 1×光子锭 + 2×光伏铱板 + 2×富集阳光合金
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingularCore::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SingularCore::class.instance(), 1)
                 .pattern("ABA")
                 .pattern("DCD")
                 .pattern("ABA")
@@ -91,7 +93,7 @@ class QuantCore2 : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金III + 1×奇点核心
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantCore2::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, QuantCore2::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy3::class.instance())
                 .define('B', SingularCore::class.instance())
@@ -109,7 +111,7 @@ class QuantCore1 : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金II + 1×量子核心II
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantCore1::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, QuantCore1::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy2::class.instance())
                 .define('B', QuantCore2::class.instance())
@@ -127,7 +129,7 @@ class NeutronCore : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // +形：4×中子 + 1×量子核心II
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NeutronCore::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, NeutronCore::class.instance(), 1)
                 .pattern(" A ")
                 .pattern("ABA")
                 .pattern(" A ")
@@ -148,7 +150,7 @@ class EnderQuantumComponent : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             // ABA/BCB/ABA：4×光伏铱板 + 4×末影之眼 + 1×下界之星
             // （1.4.0 原用 IC2 强化铱板，按计划全部替换为光伏铱板）
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnderQuantumComponent::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EnderQuantumComponent::class.instance(), 1)
                 .pattern("ABA")
                 .pattern("BCB")
                 .pattern("ABA")

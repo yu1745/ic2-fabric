@@ -16,7 +16,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
 import net.minecraft.world.level.block.state.StateDefinition
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
@@ -120,7 +120,7 @@ object ModFluids {
 
         // 2. LiquidBlock
         val blockSettings = BlockBehaviour.Properties.ofFullCopy(Blocks.WATER)
-            .noCollission().noLootTable()
+            .noCollision().noLootTable().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.BLOCK, BuildCraftAddon.id(name)))
         val block = Registry.register(
             BuiltInRegistries.BLOCK, BuildCraftAddon.id(name),
             LiquidBlock(still, blockSettings)
@@ -129,7 +129,7 @@ object ModFluids {
         // 3. 注册桶
         val bucket = Registry.register(
             BuiltInRegistries.ITEM, BuildCraftAddon.id("${name}_bucket"),
-            BucketItem(still, Item.Properties().stacksTo(1))
+            BucketItem(still, Item.Properties().stacksTo(1).setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, BuildCraftAddon.id("${name}_bucket"))))
         )
         BcOilFluid.bucketLookup[name] = bucket
 
@@ -166,11 +166,11 @@ object ModFluids {
         override fun getFlowing(): Fluid = ref.second
         override fun getBucket(): Item = bucketLookup[fluidName] ?: Items.AIR
         override fun createLegacyBlock(state: FluidState): BlockState {
-            val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, fluidName))
+            val block = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, fluidName))
             return block.defaultBlockState().setValue(LiquidBlock.LEVEL, getAmount(state))
         }
         override fun isSame(fluid: Fluid): Boolean = fluid == ref.first || fluid == ref.second
-        override fun canConvertToSource(world: Level): Boolean = false
+        override fun canConvertToSource(world: net.minecraft.server.level.ServerLevel): Boolean = false
         override fun beforeDestroyingBlock(world: net.minecraft.world.level.LevelAccessor, pos: net.minecraft.core.BlockPos, state: BlockState) {
             val entity = if (state.hasBlockEntity()) world.getBlockEntity(pos) else null
             Block.dropResources(state, world, pos, entity)

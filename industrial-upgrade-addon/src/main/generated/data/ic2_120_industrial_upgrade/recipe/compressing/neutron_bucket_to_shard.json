@@ -1,0 +1,13 @@
+{
+  "type": "ic2_120:compressing",
+  "container_return": {
+    "item": "minecraft:bucket"
+  },
+  "ingredient": {
+    "item": "ic2_120_industrial_upgrade:neutron_bucket"
+  },
+  "input_count": 1,
+  "result": {
+    "item": "ic2_120_industrial_upgrade:neutron_shard"
+  }
+}

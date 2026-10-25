@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120_industrial_upgrade:photonic_cable",
+    "B": "ic2_120:dense_iron_plate",
+    "C": "ic2_120:dense_obsidian_plate"
+  },
+  "pattern": [
+    " A ",
+    "BCB",
+    " A "
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:neutron_cable"
+  }
+}

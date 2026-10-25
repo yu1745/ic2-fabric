@@ -1,0 +1,89 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "ic2_120:nano_saber_active",
+    "entries": [
+      {
+        "threshold": 0.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/inactive"
+        }
+      },
+      {
+        "threshold": 0.1,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_1"
+        }
+      },
+      {
+        "threshold": 0.2,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_2"
+        }
+      },
+      {
+        "threshold": 0.3,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_3"
+        }
+      },
+      {
+        "threshold": 0.4,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_4"
+        }
+      },
+      {
+        "threshold": 0.5,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_5"
+        }
+      },
+      {
+        "threshold": 0.6,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_6"
+        }
+      },
+      {
+        "threshold": 0.7,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_7"
+        }
+      },
+      {
+        "threshold": 0.8,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_8"
+        }
+      },
+      {
+        "threshold": 0.9,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_9"
+        }
+      },
+      {
+        "threshold": 1,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/tool/nano_saber/active_10"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "ic2_120:item/nano_saber"
+    }
+  }
+}

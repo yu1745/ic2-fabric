@@ -7,13 +7,11 @@ import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PipeMaterial
 import ic2_120.content.block.pipes.PumpAttachmentBlock
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes as RenderType
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import com.mojang.blaze3d.vertex.PoseStack
@@ -21,16 +19,16 @@ import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 
 class PipeBlockEntityRenderer(
     context: BlockEntityRendererProvider.Context
-) : BlockEntityRenderer<PipeBlockEntity> {
+) : LegacyBlockEntityRenderer26<PipeBlockEntity>() {
 
     companion object {
-        private val PIPE_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/block/transport/pipe_white.png")
+        private val PIPE_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/block/transport/pipe_white.png")
 
         private const val BRONZE_COLOR_R = 133
         private const val BRONZE_COLOR_G = 66
@@ -85,7 +83,7 @@ class PipeBlockEntityRenderer(
         private const val GLASS_PARTICLE_ALPHA_VARIATION_MIN = 0.72f
         private const val GLASS_PARTICLE_ALPHA_VARIATION_MAX = 1.0f
 
-        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.withDefaultNamespace("textures/misc/white.png")
     }
 
     init {
@@ -93,7 +91,7 @@ class PipeBlockEntityRenderer(
         val ignored = context
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: PipeBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
@@ -118,14 +116,14 @@ class PipeBlockEntityRenderer(
 
         // 解析流体
         val fluid = entity.currentFluidId?.let { idStr ->
-            ResourceLocation.tryParse(idStr)?.let { id ->
-                if (BuiltInRegistries.FLUID.containsKey(id)) BuiltInRegistries.FLUID.get(id) else null
+            Identifier.tryParse(idStr)?.let { id ->
+                if (BuiltInRegistries.FLUID.containsKey(id)) BuiltInRegistries.FLUID.getValue(id) else null
             }
         }
 
         // --- 渲染管道外壳（Cutout，不使用半透明） ---
         // pipe_white 贴图上的透明区域即“观察窗”，只有这些区域能看到内部流体。
-        val shellVc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(PIPE_TEXTURE))
+        val shellVc = vertexConsumers.getBuffer(RenderType.entityCutout(PIPE_TEXTURE))
         val entry = matrices.last()
 
         // 连续四角骨架：从截面看仅四角不透明，其余全部留空。
@@ -148,7 +146,7 @@ class PipeBlockEntityRenderer(
                 ?.getFluidSprites(world, entity.blockPos, fluid.defaultFluidState())
             val fluidSprite = fluidSprites?.firstOrNull()
             val fluidColor = getFluidTintColor(fluid)
-            val fluidVc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS))
+            val fluidVc = vertexConsumers.getBuffer(RenderType.entityCutout(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS))
 
             val inset = FLUID_WALL_GAP
             val fMin = min + inset
@@ -1005,5 +1003,5 @@ class PipeBlockEntityRenderer(
         return handler.getFluidColor(world, BlockPos.ZERO, fluid.defaultFluidState())
     }
 
-    override fun shouldRenderOffScreen(entity: PipeBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 }

@@ -1,3 +1,10 @@
 {
-  "type": "ic2_120:metal_forming"
+  "type": "ic2_120:metal_forming",
+  "ingredient": {
+    "item": "ic2_120:tin_casing"
+  },
+  "mode": "extruding",
+  "result": {
+    "item": "ic2_120:tin_can"
+  }
 }

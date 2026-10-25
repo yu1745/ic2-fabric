@@ -17,19 +17,19 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.GsonHelper
 
 @ModMachineRecipe(id = "macerating", recipeClass = MaceratorRecipe::class)
-object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
-    private fun fromJson(id: ResourceLocation, json: JsonObject): MaceratorRecipe {
+object MaceratorRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<MaceratorRecipe>() {
+    private fun fromJson(id: Identifier, json: JsonObject): MaceratorRecipe {
         val ingredientJson = json.getAsJsonObject("ingredient")
         val count = (if (ingredientJson.has("count")) ingredientJson.get("count").asInt else 1)
         val ingredient = INGREDIENT_CODEC(ingredientJson)
 
         val result = json.getAsJsonObject("result")
-        val resultItemId = ResourceLocation.parse(result.get("item").asString)
-        val resultItem = BuiltInRegistries.ITEM.get(resultItemId)
+        val resultItemId = Identifier.parse(result.get("item").asString)
+        val resultItem = BuiltInRegistries.ITEM.getValue(resultItemId)
         val resultCount = (if (result.has("count")) result.get("count").asInt else 1)
         return MaceratorRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, ItemStack(resultItem, resultCount), count)
     }
@@ -50,7 +50,12 @@ object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
     override fun codec(): MapCodec<MaceratorRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:macerating",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", ic2_120.content.recipes.ingredientJson26(recipe.ingredient).apply {
+                if (recipe.inputCount != 1) addProperty("count", recipe.inputCount)
+            })
+            json.add("result", ic2_120.content.recipes.stackJson26(recipe.output))
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, MaceratorRecipe> =

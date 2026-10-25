@@ -1,140 +1,132 @@
 package ic2_120.client.renderers
 
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.VertexConsumer
+import com.mojang.serialization.MapCodec
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.getFluidCellVariant
+import ic2_120.client.compat.FluidRenderHandlerRegistry
+import ic2_120.client.model.obj.ObjModelLoadingPlugin
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.LightTexture
-import net.minecraft.client.renderer.RenderType
-import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.world.item.ItemDisplayContext
+import net.minecraft.client.renderer.SubmitNodeCollector
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart
+import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.client.renderer.special.SpecialModelRenderer
+import net.minecraft.client.renderer.special.SpecialModelRenderers
+import net.minecraft.client.renderer.texture.TextureAtlas
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.data.AtlasIds
+import net.minecraft.resources.Identifier
+import net.minecraft.util.LightCoordsUtil
+import net.minecraft.util.Mth
+import net.minecraft.util.RandomSource
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.material.Fluids
-import net.minecraft.world.item.ItemStack
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.world.inventory.InventoryMenu
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.core.Direction
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
-import net.minecraft.util.RandomSource
 import org.joml.Matrix3f
 import org.joml.Quaternionf
 import org.joml.Vector3f
+import org.joml.Vector3fc
+import java.util.function.Consumer
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/**
- * 流体单元 3D 物品渲染：
- * - 外壳（底座/钢箍/护条）为 OBJ 模型 `item/cell3d/shell`；
- * - 液柱用所含流体的真实贴图（与世界中流体渲染同源，水/熔岩等动画贴图照常播放），液面为倾斜平面；
- * - 玻璃为半透明八棱柱，罩在液柱外。
- *
- * 液面在世界坐标中保持水平；第一人称手持时由 [Slosh] 的阻尼弹簧根据手部加速度产生晃动。
- * 物品栏（GUI）中液面相对物品水平，不晃动。
- */
-object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
+/** 3D fluid cell renderer registered through the 26.2 special item-model codec. */
+class FluidCellItemRenderer(private val slosh: Boolean) : SpecialModelRenderer<FluidCellItemRenderer.Contents> {
+    companion object {
+        val TYPE_ID: Identifier = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")
+        val SLOSH_TYPE_ID: Identifier = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell_slosh")
+        private val SHELL = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "item/cell3d/shell")
+        private val GLASS = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "block/cell3d/glass")
+        private const val SIDES = 8
+        private const val PHASE = PI / 8
+        private const val Y0 = 3.5f / 16
+        private const val Y1 = 12.5f / 16
+        private const val FLUID_R = 3.0f / 16
+        private const val GLASS_R = 3.25f / 16
+        private const val FILL = 0.7f
+        private val STATIC_FILL = setOf("air_cell", "bio_cell")
 
-    private val SHELL = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item/cell3d/shell")
-    private val GLASS = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item/cell3d/glass")
-
-    private const val SIDES = 8
-    private const val PHASE = PI / 8
-    private const val Y0 = 3.5f / 16
-    private const val Y1 = 12.5f / 16
-    private const val FLUID_R = 3.0f / 16
-    private const val GLASS_R = 3.25f / 16
-    private const val FILL = 0.7f
-
-    /** 无流体但有内容物的单元（压缩空气、生物质块）直接用生成贴图 */
-    private val STATIC_FILL = setOf("air_cell", "bio_cell")
-
-    private val CELLS = listOf(
-        "fluid_cell", "empty_cell", "air_cell", "bio_cell", "water_cell", "lava_cell", "distilled_water_cell",
-        "coolant_cell", "hot_coolant_cell", "uu_matter_cell", "weed_ex_cell", "pahoehoe_lava_cell",
-        "biofuel_cell", "biomass_cell", "construction_foam_cell", "steam_cell", "superheated_steam_cell",
-    )
-
-    private val random = RandomSource.create()
-    private val normal = Vector3f()
-
-    fun register() {
-        for (name in CELLS) {
-            BuiltinItemRendererRegistry.INSTANCE.register(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, name)), this)
+        fun register() {
+            SpecialModelRenderers.ID_MAPPER.put(TYPE_ID, Unbaked.MAP_CODEC)
+            SpecialModelRenderers.ID_MAPPER.put(SLOSH_TYPE_ID, Unbaked.SLOSH_CODEC)
+            ClientTickEvents.END_CLIENT_TICK.register { Slosh.tick(it) }
         }
-        ClientTickEvents.END_CLIENT_TICK.register { Slosh.tick(it) }
     }
 
-    private class Contents(val sprite: TextureAtlasSprite, val color: Int, val glow: Boolean)
+    data class Contents(val sprite: TextureAtlasSprite?, val color: Int, val glow: Boolean)
+    private val random = RandomSource.create()
 
-    private fun contents(stack: ItemStack): Contents? {
-        val atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+    class Unbaked(private val slosh: Boolean) : SpecialModelRenderer.Unbaked<Contents> {
+        companion object {
+            val MAP_CODEC: MapCodec<Unbaked> = MapCodec.unit(Unbaked(false))
+            val SLOSH_CODEC: MapCodec<Unbaked> = MapCodec.unit(Unbaked(true))
+        }
+        override fun bake(context: SpecialModelRenderer.BakingContext): FluidCellItemRenderer = FluidCellItemRenderer(slosh)
+        override fun type(): MapCodec<Unbaked> = if (slosh) SLOSH_CODEC else MAP_CODEC
+    }
+
+    override fun extractArgument(stack: ItemStack): Contents {
+        val atlas = Minecraft.getInstance().atlasManager.getAtlasOrThrow(AtlasIds.BLOCKS)
         val name = BuiltInRegistries.ITEM.getKey(stack.item).path
-        if (name in STATIC_FILL) return Contents(atlas.apply(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item/cell3d/$name")), -1, false)
+        if (name in STATIC_FILL) return Contents(atlas.getSprite(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "block/cell3d/$name")), -1, false)
         val fluid: Fluid = when (val item = stack.item) {
             is ModFluidCell -> item.getFluid()
-            else -> stack.getFluidCellVariant()?.fluid ?: return null
+            else -> stack.getFluidCellVariant()?.fluid ?: return Contents(null, -1, false)
         }
-        if (fluid == Fluids.EMPTY) return null
-        val state = fluid.defaultFluidState().createLegacyBlock()
-        val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-        val sprite = handler.getFluidSprites(null, null, fluid.defaultFluidState()).firstOrNull() ?: return null
+        if (fluid == Fluids.EMPTY) return Contents(null, -1, false)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return Contents(null, -1, false)
+        val sprite = handler.getFluidSprites(null, null, fluid.defaultFluidState()).firstOrNull()
         val color = handler.getFluidColor(null, null, fluid.defaultFluidState())
-        return Contents(sprite, color, state.getLightEmission() > 0)
+        return Contents(sprite, color, fluid.defaultFluidState().createLegacyBlock().getLightEmission() > 0)
     }
 
-    override fun render(
-        stack: ItemStack,
-        mode: ItemDisplayContext,
-        matrices: PoseStack,
-        vertexConsumers: MultiBufferSource,
-        light: Int,
-        overlay: Int,
+    override fun getExtents(output: Consumer<Vector3fc>) {
+        output.accept(Vector3f(0f, 0f, 0f))
+        output.accept(Vector3f(1f, 1f, 1f))
+    }
+
+    override fun submit(
+        contents: Contents?, matrices: PoseStack, nodes: SubmitNodeCollector,
+        light: Int, overlay: Int, hasFoil: Boolean, outlineColor: Int
     ) {
-        val client = Minecraft.getInstance()
-        val entry = matrices.last()
-
-        val solid = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS))
-        val shell = client.modelManager.getModel(SHELL) ?: return
-        for (face in FACES) {
-            for (quad in shell.getQuads(null, face, random)) solid.putBulkData(entry, quad, 1f, 1f, 1f, 1f, light, overlay)
+        val manager = Minecraft.getInstance().modelManager
+        val shellKey = ObjModelLoadingPlugin.extraModelKey(SHELL)
+        if (shellKey != null) {
+            val model = manager.getModel(shellKey)
+            if (model != null) {
+                val parts = ArrayList<BlockStateModelPart>()
+                model.collectParts(random, parts)
+                nodes.submitBlockModel(matrices, RenderTypes.solidMovingBlock(), parts, intArrayOf(-1), light, overlay, outlineColor)
+            }
         }
-
-        contents(stack)?.let { c ->
-            val up = surfaceNormal(mode, entry, client)
-            val fluidLight = if (c.glow) LightTexture.FULL_BRIGHT else light
-            drawFluid(entry, solid, c, up, fluidLight, overlay, if (isFirstPerson(mode)) Slosh.agitation else 0f)
+        val c = contents
+        if (c?.sprite != null) {
+            val client = Minecraft.getInstance()
+            val up = if (slosh) surfaceNormal(matrices.last(), client) else Vector3f(0f, 1f, 0f)
+            val fluidLight = if (c.glow) LightCoordsUtil.FULL_BRIGHT else light
+            nodes.submitCustomGeometry(matrices, RenderTypes.entityCutout(TextureAtlas.LOCATION_BLOCKS)) { pose, consumer ->
+                drawFluid(pose, consumer, c, up, fluidLight, overlay, if (slosh) Slosh.agitation else 0f)
+            }
         }
-
-        val glass = client.getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(GLASS)
-        drawGlass(entry, vertexConsumers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS)), glass, light, overlay)
+        val glass = Minecraft.getInstance().atlasManager.getAtlasOrThrow(AtlasIds.BLOCKS).getSprite(GLASS)
+        nodes.submitCustomGeometry(matrices, RenderTypes.entityTranslucent(TextureAtlas.LOCATION_BLOCKS)) { pose, consumer ->
+            drawGlass(pose, consumer, glass, light, overlay)
+        }
     }
 
-    private fun isFirstPerson(mode: ItemDisplayContext) =
-        mode == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || mode == ItemDisplayContext.FIRST_PERSON_LEFT_HAND
-
-    /**
-     * 液面法线（物品局部坐标）。世界中：世界"上"（叠加晃动）→ 视图空间（相机旋转）→ 局部（法线矩阵逆）。
-     * 渲染世界与第一人称手部时矩阵栈都在同一视图空间，故统一处理；GUI 直接取局部向上。
-     */
-    private fun surfaceNormal(mode: ItemDisplayContext, entry: PoseStack.Pose, client: Minecraft): Vector3f {
-        if (mode == ItemDisplayContext.GUI || client.level == null) return Vector3f(0f, 1f, 0f)
-        val world = if (isFirstPerson(mode)) Slosh.normal(client.getTimer().getGameTimeDeltaPartialTick(false)) else Vector3f(0f, 1f, 0f)
-        val cam = client.gameRenderer.mainCamera
-        val view = Quaternionf()
-            .rotationX(cam.xRot * Mth.DEG_TO_RAD)
-            .rotateY((cam.yRot + 180f) * Mth.DEG_TO_RAD)
-            .transform(world)
+    private fun surfaceNormal(entry: PoseStack.Pose, client: Minecraft): Vector3f {
+        if (client.level == null) return Vector3f(0f, 1f, 0f)
+        val world = Slosh.normal(client.deltaTracker.getGameTimeDeltaPartialTick(false))
+        val cam = client.gameRenderer.mainCamera()
+        val view = Quaternionf().rotationX(cam.xRot() * Mth.DEG_TO_RAD).rotateY((cam.yRot() + 180f) * Mth.DEG_TO_RAD).transform(world)
         val local = Matrix3f(entry.normal()).invert().transform(view).normalize()
-        // 倒置/横放时液面法线朝下会让液柱翻出，限制为至少略微朝上
         if (local.y < 0.3f) local.y = 0.3f
         return local.normalize()
     }
@@ -149,7 +141,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
     ) {
         val pts = ring(FLUID_R)
         val center = Y0 + (Y1 - Y0) * FILL
-        val t = (Minecraft.getInstance().level?.gameTime ?: 0L) + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false)
+        val t = (Minecraft.getInstance().level?.gameTime ?: 0L) + Minecraft.getInstance().deltaTracker.getGameTimeDeltaPartialTick(false)
         // 每个角点的液面高度：过中心点、法线为 up 的平面，叠加随晃动强度衰减的小波纹
         val h = FloatArray(SIDES) {
             val dx = pts[it][0] - 0.5f
@@ -160,10 +152,10 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val r = (c.color shr 16 and 0xFF)
         val g = (c.color shr 8 and 0xFF)
         val b = (c.color and 0xFF)
-        val sp = c.sprite
+        val sp = c.sprite ?: return
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, ny: Float, nz: Float) {
             vc.addVertex(entry.pose(), x, y, z).setColor(r, g, b, 255)
-                .setUv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
+                .setUv(sp.getU(u), sp.getV(vv))
                 .setOverlay(overlay).setLight(light).setNormal(entry, nx, ny, nz)
         }
         for (k in 0 until SIDES) {
@@ -194,7 +186,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val pts = ring(GLASS_R)
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, nz: Float) {
             vc.addVertex(entry.pose(), x, y, z).setColor(255, 255, 255, 64)
-                .setUv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
+                .setUv(sp.getU(u), sp.getV(vv))
                 .setOverlay(overlay).setLight(light).setNormal(entry, nx, 0f, nz)
         }
         for (k in 0 until SIDES) {
@@ -210,8 +202,6 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
             v(b[0], Y0, b[1], u1, 1f - Y0, nx, nz)
         }
     }
-
-    private val FACES = arrayOf(*Direction.values(), null)
 
     /**
      * 液面晃动：二维阻尼弹簧（世界 x/z 上的倾斜量）。

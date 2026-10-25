@@ -2,8 +2,8 @@ package ic2_120_advanced_solar_addon.content.recipes
 
 import ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon
 import ic2_120.content.block.MachineBlock
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootSubProvider
 import net.minecraft.world.level.storage.loot.LootPool
 import net.minecraft.world.level.storage.loot.LootTable
 import net.minecraft.world.level.storage.loot.predicates.InvertedLootItemCondition
@@ -11,19 +11,21 @@ import net.minecraft.world.level.storage.loot.predicates.MatchTool
 import net.minecraft.world.level.storage.loot.entries.LootItem
 import net.minecraft.world.level.storage.loot.functions.ApplyExplosionDecay
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue
-import net.minecraft.advancements.critereon.ItemPredicate
+import net.minecraft.advancements.predicates.ItemPredicate
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.registries.Registries
+import net.minecraft.resources.Identifier
 import java.util.concurrent.CompletableFuture
 import net.minecraft.core.HolderLookup
 
-class ModBlockLootTableProvider(output: FabricDataOutput, registriesFuture: CompletableFuture<HolderLookup.Provider>) : FabricBlockLootTableProvider(output, registriesFuture) {
+class ModBlockLootTableProvider(output: FabricPackOutput, registriesFuture: CompletableFuture<HolderLookup.Provider>) : FabricBlockLootSubProvider(output, registriesFuture) {
 
-    private val wrenchPredicateBuilder = ItemPredicate.Builder.item()
+    private val wrenchPredicateBuilder by lazy { ItemPredicate.Builder.item()
         .of(
-            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "wrench")),
-            BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "electric_wrench"))
-        )
+            registries.lookupOrThrow(Registries.ITEM),
+            BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "wrench")),
+            BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "electric_wrench"))
+        ) }
 
     override fun generate() {
         for (block in BuiltInRegistries.BLOCK) {

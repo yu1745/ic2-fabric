@@ -1,16 +1,16 @@
 package ic2_120_industrial_upgrade.client.screen
 
 import ic2_120.client.FluidUtils
+import ic2_120.client.screen.LegacyContainerScreen26
 import ic2_120_industrial_upgrade.content.fluid.NeutronFluid
 import ic2_120_industrial_upgrade.content.screen.NeutronFabricatorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
+import ic2_120.client.compat.*
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 中子制造机客户端 GUI。
@@ -25,11 +25,9 @@ class NeutronFabricatorScreen(
     handler: NeutronFabricatorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<NeutronFabricatorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<NeutronFabricatorScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
         // 隐藏父类 AbstractContainerScreen 默认绘制的容器 title（由本类 render 手动居中绘制，避免重复）
         titleLabelX = -1000
         titleLabelY = -1000
@@ -118,24 +116,7 @@ class NeutronFabricatorScreen(
             val tileH = minOf(16, sy + TANK_H - cy)
             for (cx in sx until (sx + TANK_W) step 16) {
                 val tileW = minOf(16, sx + TANK_W - cx)
-                context.bufferSource().let { buffers ->
-                    val vs = buffers.getBuffer(net.minecraft.client.renderer.RenderType.entityCutoutNoCull(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS))
-                    val m = context.pose().last()
-                    val c = ((r.coerceIn(0f, 1f)) * 255f).toInt().shl(16) or ((g.coerceIn(0f, 1f)) * 255f).toInt().shl(8) or ((b.coerceIn(0f, 1f)) * 255f).toInt()
-                    val x0 = cx.toFloat(); val x1 = (cx + tileW).toFloat()
-                    val y0 = cy.toFloat(); val y1 = (cy + tileH).toFloat()
-                    val uv = arrayOf(
-                        floatArrayOf(sprite.u0, sprite.v0), floatArrayOf(sprite.u1, sprite.v0),
-                        floatArrayOf(sprite.u1, sprite.v1), floatArrayOf(sprite.u0, sprite.v1)
-                    )
-                    val xy = arrayOf(floatArrayOf(x0, y0), floatArrayOf(x1, y0), floatArrayOf(x1, y1), floatArrayOf(x0, y1))
-                    for (i in 0 until 4) {
-                        vs.addVertex(m, xy[i][0], xy[i][1], 0f)
-                            .setColor((c shr 16) and 0xFF, (c shr 8) and 0xFF, c and 0xFF, 255)
-                            .setUv(uv[i][0], uv[i][1])
-                            .setLight(net.minecraft.client.renderer.LightTexture.FULL_BRIGHT)
-                    }
-                }
+                context.blit(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
         context.disableScissor()
@@ -143,7 +124,7 @@ class NeutronFabricatorScreen(
 
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guimattergenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guimattergenerator.png")
         private const val TEX_SIZE = 256
 
         // 流体槽区域（与 core 物质制造机贴图布局一致）

@@ -5,7 +5,7 @@
       "item": "ic2_120:forge_hammer"
     },
     {
-      "item": "minecraft:air"
+      "tag": "ic2_120:compat/plates/copper"
     }
   ],
   "result": {

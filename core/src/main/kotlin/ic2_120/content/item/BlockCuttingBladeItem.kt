@@ -1,8 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
@@ -27,7 +29,7 @@ class IronBlockCuttingBladeItem : Item(Item.Properties()), IBlockCuttingBlade {
         fun generateRecipes(exporter: RecipeOutput) {
             val dense = DenseIronPlate::class.instance()
             if (dense != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronBlockCuttingBladeItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IronBlockCuttingBladeItem::class.instance(), 1)
                     .pattern("PPP").pattern("PSP").pattern("PPP")
                     .define('P', dense).define('S', Items.STONE)
                     .unlockedBy(getHasName(dense), has(dense))
@@ -46,9 +48,9 @@ class SteelBlockCuttingBladeItem : Item(Item.Properties()), IBlockCuttingBlade {
         fun generateRecipes(exporter: RecipeOutput) {
             val plate = SteelPlate::class.instance()
             if (plate != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelBlockCuttingBladeItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SteelBlockCuttingBladeItem::class.instance(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
-                    .define('A', Ingredient.of(ModTags.Compat.Items.PLATES_STEEL)).define('B', Ingredient.of(ModTags.Compat.Items.INGOTS_IRON))
+                    .define('A', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_STEEL)).define('B', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_IRON))
                     .unlockedBy(getHasName(plate), has(plate))
                     .save(exporter, SteelBlockCuttingBladeItem::class.id())
             }
@@ -65,7 +67,7 @@ class DiamondBlockCuttingBladeItem : Item(Item.Properties()), IBlockCuttingBlade
         fun generateRecipes(exporter: RecipeOutput) {
             val steel = SteelIngot::class.instance()
             if (steel != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, DiamondBlockCuttingBladeItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, DiamondBlockCuttingBladeItem::class.instance(), 1)
                     .pattern("DDD").pattern("DSD").pattern("DDD")
                     .define('D', Items.DIAMOND).define('S', steel)
                     .unlockedBy(getHasName(steel), has(steel))

@@ -9,7 +9,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /** 从物品容器中读取半流质发电机可用燃料流体。 */
 fun ItemStack.getSemifluidFuelFluid(): Fluid? {
@@ -17,11 +17,11 @@ fun ItemStack.getSemifluidFuelFluid(): Fluid? {
 
     ModFluids.getFluidFromModBucket(item)?.let { return it }
 
-    if (item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "biofuel_cell"))) {
+    if (item == BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "biofuel_cell"))) {
         return ModFluids.BIOFUEL_STILL
     }
 
-    if (item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))) {
+    if (item == BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))) {
         return getFluidCellVariant()?.fluid
     }
 

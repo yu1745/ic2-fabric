@@ -1,5 +1,6 @@
 package ic2_120.content.recipes.solidcanner
 
+import ic2_120.compat.recipeManager
 import ic2_120.content.recipes.ModMachineRecipes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.Ingredient
@@ -7,7 +8,7 @@ import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.core.RegistryAccess
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.level.Level
 
 /**
@@ -17,25 +18,22 @@ import net.minecraft.world.level.Level
  * 产出：满锡罐 / 燃料棒
  */
 class SolidCannerRecipe(
-    private val id: ResourceLocation,
+    private val id: Identifier,
     val slot0Ingredient: Ingredient,
     val slot0Count: Int,
     val slot1Ingredient: Ingredient,
     val slot1Count: Int,
     val output: ItemStack
-) : Recipe<SolidCannerRecipe.Input> {
+) : ic2_120.content.recipes.LegacyMachineRecipe26<SolidCannerRecipe.Input> {
 
     companion object {
         private var slot1Cache: Set<Ingredient>? = null
 
         fun slot1Ingredients(world: net.minecraft.world.level.Level): Set<Ingredient> {
             slot1Cache?.let { return it }
-            val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
-            // TODO(1.21.1): getAllRecipesFor 返回 RecipeHolder，需 .value 取配方本体。
-            @Suppress("UNCHECKED_CAST")
             val result: Set<Ingredient> = world.recipeManager
-                .getAllRecipesFor(recipeType as net.minecraft.world.item.crafting.RecipeType<SolidCannerRecipe>)
-                .mapTo(mutableSetOf()) { it.value.slot1Ingredient }
+                .recipes.mapNotNull { it.value as? SolidCannerRecipe }
+                .mapTo(mutableSetOf()) { it.slot1Ingredient }
             slot1Cache = result
             return result
         }
@@ -53,17 +51,17 @@ class SolidCannerRecipe(
         return true
     }
 
-    override fun assemble(inventory: Input, lookup: net.minecraft.core.HolderLookup.Provider): ItemStack {
+    override fun assemble(inventory: Input): ItemStack {
         return output.copy()
     }
 
-    override fun canCraftInDimensions(width: Int, height: Int): Boolean = true
+    fun canCraftInDimensions(width: Int, height: Int): Boolean = true
 
-    override fun getResultItem(lookup: net.minecraft.core.HolderLookup.Provider): ItemStack = output.copy()
+    fun getResultItem(lookup: net.minecraft.core.HolderLookup.Provider): ItemStack = output.copy()
 
-    override fun getSerializer(): RecipeSerializer<*> = ModMachineRecipes.recipeSerializer(SolidCannerRecipe::class)
+    override fun getSerializer(): RecipeSerializer<SolidCannerRecipe> = ModMachineRecipes.recipeSerializer(SolidCannerRecipe::class)
 
-    override fun getType(): RecipeType<*> = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
+    override fun getType(): RecipeType<SolidCannerRecipe> = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
 
     /** 配方输入：锡罐 + 食物两槽（用 mojmap RecipeInput 取代 SimpleContainer）。 */
     class Input(val tinCan: ItemStack, val food: ItemStack) : net.minecraft.world.item.crafting.RecipeInput {

@@ -1,12 +1,14 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import ic2_120.compat.orCreateNbt
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.compat.isClient
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.world
 
@@ -112,7 +114,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
 
         fun getFluidAmount(stack: ItemStack): Long {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return 0L
-            return stack.orCreateNbt.getLong(NBT_FLUID_DROPLETS).coerceIn(0L, CAPACITY_DROPLETS)
+            return stack.orCreateNbt.getLongOr(NBT_FLUID_DROPLETS, 0L).coerceIn(0L, CAPACITY_DROPLETS)
         }
 
         fun setFluidAmount(stack: ItemStack, amount: Long) {
@@ -127,13 +129,13 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
 
         fun isMultiMode(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return false
-            return stack.orCreateNbt.getBoolean(NBT_MULTI_MODE)
+            return stack.orCreateNbt.getBooleanOr(NBT_MULTI_MODE, false)
         }
 
         /** @return 切换后的模式：true = 多格 */
         fun toggleMultiMode(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
-            val next = !nbt.getBoolean(NBT_MULTI_MODE)
+            val next = !nbt.getBooleanOr(NBT_MULTI_MODE, false)
             nbt.putBoolean(NBT_MULTI_MODE, next)
             return next
         }
@@ -281,7 +283,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
          */
         private fun buildMultiSprayPositions(world: Level, hit: BlockHitResult): List<BlockPos> {
             val side = hit.direction
-            val normal = side.normal
+            val normal = side.unitVec3i
             val center = foamSprayAnchorPos(world, hit)
             val r = world.random.nextInt(3) + 1
             val rSq = r * r
@@ -315,7 +317,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
             val iron = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             if (iron != Items.AIR && emptyCell != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, FoamSprayerItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, FoamSprayerItem::class.instance(), 1)
                     .pattern("I  ")
                     .pattern(" I ")
                     .pattern(" FI")

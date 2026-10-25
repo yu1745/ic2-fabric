@@ -1,5 +1,7 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import ic2_120.compat.pos
 import ic2_120.compat.world
 
@@ -22,7 +24,7 @@ class ReactorAccessHatchBlockEntity(
     type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container {
+) : LegacyBlockEntity26(type, pos, state), Container {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ReactorAccessHatchBlockEntity::class.type(),

@@ -1,4 +1,9 @@
 package ic2_120.content.block.machines
+import ic2_120.compat.getUUID
+import ic2_120.compat.putUUID
+import ic2_120.compat.hasUUID
+
+import ic2_120.compat.LegacyBlockEntity26
 
 import net.minecraft.core.HolderLookup
 
@@ -37,7 +42,7 @@ abstract class MachineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ITieredMachine, IOwned {
+) : LegacyBlockEntity26(type, pos, state), ITieredMachine, IOwned {
 
     /** Per-instance startup phase prevents all loaded machines dirtying the same tick. */
     private val initialDirtyDelayTicks = kotlin.random.Random.nextLong(1L, DIRTY_INTERVAL_TICKS + 1L)

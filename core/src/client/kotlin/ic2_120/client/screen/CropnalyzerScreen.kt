@@ -9,24 +9,24 @@ import ic2_120.content.screen.CropnalyzerScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.network.chat.Component as McText
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(handler = "cropnalyzer")
 class CropnalyzerScreen(
     val handler: CropnalyzerScreenHandler,
     playerInventory: Inventory,
     title: McText
-) : AbstractContainerScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<CropnalyzerScreenHandler>(handler, playerInventory, title, GUI_WIDTH, GUI_HEIGHT) {
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicropnalyzer.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guicropnalyzer.png")
         private const val TEXTURE_SIZE = 256
         private const val GUI_WIDTH = 176
         private const val GUI_HEIGHT = 223
@@ -49,8 +49,6 @@ class CropnalyzerScreen(
     }
 
     init {
-        imageWidth = GUI_WIDTH
-        imageHeight = GUI_HEIGHT
         titleLabelY = 6
     }
 

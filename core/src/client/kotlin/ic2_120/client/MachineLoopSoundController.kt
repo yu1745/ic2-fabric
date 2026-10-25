@@ -23,7 +23,7 @@ import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.level.block.state.properties.BooleanProperty
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.util.RandomSource
 
@@ -127,7 +127,7 @@ object MachineLoopSoundController {
 
     private class BlockLoopSoundInstance(pos: BlockPos, def: LoopDef) :
         AbstractTickableSoundInstance(
-            SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", def.eventId)),
+            SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("ic2", def.eventId)),
             SoundSource.BLOCKS,
             RandomSource.create()
         ) {

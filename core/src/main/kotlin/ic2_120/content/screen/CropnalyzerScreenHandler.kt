@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.displayClientMessage
+
 import ic2_120.compat.stack
 
 import ic2_120.content.item.CropSeedBagItem

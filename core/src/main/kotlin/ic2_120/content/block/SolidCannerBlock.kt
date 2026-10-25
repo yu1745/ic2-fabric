@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -34,7 +36,7 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import ic2_120.registry.id
@@ -93,7 +95,7 @@ class SolidCannerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val tinCan = EmptyTinCanItem::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR && tinCan != Items.AIR) {
                 // 标准配方：2 空锡罐 + 2 电路板 + 1 基础机械外壳
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SolidCannerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SolidCannerBlock::class.item(), 1)
                     .pattern(" C ").pattern(" C ").pattern("TMT")
                     .define('C', tinCan).define('T', circuit).define('M', machine)
                     .unlockedBy(getHasName(machine), has(machine))
@@ -101,11 +103,11 @@ class SolidCannerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             }
             // if (machine != Items.AIR && circuit != Items.AIR && tinIngot != Items.AIR) {
             //     // LF 配方：7 锡锭 + 1 电路板 + 1 基础机械外壳
-            //     ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SolidCannerBlock::class.item(), 1)
+            //     ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SolidCannerBlock::class.item(), 1)
             //         .pattern("TCT").pattern("TMT").pattern("TTT")
             //         .define('T', tinIngot).define('C', circuit).define('M', machine)
             //         .unlockedBy(getHasName(machine), has(machine))
-            //         .save(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "solid_canner_lf"))
+            //         .save(exporter, Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "solid_canner_lf"))
             // }
         }
     }

@@ -61,7 +61,7 @@ abstract class SunPanelBlockEntity(
             return
         }
 
-        val time = world.dayTime % 24000
+        val time = world.getOverworldClockTime() % 24000
         val isRaining = world.isRaining || world.isThundering
         val canRain = world.getBiome(pos).value().hasPrecipitation()
         val isDaytime = time in DAY_START_TICK..DAY_END_TICK

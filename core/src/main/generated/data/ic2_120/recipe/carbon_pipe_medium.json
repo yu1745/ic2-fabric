@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "X": {
-      "item": "ic2_120:carbon_mesh"
-    }
+    "X": "ic2_120:carbon_mesh"
   },
   "pattern": [
     "XXX",

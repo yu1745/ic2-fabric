@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "I": {
-      "item": "ic2_120:raw_tin"
-    }
+    "I": "ic2_120:raw_tin"
   },
   "pattern": [
     "III",
@@ -12,7 +10,6 @@
     "III"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:raw_tin_block"
   }
 }

@@ -7,22 +7,20 @@ import ic2_120.content.block.machines.WindGeneratorBlockEntity
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.WindGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = WindGeneratorBlock::class)
 class WindGeneratorScreen(
     val handler: WindGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<WindGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<WindGeneratorScreenHandler>(handler, playerInventory, title, GUI_SIZE.width, GUI_SIZE.height) {
 
     init {
-        imageWidth = GUI_SIZE.width
-        imageHeight = GUI_SIZE.height
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -66,7 +64,7 @@ class WindGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiwindgenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiwindgenerator.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD
 

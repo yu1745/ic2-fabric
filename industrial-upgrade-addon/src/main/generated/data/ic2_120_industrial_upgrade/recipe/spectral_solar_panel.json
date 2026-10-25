@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120_industrial_upgrade:spectral_core",
+    "B": "ic2_120_advanced_solar_addon:quantum_solar_panel"
+  },
+  "pattern": [
+    " B ",
+    "BAB",
+    " B "
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:spectral_solar_panel"
+  }
+}

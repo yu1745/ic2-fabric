@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "F": {
-      "item": "minecraft:fern"
-    }
+    "F": "minecraft:fern"
   },
   "pattern": [
     "FFF",
@@ -12,7 +9,6 @@
     "FFF"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:plant_ball"
   }
 }

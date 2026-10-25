@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -23,7 +25,7 @@ import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_industrial_upgrade.photonic_solar_panelrain
 // zh_cn: 光子雨能太阳能发电机  en_us: Photonic Rain Panel
@@ -44,7 +46,7 @@ class PhotonicSolarPanelRainBlock : IndustrialSolarPanelBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：光子太阳能发电机 + RainLinse（ASA）
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PhotonicSolarPanelRainBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, PhotonicSolarPanelRainBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', PhotonicSolarPanelBlock::class.item())
@@ -52,7 +54,7 @@ class PhotonicSolarPanelRainBlock : IndustrialSolarPanelBlock() {
                 .unlockedBy(getHasName(PhotonicSolarPanelBlock::class.item()), has(PhotonicSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("photonic_solar_panelrain"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, PhotonicSolarPanelBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, PhotonicSolarPanelBlock::class.item(), 1)
                 .requires(PhotonicSolarPanelRainBlock::class.item())
                 .unlockedBy(getHasName(PhotonicSolarPanelRainBlock::class.item()), has(PhotonicSolarPanelRainBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("photonic_solar_panelrain_revert"))

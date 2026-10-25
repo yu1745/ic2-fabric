@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.solidcanner
 
+import ic2_120.compat.accept
+
 import com.google.gson.JsonObject
 import ic2_120.content.item.EmptyFuelRodItem
 import ic2_120.content.item.Mox
@@ -13,7 +15,7 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.function.Consumer
 
 /**
@@ -51,7 +53,7 @@ object SolidCannerRecipeDatagen {
 
     fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "solid_canning/${entry.name}")
+            val recipeId = Identifier.fromNamespaceAndPath("ic2_120", "solid_canning/${entry.name}")
             val recipe = SolidCannerRecipe(
                 recipeId,
                 entry.slot0Ingredient.toIngredient(),

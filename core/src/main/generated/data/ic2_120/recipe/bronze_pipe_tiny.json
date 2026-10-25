@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "X": {
-      "item": "ic2_120:bronze_casing"
-    }
+    "X": "ic2_120:bronze_casing"
   },
   "pattern": [
     "XXX",

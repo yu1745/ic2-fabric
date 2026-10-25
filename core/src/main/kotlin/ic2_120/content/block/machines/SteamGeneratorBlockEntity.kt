@@ -23,7 +23,7 @@ import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -72,7 +72,7 @@ class SteamGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), IHeatConsumer, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport,
-    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SteamGeneratorBlock.ACTIVE
     override val tier: Int = 2
@@ -188,9 +188,9 @@ class SteamGeneratorBlockEntity(
         /** NBT 恢复 */
         fun readFromNbt(nbt: CompoundTag, lookup: HolderLookup.Provider) {
             // TODO(1.21.1): FluidVariant.fromNbt 在 fabric-api 1.21.1 已移除，改用 CODEC + RegistryOps 解析。
-            variant = FluidVariant.CODEC.parse(lookup.createSerializationContext(NbtOps.INSTANCE), nbt.getCompound("variant"))
+            variant = FluidVariant.CODEC.parse(lookup.createSerializationContext(NbtOps.INSTANCE), nbt.getCompoundOrEmpty("variant"))
                 .result().orElse(FluidVariant.blank())
-            amount = nbt.getLong("amount")
+            amount = nbt.getLongOr("amount", 0L)
         }
 
         /** NBT 保存 */
@@ -253,9 +253,9 @@ class SteamGeneratorBlockEntity(
         /** NBT 恢复 */
         fun readFromNbt(nbt: CompoundTag, lookup: HolderLookup.Provider) {
             // TODO(1.21.1): FluidVariant.fromNbt 在 fabric-api 1.21.1 已移除，改用 CODEC + RegistryOps 解析。
-            variant = FluidVariant.CODEC.parse(lookup.createSerializationContext(NbtOps.INSTANCE), nbt.getCompound("variant"))
+            variant = FluidVariant.CODEC.parse(lookup.createSerializationContext(NbtOps.INSTANCE), nbt.getCompoundOrEmpty("variant"))
                 .result().orElse(FluidVariant.blank())
-            amount = nbt.getLong("amount")
+            amount = nbt.getLongOr("amount", 0L)
         }
 
         /** NBT 保存 */
@@ -343,7 +343,7 @@ class SteamGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.steam_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         SteamGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -357,13 +357,13 @@ class SteamGeneratorBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
-        systemHeatMilli = nbt.getLong(NBT_SYSTEM_HEAT_MILLI)
-        calcification = nbt.getLong(NBT_CALCIFICATION)
-        sync.inputMB = nbt.getInt(NBT_INPUT_MB).coerceIn(0, 1000)
-        sync.pressure = nbt.getInt(NBT_PRESSURE).coerceIn(0, SteamGeneratorSync.MAX_PRESSURE)
+        systemHeatMilli = nbt.getLongOr(NBT_SYSTEM_HEAT_MILLI, 0L)
+        calcification = nbt.getLongOr(NBT_CALCIFICATION, 0L)
+        sync.inputMB = nbt.getIntOr(NBT_INPUT_MB, 0).coerceIn(0, 1000)
+        sync.pressure = nbt.getIntOr(NBT_PRESSURE, 0).coerceIn(0, SteamGeneratorSync.MAX_PRESSURE)
 
-        if (nbt.contains(NBT_WATER_TANK)) waterTank.readFromNbt(nbt.getCompound(NBT_WATER_TANK), lookup)
-        if (nbt.contains(NBT_STEAM_TANK)) steamTank.readFromNbt(nbt.getCompound(NBT_STEAM_TANK), lookup)
+        if (nbt.contains(NBT_WATER_TANK)) waterTank.readFromNbt(nbt.getCompoundOrEmpty(NBT_WATER_TANK), lookup)
+        if (nbt.contains(NBT_STEAM_TANK)) steamTank.readFromNbt(nbt.getCompoundOrEmpty(NBT_STEAM_TANK), lookup)
         sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
         sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.calcification = calcification.coerceIn(0L, SteamGeneratorSync.MAX_CALCIFICATION).toInt()

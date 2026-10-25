@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -78,7 +80,7 @@ class CondenserBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val heatVent = ic2_120.content.item.HeatVentItem::class.instance()
             val ironIngot = net.minecraft.world.item.Items.IRON_INGOT
             if (ironCasing != net.minecraft.world.item.Items.AIR && heatVent != net.minecraft.world.item.Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CondenserBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CondenserBlock::class.item(), 1)
                     .pattern("CHC")
                     .pattern("CIC")
                     .pattern("CCC")

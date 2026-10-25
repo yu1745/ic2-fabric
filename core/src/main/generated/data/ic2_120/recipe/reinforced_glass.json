@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "item": "ic2_120:alloy"
-    },
-    "X": {
-      "item": "minecraft:glass"
-    }
+    "G": "ic2_120:alloy",
+    "X": "minecraft:glass"
   },
   "pattern": [
     "XGX",

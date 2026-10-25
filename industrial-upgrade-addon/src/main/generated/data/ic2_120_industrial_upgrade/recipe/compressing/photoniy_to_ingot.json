@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "ic2_120_industrial_upgrade:photoniy"
+  },
+  "input_count": 9,
+  "result": {
+    "item": "ic2_120_industrial_upgrade:photoniy_ingot"
+  }
+}

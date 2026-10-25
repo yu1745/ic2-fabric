@@ -22,13 +22,13 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.content.network.SetFluidFilterPayload
 import ic2_120.content.network.SetItemFilterPayload
 
 @JeiPlugin
 class Ic2JeiGhostPlugin : IModPlugin {
-    override fun getPluginUid(): ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "ghost_filters")
+    override fun getPluginUid(): Identifier = Identifier.fromNamespaceAndPath("ic2_120", "ghost_filters")
 
     override fun registerGuiHandlers(registration: IGuiHandlerRegistration) {
         val fluidIngredientType = registration.jeiHelpers.platformFluidHelper.fluidIngredientType

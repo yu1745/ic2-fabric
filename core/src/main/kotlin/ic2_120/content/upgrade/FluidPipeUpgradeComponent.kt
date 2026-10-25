@@ -21,7 +21,7 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
@@ -95,10 +95,10 @@ object FluidPipeUpgradeComponent {
 
     fun readFilter(stack: ItemStack): Fluid? {
         val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return null
-        val raw = nbt.getString(NBT_FILTER)
+        val raw = nbt.getStringOr(NBT_FILTER, "")
         if (raw.isNullOrBlank()) return null
-        val id = ResourceLocation.tryParse(raw) ?: return null
-        return if (BuiltInRegistries.FLUID.containsKey(id)) BuiltInRegistries.FLUID.get(id) else null
+        val id = Identifier.tryParse(raw) ?: return null
+        return if (BuiltInRegistries.FLUID.containsKey(id)) BuiltInRegistries.FLUID.getValue(id) else null
     }
 
     fun writeFilter(stack: ItemStack, fluid: Fluid?) {
@@ -117,11 +117,11 @@ object FluidPipeUpgradeComponent {
 
     fun readDirections(stack: ItemStack): Set<Direction> {
         val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return emptySet()
-        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.TAG_STRING.toInt())
+        val list = nbt.getListOrEmpty(NBT_DIRECTIONS)
         if (list.isEmpty()) return emptySet()
         val result = mutableSetOf<Direction>()
         for (i in 0 until list.size) {
-            Direction.byName(list.getString(i))?.let { result.add(it) }
+            Direction.byName(list.getStringOr(i, ""))?.let { result.add(it) }
         }
         return result
     }

@@ -34,9 +34,13 @@ tasks.named('runDatagen') {
 }
 
 dependencies {
-	implementation project(path: ":core", configuration: "namedElements")
-	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
+	implementation project(":core")
+	compileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api:${project.jei_version}")
 }
+
+sourceSets.client.compileClasspath += project(":core").sourceSets.client.output
+sourceSets.client.runtimeClasspath += project(":core").sourceSets.client.output
+tasks.named("compileClientKotlin") { dependsOn(":core:compileClientKotlin") }
 
 processResources {
 	inputs.property "version", project.version

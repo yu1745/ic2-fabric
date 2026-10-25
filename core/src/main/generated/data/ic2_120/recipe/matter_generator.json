@@ -1,19 +1,10 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "A": {
-      "item": "ic2_120:advanced_machine"
-    },
-    "C": {
-      "item": "ic2_120:advanced_circuit"
-    },
-    "G": {
-      "item": "minecraft:glowstone"
-    },
-    "M": {
-      "item": "ic2_120:lapotron_crystal"
-    }
+    "A": "ic2_120:advanced_machine",
+    "C": "ic2_120:advanced_circuit",
+    "G": "minecraft:glowstone",
+    "M": "ic2_120:lapotron_crystal"
   },
   "pattern": [
     "GCG",
@@ -21,7 +12,6 @@
     "GCG"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:matter_generator"
   }
 }

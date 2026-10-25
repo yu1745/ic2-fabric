@@ -1,3 +1,12 @@
 {
-  "type": "ic2_120:cutting"
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:stripped_mangrove_log"
+  },
+  "input_count": 1,
+  "material_hardness": 2,
+  "result": {
+    "count": 6,
+    "item": "minecraft:mangrove_planks"
+  }
 }

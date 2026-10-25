@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 
@@ -65,7 +67,7 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -115,7 +117,20 @@ abstract class BaseMinerBlockEntity(
     private val advanced: Boolean
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IClaimSensitive, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IClaimSensitive, ExtendedMenuProvider<FriendlyByteBuf> {
+
+    override fun preRemoveSideEffects(pos: BlockPos, state: BlockState) {
+        val level = world
+        if (level != null) {
+            for (stack in itemCache) {
+                if (!stack.isEmpty) net.minecraft.world.Containers.dropItemStack(level, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack.copy())
+            }
+            itemCache.clear()
+            cacheItemCount = 0
+            (state.block as? BaseMinerBlock)?.retrieveMiningPipes(level, pos)
+        }
+        super.preRemoveSideEffects(pos, state)
+    }
 
     override val activeProperty = BaseMinerBlock.ACTIVE
     override val soundConfig = MachineSoundConfig.operate("machine.miner.operate", 0.5f, 1.0f, 20)
@@ -411,7 +426,7 @@ abstract class BaseMinerBlockEntity(
         val target = findNormalTarget(world, y, scanRange) ?: run {
             sync.cursorY = y - 1
             scanLevel = Int.MIN_VALUE
-            if (sync.cursorY < world.minBuildHeight) {
+            if (sync.cursorY < world.minY) {
                 normalReachedBottom = true
                 setChanged()
                 return recoverNormalPipes(world)
@@ -460,7 +475,7 @@ abstract class BaseMinerBlockEntity(
 
     private fun findDeepestNormalPipe(world: ServerLevel): BlockPos? {
         // 自底向上回收：先拆最底部的管道（钻头端），列保持连续，不会出现隔空缺口 (#26)
-        for (y in world.minBuildHeight until pos.y) {
+        for (y in world.minY until pos.y) {
             val pipe = BlockPos(pos.x, y, pos.z)
             if (world.getBlockState(pipe).block is MiningPipeBlock) return pipe
         }
@@ -552,21 +567,21 @@ abstract class BaseMinerBlockEntity(
         val current = advancedScanPos ?: return null
         var x = current.x; var y = current.y; var z = current.z
         if (x < pos.x + range) x++ else if (z < pos.z + range) { x = pos.x - range; z++ } else { x = pos.x - range; z = pos.z - range; y-- }
-        val bottomY = world?.minBuildHeight ?: return null
+        val bottomY = world?.minY ?: return null
         if (y < bottomY) { advancedScanPos = BlockPos(x, y, z); return null }
         val result = BlockPos(x, y, z); advancedScanPos = result; sync.cursorX = x - pos.x; sync.cursorY = y; sync.cursorZ = z - pos.z; return result
     }
 
     private fun isOreLike(world: Level, target: BlockPos, state: BlockState): Boolean =
         state.block !is ic2_120.content.block.MachineBlock &&
-            (state.`is`(net.minecraft.tags.BlockTags.COAL_ORES) ||
+            (state.`is`(net.minecraft.tags.BlockItemTags.COAL_ORES.block()) ||
                 state.`is`(net.minecraft.tags.BlockTags.COPPER_ORES) ||
-                state.`is`(net.minecraft.tags.BlockTags.DIAMOND_ORES) ||
-                state.`is`(net.minecraft.tags.BlockTags.EMERALD_ORES) ||
+                state.`is`(net.minecraft.tags.BlockItemTags.DIAMOND_ORES.block()) ||
+                state.`is`(net.minecraft.tags.BlockItemTags.EMERALD_ORES.block()) ||
                 state.`is`(net.minecraft.tags.BlockTags.GOLD_ORES) ||
                 state.`is`(net.minecraft.tags.BlockTags.IRON_ORES) ||
-                state.`is`(net.minecraft.tags.BlockTags.LAPIS_ORES) ||
-                state.`is`(net.minecraft.tags.BlockTags.REDSTONE_ORES) ||
+                state.`is`(net.minecraft.tags.BlockItemTags.LAPIS_ORES.block()) ||
+                state.`is`(net.minecraft.tags.BlockItemTags.REDSTONE_ORES.block()) ||
                 state.`is`(net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS) ||
                 BuiltInRegistries.BLOCK.getKey(state.block)!!.path.contains("ore") ||
                 BuiltInRegistries.BLOCK.getKey(state.block)!!.path == "ancient_debris")
@@ -596,8 +611,8 @@ abstract class BaseMinerBlockEntity(
             is IridiumDrill -> ItemStack(Items.NETHERITE_PICKAXE)
             else -> ItemStack(Items.DIAMOND_PICKAXE)
         }
-        if (silk) tool.enchant(world.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.SILK_TOUCH), 1)
-        else if (!advanced && drill is IridiumDrill) tool.enchant(world.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.FORTUNE), 3)
+        if (silk) tool.enchant(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(Enchantments.SILK_TOUCH).orElseThrow(), 1)
+        else if (!advanced && drill is IridiumDrill) tool.enchant(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(Enchantments.FORTUNE).orElseThrow(), 3)
         return tool
     }
     private fun harvest(world: ServerLevel, target: BlockPos, tool: ItemStack) {
@@ -628,7 +643,7 @@ abstract class BaseMinerBlockEntity(
             if (current.isEmpty) { setItem(slot, rest); rest = ItemStack.EMPTY }
             else if (ItemStack.isSameItemSameComponents(current, rest)) { val move = minOf(rest.count, current.maxStackSize - current.count); if (move > 0) { current.grow(move); rest.shrink(move) } }
         }
-        if (!rest.isEmpty) Containers.dropItemStack(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), rest)
+        if (!rest.isEmpty) world?.let { Containers.dropItemStack(it, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), rest) }
     }
 
     fun getRenderDrillTarget(time: Long): BlockPos? = renderTarget?.takeIf { time - renderTargetTime <= 8 }
@@ -651,13 +666,13 @@ abstract class BaseMinerBlockEntity(
         nbt.putLong("EnergyStored", sync.amount); nbt.putInt("ScanLevel", scanLevel); nbt.putInt("ProgressMode", progressMode); nbt.putInt("AdvancedTicker", advancedTicker); nbt.putInt("NormalPipeRecoveryTicks", normalPipeRecoveryTicks); nbt.putBoolean("NormalReachedBottom", normalReachedBottom)
         nbt.putLong("RenderTargetTime", renderTargetTime); nbt.putBoolean("ResetWaitingForRedstone", resetWaitingForRedstone); nbt.putBoolean("RedstoneStateAtReset", redstoneStateAtReset); renderTarget?.let { nbt.putInt("RenderTargetX", it.x); nbt.putInt("RenderTargetY", it.y); nbt.putInt("RenderTargetZ", it.z) }
     }
-    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.loadAdditional(nbt, lookup); ContainerHelper.loadAllItems(nbt, inventory, lookup); syncedData.readNbt(nbt); sync.amount = nbt.getLong("EnergyStored"); sync.syncCommittedAmount(); scanLevel = nbt.getInt("ScanLevel"); progressMode = nbt.getInt("ProgressMode"); advancedTicker = nbt.getInt("AdvancedTicker"); normalPipeRecoveryTicks = nbt.getInt("NormalPipeRecoveryTicks").coerceIn(0, 19); normalReachedBottom = nbt.getBoolean("NormalReachedBottom"); resetWaitingForRedstone = nbt.getBoolean("ResetWaitingForRedstone"); redstoneStateAtReset = nbt.getBoolean("RedstoneStateAtReset"); renderTargetTime = nbt.getLong("RenderTargetTime"); if (nbt.contains("RenderTargetX")) renderTarget = BlockPos(nbt.getInt("RenderTargetX"), nbt.getInt("RenderTargetY"), nbt.getInt("RenderTargetZ")) }
-    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.saveAdditional(nbt, lookup); ContainerHelper.saveAllItems(nbt, inventory, lookup); syncedData.writeNbt(nbt); writeMinerNbt(nbt) }
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.loadAdditional(nbt, lookup); ContainerHelper26.loadAllItems(nbt, inventory, lookup); syncedData.readNbt(nbt); sync.amount = nbt.getLongOr("EnergyStored", 0L); sync.syncCommittedAmount(); scanLevel = nbt.getIntOr("ScanLevel", 0); progressMode = nbt.getIntOr("ProgressMode", 0); advancedTicker = nbt.getIntOr("AdvancedTicker", 0); normalPipeRecoveryTicks = nbt.getIntOr("NormalPipeRecoveryTicks", 0).coerceIn(0, 19); normalReachedBottom = nbt.getBooleanOr("NormalReachedBottom", false); resetWaitingForRedstone = nbt.getBooleanOr("ResetWaitingForRedstone", false); redstoneStateAtReset = nbt.getBooleanOr("RedstoneStateAtReset", false); renderTargetTime = nbt.getLongOr("RenderTargetTime", 0L); if (nbt.contains("RenderTargetX")) renderTarget = BlockPos(nbt.getIntOr("RenderTargetX", 0), nbt.getIntOr("RenderTargetY", 0), nbt.getIntOr("RenderTargetZ", 0)) }
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.saveAdditional(nbt, lookup); ContainerHelper26.saveAllItems(nbt, inventory, lookup); syncedData.writeNbt(nbt); writeMinerNbt(nbt) }
     override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveWithoutMetadata(lookup)
     override fun getUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf { val buf = FriendlyByteBuf(Unpooled.buffer()); buf.writeBlockPos(pos); buf.writeVarInt(syncedData.count); buf.writeBoolean(advanced); return buf }
     override fun getDisplayName() = Component.translatable("block.ic2_120.$blockKey")
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?) = MinerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage, advanced)
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player) = MinerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage, advanced)
 }
 
 @ModBlockEntity(block = MinerBlock::class)

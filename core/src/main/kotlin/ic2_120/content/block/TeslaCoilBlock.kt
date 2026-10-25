@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -71,7 +73,7 @@ class TeslaCoilBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         world: Level,
         pos: BlockPos,
         sourceBlock: net.minecraft.world.level.block.Block,
-        sourcePos: BlockPos,
+        orientation: net.minecraft.world.level.redstone.Orientation?,
         notify: Boolean
     ) {
         if (!world.isClient) {
@@ -80,7 +82,7 @@ class TeslaCoilBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
                 world.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.POWERED, powered))
             }
         }
-        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
+        super.neighborChanged(state, world, pos, sourceBlock, orientation, notify)
     }
 
     companion object {
@@ -92,7 +94,7 @@ class TeslaCoilBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val ironCasing = IronCasing::class.instance()
             val circuit = Circuit::class.instance()
             if (mv != Items.AIR && ironCasing != Items.AIR && circuit != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TeslaCoilBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TeslaCoilBlock::class.item(), 1)
                     .pattern("RRR")
                     .pattern("RMR")
                     .pattern("ICI")

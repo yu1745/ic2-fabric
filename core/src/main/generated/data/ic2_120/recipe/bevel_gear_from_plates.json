@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "s": {
-      "tag": "ic2_120:compat/plates/iron"
-    }
+    "s": "#ic2_120:compat/plates/iron"
   },
   "pattern": [
     "s s",
@@ -12,7 +9,6 @@
     "sss"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:bevel_gear"
   }
 }

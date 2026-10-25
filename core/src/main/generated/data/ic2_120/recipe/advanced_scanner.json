@@ -2,21 +2,11 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": {
-      "item": "ic2_120:energy_crystal"
-    },
-    "C": {
-      "item": "ic2_120:advanced_circuit"
-    },
-    "I": {
-      "item": "ic2_120:scanner"
-    },
-    "g": {
-      "item": "minecraft:glowstone_dust"
-    },
-    "i": {
-      "item": "ic2_120:insulated_gold_cable"
-    }
+    "A": "ic2_120:energy_crystal",
+    "C": "ic2_120:advanced_circuit",
+    "I": "ic2_120:scanner",
+    "g": "minecraft:glowstone_dust",
+    "i": "ic2_120:insulated_gold_cable"
   },
   "pattern": [
     "gCg",
@@ -24,7 +14,6 @@
     "iIi"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:advanced_scanner"
   }
 }

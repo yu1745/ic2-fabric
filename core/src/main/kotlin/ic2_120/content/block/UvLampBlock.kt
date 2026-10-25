@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import com.mojang.serialization.MapCodec
 
 import ic2_120.compat.validateTicker
@@ -8,7 +10,7 @@ import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -120,23 +122,6 @@ class UvLampBlock : BaseEntityBlock(
         return InteractionResult.SUCCESS
     }
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        newState: BlockState,
-        moved: Boolean
-    ) {
-        if (!world.isClient && !state.`is`(newState.block) && !moved) {
-            val be = world.getBlockEntity(pos)
-            if (be is Container) {
-                Containers.dropContents(world, pos, be)
-            }
-        }
-        super.onRemove(state, world, pos, newState, moved)
-    }
-
     private fun lampShape(facing: Direction): VoxelShape = when (facing) {
         Direction.NORTH -> SHAPE_NORTH
         Direction.SOUTH -> SHAPE_SOUTH
@@ -162,9 +147,9 @@ class UvLampBlock : BaseEntityBlock(
         fun generateRecipes(exporter: RecipeOutput) {
             val luminator = LuminatorFlatBlock::class.item()
             if (luminator != Items.AIR) {
-                ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, UvLampBlock::class.item(), 1)
+                ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, UvLampBlock::class.item(), 1)
                     .requires(luminator)
-                    .requires(Items.PURPLE_DYE)
+                    .requires(Items.DYE.pick(net.minecraft.world.item.DyeColor.PURPLE))
                     .unlockedBy(getHasName(luminator), has(luminator))
                     .save(exporter, UvLampBlock::class.id())
             }

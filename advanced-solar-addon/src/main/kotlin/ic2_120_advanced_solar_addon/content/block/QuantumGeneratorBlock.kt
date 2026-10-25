@@ -18,7 +18,7 @@ import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -89,7 +89,7 @@ class QuantumGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(QuantumGeneratorBlockEntity::class.type(), pos, state),
-    IGenerator, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IGenerator, ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         const val DEFAULT_ENERGY_MAC = 512
@@ -174,7 +174,7 @@ class QuantumGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120_advanced_solar_addon.quantum_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         QuantumGeneratorScreenHandler(syncId, playerInventory, ContainerLevelAccess.create(world!!, pos), syncedData)
 
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
@@ -187,11 +187,11 @@ class QuantumGeneratorBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         energyMac = if (nbt.contains("energyMac"))
-            nbt.getInt("energyMac").coerceIn(1, EnergyTier.euPerTickFromTier(VARIABLE_MAX).toInt()) else DEFAULT_ENERGY_MAC
+            nbt.getIntOr("energyMac", DEFAULT_ENERGY_MAC).coerceIn(1, EnergyTier.euPerTickFromTier(VARIABLE_MAX).toInt()) else DEFAULT_ENERGY_MAC
         variable = if (nbt.contains("variable"))
-            nbt.getInt("variable").coerceIn(VARIABLE_MIN, VARIABLE_MAX) else DEFAULT_VARIABLE
-        isActive = if (nbt.contains("active")) nbt.getBoolean("active") else true
-        sync.restoreEnergy(nbt.getLong(QuantumGeneratorSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
+            nbt.getIntOr("variable", DEFAULT_VARIABLE).coerceIn(VARIABLE_MIN, VARIABLE_MAX) else DEFAULT_VARIABLE
+        isActive = nbt.getBooleanOr("active", true)
+        sync.restoreEnergy(nbt.getLongOr(QuantumGeneratorSync.NBT_ENERGY, 0L).coerceIn(0L, sync.capacity))
         syncedData.readNbt(nbt)
     }
 

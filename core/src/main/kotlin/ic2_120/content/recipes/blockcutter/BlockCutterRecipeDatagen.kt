@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.blockcutter
 
+import ic2_120.compat.accept
+
 import com.google.gson.JsonObject
 import ic2_120.content.item.*
 import ic2_120.content.recipes.IngredientInput
@@ -10,7 +12,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.function.Consumer
 
 /**
@@ -32,11 +34,11 @@ object BlockCutterRecipeDatagen {
         // ===== 金属块 → 9 板（保留为 Item，因 storage_blocks 未覆盖全部金属） =====
         Entry("iron_block_to_plate", IngredientInput.item(Items.IRON_BLOCK), 1, 5.0f, IronPlate::class.instance(), 9),
         Entry("gold_block_to_plate", IngredientInput.item(Items.GOLD_BLOCK), 1, 5.0f, GoldPlate::class.instance(), 9),
-        Entry("copper_block_to_plate", IngredientInput.item(Items.COPPER_BLOCK), 1, 3.0f, CopperPlate::class.instance(), 9),
-        Entry("tin_block_to_plate", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "tin_block"))), 1, 3.0f, TinPlate::class.instance(), 9),
-        Entry("bronze_block_to_plate", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "bronze_block"))), 1, 5.0f, BronzePlate::class.instance(), 9),
-        Entry("lead_block_to_plate", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "lead_block"))), 1, 5.0f, LeadPlate::class.instance(), 9),
-        Entry("steel_block_to_plate", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "steel_block"))), 1, 6.0f, SteelPlate::class.instance(), 9),
+        Entry("copper_block_to_plate", IngredientInput.item(Items.COPPER_BLOCK.weathering().unaffected()), 1, 3.0f, CopperPlate::class.instance(), 9),
+        Entry("tin_block_to_plate", IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "tin_block"))), 1, 3.0f, TinPlate::class.instance(), 9),
+        Entry("bronze_block_to_plate", IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "bronze_block"))), 1, 5.0f, BronzePlate::class.instance(), 9),
+        Entry("lead_block_to_plate", IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "lead_block"))), 1, 5.0f, LeadPlate::class.instance(), 9),
+        Entry("steel_block_to_plate", IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "steel_block"))), 1, 6.0f, SteelPlate::class.instance(), 9),
         Entry("lapis_block_to_plate", IngredientInput.item(Items.LAPIS_BLOCK), 1, 3.0f, LapisPlate::class.instance(), 9),
         Entry("obsidian_to_plate", IngredientInput.item(Items.OBSIDIAN), 1, 50.0f, ObsidianPlate::class.instance(), 4),
 
@@ -68,19 +70,19 @@ object BlockCutterRecipeDatagen {
         Entry("blackstone_to_slab", IngredientInput.item(Items.BLACKSTONE), 1, 1.5f, Items.BLACKSTONE_SLAB, 9),
         Entry("polished_blackstone_to_slab", IngredientInput.item(Items.POLISHED_BLACKSTONE), 1, 1.5f, Items.POLISHED_BLACKSTONE_SLAB, 9),
         Entry("polished_blackstone_bricks_to_slab", IngredientInput.item(Items.POLISHED_BLACKSTONE_BRICKS), 1, 1.5f, Items.POLISHED_BLACKSTONE_BRICK_SLAB, 9),
-        Entry("deepslate_to_slab", IngredientInput.item(Items.DEEPSLATE), 1, 3.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "deepslate_slab")), 9),
-        Entry("polished_deepslate_to_slab", IngredientInput.item(Items.POLISHED_DEEPSLATE), 1, 3.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "polished_deepslate_slab")), 9),
-        Entry("deepslate_bricks_to_slab", IngredientInput.item(Items.DEEPSLATE_BRICKS), 1, 3.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "deepslate_brick_slab")), 9),
-        Entry("deepslate_tiles_to_slab", IngredientInput.item(Items.DEEPSLATE_TILES), 1, 3.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "deepslate_tile_slab")), 9),
+        Entry("deepslate_to_slab", IngredientInput.item(Items.DEEPSLATE), 1, 3.0f, Items.COBBLED_DEEPSLATE_SLAB, 9),
+        Entry("polished_deepslate_to_slab", IngredientInput.item(Items.POLISHED_DEEPSLATE), 1, 3.0f, BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("minecraft", "polished_deepslate_slab")), 9),
+        Entry("deepslate_bricks_to_slab", IngredientInput.item(Items.DEEPSLATE_BRICKS), 1, 3.0f, BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("minecraft", "deepslate_brick_slab")), 9),
+        Entry("deepslate_tiles_to_slab", IngredientInput.item(Items.DEEPSLATE_TILES), 1, 3.0f, BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("minecraft", "deepslate_tile_slab")), 9),
         Entry("mud_bricks_to_slab", IngredientInput.item(Items.MUD_BRICKS), 1, 1.5f, Items.MUD_BRICK_SLAB, 9),
-        Entry("oxidized_copper_to_slab", IngredientInput.item(Items.OXIDIZED_COPPER), 1, 3.0f, Items.OXIDIZED_CUT_COPPER_SLAB, 9),
-        Entry("weathered_copper_to_slab", IngredientInput.item(Items.WEATHERED_COPPER), 1, 3.0f, Items.WEATHERED_CUT_COPPER_SLAB, 9),
-        Entry("exposed_copper_to_slab", IngredientInput.item(Items.EXPOSED_COPPER), 1, 3.0f, Items.EXPOSED_CUT_COPPER_SLAB, 9),
-        Entry("cut_copper_to_slab", IngredientInput.item(Items.CUT_COPPER), 1, 3.0f, Items.CUT_COPPER_SLAB, 9),
-        Entry("waxed_copper_to_slab", IngredientInput.item(Items.WAXED_COPPER_BLOCK), 1, 3.0f, Items.WAXED_CUT_COPPER_SLAB, 9),
-        Entry("waxed_weathered_copper_to_slab", IngredientInput.item(Items.WAXED_WEATHERED_COPPER), 1, 3.0f, Items.WAXED_WEATHERED_CUT_COPPER_SLAB, 9),
-        Entry("waxed_exposed_copper_to_slab", IngredientInput.item(Items.WAXED_EXPOSED_COPPER), 1, 3.0f, Items.WAXED_EXPOSED_CUT_COPPER_SLAB, 9),
-        Entry("waxed_oxidized_copper_to_slab", IngredientInput.item(Items.WAXED_OXIDIZED_COPPER), 1, 3.0f, Items.WAXED_OXIDIZED_CUT_COPPER_SLAB, 9),
+        Entry("oxidized_copper_to_slab", IngredientInput.item(Items.COPPER_BLOCK.weathering().oxidized()), 1, 3.0f, Items.CUT_COPPER_SLAB.weathering().oxidized(), 9),
+        Entry("weathered_copper_to_slab", IngredientInput.item(Items.COPPER_BLOCK.weathering().weathered()), 1, 3.0f, Items.CUT_COPPER_SLAB.weathering().weathered(), 9),
+        Entry("exposed_copper_to_slab", IngredientInput.item(Items.COPPER_BLOCK.weathering().exposed()), 1, 3.0f, Items.CUT_COPPER_SLAB.weathering().exposed(), 9),
+        Entry("cut_copper_to_slab", IngredientInput.item(Items.CUT_COPPER.weathering().unaffected()), 1, 3.0f, Items.CUT_COPPER_SLAB.weathering().unaffected(), 9),
+        Entry("waxed_copper_to_slab", IngredientInput.item(Items.COPPER_BLOCK.waxed().unaffected()), 1, 3.0f, Items.CUT_COPPER_SLAB.waxed().unaffected(), 9),
+        Entry("waxed_weathered_copper_to_slab", IngredientInput.item(Items.COPPER_BLOCK.waxed().weathered()), 1, 3.0f, Items.CUT_COPPER_SLAB.waxed().weathered(), 9),
+        Entry("waxed_exposed_copper_to_slab", IngredientInput.item(Items.COPPER_BLOCK.waxed().exposed()), 1, 3.0f, Items.CUT_COPPER_SLAB.waxed().exposed(), 9),
+        Entry("waxed_oxidized_copper_to_slab", IngredientInput.item(Items.COPPER_BLOCK.waxed().oxidized()), 1, 3.0f, Items.CUT_COPPER_SLAB.waxed().oxidized(), 9),
 
         // ===== 木板类 → 9 台阶 =====
         Entry("oak_planks_to_slab", IngredientInput.item(Items.OAK_PLANKS), 1, 2.0f, Items.OAK_SLAB, 9),
@@ -94,7 +96,7 @@ object BlockCutterRecipeDatagen {
         Entry("bamboo_planks_to_slab", IngredientInput.item(Items.BAMBOO_PLANKS), 1, 2.0f, Items.BAMBOO_SLAB, 9),
         Entry("crimson_planks_to_slab", IngredientInput.item(Items.CRIMSON_PLANKS), 1, 2.0f, Items.CRIMSON_SLAB, 9),
         Entry("warped_planks_to_slab", IngredientInput.item(Items.WARPED_PLANKS), 1, 2.0f, Items.WARPED_SLAB, 9),
-        Entry("rubber_planks_to_slab", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_planks"))), 1, 2.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_slab")), 9),
+        Entry("rubber_planks_to_slab", IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "rubber_planks"))), 1, 2.0f, BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "rubber_slab")), 9),
 
         // ===== 木板 → 6 木棍（双配方，inputCount=2） =====
         Entry("oak_planks_to_sticks", IngredientInput.item(Items.OAK_PLANKS), 2, 2.0f, Items.STICK, 6),
@@ -108,7 +110,7 @@ object BlockCutterRecipeDatagen {
         Entry("bamboo_planks_to_sticks", IngredientInput.item(Items.BAMBOO_PLANKS), 2, 2.0f, Items.STICK, 6),
         Entry("crimson_planks_to_sticks", IngredientInput.item(Items.CRIMSON_PLANKS), 2, 2.0f, Items.STICK, 6),
         Entry("warped_planks_to_sticks", IngredientInput.item(Items.WARPED_PLANKS), 2, 2.0f, Items.STICK, 6),
-        Entry("rubber_planks_to_sticks", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_planks"))), 2, 2.0f, Items.STICK, 6),
+        Entry("rubber_planks_to_sticks", IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "rubber_planks"))), 2, 2.0f, Items.STICK, 6),
 
         // ===== 原木 → 6 木板（增产 50%） =====
         Entry("oak_log_to_planks", IngredientInput.item(Items.OAK_LOG), 1, 2.0f, Items.OAK_PLANKS, 6),
@@ -121,7 +123,7 @@ object BlockCutterRecipeDatagen {
         Entry("cherry_log_to_planks", IngredientInput.item(Items.CHERRY_LOG), 1, 2.0f, Items.CHERRY_PLANKS, 6),
         Entry("crimson_stem_to_planks", IngredientInput.item(Items.CRIMSON_STEM), 1, 2.0f, Items.CRIMSON_PLANKS, 6),
         Entry("warped_stem_to_planks", IngredientInput.item(Items.WARPED_STEM), 1, 2.0f, Items.WARPED_PLANKS, 6),
-        Entry("rubber_log_to_planks", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_log"))), 1, 2.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_planks")), 6),
+        Entry("rubber_log_to_planks", IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "rubber_log"))), 1, 2.0f, BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "rubber_planks")), 6),
         Entry("stripped_oak_log_to_planks", IngredientInput.item(Items.STRIPPED_OAK_LOG), 1, 2.0f, Items.OAK_PLANKS, 6),
         Entry("stripped_spruce_log_to_planks", IngredientInput.item(Items.STRIPPED_SPRUCE_LOG), 1, 2.0f, Items.SPRUCE_PLANKS, 6),
         Entry("stripped_birch_log_to_planks", IngredientInput.item(Items.STRIPPED_BIRCH_LOG), 1, 2.0f, Items.BIRCH_PLANKS, 6),
@@ -132,7 +134,7 @@ object BlockCutterRecipeDatagen {
         Entry("stripped_cherry_log_to_planks", IngredientInput.item(Items.STRIPPED_CHERRY_LOG), 1, 2.0f, Items.CHERRY_PLANKS, 6),
         Entry("stripped_crimson_stem_to_planks", IngredientInput.item(Items.STRIPPED_CRIMSON_STEM), 1, 2.0f, Items.CRIMSON_PLANKS, 6),
         Entry("stripped_warped_stem_to_planks", IngredientInput.item(Items.STRIPPED_WARPED_STEM), 1, 2.0f, Items.WARPED_PLANKS, 6),
-        Entry("stripped_rubber_log_to_planks", IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stripped_rubber_log"))), 1, 2.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_planks")), 6),
+        Entry("stripped_rubber_log_to_planks", IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "stripped_rubber_log"))), 1, 2.0f, BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "rubber_planks")), 6),
         Entry("bamboo_block_to_planks", IngredientInput.item(Items.BAMBOO_BLOCK), 1, 2.0f, Items.BAMBOO_PLANKS, 6),
         Entry("stripped_bamboo_block_to_planks", IngredientInput.item(Items.STRIPPED_BAMBOO_BLOCK), 1, 2.0f, Items.BAMBOO_PLANKS, 6)
     )
@@ -141,7 +143,7 @@ object BlockCutterRecipeDatagen {
 
     fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "cutting/${entry.name}")
+            val recipeId = Identifier.fromNamespaceAndPath("ic2_120", "cutting/${entry.name}")
             val recipe = BlockCutterRecipe(
                 recipeId,
                 entry.input.toIngredient(),

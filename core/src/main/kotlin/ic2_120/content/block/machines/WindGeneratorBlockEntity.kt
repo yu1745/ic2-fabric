@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -56,7 +58,7 @@ class WindGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         const val INVENTORY_SIZE = 1
@@ -162,7 +164,7 @@ class WindGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.wind_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         WindGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -174,18 +176,18 @@ class WindGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(WindGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, WindGeneratorSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(WindGeneratorSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, WindGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        currentOutputMilliEuPerTick = nbt.getInt("CurrentOutputMilliEuPerTick").coerceIn(0, 20000)
-        euAccum = nbt.getInt("EuAccum").coerceIn(0, 999)
+        currentOutputMilliEuPerTick = nbt.getIntOr("CurrentOutputMilliEuPerTick", 0).coerceIn(0, 20000)
+        euAccum = nbt.getIntOr("EuAccum", 0).coerceIn(0, 999)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(WindGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("CurrentOutputMilliEuPerTick", currentOutputMilliEuPerTick)

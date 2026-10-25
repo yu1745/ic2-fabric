@@ -1,5 +1,7 @@
 package ic2_120
 
+import ic2_120.compat.addAfter
+
 import net.minecraft.core.registries.Registries
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.analytics.AnalyticsReporter
@@ -61,10 +63,10 @@ import ic2_120.registry.CreativeTab
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
-import net.fabricmc.fabric.api.registry.FuelRegistry
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents
+import net.fabricmc.fabric.api.registry.FuelValueEvents
 import ic2_120.content.item.CreativeTabIconItemsRegistration
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -79,7 +81,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.Direction
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
 
@@ -129,9 +131,10 @@ object Ic2_120 : ModInitializer {
         )
 
         // 焦炭作为固体燃料：燃烧时间为煤炭 2 倍（影响原版熔炉、铁炉、发电机等读取 FuelRegistry 的设备）
-        val coalBurnTicks = FuelRegistry.INSTANCE.get(Items.COAL) ?: 1600
-        BuiltInRegistries.ITEM.getOptional(ResourceLocation.fromNamespaceAndPath(MOD_ID, "coke")).ifPresent { cokeItem ->
-            FuelRegistry.INSTANCE.add(cokeItem, coalBurnTicks * 2)
+        BuiltInRegistries.ITEM.getOptional(Identifier.fromNamespaceAndPath(MOD_ID, "coke")).ifPresent { cokeItem ->
+            FuelValueEvents.BUILD.register { builder, context ->
+                builder.add(cokeItem, context.baseSmeltTime() * 16)
+            }
         }
 
         // 机器 RecipeType/Serializer：扫描 recipes 包时先 Class.forName(initialize=false)，仅带 @ModMachineRecipe 的序列化器会完成初始化；须在物品/方块注册之后
@@ -184,7 +187,7 @@ object Ic2_120 : ModInitializer {
         CellAndBucketFluidRegistration.register()
 
         // 世界卸载时清理电网缓存
-        ServerWorldEvents.UNLOAD.register { _, world ->
+        ServerLevelEvents.UNLOAD.register { _, world ->
             EnergyNetworkManager.onWorldUnload(world)
             PipeNetworkManager.onWorldUnload(world)
             KineticNetworkManager.onWorldUnload(world)
@@ -213,9 +216,9 @@ object Ic2_120 : ModInitializer {
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
-        val ic2CropSeedsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries ->
-            val seedBag = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(MOD_ID, "crop_seed_bag"))
+        val ic2CropSeedsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
+        CreativeModeTabEvents.modifyOutputEvent(ic2CropSeedsKey).register { entries ->
+            val seedBag = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(MOD_ID, "crop_seed_bag"))
             val initialSeeds = CropSeedBagItem.createInitialSeedStacks()
             if (seedBag != net.minecraft.world.item.Items.AIR) {
                 for (stack in initialSeeds) entries.addAfter(seedBag, stack)
@@ -225,9 +228,9 @@ object Ic2_120 : ModInitializer {
         }
 
         // 刷子 16 色变体（基础未染色刷子由 @ModItem 自动加入）
-        val ic2ToolsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_TOOLS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2ToolsKey).register { entries ->
-            val painter = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(MOD_ID, "painter"))
+        val ic2ToolsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_TOOLS.id))
+        CreativeModeTabEvents.modifyOutputEvent(ic2ToolsKey).register { entries ->
+            val painter = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(MOD_ID, "painter"))
             val coloredPainters = PainterItem.createColoredStacks()
             if (painter != Items.AIR) {
                 for (stack in coloredPainters) entries.addAfter(painter, stack)
@@ -251,7 +254,7 @@ object Ic2_120 : ModInitializer {
 
         // 玩家维度切换后客户端 LocalPlayer 会被重建，allowFlying 被 vanilla 按
         // 生存模式重置为 false；登记给 FlightManager 在下次 tick 强制重发 abilities 包兜底。
-        ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register { player, _, _ ->
+        ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register { player, _, _ ->
             FlightManager.onWorldChanged(player)
         }
 
@@ -277,7 +280,7 @@ object Ic2_120 : ModInitializer {
             // JEI 是可选依赖：无 JEI 环境（如最小测试容器）不能引用其类，
             // 否则 ClassNotFoundException 直接崩服务器启动。
             if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("jei")) {
-                ic2_120.integration.jei.Ic2JeiPlugin.refreshReplicatorRecipes()
+                ic2_120.integration.jei.LiveRecipeSource.refreshJeiRecipes?.invoke()
             }
         }
 
@@ -287,5 +290,5 @@ object Ic2_120 : ModInitializer {
     /**
      * 创建模组内的标识符
      */
-    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
+    fun id(path: String): Identifier = Identifier.fromNamespaceAndPath(MOD_ID, path)
 }

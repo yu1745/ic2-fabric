@@ -1,5 +1,7 @@
 package ic2_120.content.block.cables
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import ic2_120.compat.cachedState
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
@@ -19,7 +21,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import org.slf4j.LoggerFactory
@@ -32,7 +34,7 @@ import team.reborn.energy.api.EnergyStorage
  * - 电网在 tick 中统一向所有边界消费者推送能量，不依赖 tick 顺序。
  * - [localEnergy] 仅用于 NBT 持久化和电网重建时的中转。
  */
-class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos, state) {
+class CableBlockEntity(pos: BlockPos, state: BlockState) : LegacyBlockEntity26(TYPE, pos, state) {
 
     /** 所属电网；首次 tick 时惰性构建。 */
     var network: EnergyNetwork? = null
@@ -92,14 +94,14 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        localEnergy = nbt.getLong(NBT_ENERGY)
-        configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
+        localEnergy = nbt.getLongOr(NBT_ENERGY, 0L)
+        configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLongOr(NBT_LIMIT, 0L) else 0
         splitterThreshold = if (nbt.contains(NBT_SPLITTER_THRESHOLD)) {
-            nbt.getInt(NBT_SPLITTER_THRESHOLD).coerceIn(MIN_SPLITTER_THRESHOLD, MAX_SPLITTER_THRESHOLD)
+            nbt.getIntOr(NBT_SPLITTER_THRESHOLD, 0).coerceIn(MIN_SPLITTER_THRESHOLD, MAX_SPLITTER_THRESHOLD)
         } else {
             DEFAULT_SPLITTER_THRESHOLD
         }
-        splitterInverted = nbt.getBoolean(NBT_SPLITTER_INVERTED)
+        splitterInverted = nbt.getBooleanOr(NBT_SPLITTER_INVERTED, false)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
@@ -173,7 +175,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
             TYPE = FabricBlockEntityTypeBuilder.create(factory, *cableBlocks.toTypedArray())
                 .build() as BlockEntityType<CableBlockEntity>
 
-            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(modId, "cable"), TYPE)
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Identifier.fromNamespaceAndPath(modId, "cable"), TYPE)
             EnergyStorage.SIDED.registerForBlockEntity({ be, _ -> be.energyStorage }, TYPE)
 
             logger.info("已注册 CableBlockEntity（电网模型），关联 {} 种导线方块", cableBlocks.size)

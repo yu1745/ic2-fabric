@@ -58,7 +58,7 @@ class MetalFormerScreenHandler(
     }
 
     fun getBlockPos(): net.minecraft.core.BlockPos? {
-        return context.evaluate({ world, pos -> pos }, null)
+        return context.evaluate { _, pos -> pos }.orElse(null)
     }
 
     init {

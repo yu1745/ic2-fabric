@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -38,7 +40,7 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.EquipmentSlot
@@ -66,7 +68,7 @@ class MagnetizerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = MagnetizerBlock.ACTIVE
 
@@ -201,7 +203,7 @@ class MagnetizerBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.magnetizer")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
         interactingPlayer = player as? ServerPlayer
         // 将玩家脚部装备同步到鞋子槽位
         val boots = player?.getItemBySlot(EquipmentSlot.FEET)?.copy() ?: ItemStack.EMPTY
@@ -222,20 +224,20 @@ class MagnetizerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(MagnetizerSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(MagnetizerSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
-        redstoneInverted = nbt.getBoolean("RedstoneInverted")
-        sync.pulseCooldown = nbt.getInt("PulseCooldown").coerceAtLeast(0)
-        sync.pulseTicksRemaining = nbt.getInt("PulseTicksRemaining").coerceAtLeast(0)
+        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloatOr("EnergyDebt", 0f).coerceAtLeast(0f) else 0f
+        redstoneInverted = nbt.getBooleanOr("RedstoneInverted", false)
+        sync.pulseCooldown = nbt.getIntOr("PulseCooldown", 0).coerceAtLeast(0)
+        sync.pulseTicksRemaining = nbt.getIntOr("PulseTicksRemaining", 0).coerceAtLeast(0)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MagnetizerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
@@ -374,8 +376,8 @@ class MagnetizerBlockEntity(
             val vy = if (shouldLift) player.deltaMovement.y.coerceAtLeast(0.0) + verticalBoost else player.deltaMovement.y
 
             player.deltaMovement = Vec3(vx, vy, vz)
-            player.hasImpulse = true
-            player.fallDistance = 0f
+            player.hurtMarked = true
+            player.fallDistance = 0.0
         }
     }
 

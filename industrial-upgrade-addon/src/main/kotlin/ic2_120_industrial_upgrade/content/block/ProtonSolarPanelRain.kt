@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -23,7 +25,7 @@ import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_industrial_upgrade.proton_solar_panelrain
 // zh_cn: 质子雨能太阳能发电机  en_us: Proton Rain Panel
@@ -44,7 +46,7 @@ class ProtonSolarPanelRainBlock : IndustrialSolarPanelBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：质子太阳能发电机 + RainLinse（ASA）
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ProtonSolarPanelRainBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ProtonSolarPanelRainBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', ProtonSolarPanelBlock::class.item())
@@ -52,7 +54,7 @@ class ProtonSolarPanelRainBlock : IndustrialSolarPanelBlock() {
                 .unlockedBy(getHasName(ProtonSolarPanelBlock::class.item()), has(ProtonSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("proton_solar_panelrain"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ProtonSolarPanelBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ProtonSolarPanelBlock::class.item(), 1)
                 .requires(ProtonSolarPanelRainBlock::class.item())
                 .unlockedBy(getHasName(ProtonSolarPanelRainBlock::class.item()), has(ProtonSolarPanelRainBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("proton_solar_panelrain_revert"))

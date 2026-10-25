@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "x": {
-      "item": "ic2_120:resin"
-    }
+    "x": "ic2_120:resin"
   },
   "pattern": [
     "xxx",

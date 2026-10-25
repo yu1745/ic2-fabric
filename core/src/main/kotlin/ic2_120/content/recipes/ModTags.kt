@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.item.Item
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.TagKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 配方输入端统一使用 `ic2_120:compat/...` 标签；datagen 中将其展开为 c: + forge: 的并集。
@@ -19,7 +19,7 @@ object ModTags {
      * 内容由 [ic2_120.content.recipes.ModItemTagProvider] 在 datagen 时填充。
      */
     val RUBBER_LOGS: TagKey<Item> =
-        TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_logs"))
+        TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_logs"))
 
     object Compat {
         object Items {
@@ -100,7 +100,7 @@ object ModTags {
             val RAW_MATERIALS_COPPER = item("raw_materials/copper")
 
             private fun item(path: String): TagKey<Item> =
-                TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
         }
 
         object Blocks {
@@ -116,7 +116,7 @@ object ModTags {
             val STORAGE_BLOCKS_URANIUM = block("storage_blocks/uranium")
 
             private fun block(path: String): TagKey<Block> =
-                TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
         }
 
         object Fluids {
@@ -124,7 +124,7 @@ object ModTags {
             val SEMIFLUID_CREOSOTE_EQUIVALENT = fluid("semifluid_generator/creosote_equivalent")
 
             private fun fluid(path: String): TagKey<net.minecraft.world.level.material.Fluid> =
-                TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.create(Registries.FLUID, Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "compat/$path"))
         }
     }
 }

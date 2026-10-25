@@ -3,6 +3,7 @@ package ic2_120.mixin.client;
 import ic2_120.client.ModeKeybinds;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,14 +15,12 @@ public abstract class KeyboardModifierStateMixin {
     @Inject(method = "keyPress", at = @At("HEAD"))
     private void ic2_120$trackModifierState(
         long window,
-        int key,
-        int scancode,
         int action,
-        int modifiers,
+        KeyEvent event,
         CallbackInfo ci
     ) {
-        if (window == Minecraft.getInstance().getWindow().getWindow()) {
-            ModeKeybinds.onKeyEvent(key, action);
+        if (window == Minecraft.getInstance().getWindow().handle()) {
+            ModeKeybinds.onKeyEvent(event.key(), action);
         }
     }
 }

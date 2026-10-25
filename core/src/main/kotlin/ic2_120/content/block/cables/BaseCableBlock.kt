@@ -84,15 +84,17 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
         state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
+        world: net.minecraft.world.level.LevelReader,
+        ticks: net.minecraft.world.level.ScheduledTickAccess,
         pos: BlockPos,
-        neighborPos: BlockPos
+        direction: Direction,
+        neighborPos: BlockPos,
+        neighborState: BlockState,
+        random: net.minecraft.util.RandomSource
     ): BlockState {
         // 与原版含水方块一致：含水时调度水 tick，不在这里反推 WATERLOGGED。
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
+            ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         val property = propertyFor(direction)
         val previousConnected = state.getValue(property)
@@ -108,7 +110,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
         if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultFluidState()
 
     // 流动水通过 LiquidBlockContainer.tryFillWithFluid 含水；需显式实现（与栅栏等原版方块一致）。
-    override fun canPlaceLiquid(player: Player?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canPlaceLiquid(player: net.minecraft.world.entity.LivingEntity?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.getValue(BlockStateProperties.WATERLOGGED) && fluid == Fluids.WATER
 
     override fun placeLiquid(
@@ -125,10 +127,10 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
         return true
     }
 
-    override fun pickupBlock(player: Player?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack =
+    override fun pickupBlock(player: net.minecraft.world.entity.LivingEntity?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack =
         ItemStack.EMPTY
 
-    protected fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction): Boolean {
+    protected fun canConnect(world: net.minecraft.world.level.LevelReader, pos: BlockPos, direction: Direction): Boolean {
         val neighborPos = pos.relative(direction)
         val neighborBlock = world.getBlockState(neighborPos).block
         if (neighborBlock is BaseCableBlock) return true
@@ -148,11 +150,9 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     // ── 生命周期 ────────────────────────────────────────────────
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!state.`is`(newState.block)) {
-            EnergyNetworkManager.invalidateAt(world, pos)
-        }
-        super.onRemove(state, world, pos, newState, moved)
+    override fun affectNeighborsAfterRemoval(state: BlockState, world: net.minecraft.server.level.ServerLevel, pos: BlockPos, moved: Boolean) {
+        EnergyNetworkManager.invalidateAt(world, pos)
+        super.affectNeighborsAfterRemoval(state, world, pos, moved)
     }
 
     // ── BlockEntity / Ticker ────────────────────────────────────
@@ -251,7 +251,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
         protected fun defaultSettings(): BlockBehaviour.Properties =
             BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)
                 .strength(0.5f)
-                .noCollission()
+                .noCollision()
 
         fun propertyFor(direction: Direction): BooleanProperty = when (direction) {
             Direction.NORTH -> NORTH

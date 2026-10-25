@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -48,7 +50,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.material.Fluids
@@ -76,7 +78,7 @@ class GeoGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         const val GENERATOR_TIER = 1
@@ -303,7 +305,7 @@ class GeoGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.geo_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         ic2_120.content.screen.GeoGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -315,18 +317,18 @@ class GeoGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(GeoGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, GeoGeneratorSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(GeoGeneratorSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, GeoGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        lavaTankInternal.setStoredLava(nbt.getLong(NBT_LAVA_AMOUNT))
-        lavaConsumptionRemainder = nbt.getLong(NBT_LAVA_CONSUMPTION_REMAINDER).coerceIn(0L, GeoGeneratorSync.BURN_TICKS_PER_BUCKET - 1L)
+        lavaTankInternal.setStoredLava(nbt.getLongOr(NBT_LAVA_AMOUNT, 0L))
+        lavaConsumptionRemainder = nbt.getLongOr(NBT_LAVA_CONSUMPTION_REMAINDER, 0L).coerceIn(0L, GeoGeneratorSync.BURN_TICKS_PER_BUCKET - 1L)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(GeoGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_LAVA_AMOUNT, lavaTankInternal.getStoredAmount())
@@ -356,7 +358,7 @@ class GeoGeneratorBlockEntity(
             }
             fuelStack.item is LavaCell -> {
                 // 岩浆单元 = 1 桶 = 1000 mB
-                val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")))
+                val emptyCell = ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")))
                 if (lavaTankInternal.canAcceptFullBucket() && canInsertEmptyContainer(emptyCell)) {
                     val inserted = lavaTankInternal.tryInsertLava(FluidConstants.BUCKET)
                     if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {

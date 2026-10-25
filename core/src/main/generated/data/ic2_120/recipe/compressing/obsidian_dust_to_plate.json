@@ -1,3 +1,10 @@
 {
-  "type": "ic2_120:compressing"
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "tag": "ic2_120:compat/dusts/obsidian"
+  },
+  "input_count": 1,
+  "result": {
+    "item": "ic2_120:obsidian_plate"
+  }
 }

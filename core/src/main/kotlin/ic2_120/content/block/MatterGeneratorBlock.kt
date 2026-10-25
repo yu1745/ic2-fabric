@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -81,7 +83,7 @@ class MatterGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion(
             val advancedCircuit = AdvancedCircuit::class.instance()
             val lapotronCrystal = LapotronCrystalItem::class.instance()
             if (advancedMachine != Items.AIR && advancedCircuit != Items.AIR && lapotronCrystal != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MatterGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MatterGeneratorBlock::class.item(), 1)
                     .pattern("GCG")
                     .pattern("AMA")
                     .pattern("GCG")

@@ -1,5 +1,11 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.LegacyBlockEntity26
+
+import ic2_120.compat.displayClientMessage
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import net.minecraft.core.HolderLookup
@@ -32,7 +38,7 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -48,7 +54,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
 import net.minecraft.core.NonNullList
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
@@ -62,7 +68,7 @@ abstract class EnergyStorageBlockEntity(
     pos: BlockPos,
     state: BlockState,
     val config: EnergyStorageConfig
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf>, ITieredMachine {
+) : LegacyBlockEntity26(type, pos, state), Container, IRoutedSidedInventory, ExtendedMenuProvider<FriendlyByteBuf>, ITieredMachine {
 
     override val tier: Int get() = config.tier
 
@@ -176,9 +182,9 @@ abstract class EnergyStorageBlockEntity(
 
     abstract val containerTranslationKey: String
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
         val blockId = BuiltInRegistries.BLOCK.getKey(world!!.getBlockState(pos).block)
-        val screenHandlerType = BuiltInRegistries.MENU.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
+        val screenHandlerType = BuiltInRegistries.MENU.getValue(Identifier.fromNamespaceAndPath(blockId.namespace, blockId.path))
             ?: error("AbstractContainerMenu type not found for $blockId")
         @Suppress("UNCHECKED_CAST")
         return ic2_120.content.screen.EnergyStorageScreenHandler(
@@ -189,16 +195,16 @@ abstract class EnergyStorageBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(EnergyStorageSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(EnergyStorageSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyStorageSync.NBT_ENERGY_STORED, sync.amount)
     }

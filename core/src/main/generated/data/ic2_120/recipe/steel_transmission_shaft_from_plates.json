@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "x": {
-      "tag": "ic2_120:compat/plates/steel"
-    }
+    "x": "#ic2_120:compat/plates/steel"
   },
   "pattern": [
     "xxx",

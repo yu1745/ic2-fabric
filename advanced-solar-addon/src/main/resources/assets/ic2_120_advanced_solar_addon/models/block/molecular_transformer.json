@@ -1,6 +1,5 @@
 {
-	"parent": "builtin/entity",
-	"textures": {
+		"textures": {
 		"particle": "ic2_120_advanced_solar_addon:block/molecular_transformer"
 	},
     "display": {

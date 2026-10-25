@@ -17,23 +17,23 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.GsonHelper
 
 @ModMachineRecipe(id = "compressing", recipeClass = CompressorRecipe::class)
-object CompressorRecipeSerializer : RecipeSerializer<CompressorRecipe> {
-    private fun fromJson(id: ResourceLocation, json: JsonObject): CompressorRecipe {
+object CompressorRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<CompressorRecipe>() {
+    private fun fromJson(id: Identifier, json: JsonObject): CompressorRecipe {
         val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
         val inputCount = (if (json.has("input_count")) json.get("input_count").asInt else 1)
         val result = json.getAsJsonObject("result")
-        val itemId = ResourceLocation.parse(result.get("item").asString)
-        val item = BuiltInRegistries.ITEM.get(itemId)
+        val itemId = Identifier.parse(result.get("item").asString)
+        val item = BuiltInRegistries.ITEM.getValue(itemId)
         val count = (if (result.has("count")) result.get("count").asInt else 1)
         val containerReturn = if (json.has("container_return")) {
             val containerObj = json.getAsJsonObject("container_return")
-            val containerId = ResourceLocation.parse(containerObj.get("item").asString)
+            val containerId = Identifier.parse(containerObj.get("item").asString)
             val containerCount = (if (containerObj.has("count")) containerObj.get("count").asInt else 1)
-            ItemStack(BuiltInRegistries.ITEM.get(containerId), containerCount)
+            ItemStack(BuiltInRegistries.ITEM.getValue(containerId), containerCount)
         } else ItemStack.EMPTY
         return CompressorRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, inputCount, ItemStack(item, count), containerReturn)
     }
@@ -56,7 +56,14 @@ object CompressorRecipeSerializer : RecipeSerializer<CompressorRecipe> {
     override fun codec(): MapCodec<CompressorRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:compressing",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", ic2_120.content.recipes.ingredientJson26(recipe.ingredient))
+            json.addProperty("input_count", recipe.inputCount)
+            json.add("result", ic2_120.content.recipes.stackJson26(recipe.output))
+            if (!recipe.containerReturn.isEmpty) {
+                json.add("container_return", ic2_120.content.recipes.stackJson26(recipe.containerReturn))
+            }
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, CompressorRecipe> =

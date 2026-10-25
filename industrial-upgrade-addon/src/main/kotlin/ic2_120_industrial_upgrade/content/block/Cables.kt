@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.cables.GlassFibreCableBlock
 import ic2_120.content.item.Alloy
@@ -28,7 +30,7 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 import com.mojang.serialization.MapCodec
 import net.minecraft.world.level.block.BaseEntityBlock
 
@@ -154,7 +156,7 @@ object CableRecipes {
      */
     fun generateRecipes(exporter: RecipeOutput) {
         // 1 光谱：core 玻璃纤维 + 混合金属锭 + 橡胶
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SpectralCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SpectralCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BBB")
             .pattern(" C ")
@@ -165,7 +167,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("spectral_cable"))
 
         // 2 质子：光谱导线 + 致密锡板 + 银锭
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ProtonCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ProtonCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -176,7 +178,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("proton_cable"))
 
         // 3 奇异：质子导线 + 致密锡板 + 高级合金
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingularCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SingularCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -187,7 +189,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("singular_cable"))
 
         // 4 神话：奇异导线 + 致密铅板 + 高级合金 + 致密金板
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MythicalCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MythicalCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")
@@ -199,7 +201,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("mythical_cable"))
 
         // 5 量子：神话导线 + 钢锭 + 碳板 + 青铜锭
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantumCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, QuantumCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")
@@ -211,7 +213,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("quantum_cable"))
 
         // 6 光子：量子导线 + 致密铜板 + 致密钢板
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PhotonicCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, PhotonicCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -222,7 +224,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("photonic_cable"))
 
         // 7 中子：光子导线 + 致密铁板 + 致密度石岩板
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NeutronCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, NeutronCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -233,7 +235,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("neutron_cable"))
 
         // 8 完美：中子导线 + 致密青金石板 + 致密青铜板
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PerfectCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, PerfectCableBlock::class.item(), 1)
             .pattern(" A ")
             .pattern("BCB")
             .pattern(" A ")
@@ -244,7 +246,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("perfect_cable"))
 
         // 9 寰宇：完美导线 + 混合金属锭 + 致密铁板 + 致密青金石板
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, UniversalCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, UniversalCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")
@@ -256,7 +258,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("universal_cable"))
 
         // 10 街射：寰宇导线 + 碳板 + 混合金属锭 + 致密度石岩板
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, DiffractiveCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, DiffractiveCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")
@@ -268,7 +270,7 @@ object CableRecipes {
             .save(exporter, IC2IndustrialUpgrade.id("diffractive_cable"))
 
         // 11 无限：街射导线 + 致密青金石板 + 致密青铜板 + 致密度石岩板
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, InfinityCableBlock::class.item(), 1)
+        ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, InfinityCableBlock::class.item(), 1)
             .pattern("DAD")
             .pattern("BCB")
             .pattern("DAD")

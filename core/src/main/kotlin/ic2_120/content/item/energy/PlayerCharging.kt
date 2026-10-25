@@ -42,9 +42,9 @@ fun chargePlayerInventory(player: Player, eu: Long): Long {
     }
 
     chargeStack(player.mainHandItem)
-    for (target in player.inventory.armor) chargeStack(target)
+    for (slot in listOf(net.minecraft.world.entity.EquipmentSlot.FEET, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.HEAD)) chargeStack(player.getItemBySlot(slot))
     for (i in 0..8) chargeStack(player.inventory.getItem(i))
-    for (i in 9 until player.inventory.items.size) chargeStack(player.inventory.getItem(i))
+    for (i in 9 until player.inventory.nonEquipmentItems.size) chargeStack(player.inventory.getItem(i))
 
     return charged
 }
@@ -116,8 +116,8 @@ fun chargePlayerInventoryPerItemLimit(
 
     chargeStack(player.mainHandItem)
     chargeStack(player.offhandItem)
-    for (target in player.inventory.armor) chargeStack(target)
-    for (i in 0 until player.inventory.items.size) chargeStack(player.inventory.getItem(i))
+    for (slot in listOf(net.minecraft.world.entity.EquipmentSlot.FEET, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.HEAD)) chargeStack(player.getItemBySlot(slot))
+    for (i in 0 until player.inventory.nonEquipmentItems.size) chargeStack(player.inventory.getItem(i))
 
     return charged
 }

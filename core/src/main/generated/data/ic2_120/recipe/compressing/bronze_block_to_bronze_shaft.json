@@ -1,3 +1,10 @@
 {
-  "type": "ic2_120:compressing"
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "ic2_120:bronze_block"
+  },
+  "input_count": 1,
+  "result": {
+    "item": "ic2_120:bronze_shaft"
+  }
 }

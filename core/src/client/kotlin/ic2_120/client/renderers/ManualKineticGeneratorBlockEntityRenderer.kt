@@ -7,15 +7,13 @@ import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
 import ic2_120.content.item.CrankMaterial
 import ic2_120.content.item.CrankHandleItem
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes as RenderType
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.Direction
 import com.mojang.math.Axis
 import org.joml.Matrix3f
@@ -23,13 +21,13 @@ import org.joml.Matrix4f
 
 class ManualKineticGeneratorBlockEntityRenderer(
     context: BlockEntityRendererProvider.Context
-) : BlockEntityRenderer<ManualKineticGeneratorBlockEntity> {
+) : LegacyBlockEntityRenderer26<ManualKineticGeneratorBlockEntity>() {
 
     companion object {
-        private val WOOD_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/wood_rotor_model.png")
-        private val IRON_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/iron_rotor_model.png")
-        private val STEEL_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/steel_rotor_model.png")
-        private val CARBON_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
+        private val WOOD_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/wood_rotor_model.png")
+        private val IRON_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/iron_rotor_model.png")
+        private val STEEL_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/steel_rotor_model.png")
+        private val CARBON_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
         
         private const val PIXEL = 1.0f / 16.0f
         private const val SHAFT_HALF = 1.0f * PIXEL
@@ -46,7 +44,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
         val ignored = context
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: ManualKineticGeneratorBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
@@ -63,7 +61,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
         
         val material = (crankStack.item as? CrankHandleItem)?.material ?: return
         val texture = getTextureForMaterial(material)
-        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(texture))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutout(texture))
 
         val angle = entity.clientTurnAngle + if (entity.sync.isTurning) tickDelta * 15f else 0f
 
@@ -82,7 +80,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
         matrices.popPose()
     }
 
-    private fun getTextureForMaterial(material: CrankMaterial): ResourceLocation =
+    private fun getTextureForMaterial(material: CrankMaterial): Identifier =
         when (material) {
             CrankMaterial.WOOD -> WOOD_TEXTURE
             CrankMaterial.IRON -> IRON_TEXTURE

@@ -1,7 +1,7 @@
 package ic2_120.content.network
 
 import net.minecraft.network.FriendlyByteBuf
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 class ConfigSyncPacket(
     val totalChunks: Int,
@@ -9,8 +9,8 @@ class ConfigSyncPacket(
     val chunkData: ByteArray
 ) {
     companion object {
-        val ID: ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "config_sync")
-        val REPLICATION_COSTS_ID: ResourceLocation = ResourceLocation.fromNamespaceAndPath("ic2_120", "replication_costs_sync")
+        val ID: Identifier = Identifier.fromNamespaceAndPath("ic2_120", "config_sync")
+        val REPLICATION_COSTS_ID: Identifier = Identifier.fromNamespaceAndPath("ic2_120", "replication_costs_sync")
         const val MAX_CHUNK_BYTES = 20000
 
         fun read(buf: FriendlyByteBuf): ConfigSyncPacket {

@@ -1,5 +1,8 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.recipeManager
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import net.minecraft.network.FriendlyByteBuf
@@ -50,7 +53,7 @@ import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -75,7 +78,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -97,7 +100,7 @@ class CannerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CannerBlock.ACTIVE
 
@@ -165,7 +168,7 @@ class CannerBlockEntity(
         private const val TANK_CAPACITY_BUCKETS = 8
         private val TANK_CAPACITY = FluidConstants.BUCKET * TANK_CAPACITY_BUCKETS
 
-        private val tinCanItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "tin_can")) }
+        private val tinCanItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "tin_can")) }
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -346,27 +349,27 @@ class CannerBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.canner")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         CannerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(CannerSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(CannerSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         progressF = if (nbt.contains("ProgressF")) {
-            nbt.getFloat("ProgressF").coerceIn(0f, CannerSync.PROGRESS_MAX.toFloat())
+            nbt.getFloatOr("ProgressF", 0f).coerceIn(0f, CannerSync.PROGRESS_MAX.toFloat())
         } else {
             sync.progress.toFloat().coerceIn(0f, CannerSync.PROGRESS_MAX.toFloat())
         }
-        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
-        leftTankInternal.amount = nbt.getLong(NBT_LEFT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
-        val leftFluidTag = nbt.getCompound(NBT_LEFT_FLUID_VARIANT)
+        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloatOr("EnergyDebt", 0f).coerceAtLeast(0f) else 0f
+        leftTankInternal.amount = nbt.getLongOr(NBT_LEFT_FLUID_AMOUNT, 0L).coerceIn(0L, TANK_CAPACITY)
+        val leftFluidTag = nbt.getCompoundOrEmpty(NBT_LEFT_FLUID_VARIANT)
         leftTankInternal.variant = if (leftFluidTag.isEmpty) FluidVariant.blank() else decodeFluidVariant(leftFluidTag)
-        rightTankInternal.amount = nbt.getLong(NBT_RIGHT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
-        val rightFluidTag = nbt.getCompound(NBT_RIGHT_FLUID_VARIANT)
+        rightTankInternal.amount = nbt.getLongOr(NBT_RIGHT_FLUID_AMOUNT, 0L).coerceIn(0L, TANK_CAPACITY)
+        val rightFluidTag = nbt.getCompoundOrEmpty(NBT_RIGHT_FLUID_VARIANT)
         rightTankInternal.variant = if (rightFluidTag.isEmpty) FluidVariant.blank() else decodeFluidVariant(rightFluidTag)
         sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
         sync.leftFluidCapacity = TANK_CAPACITY.toInt()
@@ -378,7 +381,7 @@ class CannerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)

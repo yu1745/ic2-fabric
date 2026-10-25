@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -90,7 +92,7 @@ class GeoGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) 
             val emptyCell = EmptyCell::class.instance()
             val ironCasing = IronCasing::class.instance()
             if (generator != Items.AIR && emptyCell != Items.AIR && ironCasing != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, GeoGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, GeoGeneratorBlock::class.item(), 1)
                     .pattern("LEL")
                     .pattern("LEL")
                     .pattern("CGC")

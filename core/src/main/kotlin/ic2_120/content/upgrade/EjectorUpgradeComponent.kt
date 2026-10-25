@@ -17,7 +17,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
@@ -225,10 +225,10 @@ object EjectorUpgradeComponent {
 
     fun readFilter(stack: ItemStack): Item? {
         val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return null
-        val raw = nbt.getString(NBT_ITEM_FILTER)
+        val raw = nbt.getStringOr(NBT_ITEM_FILTER, "")
         if (raw.isNullOrBlank()) return null
-        val id = ResourceLocation.tryParse(raw) ?: return null
-        return if (BuiltInRegistries.ITEM.containsKey(id)) BuiltInRegistries.ITEM.get(id) else null
+        val id = Identifier.tryParse(raw) ?: return null
+        return if (BuiltInRegistries.ITEM.containsKey(id)) BuiltInRegistries.ITEM.getValue(id) else null
     }
 
     fun writeFilter(stack: ItemStack, item: Item?) {
@@ -253,16 +253,16 @@ object EjectorUpgradeComponent {
     /** 空集合表示任意方向；同时兼容旧版本的单方向 NBT。 */
     fun readDirections(stack: ItemStack): Set<Direction> {
         val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return emptySet()
-        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.TAG_STRING.toInt())
+        val list = nbt.getListOrEmpty(NBT_DIRECTIONS)
         if (!list.isEmpty()) {
             val result = mutableSetOf<Direction>()
         for (i in 0 until list.size) {
-            Direction.byName(list.getString(i))?.let { result.add(it) }
+            Direction.byName(list.getStringOr(i, ""))?.let { result.add(it) }
         }
         return result
         }
 
-        val raw = nbt.getString(NBT_DIRECTION)
+        val raw = nbt.getStringOr(NBT_DIRECTION, "")
         if (raw.isNullOrBlank()) return emptySet()
         return Direction.byName(raw.lowercase())?.let { setOf(it) } ?: emptySet()
     }

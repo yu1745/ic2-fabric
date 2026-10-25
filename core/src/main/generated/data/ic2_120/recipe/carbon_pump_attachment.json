@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "P": {
-      "item": "ic2_120:carbon_plate"
-    },
-    "T": {
-      "item": "ic2_120:carbon_pipe_tiny"
-    }
+    "P": "ic2_120:carbon_plate",
+    "T": "ic2_120:carbon_pipe_tiny"
   },
   "pattern": [
     " P ",
@@ -15,7 +10,6 @@
     " P "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:carbon_pump_attachment"
   }
 }

@@ -6,7 +6,7 @@ import ic2_120.content.network.OreScanEntry
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.screen.ScannerScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
@@ -14,7 +14,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(handler = "scanner")
@@ -22,11 +22,9 @@ class ScannerScreen(
     val handler: ScannerScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<ScannerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<ScannerScreenHandler>(handler, playerInventory, title, 176, 231) {
 
     init {
-        imageWidth = 176
-        imageHeight = 231
         titleLabelY = 6
     }
 
@@ -68,7 +66,7 @@ class ScannerScreen(
         renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
-        val stack = menu.playerInventory.getItem(menu.playerInventory.selected)
+        val stack = menu.playerInventory.getItem(menu.playerInventory.selectedSlot)
         val type = OdScannerItem.getScannerType(stack)
         val results = lastResults
 
@@ -169,7 +167,7 @@ class ScannerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guitoolscanner.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guitoolscanner.png")
         private const val TEXTURE_SIZE = 256
 
         private const val SCAN_BTN_X = 148
@@ -195,7 +193,7 @@ class ScannerScreen(
         }
 
         private fun entryToItemStack(entry: OreScanEntry): ItemStack {
-            val id = ResourceLocation.tryParse(entry.blockId) ?: return ItemStack.EMPTY
+            val id = Identifier.tryParse(entry.blockId) ?: return ItemStack.EMPTY
             val block = BuiltInRegistries.BLOCK.getOptional(id).orElse(null) ?: return ItemStack.EMPTY
             val item = block.asItem()
             if (item == net.minecraft.world.item.Items.AIR) return ItemStack.EMPTY

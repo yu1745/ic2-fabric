@@ -14,15 +14,13 @@ import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.Container
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.item.ItemStack
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.Containers
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
@@ -51,7 +49,7 @@ abstract class MachineBlock(settings: BlockBehaviour.Properties = defaultMachine
      * 子类可覆写以改为高级机器外壳或其他物品。
      */
     open fun getCasingDrop(): Item =
-        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
+        BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
         registerDefaultState(stateDefinition.any().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH))
@@ -74,20 +72,6 @@ abstract class MachineBlock(settings: BlockBehaviour.Properties = defaultMachine
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
 
-    /**
-     * 方块被破坏时，将 BlockEntity 内 Container 的物品散落掉落，而非凭空消失。
-     * 仅当方块被替换（如挖掉）且未被活塞推动时生效。
-     */
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.`is`(newState.block) && !moved) {
-            val be = world.getBlockEntity(pos)
-            if (be is Container) {
-                Containers.dropContents(world, pos, be)
-            }
-        }
-        super.onRemove(state, world, pos, newState, moved)
-    }
 
     /**
      * BaseEntityBlock 默认可能不会使用 JSON 模型渲染，显式指定为 MODEL
@@ -123,7 +107,7 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = def
      * 子类可覆写以改为高级机器外壳或其他物品。
      */
     open fun getCasingDrop(): Item =
-        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
+        BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
         registerDefaultState(stateDefinition.any().setValue(BlockStateProperties.FACING, Direction.NORTH))
@@ -149,20 +133,6 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = def
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
 
-    /**
-     * 方块被破坏时，将 BlockEntity 内 Container 的物品散落掉落，而非凭空消失。
-     * 仅当方块被替换（如挖掉）且未被活塞推动时生效。
-     */
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.`is`(newState.block) && !moved) {
-            val be = world.getBlockEntity(pos)
-            if (be is Container) {
-                Containers.dropContents(world, pos, be)
-            }
-        }
-        super.onRemove(state, world, pos, newState, moved)
-    }
 
     /**
      * BaseEntityBlock 默认可能不会使用 JSON 模型渲染，显式指定为 MODEL

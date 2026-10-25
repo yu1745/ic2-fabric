@@ -45,7 +45,7 @@ class NeutronFabricatorScreenHandler(
 
     /** 升级槽：仅接受 UpgradeItemRegistry 注册且本机实现了对应接口的升级（与物质生成机一致） */
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) ?: this }, this) }
     }
 
     companion object {

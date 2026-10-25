@@ -29,12 +29,11 @@ abstract class WirelessBatteryItemBase(
 ) {
     override fun inventoryTick(
         stack: ItemStack,
-        world: Level,
+        world: net.minecraft.server.level.ServerLevel,
         entity: Entity,
-        slot: Int,
-        selected: Boolean
+        slot: net.minecraft.world.entity.EquipmentSlot?
     ) {
-        super.inventoryTick(stack, world, entity, slot, selected)
+        super.inventoryTick(stack, world, entity, slot)
         if (world.isClient) return
         val player = entity as? Player ?: return
         autoChargeEquipment(stack, player)

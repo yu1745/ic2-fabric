@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120_industrial_upgrade:spectral_cable",
+    "B": "ic2_120:dense_tin_plate",
+    "C": "ic2_120:silver_ingot"
+  },
+  "pattern": [
+    " A ",
+    "BCB",
+    " A "
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:proton_cable"
+  }
+}

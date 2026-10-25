@@ -1,8 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.IReactor
@@ -175,9 +177,9 @@ class HeatExchangerItem : ReactorHeatExchangerBase(Item.Properties(), 2500, 12, 
             val tin = TinPlate::class.instance()
             val circuit = Circuit::class.instance()
             if (copper != Items.AIR && tin != Items.AIR && circuit != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeatExchangerItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, HeatExchangerItem::class.instance(), 1)
                     .pattern("CEC").pattern("TCT").pattern("CTC")
-                    .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER)).define('E', circuit).define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                    .define('C', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_COPPER)).define('E', circuit).define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                     .unlockedBy(getHasName(copper), has(copper))
                     .save(exporter, HeatExchangerItem::class.id())
             }
@@ -193,9 +195,9 @@ class ReactorHeatExchangerItem : ReactorHeatExchangerBase(Item.Properties(), 500
             val plate = CopperPlate::class.instance()
             val base = HeatExchangerItem::class.instance()
             if (plate != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorHeatExchangerItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorHeatExchangerItem::class.instance(), 1)
                     .pattern("PPP").pattern("PHP").pattern("PPP")
-                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER)).define('H', base)
+                    .define('P', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_COPPER)).define('H', base)
                     .unlockedBy(getHasName(base), has(base))
                     .save(exporter, ReactorHeatExchangerItem::class.id())
             }
@@ -211,9 +213,9 @@ class ComponentHeatExchangerItem : ReactorHeatExchangerBase(Item.Properties(), 5
             val gold = GoldPlate::class.instance()
             val base = HeatExchangerItem::class.instance()
             if (gold != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ComponentHeatExchangerItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ComponentHeatExchangerItem::class.instance(), 1)
                     .pattern(" G ").pattern("GHG").pattern(" G ")
-                    .define('G', Ingredient.of(ModTags.Compat.Items.PLATES_GOLD)).define('H', base)
+                    .define('G', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_GOLD)).define('H', base)
                     .unlockedBy(getHasName(base), has(base))
                     .save(exporter, ComponentHeatExchangerItem::class.id())
             }
@@ -231,9 +233,9 @@ class AdvancedHeatExchangerItem : ReactorHeatExchangerBase(Item.Properties(), 10
             val circuit = Circuit::class.instance()
             val base = HeatExchangerItem::class.instance()
             if (lapis != Items.AIR && copper != Items.AIR && circuit != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedHeatExchangerItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdvancedHeatExchangerItem::class.instance(), 1)
                     .pattern("LCL").pattern("HPH").pattern("LCL")
-                    .define('L', Ingredient.of(ModTags.Compat.Items.PLATES_LAPIS)).define('C', circuit).define('P', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER)).define('H', base)
+                    .define('L', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_LAPIS)).define('C', circuit).define('P', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_COPPER)).define('H', base)
                     .unlockedBy(getHasName(base), has(base))
                     .save(exporter, AdvancedHeatExchangerItem::class.id())
             }

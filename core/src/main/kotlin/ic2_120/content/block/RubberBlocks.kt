@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.world.level.block.state.BlockState
 
 import net.minecraft.world.level.block.state.BlockBehaviour
@@ -10,7 +12,7 @@ import net.minecraft.core.registries.Registries
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.world
 
@@ -60,7 +62,7 @@ import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.level.block.state.properties.EnumProperty
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.StringRepresentable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -83,7 +85,7 @@ class RubberWood : RotatedPillarBlock(
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val log = RubberLogBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, RubberWood::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, RubberWood::class.item(), 3)
                 .pattern("LL").pattern("LL")
                 .define('L', log)
                 .unlockedBy(getHasName(log), has(log))
@@ -138,8 +140,8 @@ class RubberLogBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Proper
     override fun getDrops(state: BlockState, builder: LootParams.Builder): MutableList<ItemStack> {
         val drops = super.getDrops(state, builder).toMutableList()
         if (!hasNoRubberFaces(state) && builder.getLevel().random.nextInt(6) == 0) {
-            val resinId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "resin")
-            drops.add(ItemStack(BuiltInRegistries.ITEM.get(resinId)))
+            val resinId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "resin")
+            drops.add(ItemStack(BuiltInRegistries.ITEM.getValue(resinId)))
         }
         return drops
     }
@@ -269,7 +271,7 @@ class StrippedRubberWoodBlock(settings: BlockBehaviour.Properties = BlockBehavio
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val log = StrippedRubberLogBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, StrippedRubberWoodBlock::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, StrippedRubberWoodBlock::class.item(), 3)
                 .pattern("LL").pattern("LL")
                 .define('L', log)
                 .unlockedBy(getHasName(log), has(log))
@@ -284,8 +286,8 @@ class RubberPlanksBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val log = RubberLogBlock::class.item()
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.BUILDING_BLOCKS, RubberPlanksBlock::class.item(), 4)
-                .requires(Ingredient.of(ModTags.RUBBER_LOGS))
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, RubberPlanksBlock::class.item(), 4)
+                .requires(ic2_120.compat.tagIngredient(ModTags.RUBBER_LOGS))
                 .unlockedBy(getHasName(log), has(log))
                 .save(exporter, RubberPlanksBlock::class.id())
         }
@@ -300,7 +302,7 @@ class RubberSlabBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val planks = RubberPlanksBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, RubberSlabBlock::class.item(), 6)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, RubberSlabBlock::class.item(), 6)
                 .pattern("PPP").define('P', planks)
                 .unlockedBy(getHasName(planks), has(planks))
                 .save(exporter, RubberSlabBlock::class.id())
@@ -314,7 +316,7 @@ class RubberStairsBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val planks = RubberPlanksBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, RubberStairsBlock::class.item(), 4)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, RubberStairsBlock::class.item(), 4)
                 .pattern("P  ").pattern("PP ").pattern("PPP").define('P', planks)
                 .unlockedBy(getHasName(planks), has(planks))
                 .save(exporter, RubberStairsBlock::class.id())
@@ -331,7 +333,7 @@ class RubberFenceBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prop
         fun generateRecipes(exporter: RecipeOutput) {
             val planks = RubberPlanksBlock::class.item()
             val sticks = Items.STICK
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RubberFenceBlock::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RubberFenceBlock::class.item(), 3)
                 .pattern("PSP").pattern("PSP").define('P', planks).define('S', sticks)
                 .unlockedBy(getHasName(planks), has(planks))
                 .save(exporter, RubberFenceBlock::class.id())
@@ -346,7 +348,7 @@ class RubberFenceGateBlock(settings: BlockBehaviour.Properties = BlockBehaviour.
         fun generateRecipes(exporter: RecipeOutput) {
             val planks = RubberPlanksBlock::class.item()
             val sticks = Items.STICK
-            ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, RubberFenceGateBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.REDSTONE, RubberFenceGateBlock::class.item(), 1)
                 .pattern("SPS").pattern("SPS").define('P', planks).define('S', sticks)
                 .unlockedBy(getHasName(planks), has(planks))
                 .save(exporter, RubberFenceGateBlock::class.id())
@@ -363,7 +365,7 @@ class RubberDoorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         fun generateRecipes(exporter: RecipeOutput) {
             val planks = RubberPlanksBlock::class.item()
             val sticks = Items.STICK
-            ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, RubberDoorBlock::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.REDSTONE, RubberDoorBlock::class.item(), 3)
                 .pattern("PP").pattern("PP").pattern("SS").define('P', planks).define('S', sticks)
                 .unlockedBy(getHasName(planks), has(planks))
                 .save(exporter, RubberDoorBlock::class.id())
@@ -377,7 +379,7 @@ class RubberTrapdoorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val planks = RubberPlanksBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, RubberTrapdoorBlock::class.item(), 2)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.REDSTONE, RubberTrapdoorBlock::class.item(), 2)
                 .pattern("PPP").pattern("PPP").define('P', planks)
                 .unlockedBy(getHasName(planks), has(planks))
                 .save(exporter, RubberTrapdoorBlock::class.id())
@@ -393,7 +395,7 @@ class RubberButtonBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val planks = RubberPlanksBlock::class.item()
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.REDSTONE, RubberButtonBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.REDSTONE, RubberButtonBlock::class.item(), 1)
                 .requires(planks)
                 .unlockedBy(getHasName(planks), has(planks))
                 .save(exporter, RubberButtonBlock::class.id())
@@ -407,7 +409,7 @@ class RubberPressurePlateBlock(settings: BlockBehaviour.Properties = BlockBehavi
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val planks = RubberPlanksBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, RubberPressurePlateBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.REDSTONE, RubberPressurePlateBlock::class.item(), 1)
                 .pattern("PP").define('P', planks)
                 .unlockedBy(getHasName(planks), has(planks))
                 .save(exporter, RubberPressurePlateBlock::class.id())
@@ -423,7 +425,7 @@ internal object RubberSaplingGenerator {
         "rubber_tree",
         java.util.Optional.empty(),
         java.util.Optional.of(
-            ResourceKey.create(Registries.CONFIGURED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
+            ResourceKey.create(Registries.CONFIGURED_FEATURE, Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
         ),
         java.util.Optional.empty()
     )
@@ -454,7 +456,10 @@ class RubberSaplingBlock(
 }
 
 @ModBlock(name = "rubber_leaves", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
-class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES).strength(0.2f)) : LeavesBlock(settings) {
+class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES).strength(0.2f)) : net.minecraft.world.level.block.TintedParticleLeavesBlock(0.01f, settings) {
+    override fun codec(): com.mojang.serialization.MapCodec<out net.minecraft.world.level.block.TintedParticleLeavesBlock> =
+        net.minecraft.world.level.block.Block.simpleCodec(::RubberLeavesBlock)
+
     init {
         // 明确指定默认值，避免新增布尔状态在不同注册阶段被误认为已绑定树苗。
         registerDefaultState(defaultBlockState().setValue(RUBBER_SAPLING_DROP, false))
@@ -477,16 +482,18 @@ class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
      */
     override fun updateShape(
         state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
+        world: net.minecraft.world.level.LevelReader,
+        ticks: net.minecraft.world.level.ScheduledTickAccess,
         pos: BlockPos,
-        neighborPos: BlockPos
+        direction: Direction,
+        neighborPos: BlockPos,
+        neighborState: BlockState,
+        random: RandomSource
     ): BlockState {
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, net.minecraft.world.level.material.Fluids.WATER, net.minecraft.world.level.material.Fluids.WATER.getTickDelay(world))
+            ticks.scheduleTick(pos, net.minecraft.world.level.material.Fluids.WATER, net.minecraft.world.level.material.Fluids.WATER.getTickDelay(world))
         }
-        world.scheduleTick(pos, this, 1)
+        ticks.scheduleTick(pos, this, 1)
         return state
     }
 

@@ -1,3 +1,10 @@
 {
-  "type": "ic2_120:compressing"
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "tag": "ic2_120:compat/plates/lapis"
+  },
+  "input_count": 9,
+  "result": {
+    "item": "ic2_120:dense_lapis_plate"
+  }
 }

@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.world.level.block.entity.BlockEntityType
 
 import ic2_120.compat.time
@@ -45,7 +47,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.FarmBlock
+import net.minecraft.world.level.block.FarmlandBlock
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.entity.player.Player
@@ -61,7 +63,7 @@ import net.minecraft.tags.TagKey
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.Containers
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
@@ -81,9 +83,11 @@ import net.minecraft.server.level.ServerLevel
     generateBlockLootTable = false
 )
 class CropBlock : BaseEntityBlock(
-    BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)
+    BlockBehaviour.Properties.of()
+        .mapColor(net.minecraft.world.level.material.MapColor.PLANT)
+        .sound(net.minecraft.world.level.block.SoundType.CROP)
         .instabreak()
-        .noCollission()
+        .noCollision()
          .noOcclusion()
         .lightLevel { state ->
             if (state.hasProperty(CROP_TYPE) && state.hasProperty(AGE) &&
@@ -198,7 +202,7 @@ class CropBlock : BaseEntityBlock(
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun canSurvive(state: BlockState, world: net.minecraft.world.level.LevelReader, pos: BlockPos): Boolean {
-        return world.getBlockState(pos.below()).block is FarmBlock
+        return world.getBlockState(pos.below()).block is FarmlandBlock
     }
 
     /**
@@ -208,17 +212,19 @@ class CropBlock : BaseEntityBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
         state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
+        world: net.minecraft.world.level.LevelReader,
+        ticks: net.minecraft.world.level.ScheduledTickAccess,
         pos: BlockPos,
-        neighborPos: BlockPos
+        direction: Direction,
+        neighborPos: BlockPos,
+        neighborState: BlockState,
+        random: net.minecraft.util.RandomSource
     ): BlockState {
         if (direction == Direction.DOWN && !canSurvive(state, world, pos)) {
-            dropContentsOnCollapse(world, pos, state)
+            if (world is LevelAccessor) dropContentsOnCollapse(world, pos, state)
             return Blocks.AIR.defaultBlockState()
         }
-        return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
+        return super.updateShape(state, world, ticks, pos, direction, neighborPos, neighborState, random)
     }
 
     /**
@@ -271,7 +277,7 @@ class CropBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), CropCareTarget {
+) : LegacyBlockEntity26(type, pos, state), CropCareTarget {
 
     var stats = CropStats()
     var scanLevel: Int = 0
@@ -520,18 +526,18 @@ class CropBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         stats = CropStats(
-            growth = nbt.getInt("growth"),
-            gain = nbt.getInt("gain"),
-            resistance = nbt.getInt("resistance"),
+            growth = nbt.getIntOr("growth", 0),
+            gain = nbt.getIntOr("gain", 0),
+            resistance = nbt.getIntOr("resistance", 0),
         )
-        scanLevel = nbt.getInt("scan_level").coerceIn(0, 4)
-        growthPoints = nbt.getInt("growth_points")
-        storageNutrients = nbt.getInt("nutrients")
-        storageWater = nbt.getInt("water")
-        storageWeedEx = nbt.getInt("weed_ex")
-        terrainHumidity = nbt.getInt("terrain_humidity")
-        terrainNutrients = nbt.getInt("terrain_nutrients")
-        terrainAirQuality = nbt.getInt("terrain_air_quality")
+        scanLevel = nbt.getIntOr("scan_level", 0).coerceIn(0, 4)
+        growthPoints = nbt.getIntOr("growth_points", 0)
+        storageNutrients = nbt.getIntOr("nutrients", 0)
+        storageWater = nbt.getIntOr("water", 0)
+        storageWeedEx = nbt.getIntOr("weed_ex", 0)
+        terrainHumidity = nbt.getIntOr("terrain_humidity", 0)
+        terrainNutrients = nbt.getIntOr("terrain_nutrients", 0)
+        terrainAirQuality = nbt.getIntOr("terrain_air_quality", 0)
     }
 
     fun storageSnapshot(): Triple<Int, Int, Int> = Triple(storageNutrients, storageWater, storageWeedEx)
@@ -789,11 +795,11 @@ class CropBlockEntity(
 
     private fun createGainStacks(cropType: CropType, age: Int, world: Level): List<ItemStack> {
         return when (cropType) {
-            CropType.DANDELION -> listOf(ItemStack(Items.YELLOW_DYE, 1))
-            CropType.POPPY -> listOf(ItemStack(Items.RED_DYE, 1))
-            CropType.BLACKTHORN -> listOf(ItemStack(Items.BLACK_DYE, 1))
-            CropType.TULIP -> listOf(ItemStack(Items.PURPLE_DYE, 1))
-            CropType.CYAZINT -> listOf(ItemStack(Items.BLUE_DYE, 1))
+            CropType.DANDELION -> listOf(ItemStack(Items.DYE.pick(net.minecraft.world.item.DyeColor.YELLOW), 1))
+            CropType.POPPY -> listOf(ItemStack(Items.DYE.pick(net.minecraft.world.item.DyeColor.RED), 1))
+            CropType.BLACKTHORN -> listOf(ItemStack(Items.DYE.pick(net.minecraft.world.item.DyeColor.BLACK), 1))
+            CropType.TULIP -> listOf(ItemStack(Items.DYE.pick(net.minecraft.world.item.DyeColor.PURPLE), 1))
+            CropType.CYAZINT -> listOf(ItemStack(Items.DYE.pick(net.minecraft.world.item.DyeColor.BLUE), 1))
             CropType.REED -> listOf(ItemStack(Items.SUGAR_CANE, age.coerceAtLeast(1)))
             CropType.STICKY_REED -> {
                 if (age >= CropSystem.maxAge(cropType)) listOf(ItemStack(Resin::class.instance(), 1))
@@ -812,7 +818,7 @@ class CropBlockEntity(
             CropType.FLAX -> listOf(ItemStack(Items.STRING, 1))
             CropType.VENOMILIA -> {
                 if (age == 4) listOf(ItemStack(GrinPowder::class.instance(), 1))
-                else if (age >= 3) listOf(ItemStack(Items.PURPLE_DYE, 1))
+                else if (age >= 3) listOf(ItemStack(Items.DYE.pick(net.minecraft.world.item.DyeColor.PURPLE), 1))
                 else emptyList()
             }
             CropType.POTATO -> {
@@ -931,8 +937,8 @@ class CropBlockEntity(
         if (world.isRaining) value += 2
         if (biome.baseTemperature in 0.2f..1.0f) value += 2
         val below = world.getBlockState(pos.below())
-        if (below.block is net.minecraft.world.level.block.FarmBlock) {
-            val moisture = below.getValue(net.minecraft.world.level.block.FarmBlock.MOISTURE)
+        if (below.block is net.minecraft.world.level.block.FarmlandBlock) {
+            val moisture = below.getValue(net.minecraft.world.level.block.FarmlandBlock.MOISTURE)
             if (moisture >= 7) value += 2
         }
         if (storageWater >= 5) value += 2
@@ -1002,7 +1008,7 @@ class CropBlockEntity(
                 val soilPos = targetPos.below()
                 val soilState = world.getBlockState(soilPos)
 
-                if (soilState.block is net.minecraft.world.level.block.FarmBlock || soilState.block == Blocks.DIRT) {
+                if (soilState.block is net.minecraft.world.level.block.FarmlandBlock || soilState.block == Blocks.DIRT) {
                     world.setBlock(soilPos, Blocks.GRASS_BLOCK.defaultBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL)
 
                     if (world.getBlockState(targetPos).isAir) {
@@ -1100,28 +1106,28 @@ class CropBlockEntity(
 
     companion object {
         const val TICK_RATE = 256
-        private val TAG_ORES_IRON: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "ores/iron"))
-        private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "storage_blocks/iron"))
-        private val TAG_ORES_COPPER: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "ores/copper"))
-        private val TAG_STORAGE_COPPER: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "storage_blocks/copper"))
-        private val TAG_ORES_TIN: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "ores/tin"))
-        private val TAG_STORAGE_TIN: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "storage_blocks/tin"))
-        private val TAG_ORES_LEAD: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "ores/lead"))
-        private val TAG_STORAGE_LEAD: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "storage_blocks/lead"))
-        private val TAG_ORES_GOLD: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "ores/gold"))
-        private val TAG_STORAGE_GOLD: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "storage_blocks/gold"))
-        private val TAG_ORES_SILVER: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "ores/silver"))
-        private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", "storage_blocks/silver"))
+        private val TAG_ORES_IRON: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores/iron"))
+        private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "storage_blocks/iron"))
+        private val TAG_ORES_COPPER: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores/copper"))
+        private val TAG_STORAGE_COPPER: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "storage_blocks/copper"))
+        private val TAG_ORES_TIN: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores/tin"))
+        private val TAG_STORAGE_TIN: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "storage_blocks/tin"))
+        private val TAG_ORES_LEAD: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores/lead"))
+        private val TAG_STORAGE_LEAD: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "storage_blocks/lead"))
+        private val TAG_ORES_GOLD: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores/gold"))
+        private val TAG_STORAGE_GOLD: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "storage_blocks/gold"))
+        private val TAG_ORES_SILVER: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores/silver"))
+        private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "storage_blocks/silver"))
         private val METAL_IRON = MetalRootGroup.IRON
         private val COPPER_BLOCKS = setOf(
-            Blocks.COPPER_BLOCK,
-            Blocks.EXPOSED_COPPER,
-            Blocks.WEATHERED_COPPER,
-            Blocks.OXIDIZED_COPPER,
-            Blocks.WAXED_COPPER_BLOCK,
-            Blocks.WAXED_EXPOSED_COPPER,
-            Blocks.WAXED_WEATHERED_COPPER,
-            Blocks.WAXED_OXIDIZED_COPPER,
+            Blocks.COPPER_BLOCK.weathering().pick(net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED),
+            Blocks.COPPER_BLOCK.weathering().pick(net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPOSED),
+            Blocks.COPPER_BLOCK.weathering().pick(net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED),
+            Blocks.COPPER_BLOCK.weathering().pick(net.minecraft.world.level.block.WeatheringCopper.WeatherState.OXIDIZED),
+            Blocks.COPPER_BLOCK.waxed().pick(net.minecraft.world.level.block.WeatheringCopper.WeatherState.UNAFFECTED),
+            Blocks.COPPER_BLOCK.waxed().pick(net.minecraft.world.level.block.WeatheringCopper.WeatherState.EXPOSED),
+            Blocks.COPPER_BLOCK.waxed().pick(net.minecraft.world.level.block.WeatheringCopper.WeatherState.WEATHERED),
+            Blocks.COPPER_BLOCK.waxed().pick(net.minecraft.world.level.block.WeatheringCopper.WeatherState.OXIDIZED),
         )
         private val METAL_COPPER = MetalRootGroup.COPPER
         private val METAL_TIN = MetalRootGroup.TIN

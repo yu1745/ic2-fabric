@@ -3,24 +3,22 @@ package ic2_120.client.screen
 import ic2_120.client.FluidUtils
 import ic2_120.content.screen.TankScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.FluidRenderHandlerRegistry
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(handler = "tank")
 class TankScreen(
     val handler: TankScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<TankScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<TankScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -43,7 +41,7 @@ class TankScreen(
 
         // 流体全铺渲染至 (79,27)-(97,45) = 18x18，使用 FluidUtils 着色
         val fluidId = menu.sync.fluidId ?: return
-        val fluid = BuiltInRegistries.FLUID.get(fluidId)
+        val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
         val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState())
         val sprite = sprites[0]
@@ -104,7 +102,7 @@ class TankScreen(
             val capacity = menu.sync.capacity
 
             val lines = if (fluidId != null && amount > 0) {
-                val fluid = BuiltInRegistries.FLUID.get(fluidId)
+                val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
                 val fluidName = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes.getName(
                     net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(fluid)
                 ).string
@@ -120,8 +118,8 @@ class TankScreen(
     private fun formatRate(rate: Int): String = "%+d mB/s".format(rate)
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiother.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiother.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val UPTIPS_SIZE = 16
         private const val UPTIPS_X = 4

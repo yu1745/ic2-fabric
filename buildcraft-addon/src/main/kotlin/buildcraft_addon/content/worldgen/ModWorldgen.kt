@@ -14,8 +14,9 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
+import net.minecraft.core.QuartPos
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.util.RandomSource
 import net.minecraft.world.level.levelgen.Heightmap
@@ -62,7 +63,7 @@ class WaterSpringFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneF
         val world = context.level()
         val origin = context.origin()
         val random = context.random()
-        val chunkPos = ChunkPos(origin)
+        val chunkPos = ChunkPos.containing(origin)
 
         // BC: 2.5% per chunk
         if (random.nextFloat() > 0.025f) return false
@@ -70,17 +71,17 @@ class WaterSpringFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneF
         val x = chunkPos.minBlockX + random.nextInt(16)
         val z = chunkPos.minBlockZ + random.nextInt(16)
 
-        // 1.18+ 基岩层在 world.minBuildHeight，向上扫 5 格
-        for (y in world.minBuildHeight..(world.minBuildHeight + 4)) {
+        // 1.18+ 基岩层在 world.minY，向上扫 5 格
+        for (y in world.minY..(world.minY + 4)) {
             val pos = BlockPos(x, y, z)
             if (world.getBlockState(pos).`is`(Blocks.BEDROCK)) {
                 val springPos = pos.above()
-                val springBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("spring"))
+                val springBlock = BuiltInRegistries.BLOCK.getValue(BuildCraftAddon.id("spring"))
                 world.setBlock(springPos,
                     springBlock.defaultBlockState().setValue(SpringBlock.SPRING_TYPE, SpringType.WATER),
                     Block.UPDATE_ALL)
 
-                for (j in y + 2 until world.maxBuildHeight) {
+                for (j in y + 2 ..world.maxY) {
                     val columnPos = BlockPos(x, j, z)
                     if (world.isEmptyBlock(columnPos)) break
                     world.setBlock(columnPos, Fluids.WATER.defaultFluidState().createLegacyBlock(), Block.UPDATE_ALL)
@@ -138,12 +139,12 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
 
         // BC: 排除维度
         if (world is net.minecraft.world.level.Level) {
-            val dimId = world.dimension().location()
+            val dimId = world.dimension().identifier()
             if (dimId.toString().contains("the_nether") || dimId.toString().contains("the_end")) return false
         }
 
         // 当前区块边界：所有 setBlock 限制在此范围内，消除 "far chunk" 警告
-        val genMin = BlockPos(chunkX * 16, world.minBuildHeight, chunkZ * 16)
+        val genMin = BlockPos(chunkX * 16, world.minY, chunkZ * 16)
         val genMax = genMin.offset(15, world.height - 1, 15)
 
         for (cdx in -MAX_CHUNK_RADIUS..MAX_CHUNK_RADIUS) {
@@ -155,10 +156,15 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
         return true
     }
 
+    private fun baseSurfaceY(world: WorldGenLevel, x: Int, z: Int): Int {
+        val source = world.level.chunkSource
+        return source.generator.getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, world, source.randomState()) - 1
+    }
+
     private fun generateAt(world: WorldGenLevel, cx: Int, cz: Int, genMin: BlockPos, genMax: BlockPos, isCenter: Boolean = false) {
         // BC: 确定性随机（同种子同坐标必出相同结构）
         // WorldGenLevel 运行时为 ServerLevel，可安全访问种子
-        val wSeed = if (world is net.minecraft.world.level.Level) world.seed else 0L
+        val wSeed = world.seed
         val chunkSeed = cx.toLong() * 341873128712L + cz.toLong() * 132897987541L
         val rand = RandomSource.create(wSeed xor chunkSeed xor MAGIC_GEN_NUMBER)
 
@@ -166,15 +172,18 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
         val z = cz * 16 + 8 + rand.nextInt(16)
 
         // BC: 排除末地中心岛
-        val dim = (world as? net.minecraft.world.level.Level)?.dimension()
+        val dim = world.level.dimension()
         if (dim == net.minecraft.world.level.Level.END && (Math.abs(x) < 1200 || Math.abs(z) < 1200)) return
 
         // BC: 按生物群系 + 噪声斑块计算概率加成
-        val biomeKey = world.getBiome(BlockPos(x, 0, z)).unwrapKey()
+        val chunkSource = world.level.chunkSource
+        val biomeKey = chunkSource.generator.biomeSource
+            .getNoiseBiome(QuartPos.fromBlock(x), 0, QuartPos.fromBlock(z), chunkSource.randomState().sampler())
+            .unwrapKey()
         var bonus = 1.0
         var oilBiome = false // surfaceDepositBiomes (3x + 允许 LAKE)
         if (biomeKey.isPresent) {
-            val id = biomeKey.get().location().toString()
+            val id = biomeKey.get().identifier().toString()
             val isDesert = id.contains("desert") || id.contains("badlands") || id.contains("mesa")
             val isOcean = id.contains("ocean") || id.contains("swamp") || id.contains("mangrove")
 
@@ -207,7 +216,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
         }
 
         if (isCenter) {
-            val surfaceY = world.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 1
+            val surfaceY = baseSurfaceY(world, x, z)
             BuildCraftAddon.LOGGER.info("OilWellFeature.generateAt() -> {} at chunk [{}, {}], center (x={}, y={}, z={})", type, cx, cz, x, surfaceY, z)
         }
 
@@ -230,26 +239,26 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
         totalOilCount += generateTendril(world, pattern, startPos, depth, genMin, genMax)
 
         if (type != GenType.LAKE) {
-            // wellY = 距 world.minBuildHeight 的偏移（BC 原版底部为 Y=0，wellY 即绝对 Y）
+            // wellY = 距 world.minY 的偏移（BC 原版底部为 Y=0，wellY 即绝对 Y）
             val wellY = 20 + rand.nextInt(10)
 
             // BC: 地下油藏球体
             val sphereRadius = if (type == GenType.LARGE) 8 + rand.nextInt(9) else 4 + rand.nextInt(4)
-            totalOilCount += generateSphere(world, BlockPos(x, world.minBuildHeight + wellY, z), sphereRadius, genMin, genMax)
+            totalOilCount += generateSphere(world, BlockPos(x, world.minY + wellY, z), sphereRadius, genMin, genMax)
 
             // BC: 喷口
             if (type == GenType.LARGE) {
                 val spoutHeight = if (LARGE_SPOUT_MAX > LARGE_SPOUT_MIN) {
                     LARGE_SPOUT_MIN + rand.nextInt(LARGE_SPOUT_MAX - LARGE_SPOUT_MIN)
                 } else LARGE_SPOUT_MIN
-                totalOilCount += generateSpout(world, BlockPos(x, world.minBuildHeight + wellY, z), spoutHeight, 1, genMin, genMax)
+                totalOilCount += generateSpout(world, BlockPos(x, world.minY + wellY, z), spoutHeight, 1, genMin, genMax)
 
                 // BC: 管道从底部+2 延伸到球体高度（wellY = 距离底部的偏移）
-                val tubeBottom = world.minBuildHeight + 1
+                val tubeBottom = world.minY + 1
                 totalOilCount += generateTube(world, BlockPos(x, tubeBottom, z), wellY, 1, genMin, genMax)
 
                 // BC: Spring 方块在底部
-                val springPos = BlockPos(x, world.minBuildHeight, z)
+                val springPos = BlockPos(x, world.minY, z)
                 if (inChunk(springPos, genMin, genMax)) {
                     placeOilSpring(world, springPos, totalOilCount)
                 }
@@ -257,7 +266,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
                 val spoutHeight = if (SMALL_SPOUT_MAX > SMALL_SPOUT_MIN) {
                     SMALL_SPOUT_MIN + rand.nextInt(SMALL_SPOUT_MAX - SMALL_SPOUT_MIN)
                 } else SMALL_SPOUT_MIN
-                totalOilCount += generateSpout(world, BlockPos(x, world.minBuildHeight + wellY, z), spoutHeight, 0, genMin, genMax)
+                totalOilCount += generateSpout(world, BlockPos(x, world.minY + wellY, z), spoutHeight, 0, genMin, genMax)
             }
         }
     }
@@ -375,7 +384,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
 
     private fun generateSpout(world: WorldGenLevel, start: BlockPos, height: Int, radius: Int, min: BlockPos, max: BlockPos): Int {
         // BC: 使用高度图找到地表（从顶向下，与 BC 原版一致）
-        val surfaceY = world.getHeight(Heightmap.Types.WORLD_SURFACE_WG, start.x, start.z) - 1
+        val surfaceY = baseSurfaceY(world, start.x, start.z)
         if (surfaceY <= start.y) return 0
 
         var count = 0
@@ -415,7 +424,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
     // ========== Spring 放置 ==========
 
     private fun placeOilSpring(world: WorldGenLevel, pos: BlockPos, totalOilCount: Int) {
-        val springBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("spring"))
+        val springBlock = BuiltInRegistries.BLOCK.getValue(BuildCraftAddon.id("spring"))
         world.setBlock(pos, springBlock.defaultBlockState().setValue(SpringBlock.SPRING_TYPE, SpringType.OIL), Block.UPDATE_ALL)
 
         // BC: 设置 totalSources 供抽油泵系统使用

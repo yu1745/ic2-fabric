@@ -22,7 +22,7 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.player.Player
 import net.minecraft.data.recipes.RecipeOutput
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
@@ -70,7 +70,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
 
         fun toggleNightVision(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
-            val enabled = !nbt.getBoolean(NIGHT_VISION_KEY)
+            val enabled = !nbt.getBooleanOr(NIGHT_VISION_KEY, false)
             nbt.putBoolean(NIGHT_VISION_KEY, enabled)
             return enabled
         }
@@ -96,15 +96,15 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
-        super.inventoryTick(stack, world, entity, slot, selected)
+    override fun inventoryTick(stack: ItemStack, world: net.minecraft.server.level.ServerLevel, entity: net.minecraft.world.entity.Entity, slot: net.minecraft.world.entity.EquipmentSlot?) {
+        super.inventoryTick(stack, world, entity, slot)
         if (world.isClient) return
 
         val player = entity as? Player ?: return
         if (player.getItemBySlot(EquipmentSlot.HEAD) !== stack) return
 
         val nbt = stack.orCreateNbt
-        if (!nbt.getBoolean(NIGHT_VISION_KEY)) return
+        if (!nbt.getBooleanOr(NIGHT_VISION_KEY, false)) return
 
         val energy = getEnergy(stack)
         if (energy <= 0) {
@@ -115,7 +115,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
 
         // 使用余数累加器消耗能量
-        var remainder = nbt.getDouble(NV_REMAINDER_KEY)
+        var remainder = nbt.getDoubleOr(NV_REMAINDER_KEY, 0.0)
         remainder += nightVisionCostPerTick
         val toConsume = remainder.toLong()
         if (toConsume > 0) {
@@ -146,9 +146,10 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
     }
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
-        val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
+        val nvEnabled = stack.orCreateNbt.getBooleanOr(NIGHT_VISION_KEY, false)
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {

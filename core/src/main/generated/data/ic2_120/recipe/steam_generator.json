@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "B": {
-      "item": "ic2_120:copper_boiler"
-    },
-    "C": {
-      "item": "ic2_120:iron_casing"
-    },
-    "H": {
-      "item": "ic2_120:heat_conductor"
-    }
+    "B": "ic2_120:copper_boiler",
+    "C": "ic2_120:iron_casing",
+    "H": "ic2_120:heat_conductor"
   },
   "pattern": [
     "CHC",
@@ -18,7 +11,6 @@
     "CCC"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:steam_generator"
   }
 }

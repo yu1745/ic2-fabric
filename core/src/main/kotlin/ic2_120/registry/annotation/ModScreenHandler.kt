@@ -18,7 +18,7 @@ enum class ScreenHandlerMode {
 
 /**
  * 标记需要自动注册的 AbstractContainerMenu 类。
- * 直接标注在 AbstractContainerMenu 子类上，注册器会自动创建 ExtendedScreenHandlerType 并注册。
+ * 直接标注在 AbstractContainerMenu 子类上，注册器会自动创建 ExtendedMenuType 并注册。
  *
  * 约定：
  * - 标准模式（BLOCK / HANDHELD）：扫描器根据 [inventorySize] 和 [mode] 自动构造客户端实例，无需手写 fromBuffer。

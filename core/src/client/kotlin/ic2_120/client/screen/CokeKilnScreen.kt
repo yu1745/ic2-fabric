@@ -6,25 +6,23 @@ import ic2_120.content.screen.CokeKilnScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.CokeKilnSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = CokeKilnBlock::class)
 class CokeKilnScreen(
     val handler: CokeKilnScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<CokeKilnScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<CokeKilnScreenHandler>(handler, playerInventory, title, GUI_SIZE.width, GUI_SIZE.height) {
 
     init {
-        imageWidth = GUI_SIZE.width
-        imageHeight = GUI_SIZE.height
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -101,7 +99,7 @@ class CokeKilnScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicokeoven.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guicokeoven.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

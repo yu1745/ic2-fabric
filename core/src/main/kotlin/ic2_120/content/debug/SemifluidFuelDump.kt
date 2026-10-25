@@ -5,7 +5,7 @@ import ic2_120.content.fluid.FluidFuelRegistry.FuelProfile
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 
 /**
@@ -31,15 +31,15 @@ object SemifluidFuelDump {
         // 收集所有非空、非纯客户端占位的流体
         val all = BuiltInRegistries.FLUID.keySet()
             .mapNotNull { id ->
-                val fluid = BuiltInRegistries.FLUID.get(id)
+                val fluid = BuiltInRegistries.FLUID.getValue(id)
                 // 跳过 EMPTY / 占位
                 if (fluid == net.minecraft.world.level.material.Fluids.EMPTY) return@mapNotNull null
                 id to fluid
             }
 
         // 复用发电机真实判定
-        val supported = mutableListOf<Pair<ResourceLocation, FuelProfile>>()
-        val unsupportedButNamed = mutableListOf<ResourceLocation>() // 名字像油/燃料但被判定为不支持
+        val supported = mutableListOf<Pair<Identifier, FuelProfile>>()
+        val unsupportedButNamed = mutableListOf<Identifier>() // 名字像油/燃料但被判定为不支持
 
         for ((id, fluid) in all) {
             val profile = FluidFuelRegistry.getProfile(fluid)
@@ -83,7 +83,7 @@ object SemifluidFuelDump {
     }
 
     /** 启发式：fluid id 看起来像油/燃料（用于找出"被漏掉"的候选） */
-    private fun looksLikeFuel(id: ResourceLocation): Boolean {
+    private fun looksLikeFuel(id: Identifier): Boolean {
         val path = id.path.lowercase()
         return path in setOf("oil", "crude_oil", "petroleum", "fuel", "biofuel", "diesel",
             "gasoline", "ethanol", "biodiesel", "creosote", "plantoil", "plant_oil",

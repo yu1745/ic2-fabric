@@ -1,12 +1,14 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -35,7 +37,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -96,14 +98,14 @@ class NuclearReactorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
         world: Level,
         pos: BlockPos,
         sourceBlock: net.minecraft.world.level.block.Block,
-        sourcePos: BlockPos,
+        orientation: net.minecraft.world.level.redstone.Orientation?,
         notify: Boolean
     ) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? NuclearReactorBlockEntity
             be?.dropOverflowItems(world, pos)
         }
-        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
+        super.neighborChanged(state, world, pos, sourceBlock, orientation, notify)
     }
 
     companion object {
@@ -117,7 +119,7 @@ class NuclearReactorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
             val reactorChamber = ReactorChamberBlock::class.item()
             if (generator != Items.AIR && denseLeadPlate != Items.AIR && advancedCircuit != Items.AIR &&
                 reactorChamber != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NuclearReactorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, NuclearReactorBlock::class.item(), 1)
                     .pattern("DCD").pattern("RRR").pattern("DGD")
                     .define('D', denseLeadPlate).define('C', advancedCircuit).define('R', reactorChamber).define('G', generator)
                     .unlockedBy(getHasName(reactorChamber), has(reactorChamber))

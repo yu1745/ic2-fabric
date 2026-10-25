@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -32,7 +34,7 @@ import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.material.Fluid
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -78,7 +80,7 @@ class CondenserBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CondenserBlock.ACTIVE
     override val tier: Int = 3
@@ -233,16 +235,16 @@ class CondenserBlockEntity(
                 val neighborPos = pos.relative(side)
                 val storage = FluidStorage.SIDED.find(world, neighborPos, side.opposite) ?: continue
                 try {
-                    val extracted = storage.insert(variant, amount, null)
-                    if (extracted > 0L) {
-                        Transaction.openOuter().use { tx ->
+                    Transaction.openOuter().use { tx ->
+                        val extracted = storage.insert(variant, amount, tx)
+                        if (extracted > 0L) {
                             updateSnapshots(tx)
                             amount -= extracted
                             if (amount <= 0L) variant = FluidVariant.blank()
                             tx.commit()
+                            sync.waterAmount = amount.toInt().coerceAtLeast(0)
+                            setChanged()
                         }
-                        sync.waterAmount = amount.toInt().coerceAtLeast(0)
-                        setChanged()
                     }
                 } catch (_: Exception) { }
             }
@@ -333,29 +335,29 @@ class CondenserBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.condenser")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         CondenserScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     // ==== NBT ====
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(CondenserSync.NBT_ENERGY_STORED).coerceIn(0L, CondenserSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(CondenserSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, CondenserSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        progress = nbt.getInt(NBT_PROGRESS)
-        machineTier = nbt.getInt(NBT_TIER).coerceAtLeast(3)
+        progress = nbt.getIntOr(NBT_PROGRESS, 0)
+        machineTier = nbt.getIntOr(NBT_TIER, 0).coerceAtLeast(3)
         if (nbt.contains(NBT_STEAM_TANK)) {
-            val t = nbt.getCompound(NBT_STEAM_TANK)
-            steamTank.variant = decodeFluidVariant(t.getCompound("variant"))
-            steamTank.amount = t.getLong("amount")
+            val t = nbt.getCompoundOrEmpty(NBT_STEAM_TANK)
+            steamTank.variant = decodeFluidVariant(t.getCompoundOrEmpty("variant"))
+            steamTank.amount = t.getLongOr("amount", 0L)
         }
         if (nbt.contains(NBT_WATER_TANK)) {
-            val t = nbt.getCompound(NBT_WATER_TANK)
-            distilledWaterTank.variant = decodeFluidVariant(t.getCompound("variant"))
-            distilledWaterTank.amount = t.getLong("amount")
+            val t = nbt.getCompoundOrEmpty(NBT_WATER_TANK)
+            distilledWaterTank.variant = decodeFluidVariant(t.getCompoundOrEmpty("variant"))
+            distilledWaterTank.amount = t.getLongOr("amount", 0L)
         }
         sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.waterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
@@ -363,7 +365,7 @@ class CondenserBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CondenserSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_PROGRESS, progress)

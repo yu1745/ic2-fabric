@@ -1,3 +1,9 @@
 {
-  "type": "ic2_120:extracting"
+  "type": "ic2_120:extracting",
+  "ingredient": {
+    "item": "minecraft:pink_wool"
+  },
+  "result": {
+    "item": "minecraft:white_wool"
+  }
 }

@@ -1,10 +1,12 @@
 package ic2_120.content.block.cables
 
+import ic2_120.compat.save
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 import com.mojang.serialization.MapCodec
 import net.minecraft.world.level.block.BaseEntityBlock
@@ -35,7 +37,7 @@ import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.level.material.Fluids
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
@@ -48,7 +50,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import java.util.function.Consumer
 import ic2_120.Ic2_120
 import ic2_120.content.item.*
@@ -82,7 +84,7 @@ class TinCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : B
                 resultCount = 3,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.PLATES_TIN)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN)
                 )
             )
         }
@@ -110,7 +112,7 @@ class CopperCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) 
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.PLATES_COPPER)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_COPPER)
                 )
             )
         }
@@ -141,7 +143,7 @@ class GoldCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : 
                 resultCount = 4,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.PLATES_GOLD)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_GOLD)
                 )
             )
         }
@@ -172,7 +174,7 @@ class IronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : 
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.PLATES_IRON)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON)
                 )
             )
         }
@@ -190,20 +192,20 @@ class IronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : 
     renderLayer = "cutout_mipped"
 )
 class GlassFibreCableBlock(
-    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0.5f).noCollission()
+    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0.5f).noCollision()
 ) : BaseCableBlock(settings), IInsulatedCable, ITiered {
     override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { GlassFibreCableBlock() }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, GlassFibreCableBlock::class.item(), 6)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, GlassFibreCableBlock::class.item(), 6)
                 .pattern("GGG")
                 .pattern("ESE")
                 .pattern("GGG")
                 .define('G', Items.GLASS)
                 .define('E', EnergiumDust::class.instance())
-                .define('S', Ingredient.of(ModTags.Compat.Items.DUSTS_SILVER))
+                .define('S', ic2_120.compat.tagIngredient(ModTags.Compat.Items.DUSTS_SILVER))
                 .unlockedBy(
                     getHasName(EnergiumDust::class.instance()),
                     has(EnergiumDust::class.instance())
@@ -239,9 +241,9 @@ class InsulatedCopperCableBlock(settings: BlockBehaviour.Properties = defaultSet
    companion object {
        @RecipeProvider
        fun generateRecipes(exporter: RecipeOutput) {
-           ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
+           ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
                 .requires(CopperCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(getHasName(CopperCableBlock::class.item()), has(CopperCableBlock::class.item()))
                 .save(exporter, InsulatedCopperCableBlock::class.id())
             // 剪刀剥离绝缘层
@@ -277,9 +279,9 @@ class InsulatedTinCableBlock(settings: BlockBehaviour.Properties = defaultSettin
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, InsulatedTinCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, InsulatedTinCableBlock::class.item(), 1)
                 .requires(TinCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(getHasName(TinCableBlock::class.item()), has(TinCableBlock::class.item()))
                 .save(exporter, InsulatedTinCableBlock::class.id())
             // 剪刀剥离绝缘层
@@ -316,9 +318,9 @@ class InsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, InsulatedGoldCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, InsulatedGoldCableBlock::class.item(), 1)
                 .requires(GoldCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(getHasName(GoldCableBlock::class.item()), has(GoldCableBlock::class.item()))
                 .save(exporter, InsulatedGoldCableBlock::class.id())
             // 剪刀剥离绝缘层
@@ -356,16 +358,16 @@ class DoubleInsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaul
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 直接合成：金导线 + 2 橡胶
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .requires(GoldCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(getHasName(GoldCableBlock::class.item()), has(GoldCableBlock::class.item()))
                 .save(exporter, DoubleInsulatedGoldCableBlock::class.id())
             // 递进合成：1x 绝缘金导线 + 1 橡胶
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .requires(InsulatedGoldCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(
                     getHasName(InsulatedGoldCableBlock::class.item()),
                     has(InsulatedGoldCableBlock::class.item())
@@ -405,9 +407,9 @@ class InsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, InsulatedIronCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, InsulatedIronCableBlock::class.item(), 1)
                 .requires(IronCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(getHasName(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
                 .save(exporter, InsulatedIronCableBlock::class.id())
             // 剪刀剥离绝缘层
@@ -445,16 +447,16 @@ class DoubleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaul
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 直接合成：高压导线 + 2 橡胶
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .requires(IronCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(getHasName(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
                 .save(exporter, DoubleInsulatedIronCableBlock::class.id())
             // 递进合成：1x 绝缘高压导线 + 1 橡胶
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .requires(InsulatedIronCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(
                     getHasName(InsulatedIronCableBlock::class.item()),
                     has(InsulatedIronCableBlock::class.item())
@@ -495,17 +497,17 @@ class TripleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaul
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 直接合成：高压导线 + 3 橡胶
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .requires(IronCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(getHasName(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
                 .save(exporter, TripleInsulatedIronCableBlock::class.id())
             // 递进合成：2x 绝缘高压导线 + 1 橡胶
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .requires(DoubleInsulatedIronCableBlock::class.item())
-                .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .requires(ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(
                     getHasName(DoubleInsulatedIronCableBlock::class.item()),
                     has(DoubleInsulatedIronCableBlock::class.item())
@@ -539,7 +541,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SplitterCableBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SplitterCableBlock::class.item(), 1)
                 .pattern("RCR")
                 .pattern("LRL")
                 .pattern("RCR")
@@ -580,14 +582,14 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun neighborChanged(
         state: BlockState, world: Level, pos: BlockPos,
-        block: Block, sourcePos: BlockPos, notify: Boolean
+        block: Block, orientation: net.minecraft.world.level.redstone.Orientation?, notify: Boolean
     ) {
         if (world.isClient) {
-            super.neighborChanged(state, world, pos, block, sourcePos, notify)
+            super.neighborChanged(state, world, pos, block, orientation, notify)
             return
         }
         refreshControlState(world, pos, state)
-        super.neighborChanged(state, world, pos, block, sourcePos, notify)
+        super.neighborChanged(state, world, pos, block, orientation, notify)
     }
 
     /** 按方块实体中的阈值与反相配置刷新断开状态。 */
@@ -612,7 +614,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return InteractionResult.PASS
-        player.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+        player.openMenu(object : ExtendedMenuProvider<FriendlyByteBuf> {
             override fun getDisplayName(): Component = Component.translatable("block.ic2_120.splitter_cable")
 
             override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
@@ -635,16 +637,18 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
-        state: BlockState, direction: Direction, neighborState: BlockState,
-        world: LevelAccessor, pos: BlockPos, neighborPos: BlockPos
+        state: BlockState, world: net.minecraft.world.level.LevelReader,
+        ticks: net.minecraft.world.level.ScheduledTickAccess, pos: BlockPos,
+        direction: Direction, neighborPos: BlockPos, neighborState: BlockState,
+        random: net.minecraft.util.RandomSource
     ): BlockState {
         if (state.getValue(ACTIVE)) {
             if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-                world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
+                ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
             }
             return state.setValue(propertyFor(direction), false)
         }
-        return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
+        return super.updateShape(state, world, ticks, pos, direction, neighborPos, neighborState, random)
     }
 }
 
@@ -659,7 +663,7 @@ class LimiterCableBlock(settings: BlockBehaviour.Properties = defaultSettings())
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LimiterCableBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, LimiterCableBlock::class.item(), 1)
                 .pattern(" C ")
                 .pattern("RGR")
                 .pattern(" C ")
@@ -682,7 +686,7 @@ class LimiterCableBlock(settings: BlockBehaviour.Properties = defaultSettings())
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return InteractionResult.PASS
-        player.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+        player.openMenu(object : ExtendedMenuProvider<FriendlyByteBuf> {
             override fun getDisplayName(): Component = Component.translatable("block.ic2_120.limiter_cable")
             override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                 val buf = FriendlyByteBuf(Unpooled.buffer())

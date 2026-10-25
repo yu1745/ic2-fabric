@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:iron_casing"
-    },
-    "G": {
-      "item": "ic2_120:generator"
-    },
-    "R": {
-      "item": "ic2_120:reactor_chamber"
-    }
+    "C": "ic2_120:iron_casing",
+    "G": "ic2_120:generator",
+    "R": "ic2_120:reactor_chamber"
   },
   "pattern": [
     "CCC",
@@ -18,7 +11,6 @@
     "CGC"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:rt_generator"
   }
 }

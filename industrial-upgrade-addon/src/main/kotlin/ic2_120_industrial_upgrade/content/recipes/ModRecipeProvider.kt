@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.recipes
 
+import ic2_120.compat.accept
+
 import ic2_120.content.item.Plutonium
 import ic2_120.content.item.setFluidCellVariant
 import ic2_120.registry.ClassScanner
@@ -12,23 +14,35 @@ import ic2_120_industrial_upgrade.content.item.Photoniy
 import ic2_120_industrial_upgrade.content.item.PhotoniyIngot
 import ic2_120_industrial_upgrade.content.item.Proton
 import ic2_120_industrial_upgrade.content.item.ProtonShard
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider
 import net.fabricmc.fabric.api.recipe.v1.ingredient.DefaultCustomIngredients
 import net.minecraft.data.recipes.RecipeOutput
+import net.minecraft.data.recipes.RecipeProvider
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import java.util.function.Consumer
 import java.util.concurrent.CompletableFuture
 import net.minecraft.core.HolderLookup
 
-class ModRecipeProvider(output: FabricDataOutput, registriesFuture: CompletableFuture<HolderLookup.Provider>) : FabricRecipeProvider(output, registriesFuture) {
+class ModRecipeProvider(output: FabricPackOutput, registriesFuture: CompletableFuture<HolderLookup.Provider>) : FabricRecipeProvider(output, registriesFuture) {
 
-    override fun buildRecipes(exporter: RecipeOutput) {
+    override fun createRecipeProvider(registries: HolderLookup.Provider, exporter: RecipeOutput): RecipeProvider =
+        object : RecipeProvider(registries, exporter) {
+            override fun buildRecipes() {
+                net.minecraft.core.registries.BuiltInRegistries.DATA_COMPONENT_INITIALIZERS
+                    .build(registries).forEach { it.apply() }
+                buildIndustrialRecipes(exporter)
+            }
+        }
+
+    override fun getName(): String = "IC2 Industrial Upgrade recipes"
+
+    private fun buildIndustrialRecipes(exporter: RecipeOutput) {
         // 1. 扫描 @RecipeProvider 注解方法（工作台有序合成）
         ClassScanner.generateRecipesForMod(IC2IndustrialUpgrade.MOD_ID, exporter)
 
@@ -47,19 +61,19 @@ class ModRecipeProvider(output: FabricDataOutput, registriesFuture: CompletableF
     private fun registerCompressorRecipes(exporter: RecipeOutput) {
         // 光子锭：9×光子 → 1×光子锭
         compressorRecipe(exporter, "photoniy_to_ingot",
-            input = Ingredient.of(Photoniy::class.instance().defaultInstance),
+            input = Ingredient.of(Photoniy::class.instance()),
             inputCount = 9,
             outputId = "photoniy_ingot")
 
         // 质子碎片：1×钚 → 1×质子碎片
         compressorRecipe(exporter, "plutonium_to_proton_shard",
-            input = Ingredient.of(Plutonium::class.instance().defaultInstance),
+            input = Ingredient.of(Plutonium::class.instance()),
             inputCount = 1,
             outputId = "proton_shard")
 
         // 质子：18×质子碎片 → 1×质子
         compressorRecipe(exporter, "proton_shard_to_proton",
-            input = Ingredient.of(ProtonShard::class.instance().defaultInstance),
+            input = Ingredient.of(ProtonShard::class.instance()),
             inputCount = 18,
             outputId = "proton")
 
@@ -71,8 +85,8 @@ class ModRecipeProvider(output: FabricDataOutput, registriesFuture: CompletableF
             containerReturn = Items.BUCKET)
 
         // 中子碎片：1×中子流体单元 → 1×中子碎片（返还空流体单元），与桶等效
-        val fluidCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "fluid_cell"))
-        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell"))
+        val fluidCellItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "fluid_cell"))
+        val emptyCellItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "empty_cell"))
         val neutronFluidCell = ItemStack(fluidCellItem).apply {
             setFluidCellVariant(FluidVariant.of(NeutronFluid.NEUTRON_STILL))
         }
@@ -87,7 +101,7 @@ class ModRecipeProvider(output: FabricDataOutput, registriesFuture: CompletableF
 
         // 中子：9×中子碎片 → 1×中子
         compressorRecipe(exporter, "neutron_shard_to_neutron",
-            input = Ingredient.of(NeutronShard::class.instance().defaultInstance),
+            input = Ingredient.of(NeutronShard::class.instance()),
             inputCount = 9,
             outputId = "neutron")
     }
@@ -101,8 +115,8 @@ class ModRecipeProvider(output: FabricDataOutput, registriesFuture: CompletableF
         containerReturn: net.minecraft.world.item.Item? = null
     ) {
         val recipeId = IC2IndustrialUpgrade.id("compressing/$name")
-        val outputItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
-            ResourceLocation.fromNamespaceAndPath(IC2IndustrialUpgrade.MOD_ID, outputId))
+        val outputItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(
+            Identifier.fromNamespaceAndPath(IC2IndustrialUpgrade.MOD_ID, outputId))
         val recipe = ic2_120.content.recipes.compressor.CompressorRecipe(
             recipeId,
             input,

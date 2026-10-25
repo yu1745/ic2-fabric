@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -86,7 +88,7 @@ class ElectricHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOccl
             val circuit = Circuit::class.instance()
             val heatConductor = HeatConductor::class.instance()
             if (casing != Items.AIR && battery != Items.AIR && circuit != Items.AIR && heatConductor != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ElectricHeatGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ElectricHeatGeneratorBlock::class.item(), 1)
                     .pattern("CBC")
                     .pattern("CRC")
                     .pattern("CHC")

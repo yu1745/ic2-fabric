@@ -9,14 +9,14 @@ import ic2_120.content.uu.UuTemplateEntry
 import ic2_120.registry.annotation.ModScreen
 import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.content.network.SelectTemplatePayload
 import net.minecraft.client.Minecraft
 import net.minecraft.world.entity.player.Inventory
@@ -24,14 +24,12 @@ import net.minecraft.world.entity.player.Inventory
 @ModScreen(block = PatternStorageBlock::class)
 class PatternStorageScreen(
     val handler: PatternStorageScreenHandler, playerInventory: Inventory, title: Component
-) : AbstractContainerScreen<PatternStorageScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<PatternStorageScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     private var templates: List<UuTemplateEntry> = emptyList()
     private var selectedIndex = -1
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -141,13 +139,13 @@ class PatternStorageScreen(
     }
 
     private fun templateToStack(template: UuTemplateEntry): ItemStack {
-        val id = ResourceLocation.tryParse(template.itemId) ?: return ItemStack.EMPTY
+        val id = Identifier.tryParse(template.itemId) ?: return ItemStack.EMPTY
         val item = BuiltInRegistries.ITEM.getOptional(id).orElse(null) ?: return ItemStack.EMPTY
         return if (item == net.minecraft.world.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guipatternstorage.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guipatternstorage.png")
         private const val TEX_SIZE = 256
 
         private const val TEMPLATE_ITEM_X = 18

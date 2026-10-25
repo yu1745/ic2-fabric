@@ -1,4 +1,5 @@
 package ic2_120.content.screen
+import ic2_120.compat.blockEntityOrNull
 
 import ic2_120.compat.stack
 
@@ -41,7 +42,7 @@ class TeleporterScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.blockEntityOrNull() }
     }
 
     init {
@@ -127,7 +128,7 @@ class TeleporterScreenHandler(
         }, true)
 
     fun getUpgradeTooltips(): List<McText> {
-        val be = context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null)
+        val be = context.blockEntityOrNull()
         return buildList {
             add(McText.literal("可支持的升级"))
             if (be is IOverclockerUpgradeSupport) add(McText.literal("超频升级"))

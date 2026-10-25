@@ -1,4 +1,5 @@
 package ic2_120.content.screen
+import ic2_120.compat.blockEntityOrNull
 
 import ic2_120.compat.stack
 
@@ -27,7 +28,7 @@ import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreenHandler(block = FermenterBlock::class, inventorySize = FermenterBlockEntity.INVENTORY_SIZE)
 class FermenterScreenHandler(
@@ -42,7 +43,7 @@ class FermenterScreenHandler(
     val sync = FermenterSync(SyncedDataView(propertyDelegate))
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.blockEntityOrNull() }
     }
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
@@ -148,8 +149,8 @@ class FermenterScreenHandler(
         const val PLAYER_INV_START = 7
         const val HOTBAR_END = 42
 
-        private val biomassCellId = ResourceLocation.fromNamespaceAndPath("ic2_120", "biomass_cell")
-        private val emptyCellId = ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell")
+        private val biomassCellId = Identifier.fromNamespaceAndPath("ic2_120", "biomass_cell")
+        private val emptyCellId = Identifier.fromNamespaceAndPath("ic2_120", "empty_cell")
 
         private val INPUT_FILLED_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->

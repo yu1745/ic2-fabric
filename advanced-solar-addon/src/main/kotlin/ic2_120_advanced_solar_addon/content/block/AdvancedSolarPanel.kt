@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120_advanced_solar_addon.content.item.IrradiantReinforcedPlate
@@ -36,7 +38,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_advanced_solar_addon.advanced_solar_panel
 // zh_cn: 高级太阳能发电机
@@ -85,7 +87,7 @@ open class AdvancedSolarPanelBlock : MachineBlock() {
             val irradiantPlate = IrradiantReinforcedPlate::class.instance()
 
             // // 配方 1: 简易合成模式 (防爆玻璃 + 太阳能发电机 + 高级合金 + 高级机械外壳 + 高级电路板)
-            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
+            // ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
             //     .pattern("GGG")
             //     .pattern("ASA")
             //     .pattern("C C")
@@ -97,7 +99,7 @@ open class AdvancedSolarPanelBlock : MachineBlock() {
             //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("advanced_solar_panel_simple"))
 
             // 配方 2: 使用光辉玻璃板
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
                 .pattern("GGG")
                 .pattern("ASA")
                 .pattern("CIC")
@@ -110,7 +112,7 @@ open class AdvancedSolarPanelBlock : MachineBlock() {
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("advanced_solar_panel_irradiant"))
 
             // // 配方 3: 使用防爆玻璃 + 光辉铱铁合金板
-            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
+            // ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
             //     .pattern("GGG")
             //     .pattern("ASA")
             //     .pattern("CIC")

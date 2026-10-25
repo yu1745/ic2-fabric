@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.item
 
+import ic2_120.compat.save
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -12,7 +14,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // ===== 富集阳光合金II enriched_sunnarium_alloy2 =====
 // zh_cn: 光谱富集阳光合金  en_us: Spectral Enriched Sunnarium Alloy
@@ -22,7 +24,7 @@ class EnrichedSunnariumAlloy2 : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金 + 1×奇点核心
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy2::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EnrichedSunnariumAlloy2::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy::class.instance())
                 .define('B', SingularCore::class.instance())
@@ -40,7 +42,7 @@ class EnrichedSunnariumAlloy3 : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金II + 1×光子锭
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy3::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EnrichedSunnariumAlloy3::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy2::class.instance())
                 .define('B', PhotoniyIngot::class.instance())
@@ -58,7 +60,7 @@ class EnrichedSunnariumAlloy4 : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金 + 1×光谱核心
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy4::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EnrichedSunnariumAlloy4::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy::class.instance())
                 .define('B', SpectralCore::class.instance())

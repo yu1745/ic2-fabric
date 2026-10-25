@@ -1,5 +1,7 @@
 package ic2_120.registry.annotation
 
+import ic2_120.compat.LegacyBlockEntity26
+
 /**
  * 标记方块实体中作为 Energy API 存储的字段/属性。
  * 扫描注册时会对该 BlockEntityType 调用 [team.reborn.energy.api.EnergyStorage.SIDED].registerForBlockEntity，
@@ -8,7 +10,7 @@ package ic2_120.registry.annotation
  * 使用示例：
  * ```kotlin
  * @ModBlockEntity(block = ElectricFurnaceBlock::class)
- * class ElectricFurnaceBlockEntity(...) : BlockEntity(...) {
+ * class ElectricFurnaceBlockEntity(...) : LegacyBlockEntity26(...) {
  *     @RegisterEnergy
  *     val sync = ElectricFurnaceSync(syncedData)  // 继承 SimpleEnergyStorage
  * }

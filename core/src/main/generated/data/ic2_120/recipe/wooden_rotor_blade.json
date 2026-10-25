@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "x": {
-      "tag": "minecraft:planks"
-    },
-    "y": {
-      "tag": "minecraft:logs"
-    }
+    "x": "#minecraft:planks",
+    "y": "#minecraft:logs"
   },
   "pattern": [
     "xxx",
@@ -15,7 +10,6 @@
     "xxx"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:wooden_rotor_blade"
   }
 }

@@ -33,7 +33,7 @@ class StoneEngineScreenHandler(
         // Fuel slot (BC8 pos: 80, 41)
         addSlot(object : Slot(blockInventory, 0, 80, 41) {
             override fun mayPlace(stack: net.minecraft.world.item.ItemStack): Boolean {
-                return stack.item.craftingRemainingItem !== stack.item || stack.item.toString().contains("coal")
+                return stack.item.getCraftingRemainder() != null || stack.item.toString().contains("coal")
             }
         })
 

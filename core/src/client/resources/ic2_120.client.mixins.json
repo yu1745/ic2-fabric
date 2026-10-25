@@ -6,8 +6,7 @@
 		"HandledScreenInvTitleMixin",
 		"KeyboardModifierStateMixin",
 		"LivingEntityJumpClientMixin",
-		"ModeSwitchUseMixin",
-		"TransformerTooltipMixin"
+		"ModeSwitchUseMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

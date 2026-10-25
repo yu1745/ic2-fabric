@@ -1,0 +1,40 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "ic2:charge",
+    "entries": [
+      {
+        "threshold": 0.2,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/battery/energy_crystal_wireless_1"
+        }
+      },
+      {
+        "threshold": 0.4,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/battery/energy_crystal_wireless_2"
+        }
+      },
+      {
+        "threshold": 0.6,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/battery/energy_crystal_wireless_3"
+        }
+      },
+      {
+        "threshold": 0.8,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/battery/energy_crystal_wireless_4"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "ic2_120:item/energy_crystal_wireless"
+    }
+  }
+}

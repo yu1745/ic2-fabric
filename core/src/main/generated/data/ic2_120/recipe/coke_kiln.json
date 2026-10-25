@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "R": {
-      "item": "ic2_120:refractory_bricks"
-    }
+    "R": "ic2_120:refractory_bricks"
   },
   "pattern": [
     "RRR",
@@ -12,7 +9,6 @@
     "RRR"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:coke_kiln"
   }
 }

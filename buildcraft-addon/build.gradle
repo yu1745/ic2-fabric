@@ -36,7 +36,8 @@ tasks.named('runDatagen') {
 }
 
 dependencies {
-    implementation project(path: ":core", configuration: "namedElements")
+    implementation project(":core")
+    clientImplementation files(rootProject.project(":core").sourceSets.client.output)
 }
 
 processResources {

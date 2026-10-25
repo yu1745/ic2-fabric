@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_spectral_core": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120_industrial_upgrade:spectral_core"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120_industrial_upgrade:enriched_sunnarium_alloy4"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_spectral_core"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120_industrial_upgrade:enriched_sunnarium_alloy4"
+    ]
+  }
+}

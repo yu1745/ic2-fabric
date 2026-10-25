@@ -1,85 +1,47 @@
 package ic2_120.client
 
-import ic2_120.content.item.NanoSaber
-import ic2_120.content.item.RecallScrollItem
-import ic2_120.content.item.energy.IBatteryItem
+import com.mojang.serialization.MapCodec
 import ic2_120.Ic2_120
-import net.minecraft.client.renderer.item.ItemProperties
-import net.minecraft.world.item.Item
-import net.minecraft.world.item.ItemStack
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
 import ic2_120.compat.nbt
+import ic2_120.content.item.NanoSaber
+import ic2_120.content.item.energy.IBatteryItem
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.renderer.item.properties.numeric.RangeSelectItemModelProperties
+import net.minecraft.client.renderer.item.properties.numeric.RangeSelectItemModelProperty
+import net.minecraft.resources.Identifier
+import net.minecraft.world.entity.ItemOwner
+import net.minecraft.world.item.ItemStack
 
-/**
- * 电池模型 Predicate 注册
- *
- * 为所有电池物品注册 "ic2:charge" predicate，使电池贴图随电量变化。
- */
+/** Dynamic values used by the 26.2 item definition range dispatch models. */
 object BatteryModelPredicates {
+    private val CHARGE_ID = Identifier.fromNamespaceAndPath("ic2", "charge")
+    private val NANO_SABER_ACTIVE_ID = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "nano_saber_active")
+    private val SCROLL_BOUND_ID = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "bound")
 
-    private const val NBT_HAS_BIND = "HasBind"
-    private val CHARGE_ID = ResourceLocation.fromNamespaceAndPath("ic2", "charge")
-    private val NANO_SABER_ACTIVE_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "nano_saber_active")
-    private val SCROLL_BOUND_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bound")
-
-    /**
-     * 注册所有电池物品的模型 predicate
-     */
     fun register() {
-        // 遍历所有已注册的物品，找到电池物品并注册 predicate
-        BuiltInRegistries.ITEM.keySet().forEach { id ->
-            if (id.namespace == "ic2_120") {
-                val item = BuiltInRegistries.ITEM.get(id)
-                if (item is IBatteryItem) {
-                    registerChargePredicate(item, id)
-                }
-            }
-        }
-        registerNanoSaberPredicate()
-        registerRecallScrollPredicate()
+        RangeSelectItemModelProperties.ID_MAPPER.put(CHARGE_ID, ChargeProperty.CODEC)
+        RangeSelectItemModelProperties.ID_MAPPER.put(NANO_SABER_ACTIVE_ID, NanoSaberProperty.CODEC)
+        RangeSelectItemModelProperties.ID_MAPPER.put(SCROLL_BOUND_ID, ScrollBoundProperty.CODEC)
     }
 
-    private fun registerNanoSaberPredicate() {
-        val saber = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "nano_saber"))
-        ItemProperties.register(
-            saber,
-            NANO_SABER_ACTIVE_ID
-        ) { _, _, _, _ ->
+    private object ChargeProperty : RangeSelectItemModelProperty {
+        val CODEC: MapCodec<ChargeProperty> = MapCodec.unit(this)
+        override fun get(stack: ItemStack, level: ClientLevel?, owner: ItemOwner?, seed: Int): Float =
+            (stack.item as? IBatteryItem)?.getChargeRatio(stack)?.toFloat() ?: 0f
+        override fun type(): MapCodec<ChargeProperty> = CODEC
+    }
+
+    private object NanoSaberProperty : RangeSelectItemModelProperty {
+        val CODEC: MapCodec<NanoSaberProperty> = MapCodec.unit(this)
+        override fun get(stack: ItemStack, level: ClientLevel?, owner: ItemOwner?, seed: Int): Float =
             NanoSaber.getActiveData()
-        }
+        override fun type(): MapCodec<NanoSaberProperty> = CODEC
     }
 
-    /**
-     * 为单个电池物品注册电量 predicate
-     *
-     * @param item 已注册的电池物品
-     * @param itemId 物品ID
-     */
-    private fun registerChargePredicate(item: Item, itemId: ResourceLocation) {
-        ItemProperties.register(
-            item,
-            CHARGE_ID
-        ) { stack: ItemStack, _, _, _ ->
-            // 计算电量比例 (0.0 - 1.0)
-            val batteryItem = stack.item
-            if (batteryItem is IBatteryItem) {
-                val ratio = batteryItem.getChargeRatio(stack)
-                ratio.toFloat()
-            } else {
-                0.0f
-            }
-        }
-    }
-
-    private fun registerRecallScrollPredicate() {
-        val scroll = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "recall_scroll"))
-        if (scroll !is RecallScrollItem) return
-        ItemProperties.register(
-            scroll,
-            SCROLL_BOUND_ID
-        ) { stack: ItemStack, _, _, _ ->
-            if (stack.nbt?.getBoolean(NBT_HAS_BIND) == true) 1.0f else 0.0f
-        }
+    private object ScrollBoundProperty : RangeSelectItemModelProperty {
+        val CODEC: MapCodec<ScrollBoundProperty> = MapCodec.unit(this)
+        override fun get(stack: ItemStack, level: ClientLevel?, owner: ItemOwner?, seed: Int): Float =
+            if (stack.nbt?.getBoolean("HasBind")?.orElse(false) == true) 1f else 0f
+        override fun type(): MapCodec<ScrollBoundProperty> = CODEC
     }
 }

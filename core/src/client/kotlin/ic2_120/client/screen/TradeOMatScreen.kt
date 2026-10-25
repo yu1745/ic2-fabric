@@ -3,24 +3,22 @@ package ic2_120.client.screen
 import ic2_120.content.block.TradeOMatBlock
 import ic2_120.content.screen.TradeOMatScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(handlers = ["trade_o_mat"])
 class TradeOMatScreen(
     val handler: TradeOMatScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<TradeOMatScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<TradeOMatScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     private val isOwner = handler.isOwner
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -39,7 +37,7 @@ class TradeOMatScreen(
     }
 
     companion object {
-        private val TEXTURE_OPEN = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/gui/guitradeomatopen.png")
-        private val TEXTURE_CLOSED = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/gui/guitradeomatclosed.png")
+        private val TEXTURE_OPEN = Identifier.fromNamespaceAndPath("ic2_120", "textures/gui/guitradeomatopen.png")
+        private val TEXTURE_CLOSED = Identifier.fromNamespaceAndPath("ic2_120", "textures/gui/guitradeomatclosed.png")
     }
 }

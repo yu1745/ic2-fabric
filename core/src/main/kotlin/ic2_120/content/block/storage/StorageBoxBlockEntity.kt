@@ -1,5 +1,11 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.orCreateNbt
+import ic2_120.compat.world
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -12,8 +18,8 @@ import ic2_120.content.screen.StorageBoxScreenHandler
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
+import net.fabricmc.fabric.api.transfer.v1.item.ContainerStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.minecraft.world.level.block.state.BlockState
@@ -56,7 +62,7 @@ import io.netty.buffer.Unpooled
 class StorageBoxBlockEntity(
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(StorageBoxBlockEntity::class.type(), pos, state), Container, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(StorageBoxBlockEntity::class.type(), pos, state), Container, ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         /** 木质储物箱容量 */
@@ -97,7 +103,7 @@ class StorageBoxBlockEntity(
      * `direction = null` 表示无视侧面、全向暴露（与储物箱无方向语义一致）。
      */
     @RegisterItemStorage
-    val itemStorage: Storage<ItemVariant> = InventoryStorage.of(this, null)
+    val itemStorage: Storage<ItemVariant> = ContainerStorage.of(this, null)
 
     /** 根据方块类型获取对应容量 */
     private fun getCapacity(): Int {
@@ -122,6 +128,18 @@ class StorageBoxBlockEntity(
 
     /** 创造模式破坏时由方块临时关闭掉落。 */
     var shouldDropOnBreak = true
+
+    override fun preRemoveSideEffects(pos: BlockPos, state: BlockState) {
+        // Keep contents in one packed block item, as a shulker box does.
+        val level = world as? net.minecraft.server.level.ServerLevel ?: return
+        if (!shouldDropOnBreak) return
+        val stack = ItemStack(state.block.asItem())
+        val saved = saveWithFullMetadata(level.registryAccess())
+        if (!saved.isEmpty) {
+            stack.orCreateNbt = stack.orCreateNbt.apply { put("BlockEntityTag", saved) }
+        }
+        net.minecraft.world.level.block.Block.popResource(level, pos, stack)
+    }
 
     /** 获取物品栏大小 */
     override fun getContainerSize(): Int = inventory.size
@@ -190,7 +208,7 @@ class StorageBoxBlockEntity(
         setChanged()
     }
 
-    // ========== ExtendedScreenHandlerFactory<FriendlyByteBuf> 实现 ==========
+    // ========== ExtendedMenuProvider<FriendlyByteBuf> 实现 ==========
 
     /** 创建菜单标题 */
     override fun getDisplayName(): Component {
@@ -199,7 +217,7 @@ class StorageBoxBlockEntity(
     }
 
     /** 创建 AbstractContainerMenu */
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
         return StorageBoxScreenHandler.create(syncId, playerInventory, this)
     }
 
@@ -214,24 +232,24 @@ class StorageBoxBlockEntity(
         super.saveAdditional(nbt, lookup)
         // 保存物品栏到 NBT
         val inventoryNbt = CompoundTag()
-        ContainerHelper.saveAllItems(inventoryNbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(inventoryNbt, inventory, lookup)
         nbt.put(INVENTORY_KEY, inventoryNbt)
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         // 从 NBT 读取物品栏
-        val inventoryNbt = nbt.getCompound(INVENTORY_KEY)
+        val inventoryNbt = nbt.getCompoundOrEmpty(INVENTORY_KEY)
         if (inventoryNbt.size() == 0) {
             // 兼容旧格式（直接存储在 Items 键）
-            val itemsNbt = nbt.getList(ITEMS_KEY, 10)
+            val itemsNbt = nbt.getListOrEmpty(ITEMS_KEY)
             if (itemsNbt.size != 0) {
                 inventory = createInventory()
-                ContainerHelper.loadAllItems(inventoryNbt, inventory, lookup)
+                ContainerHelper26.loadAllItems(nbt, inventory, lookup)
             }
         } else {
             inventory = createInventory()
-            ContainerHelper.loadAllItems(inventoryNbt, inventory, lookup)
+            ContainerHelper26.loadAllItems(inventoryNbt, inventory, lookup)
         }
     }
 }

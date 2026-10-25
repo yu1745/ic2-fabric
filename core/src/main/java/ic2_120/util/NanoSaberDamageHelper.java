@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * 纳米剑对穿戴纳米护甲（且未穿戴量子护甲）的玩家使用可无视护甲的伤害类型。
@@ -24,7 +24,7 @@ public final class NanoSaberDamageHelper {
     private NanoSaberDamageHelper() {}
 
     public static final ResourceKey<DamageType> NANO_SABER_ARMOR_PIERCE_KEY =
-        ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "nano_saber_armor_pierce"));
+        ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.fromNamespaceAndPath("ic2_120", "nano_saber_armor_pierce"));
 
     public static boolean isNanoSaberArmorPierceDamage(DamageSource source) {
         return source.is(NANO_SABER_ARMOR_PIERCE_KEY);
@@ -58,8 +58,8 @@ public final class NanoSaberDamageHelper {
         Player attacker = (Player) original.getEntity();
         ServerLevel world = (ServerLevel) victim.level();
         Holder<DamageType> entry = world.registryAccess()
-            .registryOrThrow(Registries.DAMAGE_TYPE)
-            .getHolder(NANO_SABER_ARMOR_PIERCE_KEY)
+            .lookupOrThrow(Registries.DAMAGE_TYPE)
+            .get(NANO_SABER_ARMOR_PIERCE_KEY)
             .orElseThrow();
         return new DamageSource(entry, attacker, attacker);
     }

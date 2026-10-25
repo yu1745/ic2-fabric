@@ -1,4 +1,13 @@
 package ic2_120.content.block.nuclear
+import ic2_120.compat.getUUID
+import ic2_120.compat.putUUID
+import ic2_120.compat.hasUUID
+
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.LegacyBlockEntity26
+
+import ic2_120.compat.displayClientMessage
 
 import net.minecraft.core.registries.BuiltInRegistries
 
@@ -45,7 +54,7 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import org.slf4j.LoggerFactory
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -68,14 +77,14 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.world.phys.AABB
 // import net.minecraft.core.particles.ParticleTypes
@@ -97,8 +106,8 @@ class NuclearReactorBlockEntity(
     type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, ITieredMachine, IReactor,
-    ExtendedScreenHandlerFactory<FriendlyByteBuf>, IOwned {
+) : LegacyBlockEntity26(type, pos, state), Container, IRoutedSidedInventory, IGenerator, ITieredMachine, IReactor,
+    ExtendedMenuProvider<FriendlyByteBuf>, IOwned {
 
     override val tier: Int = NuclearReactorSync.REACTOR_TIER
 
@@ -138,7 +147,7 @@ class NuclearReactorBlockEntity(
     private var debugHeatRun: Boolean = false
     private var debugSlotX: Int = -1
     private var debugSlotY: Int = -1
-    private var debugComponentId: ResourceLocation? = null
+    private var debugComponentId: Identifier? = null
 
     private var cycleAddHeatTotal: Int = 0
     private var cycleSetHeatDeltaTotal: Int = 0
@@ -404,14 +413,14 @@ class NuclearReactorBlockEntity(
         buf.writeVarInt(lockedSlots.size)
         for ((slot, item) in lockedSlots) {
             buf.writeVarInt(slot)
-            buf.writeResourceLocation(BuiltInRegistries.ITEM.getKey(item))
+            buf.writeIdentifier(BuiltInRegistries.ITEM.getKey(item))
         }
         return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.nuclear_reactor")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         NuclearReactorScreenHandler(
             syncId,
             playerInventory,
@@ -426,7 +435,7 @@ class NuclearReactorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         // 从 NBT 加载后强制封顶：防止旧数据遗留下来的堆叠 > 1
         for (i in 0 until minOf(inventory.size, MAX_SLOTS)) {
             val st = inventory[i]
@@ -436,36 +445,36 @@ class NuclearReactorBlockEntity(
             }
         }
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(NuclearReactorSync.NBT_ENERGY_STORED).coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(NuclearReactorSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.temperature = nbt.getInt(NuclearReactorSync.NBT_HEAT_STORED).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
-        tickOffset = if (nbt.contains("TickOffset")) nbt.getInt("TickOffset").coerceIn(0, 19) else -1
-        pendingEnergyOutput = nbt.getLong("PendingEnergyOutput").coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
+        sync.temperature = nbt.getIntOr(NuclearReactorSync.NBT_HEAT_STORED, 0).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+        tickOffset = if (nbt.contains("TickOffset")) nbt.getIntOr("TickOffset", 0).coerceIn(0, 19) else -1
+        pendingEnergyOutput = nbt.getLongOr("PendingEnergyOutput", 0L).coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
 
         // 读取热模式和流体数据
-        thermalModeCache = nbt.getBoolean("ThermalMode")
-        lastModeCheckTick = nbt.getLong("LastModeCheckTick")
+        thermalModeCache = nbt.getBooleanOr("ThermalMode", false)
+        lastModeCheckTick = nbt.getLongOr("LastModeCheckTick", 0L)
 
         // 读取流体储罐
         if (nbt.contains("InputCoolant")) {
-            inputTank.variant = decodeFluidVariant(nbt.getCompound("InputCoolant"))
+            inputTank.variant = decodeFluidVariant(nbt.getCompoundOrEmpty("InputCoolant"))
         }
-        inputTank.amount = nbt.getLong("InputCoolantAmount")
+        inputTank.amount = nbt.getLongOr("InputCoolantAmount", 0L)
 
         if (nbt.contains("OutputHotCoolant")) {
-            outputTank.variant = decodeFluidVariant(nbt.getCompound("OutputHotCoolant"))
+            outputTank.variant = decodeFluidVariant(nbt.getCompoundOrEmpty("OutputHotCoolant"))
         }
-        outputTank.amount = nbt.getLong("OutputHotCoolantAmount")
+        outputTank.amount = nbt.getLongOr("OutputHotCoolantAmount", 0L)
         ownerUuid = if (nbt.hasUUID("OwnerUUID")) nbt.getUUID("OwnerUUID") else null
 
         // 读取布局锁定数据
-        layoutLocked = nbt.getBoolean("LayoutLocked")
+        layoutLocked = nbt.getBooleanOr("LayoutLocked", false)
         lockedSlots.clear()
         if (nbt.contains("LockedSlots")) {
-            val tag = nbt.getCompound("LockedSlots")
-            for (key in tag.allKeys) {
+            val tag = nbt.getCompoundOrEmpty("LockedSlots")
+            for (key in tag.keySet()) {
                 val slot = key.toInt()
-                val item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(tag.getString(key)))
+                val item = BuiltInRegistries.ITEM.getValue(Identifier.parse(tag.getStringOr(key, "")))
                 lockedSlots[slot] = item
             }
         }
@@ -473,7 +482,7 @@ class NuclearReactorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NuclearReactorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NuclearReactorSync.NBT_HEAT_STORED, sync.temperature)
@@ -1642,16 +1651,16 @@ class NuclearReactorBlockEntity(
     }
 
     private fun createNuclearHeatDamageSource(world: net.minecraft.server.level.ServerLevel): net.minecraft.world.damagesource.DamageSource {
-        val registry = world.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE)
+        val registry = world.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE)
         val key = net.minecraft.resources.ResourceKey.create(
             net.minecraft.core.registries.Registries.DAMAGE_TYPE,
-            ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "nuclear_heat")
+            Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "nuclear_heat")
         )
-        val entry = registry.getHolder(key).orElse(null)
-            ?: registry.getHolder(
+        val entry = registry.get(key).orElse(null)
+            ?: registry.get(
                 net.minecraft.resources.ResourceKey.create(
                     net.minecraft.core.registries.Registries.DAMAGE_TYPE,
-                    ResourceLocation.fromNamespaceAndPath("minecraft", "lava")
+                    Identifier.fromNamespaceAndPath("minecraft", "lava")
                 )
             ).orElseThrow()
         return net.minecraft.world.damagesource.DamageSource(entry)

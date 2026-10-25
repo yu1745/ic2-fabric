@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.recipeManager
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -19,8 +24,7 @@ import ic2_120.content.sync.IronFurnaceSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.registry.FuelRegistry
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
@@ -57,7 +61,7 @@ class IronFurnaceBlockEntity(
     type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(type, pos, state), Container, IRoutedSidedInventory, ExtendedMenuProvider<FriendlyByteBuf> {
 
     private val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = IronFurnaceBlock.ACTIVE
 
@@ -136,22 +140,22 @@ class IronFurnaceBlockEntity(
     override fun getDisplayName(): Component =
         Component.translatable("block.ic2_120.iron_furnace")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         IronFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.burnTime = nbt.getInt(IronFurnaceSync.NBT_BURN_TIME)
-        sync.totalBurnTime = nbt.getInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME)
-        sync.cookTime = nbt.getInt(IronFurnaceSync.NBT_COOK_TIME)
-        storedExperience = nbt.getFloat(FurnaceExperienceHelper.NBT_EXPERIENCE)
+        sync.burnTime = nbt.getIntOr(IronFurnaceSync.NBT_BURN_TIME, 0)
+        sync.totalBurnTime = nbt.getIntOr(IronFurnaceSync.NBT_TOTAL_BURN_TIME, 0)
+        sync.cookTime = nbt.getIntOr(IronFurnaceSync.NBT_COOK_TIME, 0)
+        storedExperience = nbt.getFloatOr(FurnaceExperienceHelper.NBT_EXPERIENCE, 0f)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt(IronFurnaceSync.NBT_BURN_TIME, sync.burnTime)
         nbt.putInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME, sync.totalBurnTime)
@@ -172,7 +176,7 @@ class IronFurnaceBlockEntity(
         // 检查输出槽是否可以接收物品
         val canAcceptOutput = if (hasRecipe) {
             val recipe = smeltingRecipeFor(inputItem, world) ?: return
-            val result = recipe.getResultItem(world.registryAccess())
+            val result = recipe.assemble(net.minecraft.world.item.crafting.SingleRecipeInput(inputItem))
             outputItem.isEmpty ||
                 (ItemStack.isSameItem(outputItem, result) &&
                  outputItem.count + result.count <= result.maxStackSize)
@@ -186,7 +190,7 @@ class IronFurnaceBlockEntity(
             if (fuelTicks > 0) {
                 sync.totalBurnTime = fuelTicks
                 sync.burnTime = fuelTicks
-                val remainder = fuelItem.item.getRecipeRemainder(fuelItem)
+                val remainder = fuelItem.item.craftingRemainder?.create() ?: ItemStack.EMPTY
                 fuelItem.shrink(1)
                 if (fuelItem.isEmpty && !remainder.isEmpty) {
                     setItem(SLOT_FUEL, remainder.copy())
@@ -202,7 +206,7 @@ class IronFurnaceBlockEntity(
             // 烧制完成
             if (sync.cookTime >= IronFurnaceSync.COOK_TIME_MAX) {
                 val recipe = smeltingRecipeFor(inputItem, world) ?: return
-                val result = recipe.getResultItem(world.registryAccess()).copy()
+                val result = recipe.assemble(net.minecraft.world.item.crafting.SingleRecipeInput(inputItem)).copy()
 
                 inputItem.shrink(1)
                 if (outputItem.isEmpty) {
@@ -251,7 +255,7 @@ class IronFurnaceBlockEntity(
         }
 
         // 获取原版熔炉燃烧时间
-        val furnaceTicks = net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.item, 0) ?: return 0
+        val furnaceTicks = world?.fuelValues()?.burnDuration(stack) ?: return 0
         if (furnaceTicks <= 0) return 0
 
         // 应用铁炉燃料倍数（1.25倍），使煤炭可烧制 10 个物品

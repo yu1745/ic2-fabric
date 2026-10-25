@@ -2,19 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "P": {
-      "item": "ic2_120:rubber_planks"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    }
+    "P": "ic2_120:rubber_planks",
+    "S": "minecraft:stick"
   },
   "pattern": [
     "SPS",
     "SPS"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:rubber_fence_gate"
   }
 }

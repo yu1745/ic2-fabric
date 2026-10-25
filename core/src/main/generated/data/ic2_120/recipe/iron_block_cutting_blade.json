@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "P": {
-      "item": "ic2_120:dense_iron_plate"
-    },
-    "S": {
-      "item": "minecraft:stone"
-    }
+    "P": "ic2_120:dense_iron_plate",
+    "S": "minecraft:stone"
   },
   "pattern": [
     "PPP",
@@ -15,7 +10,6 @@
     "PPP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:iron_block_cutting_blade"
   }
 }

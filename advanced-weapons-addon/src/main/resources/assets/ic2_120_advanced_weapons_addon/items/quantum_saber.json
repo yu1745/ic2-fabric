@@ -1,0 +1,26 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "ic2_120_advanced_weapons_addon:quantum_saber_active",
+    "entries": [
+      {
+        "threshold": 0.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120_advanced_weapons_addon:item/quantum_saber/inactive"
+        }
+      },
+      {
+        "threshold": 1.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120_advanced_weapons_addon:item/quantum_saber/active"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "ic2_120_advanced_weapons_addon:item/quantum_saber"
+    }
+  }
+}

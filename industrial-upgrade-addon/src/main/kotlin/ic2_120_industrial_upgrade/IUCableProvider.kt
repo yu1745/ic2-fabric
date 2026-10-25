@@ -27,18 +27,26 @@ import ic2_120_industrial_upgrade.content.block.UniversalCableBlock
 class IUCableProvider : CableProvider {
     override fun registerCables(): List<BaseCableBlock> {
         val modId = IC2IndustrialUpgrade.MOD_ID
+        fun register(name: String, factory: () -> BaseCableBlock): BaseCableBlock {
+            val id = net.minecraft.resources.Identifier.fromNamespaceAndPath(modId, name)
+            ic2_120.registry.BlockConstructionId26.CURRENT.set(
+                net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.BLOCK, id)
+            )
+            val block = try { factory() } finally { ic2_120.registry.BlockConstructionId26.CURRENT.remove() }
+            return ClassScanner.registerCableBlock(modId, name, block, CreativeTab.INDUSTRIAL_UPGRADE, "cable")
+        }
         return listOf(
-            ClassScanner.registerCableBlock(modId, "spectral_cable", SpectralCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "proton_cable", ProtonCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "singular_cable", SingularCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "mythical_cable", MythicalCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "quantum_cable", QuantumCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "photonic_cable", PhotonicCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "neutron_cable", NeutronCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "perfect_cable", PerfectCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "universal_cable", UniversalCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "diffractive_cable", DiffractiveCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
-            ClassScanner.registerCableBlock(modId, "infinity_cable", InfinityCableBlock(), CreativeTab.INDUSTRIAL_UPGRADE, "cable"),
+            register("spectral_cable") { SpectralCableBlock() },
+            register("proton_cable") { ProtonCableBlock() },
+            register("singular_cable") { SingularCableBlock() },
+            register("mythical_cable") { MythicalCableBlock() },
+            register("quantum_cable") { QuantumCableBlock() },
+            register("photonic_cable") { PhotonicCableBlock() },
+            register("neutron_cable") { NeutronCableBlock() },
+            register("perfect_cable") { PerfectCableBlock() },
+            register("universal_cable") { UniversalCableBlock() },
+            register("diffractive_cable") { DiffractiveCableBlock() },
+            register("infinity_cable") { InfinityCableBlock() },
         )
     }
 }

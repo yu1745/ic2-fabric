@@ -1,5 +1,6 @@
 package ic2_120.mixin;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.PathfinderMob;
@@ -26,7 +27,7 @@ public interface PathAwareEntityMixin {
         at = @At("HEAD"),
         cancellable = true
     )
-    private static void ic2$skipLeashPullingForKineticGenerator(Entity entity, CallbackInfo ci) {
+    private static void ic2$skipLeashPullingForKineticGenerator(ServerLevel level, Entity entity, CallbackInfo ci) {
         if (!(entity instanceof PathfinderMob self)) {
             return;
         }
@@ -38,7 +39,7 @@ public interface PathAwareEntityMixin {
             // 兜底：距离过远时断开拴绳
             float distance = self.distanceTo(holdingEntity);
             if (!self.isAlive() || !holdingEntity.isAlive() || distance > 20.0F) {
-                self.dropLeash(true, true);
+                self.dropLeash();
             }
             ci.cancel();
         }

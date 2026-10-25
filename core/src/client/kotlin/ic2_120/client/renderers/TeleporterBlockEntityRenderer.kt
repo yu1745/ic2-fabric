@@ -1,16 +1,14 @@
 package ic2_120.client.renderers
 
 import ic2_120.content.block.machines.TeleporterBlockEntity
-import net.minecraft.client.renderer.LightTexture
+import net.minecraft.util.LightCoordsUtil
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes as RenderType
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.entity.Entity
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 import kotlin.math.PI
@@ -20,10 +18,10 @@ import kotlin.math.sin
 
 class TeleporterBlockEntityRenderer(
     context: BlockEntityRendererProvider.Context
-) : BlockEntityRenderer<TeleporterBlockEntity> {
+) : LegacyBlockEntityRenderer26<TeleporterBlockEntity>() {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.withDefaultNamespace("textures/misc/white.png")
         private const val SEGMENTS = 36
         private data class RenderCache(
             var lastProgress: Float = 0f,
@@ -40,7 +38,7 @@ class TeleporterBlockEntityRenderer(
         val ignored = context
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: TeleporterBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
@@ -118,7 +116,7 @@ class TeleporterBlockEntityRenderer(
         )
 
         val vc = vertexConsumers.getBuffer(RenderType.entityTranslucent(WHITE_TEXTURE))
-        val fullLight = LightTexture.FULL_BRIGHT
+        val fullLight = LightCoordsUtil.FULL_BRIGHT
 
         drawRingBand(matrices, vc, fullLight, overlay, radiusOuter, radiusInner, ringY, 80, 235, 255, alpha)
         drawRingBand(matrices, vc, fullLight, overlay, radiusOuter * 0.68f, radiusInner * 0.58f, ringY + 0.03f, 120, 250, 255, alpha - 20)
@@ -236,5 +234,5 @@ class TeleporterBlockEntityRenderer(
             
     }
 
-    override fun shouldRenderOffScreen(blockEntity: TeleporterBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 }

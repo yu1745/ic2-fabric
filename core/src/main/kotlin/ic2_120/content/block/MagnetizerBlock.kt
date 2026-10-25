@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -77,7 +79,7 @@ class MagnetizerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         world: Level,
         pos: BlockPos,
         sourceBlock: net.minecraft.world.level.block.Block,
-        sourcePos: BlockPos,
+        orientation: net.minecraft.world.level.redstone.Orientation?,
         notify: Boolean
     ) {
         if (!world.isClient) {
@@ -86,7 +88,7 @@ class MagnetizerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
                 world.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.POWERED, powered))
             }
         }
-        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
+        super.neighborChanged(state, world, pos, sourceBlock, orientation, notify)
     }
 
     companion object {
@@ -97,7 +99,7 @@ class MagnetizerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val machine = MachineCasingBlock::class.item()
             val ironFence = IronFenceBlock::class.item()
             if (machine != Items.AIR && ironFence != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MagnetizerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MagnetizerBlock::class.item(), 1)
                     .pattern("RIR")
                     .pattern("RMR")
                     .pattern("RIR")

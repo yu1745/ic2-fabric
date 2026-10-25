@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -32,7 +34,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import ic2_120.registry.id
@@ -89,7 +91,7 @@ class IronFurnaceBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         fun generateRecipes(exporter: RecipeOutput) {
             val ironPlate = ic2_120.content.item.IronPlate::class.instance()
             if (ironPlate != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronFurnaceBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IronFurnaceBlock::class.item(), 1)
                     .pattern(" I ").pattern("IFI").pattern("I I")
                     .define('I', ironPlate).define('F', Items.FURNACE)
                     .unlockedBy(getHasName(ironPlate), has(ironPlate))

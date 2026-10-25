@@ -1,8 +1,10 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.orCreateNbt
@@ -77,22 +79,25 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
         return InteractionResult.SUCCESS
     }
 
-    @Environment(EnvType.CLIENT)
-    override fun appendHoverText(
-        stack: ItemStack,
-        context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
-        type: TooltipFlag
-    ) {
-        super.appendHoverText(stack, context, tooltip, type)
-        // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
-        val blockEntityTag = stack.orCreateNbt.getCompound("BlockEntityTag")
-        val templateCount = blockEntityTag.getList("UuTemplates", 10).size
-        tooltip.add(Component.literal("模板数量: $templateCount").withStyle(ChatFormatting.GRAY))
+    class PatternStorageBlockItem(block: net.minecraft.world.level.block.Block, properties: Item.Properties) : net.minecraft.world.item.BlockItem(block, properties) {
+        @Environment(EnvType.CLIENT)
+        override fun appendHoverText(
+            stack: ItemStack,
+            context: Item.TooltipContext,
+            display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
+            type: TooltipFlag
+        ) {
+            val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+            super.appendHoverText(stack, context, display, consumer, type)
+            // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
+            val blockEntityTag = stack.orCreateNbt.getCompoundOrEmpty("BlockEntityTag")
+            val templateCount = blockEntityTag.getList("UuTemplates").orElse(net.minecraft.nbt.ListTag()).size
+            tooltip.add(Component.literal("模板数量: $templateCount").withStyle(ChatFormatting.GRAY))
+        }
     }
 
-    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState): ItemStack {
-        val itemStack = super.getCloneItemStack(world, pos, state)
+    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState, includeData: Boolean): ItemStack {
+        val itemStack = super.getCloneItemStack(world, pos, state, includeData)
         val blockEntity = (world as? Level)?.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
         val provider = blockEntity.level?.registryAccess() ?: return itemStack
         val nbt = blockEntity.saveWithoutMetadata(provider)
@@ -121,7 +126,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
             val miningLaser = MiningLaserItem::class.instance()
             val advancedCircuit = AdvancedCircuit::class.instance()
             if (advancedMachine != Items.AIR && crystalMemory != Items.AIR && reinforcedStone != Items.AIR && miningLaser != Items.AIR && advancedCircuit != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PatternStorageBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, PatternStorageBlock::class.item(), 1)
                     .pattern("SSS")
                     .pattern("CMC")
                     .pattern("LAL")

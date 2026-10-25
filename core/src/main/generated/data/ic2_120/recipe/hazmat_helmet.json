@@ -2,18 +2,10 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "D": {
-      "item": "minecraft:orange_dye"
-    },
-    "G": {
-      "item": "minecraft:glass"
-    },
-    "I": {
-      "item": "minecraft:iron_bars"
-    },
-    "R": {
-      "tag": "ic2_120:compat/rubber"
-    }
+    "D": "minecraft:orange_dye",
+    "G": "minecraft:glass",
+    "I": "minecraft:iron_bars",
+    "R": "#ic2_120:compat/rubber"
   },
   "pattern": [
     " D ",
@@ -21,7 +13,6 @@
     "RIR"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:hazmat_helmet"
   }
 }

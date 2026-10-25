@@ -1,22 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:circuit"
-    },
-    "E": {
-      "item": "ic2_120:empty_cell"
-    },
-    "H": {
-      "item": "minecraft:chest"
-    },
-    "M": {
-      "item": "ic2_120:machine"
-    },
-    "W": {
-      "item": "minecraft:wheat"
-    }
+    "C": "ic2_120:circuit",
+    "E": "ic2_120:empty_cell",
+    "H": "minecraft:chest",
+    "M": "ic2_120:machine",
+    "W": "minecraft:wheat"
   },
   "pattern": [
     "CHC",
@@ -24,7 +13,6 @@
     "WWW"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:animalmatron"
   }
 }

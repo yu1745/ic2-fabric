@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "B": {
-      "item": "minecraft:iron_bars"
-    },
-    "T": {
-      "tag": "ic2_120:compat/plates/tin"
-    },
-    "V": {
-      "item": "ic2_120:heat_vent"
-    }
+    "B": "minecraft:iron_bars",
+    "T": "#ic2_120:compat/plates/tin",
+    "V": "ic2_120:heat_vent"
   },
   "pattern": [
     "TBT",
@@ -18,7 +11,6 @@
     "TBT"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:component_heat_vent"
   }
 }

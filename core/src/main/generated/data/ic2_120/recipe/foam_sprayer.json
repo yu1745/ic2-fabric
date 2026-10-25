@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "F": {
-      "item": "ic2_120:empty_cell"
-    },
-    "I": {
-      "item": "ic2_120:iron_casing"
-    }
+    "F": "ic2_120:empty_cell",
+    "I": "ic2_120:iron_casing"
   },
   "pattern": [
     "I  ",
@@ -15,7 +10,6 @@
     " FI"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:foam_sprayer"
   }
 }

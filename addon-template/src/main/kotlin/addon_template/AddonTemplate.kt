@@ -3,14 +3,14 @@ package addon_template
 import addon_template.content.tab.ModTabs
 import ic2_120.registry.ClassScanner
 import net.fabricmc.api.ModInitializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 
 object AddonTemplate : ModInitializer {
     const val MOD_ID = "addon_template"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
-    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
+    fun id(path: String): Identifier = Identifier.fromNamespaceAndPath(MOD_ID, path)
 
     override fun onInitialize() {
         ClassScanner.scanAndRegister(

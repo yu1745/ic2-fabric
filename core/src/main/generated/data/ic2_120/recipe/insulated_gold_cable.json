@@ -1,16 +1,10 @@
 {
   "type": "minecraft:crafting_shapeless",
-  "category": "misc",
   "ingredients": [
-    {
-      "item": "ic2_120:gold_cable"
-    },
-    {
-      "tag": "ic2_120:compat/rubber"
-    }
+    "ic2_120:gold_cable",
+    "#ic2_120:compat/rubber"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:insulated_gold_cable"
   }
 }

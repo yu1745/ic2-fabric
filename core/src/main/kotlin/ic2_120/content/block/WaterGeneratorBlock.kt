@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -88,12 +90,12 @@ class WaterGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
         fun generateRecipes(exporter: RecipeOutput) {
             val generator = GeneratorBlock::class.item()
             if (generator != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WaterGeneratorBlock::class.item(), 2)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, WaterGeneratorBlock::class.item(), 2)
                     .pattern("SWS")
                     .pattern("WGW")
                     .pattern("SWS")
                     .define('S', Items.STICK)
-                    .define('W', ItemTags.PLANKS)
+                    .define('W', ic2_120.compat.tagIngredient(ItemTags.PLANKS))
                     .define('G', generator)
                     .unlockedBy(getHasName(generator), has(generator))
                     .save(exporter, WaterGeneratorBlock::class.id())

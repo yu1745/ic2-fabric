@@ -4,7 +4,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -19,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemEntity.class)
 public abstract class CoalDustWaterTransformMixin {
     @Unique
-    private static final ResourceLocation IC2_COAL_DUST = ResourceLocation.fromNamespaceAndPath("ic2_120", "coal_dust");
+    private static final Identifier IC2_COAL_DUST = Identifier.fromNamespaceAndPath("ic2_120", "coal_dust");
 
     @Unique
-    private static final ResourceLocation IC2_COAL_FUEL_DUST = ResourceLocation.fromNamespaceAndPath("ic2_120", "coal_fuel_dust");
+    private static final Identifier IC2_COAL_FUEL_DUST = Identifier.fromNamespaceAndPath("ic2_120", "coal_fuel_dust");
 
     @Unique
     private int ic2$coalWaterTransformTicks;
@@ -38,12 +38,12 @@ public abstract class CoalDustWaterTransformMixin {
         ItemEntity entity = (ItemEntity) (Object) this;
         Level world = entity.level();
 
-        if (world.isClientSide || entity.isRemoved()) {
+        if (world.isClientSide() || entity.isRemoved()) {
             return;
         }
 
         ItemStack stack = this.getStack();
-        if (stack.isEmpty() || stack.getItem() != BuiltInRegistries.ITEM.get(IC2_COAL_DUST)) {
+        if (stack.isEmpty() || stack.getItem() != BuiltInRegistries.ITEM.getValue(IC2_COAL_DUST)) {
             this.ic2$coalWaterTransformTicks = 0;
             return;
         }
@@ -63,7 +63,7 @@ public abstract class CoalDustWaterTransformMixin {
         }
         this.ic2$coalWaterTransformTicks = 0;
 
-        ItemStack output = new ItemStack(BuiltInRegistries.ITEM.get(IC2_COAL_FUEL_DUST));
+        ItemStack output = new ItemStack(BuiltInRegistries.ITEM.getValue(IC2_COAL_FUEL_DUST));
         stack.shrink(1);
         if (stack.isEmpty()) {
             this.setStack(output);

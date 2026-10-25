@@ -56,7 +56,7 @@ class CreativeGeneratorBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(CreativeGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, CreativeGeneratorSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(CreativeGeneratorSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, CreativeGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
     }
 

@@ -9,7 +9,6 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.client.Minecraft
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionResultHolder
 
 /**
  * 采矿镭射枪模式切换：
@@ -27,10 +26,10 @@ object MiningLaserModeHandler {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getItemInHand(hand)
             if (!world.isClientSide || stack.item !is MiningLaserItem || !ModeKeybinds.isAltDown()) {
-                return@register InteractionResultHolder.pass(stack)
+                return@register InteractionResult.PASS
             }
             sendToggleOnceThisTick()
-            return@register InteractionResultHolder.success(stack)
+            return@register InteractionResult.SUCCESS.heldItemTransformedTo(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->

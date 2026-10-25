@@ -13,7 +13,7 @@ class WaterRotorStatePacket(
     override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Type<WaterRotorStatePacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "water_rotor_state"))
+        val ID = CustomPacketPayload.Type<WaterRotorStatePacket>(net.minecraft.resources.Identifier.fromNamespaceAndPath("ic2_120", "water_rotor_state"))
         val CODEC: StreamCodec<FriendlyByteBuf, WaterRotorStatePacket> = StreamCodec.of(
             { buf, value -> write(value, buf) },
             { read(it) }

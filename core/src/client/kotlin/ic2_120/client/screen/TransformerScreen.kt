@@ -3,13 +3,13 @@ package ic2_120.client.screen
 import ic2_120.content.screen.TransformerScreenHandler
 import ic2_120.content.sync.TransformerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 /**
@@ -23,11 +23,9 @@ class TransformerScreen(
     val handler: TransformerScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<TransformerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<TransformerScreenHandler>(handler, playerInventory, title, 176, 219) {
 
     init {
-        imageWidth = 176
-        imageHeight = 219
         titleLabelY = 4
     }
 
@@ -104,8 +102,8 @@ class TransformerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guitransfomer.png")
-        private val WRENCH = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/tool/wrench.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guitransfomer.png")
+        private val WRENCH = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/tool/wrench.png")
         private const val INPUT_OUTPUT_COLOR = 0xFF90EE90.toInt()
     }
 }

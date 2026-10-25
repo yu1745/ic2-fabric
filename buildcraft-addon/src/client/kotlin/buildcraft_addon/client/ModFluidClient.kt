@@ -2,10 +2,12 @@ package buildcraft_addon.client
 
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.fluid.ModFluids
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderingRegistry
+import net.minecraft.client.renderer.block.FluidModel
+import net.minecraft.client.resources.model.sprite.Material
+import net.minecraft.client.color.block.BlockTintSource
 import net.minecraft.world.level.material.Fluid
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * BC 流体客户端渲染注册。
@@ -14,8 +16,8 @@ import net.minecraft.resources.ResourceLocation
  */
 object ModFluidClient {
 
-    private val STILL_TEX = ResourceLocation.fromNamespaceAndPath("ic2", "block/fluid/fluid_still")
-    private val FLOW_TEX = ResourceLocation.fromNamespaceAndPath("ic2", "block/fluid/fluid_flow")
+    private val STILL_TEX = Identifier.fromNamespaceAndPath("ic2", "block/fluid/fluid_still")
+    private val FLOW_TEX = Identifier.fromNamespaceAndPath("ic2", "block/fluid/fluid_flow")
 
     fun register() {
         val fluids = listOf(
@@ -35,10 +37,9 @@ object ModFluidClient {
             val tint = ModFluids.fluidTintColors[still] ?: continue
 
             // 注册流体渲染（含染色）
-            FluidRenderHandlerRegistry.INSTANCE.register(
-                still, flowing,
-                SimpleFluidRenderHandler(STILL_TEX, FLOW_TEX, tint)
-            )
+            FluidRenderingRegistry.register(still, flowing,
+                FluidModel.Unbaked(Material(STILL_TEX).withForceTranslucent(true),
+                    Material(FLOW_TEX).withForceTranslucent(true), null, BlockTintSource { tint }))
         }
 
         // 反射注入 IC2 的 fluidTintColors，让 IC2 通用流体单元能取到颜色

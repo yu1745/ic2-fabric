@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.evaluateNullable
+
 import ic2_120.compat.world
 
 import ic2_120.compat.stack
@@ -27,7 +29,7 @@ import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(names = ["miner", "advanced_miner"])
@@ -191,9 +193,9 @@ class MinerScreenHandler(
         return stack
     }
 
-    override fun clicked(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
+    override fun clicked(slotIndex: Int, button: Int, actionType: ContainerInput, player: Player) {
         val pipeSlotIndex = beSlotToHandlerIndex[BaseMinerBlockEntity.SLOT_PIPE]
-        if (slotIndex == pipeSlotIndex && actionType == ClickType.PICKUP) {
+        if (slotIndex == pipeSlotIndex && actionType == ContainerInput.PICKUP) {
             val miner = getMinerBlockEntity()
             if (miner != null) {
                 val cursor = carried
@@ -218,9 +220,9 @@ class MinerScreenHandler(
     }
 
     private fun getMinerBlockEntity(): BaseMinerBlockEntity? = try {
-        context.evaluate({ world, pos ->
+        context.evaluateNullable { world, pos ->
             if (world.isClient) null else world.getBlockEntity(pos) as? BaseMinerBlockEntity
-        }, null)
+        }
     } catch (_: NullPointerException) {
         null
     }

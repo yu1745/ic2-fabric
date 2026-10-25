@@ -18,7 +18,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.GsonHelper
 
 /**
@@ -37,8 +37,8 @@ import net.minecraft.util.GsonHelper
  * }
  */
 @ModMachineRecipe(id = "centrifuging", recipeClass = CentrifugeRecipe::class)
-object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
-    private fun fromJson(id: ResourceLocation, json: JsonObject): CentrifugeRecipe {
+object CentrifugeRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<CentrifugeRecipe>() {
+    private fun fromJson(id: Identifier, json: JsonObject): CentrifugeRecipe {
         val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
         val inputCount = (if (json.has("input_count")) json.get("input_count").asInt else 1)
         val minHeat = json.get("min_heat").asInt
@@ -48,8 +48,8 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
 
         resultsArray.forEach { element ->
             val resultObj = element.asJsonObject
-            val itemId = ResourceLocation.parse(resultObj.get("item").asString)
-            val item = BuiltInRegistries.ITEM.get(itemId)
+            val itemId = Identifier.parse(resultObj.get("item").asString)
+            val item = BuiltInRegistries.ITEM.getValue(itemId)
             val count = (if (resultObj.has("count")) resultObj.get("count").asInt else 1)
             outputs.add(ItemStack(item, count))
         }
@@ -86,7 +86,14 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
     override fun codec(): MapCodec<CentrifugeRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:centrifuging",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", ic2_120.content.recipes.ingredientJson26(recipe.ingredient))
+            json.addProperty("input_count", recipe.inputCount)
+            json.addProperty("min_heat", recipe.minHeat)
+            json.add("results", com.google.gson.JsonArray().apply {
+                recipe.outputs.forEach { add(ic2_120.content.recipes.stackJson26(it)) }
+            })
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, CentrifugeRecipe> =

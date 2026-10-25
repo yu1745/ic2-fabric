@@ -1,8 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.AbstractReactorComponent
@@ -112,9 +114,9 @@ class HeatVentItem : ReactorHeatVentBase(Item.Properties(), 1000, 6, 0) {
             val plate = IronPlate::class.instance()
             val motor = ElectricMotor::class.instance()
             if (plate != Items.AIR && motor != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, HeatVentItem::class.instance(), 1)
                     .pattern("BIB").pattern("IMI").pattern("BIB")
-                    .define('B', Items.IRON_BARS).define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON)).define('M', motor)
+                    .define('B', Items.IRON_BARS).define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON)).define('M', motor)
                     .unlockedBy(getHasName(plate), has(plate))
                     .save(exporter, HeatVentItem::class.id())
             }
@@ -130,9 +132,9 @@ class ReactorHeatVentItem : ReactorHeatVentBase(Item.Properties(), 1000, 5, 5) {
             val plate = CopperPlate::class.instance()
             val vent = HeatVentItem::class.instance()
             if (plate != Items.AIR && vent != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorHeatVentItem::class.instance(), 1)
                     .pattern("CCC").pattern("CVC").pattern("CCC")
-                    .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER)).define('V', vent)
+                    .define('C', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_COPPER)).define('V', vent)
                     .unlockedBy(getHasName(vent), has(vent))
                     .save(exporter, ReactorHeatVentItem::class.id())
             }
@@ -147,7 +149,7 @@ class AdvancedHeatVentItem : ReactorHeatVentBase(Item.Properties(), 1000, 12, 0)
         fun generateRecipes(exporter: RecipeOutput) {
             val vent = HeatVentItem::class.instance()
             if (vent != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdvancedHeatVentItem::class.instance(), 1)
                     .pattern("IHI").pattern("IDI").pattern("IHI")
                     .define('I', Items.IRON_BARS).define('H', vent).define('D', Items.DIAMOND)
                     .unlockedBy(getHasName(vent), has(vent))
@@ -165,9 +167,9 @@ class OverclockedHeatVentItem : ReactorHeatVentBase(Item.Properties(), 1000, 20,
             val gold = GoldPlate::class.instance()
             val reactorVent = ReactorHeatVentItem::class.instance()
             if (gold != Items.AIR && reactorVent != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, OverclockedHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, OverclockedHeatVentItem::class.instance(), 1)
                     .pattern(" G ").pattern("GRG").pattern(" G ")
-                    .define('G', Ingredient.of(ModTags.Compat.Items.PLATES_GOLD)).define('R', reactorVent)
+                    .define('G', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_GOLD)).define('R', reactorVent)
                     .unlockedBy(getHasName(reactorVent), has(reactorVent))
                     .save(exporter, OverclockedHeatVentItem::class.id())
             }
@@ -219,9 +221,9 @@ class ComponentHeatVentItem(settings: Item.Properties = Item.Properties()) : Abs
             val tin = TinPlate::class.instance()
             val vent = HeatVentItem::class.instance()
             if (tin != Items.AIR && vent != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ComponentHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ComponentHeatVentItem::class.instance(), 1)
                     .pattern("TBT").pattern("BVB").pattern("TBT")
-                    .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN)).define('B', Items.IRON_BARS).define('V', vent)
+                    .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN)).define('B', Items.IRON_BARS).define('V', vent)
                     .unlockedBy(getHasName(vent), has(vent))
                     .save(exporter, ComponentHeatVentItem::class.id())
             }

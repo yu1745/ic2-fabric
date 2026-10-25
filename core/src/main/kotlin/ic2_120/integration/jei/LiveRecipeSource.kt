@@ -1,6 +1,6 @@
 package ic2_120.integration.jei
 
-import net.minecraft.world.item.crafting.RecipeManager
+import net.minecraft.world.item.crafting.RecipeHolder
 
 /**
  * 提供运行时 RecipeManager 的抽象（供 JEI plugin 收集实际加载的配方）。
@@ -12,8 +12,8 @@ import net.minecraft.world.item.crafting.RecipeManager
  * 可覆盖 core + 所有附属命名空间的配方，而不仅限于 core 硬编码的 Entry 列表。
  */
 interface LiveRecipeSource {
-    /** 客户端当前世界的 RecipeManager；level 未就绪时返回 null */
-    fun clientRecipeManager(): RecipeManager?
+    /** 客户端当前世界同步下来的配方；level 未就绪时返回 null。 */
+    fun clientRecipes(): Collection<RecipeHolder<*>>?
 
     companion object {
         @Volatile
@@ -34,5 +34,8 @@ interface LiveRecipeSource {
          */
         @Volatile
         var scheduleOnClientThread: ((() -> Unit) -> Boolean)? = null
+
+        @Volatile
+        var refreshJeiRecipes: (() -> Unit)? = null
     }
 }

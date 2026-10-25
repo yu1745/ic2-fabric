@@ -1,8 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.content.block.DeepslateLeadOreBlock
 import ic2_120.content.block.DeepslateTinOreBlock
@@ -28,20 +30,21 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.registry.annotation.RecipeProvider
 
 private fun offerIngotSmelting(
     exporter: RecipeOutput,
     input: Item,
     output: Item,
-    recipeId: ResourceLocation,
+    recipeId: Identifier,
     experience: Float = 0.1f,
     cookingTime: Int = 200
 ) {
     SimpleCookingRecipeBuilder.smelting(
         Ingredient.of(input),
         RecipeCategory.MISC,
+                net.minecraft.world.item.crafting.CookingBookCategory.MISC,
         output,
         experience,
         cookingTime
@@ -59,24 +62,24 @@ class MixedMetalIngot : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 配方1：铁板 + 青铜板 + 锡板 = 合金锭
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
                 .pattern("III")
                 .pattern("BBB")
                 .pattern("TTT")
-                .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
-                .define('B', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
-                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON))
+                .define('B', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_BRONZE))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                 .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, MixedMetalIngot::class.recipeId("from_plates"))
 
             // 配方2：钢锭 + 青铜锭 + 锡锭 = 合金锭
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
                 .pattern("III")
                 .pattern("BBB")
                 .pattern("TTT")
-                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_STEEL))
-                .define('B', Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE))
-                .define('T', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_STEEL))
+                .define('B', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_BRONZE))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_TIN))
                 .unlockedBy(getHasName(SteelIngot::class.instance()), has(SteelIngot::class.instance()))
                 .save(exporter, MixedMetalIngot::class.recipeId("from_ingots"))
         }
@@ -89,16 +92,16 @@ class LeadIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, LeadIngot::class.instance(), 9)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, LeadIngot::class.instance(), 9)
                 .requires(LeadBlock::class.instance())
                 .unlockedBy(getHasName(LeadBlock::class.instance()), has(LeadBlock::class.instance()))
                 .save(exporter, LeadIngot::class.recipeId("from_block"))
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LeadBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, LeadBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_LEAD))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_LEAD))
                 .unlockedBy(getHasName(LeadIngot::class.instance()), has(LeadIngot::class.instance()))
                 .save(exporter, LeadBlock::class.recipeId("from_ingot"))
 
@@ -142,16 +145,16 @@ class SilverIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SilverIngot::class.instance(), 9)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SilverIngot::class.instance(), 9)
                 .requires(SilverBlock::class.instance())
                 .unlockedBy(getHasName(SilverBlock::class.instance()), has(SilverBlock::class.instance()))
                 .save(exporter, SilverIngot::class.recipeId("from_block"))
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SilverBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SilverBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_SILVER))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_SILVER))
                 .unlockedBy(getHasName(SilverIngot::class.instance()), has(SilverIngot::class.instance()))
                 .save(exporter, SilverBlock::class.recipeId("from_ingot"))
 
@@ -177,16 +180,16 @@ class SteelIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SteelIngot::class.instance(), 9)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SteelIngot::class.instance(), 9)
                 .requires(SteelBlock::class.instance())
                 .unlockedBy(getHasName(SteelBlock::class.instance()), has(SteelBlock::class.instance()))
                 .save(exporter, SteelIngot::class.recipeId("from_block"))
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SteelBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_STEEL))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_STEEL))
                 .unlockedBy(getHasName(SteelIngot::class.instance()), has(SteelIngot::class.instance()))
                 .save(exporter, SteelBlock::class.recipeId("from_ingot"))
         }
@@ -204,16 +207,16 @@ class UraniumIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, UraniumIngot::class.instance(), 9)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, UraniumIngot::class.instance(), 9)
                 .requires(UraniumBlock::class.instance())
                 .unlockedBy(getHasName(UraniumBlock::class.instance()), has(UraniumBlock::class.instance()))
                 .save(exporter, UraniumIngot::class.recipeId("from_block"))
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, UraniumBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, UraniumBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_URANIUM))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_URANIUM))
                 .unlockedBy(getHasName(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
                 .save(exporter, UraniumBlock::class.recipeId("from_ingot"))
 

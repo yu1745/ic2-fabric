@@ -1,5 +1,7 @@
 package buildcraft_addon.content.blockentity
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -12,7 +14,7 @@ import buildcraft_addon.content.screen.IronEngineScreenHandler
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -53,7 +55,7 @@ class IronEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory<FriendlyByteBuf>, IKineticMachinePort {
+) : LegacyBlockEntity26(type, pos, state), ExtendedMenuProvider<FriendlyByteBuf>, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         IronEngineBlockEntity::class.type(), pos, state
@@ -213,7 +215,7 @@ class IronEngineBlockEntity(
         override fun getCount(): Int = 4
     }
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
         return IronEngineScreenHandler(syncId, playerInventory, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
@@ -362,23 +364,23 @@ class IronEngineBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        heat = nbt.getDouble("heat")
-        progress = nbt.getFloat("progress")
-        progressPart = nbt.getInt("progressPart")
-        val dirIdx = nbt.getInt("direction")
+        heat = nbt.getDoubleOr("heat", 0.0)
+        progress = nbt.getFloatOr("progress", 0f)
+        progressPart = nbt.getIntOr("progressPart", 0)
+        val dirIdx = nbt.getIntOr("direction", 0)
         currentDirection = Direction.entries.getOrElse(dirIdx) { Direction.UP }
-        isRedstonePowered = nbt.getBoolean("isRedstonePowered")
-        isBurning = nbt.getBoolean("isBurning")
-        val stageIdx = nbt.getInt("powerStage")
+        isRedstonePowered = nbt.getBooleanOr("isRedstonePowered", false)
+        isBurning = nbt.getBooleanOr("isBurning", false)
+        val stageIdx = nbt.getIntOr("powerStage", 0)
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
-        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
-        fuelAmount = nbt.getInt("fuelAmount")
-        fuelType = nbt.getString("fuelType")
-        coolantAmount = nbt.getInt("coolantAmount")
-        residueAmount = nbt.getInt("residueAmount")
-        currentPowerPerCycle = nbt.getDouble("currentPowerPerCycle")
-        currentTotalBurnTime = nbt.getInt("currentTotalBurnTime")
-        burnTime = nbt.getDouble("burnTime")
-        penaltyCooling = nbt.getInt("penaltyCooling")
+        pendingOutputKu = nbt.getIntOr("pendingOutputKu", 0).coerceAtLeast(0)
+        fuelAmount = nbt.getIntOr("fuelAmount", 0)
+        fuelType = nbt.getStringOr("fuelType", "")
+        coolantAmount = nbt.getIntOr("coolantAmount", 0)
+        residueAmount = nbt.getIntOr("residueAmount", 0)
+        currentPowerPerCycle = nbt.getDoubleOr("currentPowerPerCycle", 0.0)
+        currentTotalBurnTime = nbt.getIntOr("currentTotalBurnTime", 0)
+        burnTime = nbt.getDoubleOr("burnTime", 0.0)
+        penaltyCooling = nbt.getIntOr("penaltyCooling", 0)
     }
 }

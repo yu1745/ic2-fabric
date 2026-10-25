@@ -1,8 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.RecipeProvider
@@ -24,14 +26,14 @@ class Fertilizer : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 两个废料 + 一个骨粉 -> 两个肥料
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, Fertilizer::class.instance(), 2)
                 .requires(Scrap::class.instance(), 2)
                 .requires(Items.BONE_MEAL)
                 .unlockedBy(getHasName(Scrap::class.instance()), has(Scrap::class.instance()))
                 .save(exporter, Fertilizer::class.recipeId("from_scrap_and_bone_meal"))
 
             // 一个肥料 + 两个废料 -> 两个肥料
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, Fertilizer::class.instance(), 2)
                 .requires(Fertilizer::class.instance())
                 .requires(Scrap::class.instance(), 2)
                 .unlockedBy(getHasName(Fertilizer::class.instance()), has(Fertilizer::class.instance()))

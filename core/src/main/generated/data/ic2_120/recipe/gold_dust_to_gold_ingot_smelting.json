@@ -1,11 +1,7 @@
 {
   "type": "minecraft:smelting",
-  "category": "misc",
-  "cookingtime": 200,
   "experience": 0.1,
-  "ingredient": {
-    "tag": "ic2_120:compat/dusts/gold"
-  },
+  "ingredient": "#ic2_120:compat/dusts/gold",
   "result": {
     "id": "minecraft:gold_ingot"
   }

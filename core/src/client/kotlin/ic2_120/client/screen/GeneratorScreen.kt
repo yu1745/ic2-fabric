@@ -6,22 +6,20 @@ import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.screen.GeneratorScreenHandler
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = GeneratorBlock::class)
 class GeneratorScreen(
     val handler: GeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<GeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<GeneratorScreenHandler>(handler, playerInventory, title, 176, 161) {
 
     init {
-        imageWidth = 176
-        imageHeight = 161
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -92,6 +90,6 @@ class GeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guipowergenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guipowergenerator.png")
     }
 }

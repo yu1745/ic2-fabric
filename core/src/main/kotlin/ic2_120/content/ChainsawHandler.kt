@@ -37,7 +37,7 @@ object ChainsawHandler {
             if (world.isClient) return@register InteractionResult.SUCCESS
             if (!consumeUseEnergy(stack, player)) return@register InteractionResult.FAIL
 
-            entity.shear(SoundSource.PLAYERS)
+            entity.shear(world as ServerLevel, SoundSource.PLAYERS, stack)
             InteractionResult.SUCCESS
         }
 

@@ -1,19 +1,10 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "A": {
-      "item": "ic2_120:advanced_circuit"
-    },
-    "C": {
-      "item": "ic2_120:advanced_machine"
-    },
-    "F": {
-      "item": "ic2_120:mfe"
-    },
-    "L": {
-      "item": "ic2_120:lapotron_crystal"
-    }
+    "A": "ic2_120:advanced_circuit",
+    "C": "ic2_120:advanced_machine",
+    "F": "ic2_120:mfe",
+    "L": "ic2_120:lapotron_crystal"
   },
   "pattern": [
     "LAL",
@@ -21,7 +12,6 @@
     "LCL"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:mfsu"
   }
 }

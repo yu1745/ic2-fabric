@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "L": {
-      "item": "ic2_120:lead_plate"
-    },
-    "M": {
-      "item": "ic2_120:machine"
-    }
+    "L": "ic2_120:lead_plate",
+    "M": "ic2_120:machine"
   },
   "pattern": [
     "L L",
@@ -15,7 +10,6 @@
     "L L"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:reactor_chamber"
   }
 }

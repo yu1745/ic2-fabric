@@ -1,22 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "A": {
-      "item": "ic2_120:advanced_machine"
-    },
-    "E": {
-      "item": "ic2_120:electric_motor"
-    },
-    "I": {
-      "item": "minecraft:iron_ingot"
-    },
-    "K": {
-      "item": "ic2_120:coil"
-    },
-    "L": {
-      "item": "ic2_120:mining_laser"
-    }
+    "A": "ic2_120:advanced_machine",
+    "E": "ic2_120:electric_motor",
+    "I": "minecraft:iron_ingot",
+    "K": "ic2_120:coil",
+    "L": "ic2_120:mining_laser"
   },
   "pattern": [
     "KLK",
@@ -24,7 +13,6 @@
     "IEI"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:centrifuge"
   }
 }

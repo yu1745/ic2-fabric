@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "I": {
-      "tag": "ic2_120:compat/plates/iron"
-    },
-    "S": {
-      "item": "ic2_120:triple_reactor_coolant_cell"
-    },
-    "T": {
-      "tag": "ic2_120:compat/plates/tin"
-    }
+    "I": "#ic2_120:compat/plates/iron",
+    "S": "ic2_120:triple_reactor_coolant_cell",
+    "T": "#ic2_120:compat/plates/tin"
   },
   "pattern": [
     "TTT",
@@ -18,7 +11,6 @@
     "TTT"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:sextuple_reactor_coolant_cell"
   }
 }

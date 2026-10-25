@@ -1,22 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:circuit"
-    },
-    "M": {
-      "item": "ic2_120:machine"
-    },
-    "N": {
-      "item": "minecraft:iron_bars"
-    },
-    "P": {
-      "item": "ic2_120:iron_plate"
-    },
-    "S": {
-      "item": "minecraft:shears"
-    }
+    "C": "ic2_120:circuit",
+    "M": "ic2_120:machine",
+    "N": "minecraft:iron_bars",
+    "P": "ic2_120:iron_plate",
+    "S": "minecraft:shears"
   },
   "pattern": [
     "CSC",
@@ -24,7 +13,6 @@
     "PNP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:animal_slaughterer"
   }
 }

@@ -6,6 +6,7 @@ import ic2_120.content.network.ConfigSyncPacket
 import ic2_120.registry.type
 import ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon
 import ic2_120_advanced_solar_addon.client.render.MolecularTransformerBlockEntityRenderer
+import ic2_120_advanced_solar_addon.client.render.MolecularTransformerItemSpecialRenderer
 import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlock
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlockEntity
@@ -13,12 +14,8 @@ import ic2_120_advanced_solar_addon.content.recipe.MTRecipes
 import ic2_120_advanced_solar_addon.integration.jei.Ic2AdvancedSolarAddonJeiPlugin
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.core.BlockPos
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers
 import ic2_120.content.network.ConfigSyncChunkPayload
 
@@ -46,15 +43,7 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         )
         println("[MT-BER] Registration complete")
 
-        // Register item renderer for Molecular Transformer
-        val mtBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "molecular_transformer"))
-        val mtItemEntity = MolecularTransformerBlockEntity(
-            BlockPos.ZERO,
-            mtBlock.defaultBlockState().setValue(MolecularTransformerBlock.ACTIVE, false)
-        )
-        BuiltinItemRendererRegistry.INSTANCE.register(mtBlock.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-            Minecraft.getInstance().blockEntityRenderDispatcher.getRenderer(mtItemEntity)!!.render(mtItemEntity, 1.0f, matrices, vertexConsumers, light, overlay)
-        }
+        MolecularTransformerItemSpecialRenderer.register()
 
         // 注册配置同步接收（分包）
         ClientPlayNetworking.registerGlobalReceiver(ConfigSyncChunkPayload.ID) { payload, _ ->

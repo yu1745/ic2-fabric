@@ -1,3 +1,12 @@
 {
-  "type": "ic2_120:cutting"
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "ic2_120:bronze_block"
+  },
+  "input_count": 1,
+  "material_hardness": 5,
+  "result": {
+    "count": 9,
+    "item": "ic2_120:bronze_plate"
+  }
 }

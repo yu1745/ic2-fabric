@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -86,7 +88,7 @@ class RtHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion(
             val reactorChamber = ReactorChamberBlock::class.item()
             val heatConductor = HeatConductor::class.instance()
             if (ironCasing != Items.AIR && reactorChamber != Items.AIR && heatConductor != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RtHeatGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RtHeatGeneratorBlock::class.item(), 1)
                     .pattern("CCC")
                     .pattern("CRC")
                     .pattern("CHC")

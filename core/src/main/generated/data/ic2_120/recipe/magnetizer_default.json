@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "I": {
-      "item": "ic2_120:iron_fence"
-    },
-    "M": {
-      "item": "ic2_120:machine"
-    },
-    "R": {
-      "item": "minecraft:redstone"
-    }
+    "I": "ic2_120:iron_fence",
+    "M": "ic2_120:machine",
+    "R": "minecraft:redstone"
   },
   "pattern": [
     "RIR",
@@ -18,7 +11,6 @@
     "RIR"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:magnetizer"
   }
 }

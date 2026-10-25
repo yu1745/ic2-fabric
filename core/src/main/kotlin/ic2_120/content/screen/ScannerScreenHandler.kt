@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.displayClientMessage
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import ic2_120.compat.stack
@@ -22,7 +24,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
 import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvent
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 import ic2_120.content.item.AdvancedScannerItem
 import ic2_120.content.item.OdScannerItem
@@ -45,12 +47,12 @@ class ScannerScreenHandler(
 
     private val syncedData = SyncedData()
     val sync = ScannerSync(syncedData)
-    private val scannerUseSound: SoundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.scanner.use"))
+    private val scannerUseSound: SoundEvent = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("ic2", "item.scanner.use"))
 
     init {
         addDataSlots(syncedData)
 
-        val stack = playerInventory.getItem(playerInventory.selected)
+        val stack = playerInventory.getItem(playerInventory.selectedSlot)
         val type = OdScannerItem.getScannerType(stack)
         val energy = IElectricTool.getEnergy(stack).toInt().coerceIn(0, Int.MAX_VALUE)
         val uses = OdScannerItem.getUsesRemaining(stack)
@@ -73,7 +75,7 @@ class ScannerScreenHandler(
     }
 
     private fun getSliderStack(): ItemStack? {
-        val stack = playerInventory.getItem(playerInventory.selected)
+        val stack = playerInventory.getItem(playerInventory.selectedSlot)
         return stack.takeIf { it.item is OdScannerItem || it.item is AdvancedScannerItem }
     }
 
@@ -140,12 +142,12 @@ class ScannerScreenHandler(
         if (world.isClient) return emptyList()
 
         val center = player.blockPosition()
-        val oreCounts = mutableMapOf<ResourceLocation, Int>()
+        val oreCounts = mutableMapOf<Identifier, Int>()
 
         val stack = player.mainHandItem
         val type = OdScannerItem.getScannerType(stack)
         val radius = type.scanRadius
-        val minY = maxOf(world.minBuildHeight, type.deepY)
+        val minY = maxOf(world.minY, type.deepY)
         val maxY = center.y
 
         for (dx in -radius..radius) {

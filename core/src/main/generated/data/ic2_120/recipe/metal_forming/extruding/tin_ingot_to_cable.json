@@ -1,3 +1,11 @@
 {
-  "type": "ic2_120:metal_forming"
+  "type": "ic2_120:metal_forming",
+  "ingredient": {
+    "tag": "ic2_120:compat/ingots/tin"
+  },
+  "mode": "extruding",
+  "result": {
+    "count": 3,
+    "item": "ic2_120:tin_cable"
+  }
 }

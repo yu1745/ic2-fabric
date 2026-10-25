@@ -1,11 +1,7 @@
 {
   "type": "minecraft:smelting",
-  "category": "misc",
-  "cookingtime": 200,
   "experience": 0.1,
-  "ingredient": {
-    "tag": "ic2_120:compat/dusts/tin"
-  },
+  "ingredient": "#ic2_120:compat/dusts/tin",
   "result": {
     "id": "ic2_120:tin_ingot"
   }

@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "F": {
-      "item": "ic2_120:empty_cell"
-    },
-    "P": {
-      "tag": "ic2_120:compat/plates/steel"
-    }
+    "F": "ic2_120:empty_cell",
+    "P": "#ic2_120:compat/plates/steel"
   },
   "pattern": [
     "PFP",
@@ -15,7 +10,6 @@
     "PFP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:steel_tank"
   }
 }

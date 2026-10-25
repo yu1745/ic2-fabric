@@ -2,6 +2,12 @@
   "parent": "minecraft:block/cube_column",
   "textures": {
     "side": "ic2_120:block/resource/rubber_wood_sides",
-    "end": "ic2_120:block/resource/rubber_wood_bottomtop"
+    "end": "ic2_120:block/resource/rubber_wood_bottomtop",
+    "wet_front": "ic2:block/resource/rubber_wood_wet_front",
+    "dry_front": "ic2:block/resource/rubber_wood_dry_front",
+    "wet_side": "ic2:block/resource/rubber_wood_wet_leftrightback",
+    "dry_side": "ic2:block/resource/rubber_wood_dry_leftrightback",
+    "wet_end": "ic2:block/resource/rubber_wood_wet_bottomtop",
+    "dry_end": "ic2:block/resource/rubber_wood_dry_bottomtop"
   }
 }

@@ -5,23 +5,21 @@ import ic2_120.content.block.UuScannerBlock
 import ic2_120.content.screen.UuScannerScreenHandler
 import ic2_120.content.sync.UuScannerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(block = UuScannerBlock::class)
 class UuScannerScreen(
     val handler: UuScannerScreenHandler, playerInventory: Inventory, title: Component
-) : AbstractContainerScreen<UuScannerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<UuScannerScreenHandler>(handler, playerInventory, title, 175, 165) {
 
     init {
-        imageWidth = 175
-        imageHeight = 165
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -172,7 +170,7 @@ class UuScannerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiuuscanner.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiuuscanner.png")
         private const val TEX_SIZE = 256
 
         private const val ENERGY_U = 179

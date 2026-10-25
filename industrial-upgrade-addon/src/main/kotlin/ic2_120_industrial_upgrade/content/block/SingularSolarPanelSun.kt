@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -23,7 +25,7 @@ import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_industrial_upgrade.singular_solar_panelsun
 // zh_cn: 奇异日光太阳能发电机  en_us: Singular Sun Panel
@@ -44,7 +46,7 @@ class SingularSolarPanelSunBlock : IndustrialSolarPanelBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：奇异太阳能发电机 + SunLinse（ASA）
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingularSolarPanelSunBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SingularSolarPanelSunBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', SingularSolarPanelBlock::class.item())
@@ -52,7 +54,7 @@ class SingularSolarPanelSunBlock : IndustrialSolarPanelBlock() {
                 .unlockedBy(getHasName(SingularSolarPanelBlock::class.item()), has(SingularSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("singular_solar_panelsun"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SingularSolarPanelBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SingularSolarPanelBlock::class.item(), 1)
                 .requires(SingularSolarPanelSunBlock::class.item())
                 .unlockedBy(getHasName(SingularSolarPanelSunBlock::class.item()), has(SingularSolarPanelSunBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("singular_solar_panelsun_revert"))

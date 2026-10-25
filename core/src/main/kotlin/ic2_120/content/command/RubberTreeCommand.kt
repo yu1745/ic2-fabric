@@ -27,13 +27,13 @@ object RubberTreeCommand {
     private const val PERMISSION_LEVEL = 4
     private const val LEAF_SEARCH_DISTANCE = 6
     private val searchExecutor = Executors.newFixedThreadPool(4)
-    private val rubberLogBlock by lazy { BuiltInRegistries.BLOCK.get(Ic2_120.id("rubber_log")) }
+    private val rubberLogBlock by lazy { BuiltInRegistries.BLOCK.getValue(Ic2_120.id("rubber_log")) }
 
     fun register() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
                 Commands.literal("ic2rubber")
-                    .requires { source -> source.hasPermission(PERMISSION_LEVEL) }
+                    .requires(net.minecraft.commands.Commands.hasPermission(net.minecraft.commands.Commands.LEVEL_OWNERS))
                     .executes { ctx -> execute(ctx, radius = 64, teleport = false) }
                     .then(
                         Commands.argument("radius", IntegerArgumentType.integer(1))
@@ -88,7 +88,7 @@ object RubberTreeCommand {
             val nearest = result.trees.first()
             if (teleport) {
                 val tpPos = findSafeTeleportPos(world, nearest)
-                player.teleportTo(player.serverLevel(), tpPos.x + 0.5, tpPos.y.toDouble(), tpPos.z + 0.5, player.yRot, player.xRot)
+                player.teleportTo(world, tpPos.x + 0.5, tpPos.y.toDouble(), tpPos.z + 0.5, emptySet(), player.yRot, player.xRot, false)
                 source.sendSuccess({
                     Component.literal("已传送到橡胶树位置 [${nearest.x}, ${nearest.y}, ${nearest.z}] (共 ${result.count} 棵, 耗时 ${elapsedMs}ms)")
                 }, true)
@@ -154,8 +154,8 @@ object RubberTreeCommand {
         val maxX = minOf((chunkX shl 4) + 15, center.x + radius)
         val minZ = maxOf((chunkZ shl 4), center.z - radius)
         val maxZ = minOf((chunkZ shl 4) + 15, center.z + radius)
-        val minY = maxOf(world.minBuildHeight, center.y - radius)
-        val maxY = minOf(world.maxBuildHeight, center.y + radius)
+        val minY = maxOf(world.minY, center.y - radius)
+        val maxY = minOf(world.maxY, center.y + radius)
 
         for (x in minX..maxX) {
             for (z in minZ..maxZ) {
@@ -208,7 +208,7 @@ object RubberTreeCommand {
     }
 
     private fun findSafeTeleportPos(world: ServerLevel, logPos: BlockPos): BlockPos {
-        for (y in logPos.y downTo world.minBuildHeight) {
+        for (y in logPos.y downTo world.minY) {
             val pos = BlockPos(logPos.x, y, logPos.z)
             val state = world.getBlockState(pos)
 
@@ -240,7 +240,7 @@ object RubberTreeCommand {
     }
 
     private fun findGroundAt(world: ServerLevel, pos: BlockPos): BlockPos? {
-        for (y in pos.y downTo maxOf(world.minBuildHeight, pos.y - 10)) {
+        for (y in pos.y downTo maxOf(world.minY, pos.y - 10)) {
             val checkPos = BlockPos(pos.x, y, pos.z)
             val state = world.getBlockState(checkPos)
 
@@ -261,6 +261,7 @@ object RubberTreeCommand {
         world.sendParticles(
             player,
             net.minecraft.core.particles.ParticleTypes.HEART,
+            true,
             true,
             vec.x, vec.y, vec.z,
             10,

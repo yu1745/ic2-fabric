@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -69,11 +71,11 @@ class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
             val tinCable = InsulatedTinCableBlock::class.item()
             val battery = ReBatteryItem::class.instance()
             if (tinCable != Items.AIR && battery != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BatBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BatBoxBlock::class.item(), 1)
                     .pattern("WTW")
                     .pattern("BBB")
                     .pattern("WWW")
-                    .define('W', ItemTags.PLANKS)
+                    .define('W', ic2_120.compat.tagIngredient(ItemTags.PLANKS))
                     .define('T', tinCable)
                     .define('B', battery)
                     .unlockedBy(getHasName(battery), has(battery))
@@ -103,11 +105,11 @@ class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
             val battery = AdvancedReBatteryItem::class.instance()
             val plate = BronzePlate::class.instance()
             if (copperCable != Items.AIR && battery != Items.AIR && plate != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CesuBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CesuBlock::class.item(), 1)
                     .pattern("WTW")
                     .pattern("BBB")
                     .pattern("WWW")
-                    .define('W', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
+                    .define('W', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_BRONZE))
                     .define('T', copperCable)
                     .define('B', battery)
                     .unlockedBy(getHasName(battery), has(battery))
@@ -137,7 +139,7 @@ class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
             val crystal = EnergyCrystalItem::class.instance()
             val machine = MachineCasingBlock::class.item()
             if (goldCable != Items.AIR && crystal != Items.AIR && machine != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MfeBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MfeBlock::class.item(), 1)
                     .pattern("GEG")
                     .pattern("EME")
                     .pattern("GEG")
@@ -173,7 +175,7 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
             val mfe = MfeBlock::class.item()
             val advCasing = AdvancedMachineCasingBlock::class.item()
             if (lapotron != Items.AIR && advCircuit != Items.AIR && mfe != Items.AIR && advCasing != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MfsuBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MfsuBlock::class.item(), 1)
                     .pattern("LAL")
                     .pattern("LFL")
                     .pattern("LCL")
@@ -277,12 +279,12 @@ class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD
             val rubber = RubberItem::class.instance()
             val base = BatBoxBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BatBoxChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BatBoxChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
                     .define('C', circuit)
                     .define('P', Items.STONE_PRESSURE_PLATE)
-                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('R', ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                     .define('B', base)
                     .unlockedBy(getHasName(base), has(base))
                     .save(exporter, BatBoxChargepadBlock::class.id())
@@ -311,12 +313,12 @@ class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
             val rubber = RubberItem::class.instance()
             val base = CesuBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CesuChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CesuChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
                     .define('C', circuit)
                     .define('P', Items.STONE_PRESSURE_PLATE)
-                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('R', ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                     .define('B', base)
                     .unlockedBy(getHasName(base), has(base))
                     .save(exporter, CesuChargepadBlock::class.id())
@@ -345,12 +347,12 @@ class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
             val rubber = RubberItem::class.instance()
             val base = MfeBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MfeChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MfeChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
                     .define('C', circuit)
                     .define('P', Items.STONE_PRESSURE_PLATE)
-                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('R', ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                     .define('B', base)
                     .unlockedBy(getHasName(base), has(base))
                     .save(exporter, MfeChargepadBlock::class.id())
@@ -380,12 +382,12 @@ class MfsuChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFSU_CHARGEPAD) {
             val rubber = RubberItem::class.instance()
             val base = MfsuBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MfsuChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MfsuChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
                     .define('C', circuit)
                     .define('P', Items.STONE_PRESSURE_PLATE)
-                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('R', ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                     .define('B', base)
                     .unlockedBy(getHasName(base), has(base))
                     .save(exporter, MfsuChargepadBlock::class.id())

@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "X": {
-      "tag": "ic2_120:compat/plates/bronze"
-    }
+    "X": "#ic2_120:compat/plates/bronze"
   },
   "pattern": [
     "X X",
@@ -12,7 +9,6 @@
     "X X"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:bronze_pipe_large"
   }
 }

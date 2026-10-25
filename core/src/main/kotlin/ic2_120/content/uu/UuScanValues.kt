@@ -4,7 +4,7 @@ import ic2_120.config.UuReplicationDefaults
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 
 /**
@@ -59,8 +59,8 @@ object UuScanValues {
 
     private fun resolveItem(idStr: String): Item? {
         val core = idStr.substringBefore('@')
-        val id = ResourceLocation.tryParse(core) ?: return null
-        val item = BuiltInRegistries.ITEM.get(id)
+        val id = Identifier.tryParse(core) ?: return null
+        val item = BuiltInRegistries.ITEM.getValue(id)
         return if (item === Items.AIR) null else item
     }
 }

@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "B": {
-      "tag": "ic2_120:compat/ingots/bronze"
-    }
+    "B": "#ic2_120:compat/ingots/bronze"
   },
   "pattern": [
     "B B",
@@ -12,7 +10,6 @@
     " B "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:wrench"
   }
 }

@@ -1,6 +1,6 @@
 package ic2_120.client.ui
 
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 
 /**
  * 可复用的 GUI 空背景：纯 Compose 绘制，不使用 PNG 纹理。

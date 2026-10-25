@@ -17,16 +17,16 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.GsonHelper
 
 @ModMachineRecipe(id = "extracting", recipeClass = ExtractorRecipe::class)
-object ExtractorRecipeSerializer : RecipeSerializer<ExtractorRecipe> {
-    private fun fromJson(id: ResourceLocation, json: JsonObject): ExtractorRecipe {
+object ExtractorRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<ExtractorRecipe>() {
+    private fun fromJson(id: Identifier, json: JsonObject): ExtractorRecipe {
         val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
         val result = json.getAsJsonObject("result")
-        val itemId = ResourceLocation.parse(result.get("item").asString)
-        val item = BuiltInRegistries.ITEM.get(itemId)
+        val itemId = Identifier.parse(result.get("item").asString)
+        val item = BuiltInRegistries.ITEM.getValue(itemId)
         val count = (if (result.has("count")) result.get("count").asInt else 1)
         return ExtractorRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, ItemStack(item, count))
     }
@@ -45,7 +45,10 @@ object ExtractorRecipeSerializer : RecipeSerializer<ExtractorRecipe> {
     override fun codec(): MapCodec<ExtractorRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:extracting",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", ic2_120.content.recipes.ingredientJson26(recipe.ingredient))
+            json.add("result", ic2_120.content.recipes.stackJson26(recipe.output))
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, ExtractorRecipe> =

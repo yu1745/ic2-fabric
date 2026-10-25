@@ -12,9 +12,9 @@ import ic2_120.content.uu.findUniqueAdjacentPatternStorage
 import ic2_120.registry.annotation.ModScreen
 import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
@@ -26,13 +26,13 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.content.network.SelectTemplatePayload
 
 @ModScreen(block = ReplicatorBlock::class)
 class ReplicatorScreen(
     val handler: ReplicatorScreenHandler, playerInventory: Inventory, title: Component
-) : AbstractContainerScreen<ReplicatorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<ReplicatorScreenHandler>(handler, playerInventory, title, 176, 184) {
 
     private var showTemplateInfo = false
     private var lastStatus = -1
@@ -44,8 +44,6 @@ class ReplicatorScreen(
     private var repeatBtn: Button? = null
 
     init {
-        imageWidth = 176
-        imageHeight = 184
     }
 
     override fun init() {
@@ -284,7 +282,7 @@ class ReplicatorScreen(
     }
 
     private fun templateToStack(template: UuTemplateEntry): ItemStack {
-        val id = ResourceLocation.tryParse(template.itemId) ?: return ItemStack.EMPTY
+        val id = Identifier.tryParse(template.itemId) ?: return ItemStack.EMPTY
         val item = BuiltInRegistries.ITEM.getOptional(id).orElse(null) ?: return ItemStack.EMPTY
         return if (item == net.minecraft.world.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
     }
@@ -313,8 +311,8 @@ class ReplicatorScreen(
 
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guirguireplicator.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guirguireplicator.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
 
         private const val MODE_TEX_U = 198

@@ -1,4 +1,4 @@
-accessWidener	v2	named
+accessWidener	v2	official
 # 为了让访问加宽造成的的变化显示在反编译后的源代码中，请运行 genSources Gradle 任务，然后在 IDE 中重新加载 Gradle 项目。
 # 使 FoliagePlacerType 构造函数可访问，用于注册自定义橡胶树树叶放置器
 accessible method net/minecraft/world/level/levelgen/feature/foliageplacers/FoliagePlacerType <init> (Lcom/mojang/serialization/MapCodec;)V

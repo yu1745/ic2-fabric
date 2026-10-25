@@ -1,0 +1,776 @@
+package ic2_120.integration.jei
+
+import ic2_120.compat.orCreateNbt
+import net.minecraft.core.registries.BuiltInRegistries
+
+import ic2_120.config.Ic2Config
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipe
+import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipeDatagen
+import ic2_120.content.recipes.blockcutter.BlockCutterRecipe
+import ic2_120.content.recipes.blockcutter.BlockCutterRecipeDatagen
+import ic2_120.content.recipes.centrifuge.CentrifugeRecipe
+import ic2_120.content.recipes.centrifuge.CentrifugeRecipeDatagen
+import ic2_120.content.recipes.compressor.CompressorRecipe
+import ic2_120.content.recipes.compressor.CompressorRecipeDatagen
+import ic2_120.content.recipes.extractor.ExtractorRecipe
+import ic2_120.content.recipes.extractor.ExtractorRecipeDatagen
+import ic2_120.content.recipes.macerator.MaceratorRecipe
+import ic2_120.content.recipes.macerator.MaceratorRecipeDatagen
+import ic2_120.content.recipes.metalformer.CuttingRecipe
+import ic2_120.content.recipes.metalformer.ExtrudingRecipe
+import ic2_120.content.recipes.metalformer.MetalFormerRecipe
+import ic2_120.content.recipes.metalformer.MetalFormerRecipeDatagen
+import ic2_120.content.recipes.metalformer.RollingRecipe
+import ic2_120.content.recipes.orewashing.OreWashingRecipe
+import ic2_120.content.recipes.orewashing.OreWashingRecipeDatagen
+import ic2_120.content.item.EmptyTinCanItem
+import ic2_120.content.item.FilledTinCanItem
+import ic2_120.content.item.isFluidVariantRepresentable
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipeDatagen
+import ic2_120.registry.instance
+import ic2_120.integration.jei.BlastFurnaceJeiRecipe
+import ic2_120.integration.jei.BlastFurnaceRecipeCategory
+import ic2_120.integration.jei.BlockCutterJeiRecipe
+import ic2_120.integration.jei.BlockCutterRecipeCategory
+import ic2_120.integration.jei.MetalFormerCuttingJeiRecipe
+import ic2_120.integration.jei.MetalFormerCuttingRecipeCategory
+import ic2_120.integration.jei.MetalFormerExtrudingJeiRecipe
+import ic2_120.integration.jei.MetalFormerExtrudingRecipeCategory
+import ic2_120.integration.jei.MetalFormerRollingJeiRecipe
+import ic2_120.integration.jei.MetalFormerRollingRecipeCategory
+import ic2_120.integration.jei.OreWashingJeiRecipe
+import ic2_120.integration.jei.OreWashingRecipeCategory
+import ic2_120.integration.jei.RecyclerJeiRecipe
+import ic2_120.integration.jei.RecyclerRecipeCategory
+import ic2_120.integration.jei.SolidCannerJeiRecipe
+import ic2_120.integration.jei.SolidCannerRecipeCategory
+import ic2_120.content.block.storage.EnergyStorageBlock
+import ic2_120.content.item.FoamSprayerItem
+import ic2_120.content.item.PainterItem
+import ic2_120.content.item.armor.JetpackItem
+import ic2_120.content.item.CropSeedBagItem
+import ic2_120.content.recipes.CannerMixingRecipes
+import ic2_120.content.item.energy.IBatteryItem
+import ic2_120.content.item.energy.IElectricTool
+import ic2_120.content.item.ModFluidCell
+import ic2_120.content.item.getFluidCellVariant
+import ic2_120.content.item.setFluidCellVariant
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import mezz.jei.api.IModPlugin
+import mezz.jei.api.JeiPlugin
+import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter
+import mezz.jei.api.registration.IExtraIngredientRegistration
+import mezz.jei.api.registration.IRecipeCatalystRegistration
+import mezz.jei.api.registration.IRecipeCategoryRegistration
+import mezz.jei.api.registration.IRecipeRegistration
+import mezz.jei.api.registration.ISubtypeRegistration
+import mezz.jei.api.runtime.IJeiRuntime
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.item.crafting.Recipe
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.resources.Identifier
+
+private fun net.minecraft.world.item.crafting.Ingredient.displayStacks(count: Int = 1): List<ItemStack> =
+    items().map { ItemStack(it.value(), count) }.toList()
+
+/**
+ * JEI 插件 - 注册电力物品、喷气背包、建筑泡沫喷枪等的空/满变体与子类型
+ *
+ * 在 JEI 中补充空电与满电、空燃料与满燃料、喷枪空罐与满罐等条目，
+ * 与创造模式物品栏（受配置开关控制的部分）展示思路一致。
+ */
+@JeiPlugin
+class Ic2JeiPlugin : IModPlugin {
+    companion object {
+        init { LiveRecipeSource.refreshJeiRecipes = ::refreshReplicatorRecipes }
+
+        @Volatile
+        var jeiRuntime: IJeiRuntime? = null
+
+        private var replicatorRecipes: List<ReplicatorJeiRecipe> = emptyList()
+        private var replicatorRefreshPending = false
+
+        fun refreshReplicatorRecipes() {
+            val runtime = jeiRuntime
+            if (runtime == null) {
+                replicatorRefreshPending = true
+                return
+            }
+            // JEI RecipeManager 必须在客户端主线程操作；SERVER_STARTED 在 Server thread 触发
+            // UU 索引重建→本方法时，经 scheduleOnClientThread 调度回客户端主线程，
+            // 否则 ErrorUtil.assertMainThread 抛 IllegalStateException（装了 JEI 时每次进世界必崩）。
+            // scheduleOnClientThread 字段位于 LiveRecipeSource（不引用 JEI 类），避免 Connector
+            // + 仅 EMI（无 JEI）环境下 client entrypoint 阶段触发 Ic2JeiPlugin 类加载崩溃。
+            if (LiveRecipeSource.scheduleOnClientThread?.invoke { refreshReplicatorRecipes() } == true) {
+                return
+            }
+            val oldRecipes = replicatorRecipes
+            if (oldRecipes.isNotEmpty()) {
+                runtime.recipeManager.hideRecipes(Ic2JeiRecipeTypes.REPLICATOR, oldRecipes)
+            }
+            val newRecipes = Ic2Config.getAllReplicationCosts()
+                .mapNotNull { (itemId, uuCostUb) ->
+                    val item = BuiltInRegistries.ITEM.getValue(Identifier.tryParse(itemId))
+                    if (item == Items.AIR) null
+                    else ReplicatorJeiRecipe(ItemStack(item, 1), uuCostUb)
+                }
+            if (newRecipes.isNotEmpty()) {
+                runtime.recipeManager.addRecipes(Ic2JeiRecipeTypes.REPLICATOR, newRecipes)
+            }
+            replicatorRecipes = newRecipes
+            replicatorRefreshPending = false
+        }
+    }
+
+    override fun getPluginUid(): Identifier {
+        return Identifier.fromNamespaceAndPath("ic2_120", "main")
+    }
+
+    override fun registerItemSubtypes(registration: ISubtypeRegistration) {
+        // 遍历所有已注册的物品
+        BuiltInRegistries.ITEM.forEach { item ->
+            if (item === Items.AIR) return@forEach
+            // 检查物品是否实现了电力接口
+            if (item is IBatteryItem || item is IElectricTool) {
+                // 注册 NBT 子类型解释器
+                registration.registerSubtypeInterpreter(
+                    item,
+                    ElectricItemSubtypeInterpreter()
+                )
+            }
+            // 检查物品是否为喷气背包
+            if (item is JetpackItem) {
+                registration.registerSubtypeInterpreter(
+                    item,
+                    JetpackItemSubtypeInterpreter()
+                )
+            }
+            if (item is FoamSprayerItem) {
+                registration.registerSubtypeInterpreter(
+                    item,
+                    FoamSprayerSubtypeInterpreter()
+                )
+            }
+            if (item is PainterItem) {
+                registration.registerSubtypeInterpreter(
+                    item,
+                    PainterSubtypeInterpreter()
+                )
+            }
+            // 检查物品是否为储电盒/充电座 BlockItem
+            if (item is EnergyStorageBlock.EnergyStorageBlockItem) {
+                registration.registerSubtypeInterpreter(
+                    item,
+                    EnergyStorageBlockItemSubtypeInterpreter()
+                )
+            }
+        }
+
+        // 通用流体单元：按 NBT 中存储的 FluidVariant 区分子类型
+        val fluidCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "fluid_cell"))
+        if (fluidCell !== Items.AIR) {
+            registration.registerSubtypeInterpreter(fluidCell, FluidCellSubtypeInterpreter())
+        }
+    }
+
+    override fun registerExtraIngredients(registration: IExtraIngredientRegistration) {
+        val extraStacks = mutableListOf<ItemStack>()
+
+        BuiltInRegistries.ITEM.forEach { item ->
+            if (item === Items.AIR) return@forEach
+            when (item) {
+                is IBatteryItem -> {
+                    // 电池：补充空电 + 满电两个明确变体
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        item.setCurrentCharge(stack, 0L)
+                    }
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        item.setCurrentCharge(stack, item.maxCapacity)
+                    }
+                }
+
+                is IElectricTool -> {
+                    // 电动工具：补充空电 + 满电两个明确变体
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        item.setEnergy(stack, 0L)
+                    }
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        item.setEnergy(stack, item.maxCapacity)
+                    }
+                }
+
+                is JetpackItem -> {
+                    // 喷气背包：补充空燃料 + 满燃料两个明确变体
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        JetpackItem.setFuel(stack, 0L)
+                    }
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        JetpackItem.setFuel(stack, JetpackItem.MAX_FUEL)
+                    }
+                }
+
+                is FoamSprayerItem -> {
+                    // 建筑泡沫喷枪：空罐 + 满罐（8 桶）
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        FoamSprayerItem.setFluidAmount(stack, 0L)
+                    }
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        FoamSprayerItem.setFluidAmount(stack, FoamSprayerItem.CAPACITY_DROPLETS)
+                    }
+                }
+
+                is EnergyStorageBlock.EnergyStorageBlockItem -> {
+                    // 储电盒/充电座：补充空电 + 满电两个明确变体
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        stack.orCreateNbt = net.minecraft.nbt.CompoundTag().also { nbt ->
+                            nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
+                        }
+                    }
+                    extraStacks += ItemStack(item as Item).also { stack ->
+                        stack.orCreateNbt = net.minecraft.nbt.CompoundTag().also { nbt ->
+                            nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
+                        }
+                    }
+                }
+            }
+        }
+
+        // 注册储电盒/充电座的满电变体（通过物品 ID 直接获取）
+        registerEnergyStorageFullVariants(extraStacks)
+        // 注册杂交作物初始种子袋（1/1/1）
+        extraStacks += CropSeedBagItem.createInitialSeedStacks()
+        // 注册刷子的 16 个带色变体
+        extraStacks += PainterItem.createColoredStacks()
+
+        // 通用流体单元：为所有没有专用单元类的流体注册 NBT 变体
+        val fluidCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "fluid_cell"))
+        if (fluidCell !== Items.AIR) {
+            // 从 ModFluidCell 子类反查已有专用单元的流体，自动同步不会有遗漏
+            val modFluidCells = mutableSetOf<Fluid>()
+            for (fluidId in listOf(
+                "water_cell", "distilled_water_cell", "lava_cell",
+                "coolant_cell", "hot_coolant_cell", "uu_matter_cell",
+                "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell",
+                "construction_foam_cell", "steam_cell", "superheated_steam_cell"
+            )) {
+                val item = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", fluidId))
+                if (item is ModFluidCell) {
+                    val fluid = item.getFluid()
+                    modFluidCells.add(fluid)
+                    // also add flowing variant if it exists
+                    val flowing = BuiltInRegistries.FLUID.getValue(Identifier.fromNamespaceAndPath("ic2_120", "flowing_${BuiltInRegistries.FLUID.getKey(fluid)!!.path}"))
+                    if (flowing !== Fluids.EMPTY) modFluidCells.add(flowing)
+                }
+            }
+            // water/lava use minecraft namespace
+            modFluidCells.add(Fluids.WATER)
+            modFluidCells.add(Fluids.FLOWING_WATER)
+            modFluidCells.add(Fluids.LAVA)
+            modFluidCells.add(Fluids.FLOWING_LAVA)
+
+            extraStacks += BuiltInRegistries.FLUID
+                .filter { fluid ->
+                    fluid !== Fluids.EMPTY &&
+                    fluid !== Fluids.FLOWING_LAVA &&
+                    fluid !== Fluids.FLOWING_WATER &&
+                    fluid !in modFluidCells &&
+                    isFluidVariantRepresentable(fluid)  // 病态流体不注册（#27，与创造栏同步）
+                }
+                .sortedBy { (BuiltInRegistries.FLUID.getKey(it)?.toString() ?: "?") }
+                .mapNotNull { fluid ->
+                    try {
+                        ItemStack(fluidCell).apply { setFluidCellVariant(FluidVariant.of(fluid)) }
+                    } catch (e: IllegalArgumentException) {
+                        null  // 兜底：防未来其他病态注册形态（#27）
+                    }
+                }
+        }
+
+        if (extraStacks.isNotEmpty()) {
+            registration.addExtraItemStacks(extraStacks)
+        }
+    }
+
+    override fun onRuntimeAvailable(runtime: IJeiRuntime) {
+        Ic2JeiPlugin.jeiRuntime = runtime
+        if (replicatorRefreshPending) {
+            refreshReplicatorRecipes()
+        }
+    }
+
+    override fun registerCategories(registration: IRecipeCategoryRegistration) {
+        registration.addRecipeCategories(
+            CoalWaterTransformRecipeCategory(registration.jeiHelpers.guiHelper),
+            MaceratorRecipeCategory(registration.jeiHelpers.guiHelper),
+            CompressorRecipeCategory(registration.jeiHelpers.guiHelper),
+            ExtractorRecipeCategory(registration.jeiHelpers.guiHelper),
+            CentrifugeRecipeCategory(registration.jeiHelpers.guiHelper),
+            BlastFurnaceRecipeCategory(registration.jeiHelpers.guiHelper),
+            OreWashingRecipeCategory(registration.jeiHelpers.guiHelper),
+            BlockCutterRecipeCategory(registration.jeiHelpers.guiHelper),
+            MetalFormerRollingRecipeCategory(registration.jeiHelpers.guiHelper),
+            MetalFormerCuttingRecipeCategory(registration.jeiHelpers.guiHelper),
+            MetalFormerExtrudingRecipeCategory(registration.jeiHelpers.guiHelper),
+            SolidCannerRecipeCategory(registration.jeiHelpers.guiHelper),
+            RecyclerRecipeCategory(registration.jeiHelpers.guiHelper),
+            ReplicatorRecipeCategory(registration.jeiHelpers.guiHelper),
+            CannerMixingRecipeCategory(registration.jeiHelpers.guiHelper)
+        )
+    }
+
+    /**
+     * 优先从运行时 client recipeManager 收集指定 [Recipe] 类型的所有配方实例。
+     * 与各机器实际判定逻辑（recipeManager.getFirstMatch）使用同一数据源，
+     * 覆盖 core + 所有附属命名空间，并反映服务器下发 / datapack 修改后的配方状态。
+     * recipeManager 未就绪时返回 null，由调用方退回 datagen 硬编码列表。
+     */
+    private inline fun <reified T : Recipe<*>> liveRecipes(): List<T>? {
+        val all = LiveRecipeSource.instance?.clientRecipes() ?: return null
+        return all.map { it.value() }.filterIsInstance<T>().takeIf { it.isNotEmpty() }
+    }
+
+    override fun registerRecipes(registration: IRecipeRegistration) {
+        registration.addRecipes(
+            Ic2JeiRecipeTypes.COAL_WATER_TRANSFORM,
+            listOf(
+                CoalWaterTransformJeiRecipe(
+                    ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "coal_dust"))),
+                    ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "coal_fuel_dust")))
+                )
+            )
+        )
+
+        // Macerator 配方
+        val maceratorRecipes = liveRecipes<MaceratorRecipe>()?.map { r ->
+            MaceratorJeiRecipe(
+                r.ingredient.displayStacks(r.inputCount),
+                r.output
+            )
+        } ?: MaceratorRecipeDatagen.allEntries().map { entry ->
+            MaceratorJeiRecipe(
+                entry.input.toItemStacks(entry.inputCount),
+                ItemStack(entry.output, entry.count)
+            )
+        }
+        registration.addRecipes(Ic2JeiRecipeTypes.MACERATOR, maceratorRecipes)
+
+        // Compressor 配方
+        val compressorRecipes = liveRecipes<CompressorRecipe>()?.map { r ->
+            CompressorJeiRecipe(
+                r.ingredient.displayStacks(r.inputCount),
+                r.output,
+                r.containerReturn
+            )
+        } ?: CompressorRecipeDatagen.allEntries().map { entry ->
+            CompressorJeiRecipe(
+                entry.input.toItemStacks(entry.inputCount),
+                ItemStack(entry.output, entry.count),
+                entry.containerReturn
+            )
+        }
+        registration.addRecipes(Ic2JeiRecipeTypes.COMPRESSOR, compressorRecipes)
+
+        // Extractor 配方
+        val extractorRecipes = liveRecipes<ExtractorRecipe>()?.map { r ->
+            ExtractorJeiRecipe(r.ingredient.displayStacks(), r.output)
+        } ?: ExtractorRecipeDatagen.allEntries().map { entry ->
+            ExtractorJeiRecipe(
+                entry.input.toItemStacks(1),
+                ItemStack(entry.output, entry.count)
+            )
+        }
+        registration.addRecipes(Ic2JeiRecipeTypes.EXTRACTOR, extractorRecipes)
+
+        // Centrifuge 配方
+        val centrifugeRecipes = liveRecipes<CentrifugeRecipe>()?.map { r ->
+            CentrifugeJeiRecipe(
+                r.ingredient.displayStacks(r.inputCount),
+                r.minHeat,
+                r.outputs
+            )
+        } ?: CentrifugeRecipeDatagen.allEntries().map { entry ->
+            CentrifugeJeiRecipe(
+                entry.input.toItemStacks(entry.inputCount),
+                entry.minHeat,
+                entry.outputs.map { ItemStack(it.item, it.count) }
+            )
+        }
+        registration.addRecipes(Ic2JeiRecipeTypes.CENTRIFUGE, centrifugeRecipes)
+
+        // BlastFurnace 配方
+        val blastFurnaceRecipes = liveRecipes<BlastFurnaceRecipe>()?.map { r ->
+            BlastFurnaceJeiRecipe(r.ingredient.displayStacks(), r.steelOutput, r.slagOutput)
+        } ?: BlastFurnaceRecipeDatagen.allEntries().map { entry ->
+            BlastFurnaceJeiRecipe(
+                entry.input.toItemStacks(1),
+                ItemStack(entry.steelOutput, entry.steelCount),
+                ItemStack(entry.slagOutput, entry.slagCount)
+            )
+        }
+        registration.addRecipes(Ic2JeiRecipeTypes.BLAST_FURNACE, blastFurnaceRecipes)
+
+        // OreWashing 配方
+        val oreWashingRecipes = liveRecipes<OreWashingRecipe>()?.map { r ->
+            OreWashingJeiRecipe(r.ingredient.displayStacks(), r.outputItems, r.waterConsumptionDroplets)
+        } ?: OreWashingRecipeDatagen.allEntries().map { entry ->
+            OreWashingJeiRecipe(
+                entry.input.toItemStacks(1),
+                entry.outputs.map { ItemStack(it.item, it.count) },
+                entry.waterConsumptionDroplets
+            )
+        }
+        registration.addRecipes(Ic2JeiRecipeTypes.ORE_WASHING, oreWashingRecipes)
+
+        // BlockCutter 配方
+        val blockCutterRecipes = liveRecipes<BlockCutterRecipe>()?.map { r ->
+            BlockCutterJeiRecipe(
+                r.ingredient.displayStacks(r.inputCount),
+                r.output
+            )
+        } ?: BlockCutterRecipeDatagen.allEntries().map { entry ->
+            BlockCutterJeiRecipe(
+                entry.input.toItemStacks(entry.inputCount),
+                ItemStack(entry.output, entry.count)
+            )
+        }
+        registration.addRecipes(Ic2JeiRecipeTypes.BLOCK_CUTTER, blockCutterRecipes)
+
+        // MetalFormer 配方 - 按模式分组（Rolling/Cutting/Extruding 子类共用同一 RecipeType）
+        val metalFormerLive = liveRecipes<MetalFormerRecipe>()
+        val rollingRecipes = metalFormerLive?.filter { it is RollingRecipe }?.map { r ->
+            MetalFormerRollingJeiRecipe(r.ingredient.displayStacks(), r.output)
+        } ?: MetalFormerRecipeDatagen.allEntries().filter { it.mode == MetalFormerRecipeDatagen.Mode.ROLLING }
+            .map { entry ->
+                MetalFormerRollingJeiRecipe(
+                    entry.input.toItemStacks(1),
+                    ItemStack(entry.output, entry.outputCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.METAL_FORMER_ROLLING, rollingRecipes)
+
+        val cuttingRecipes = metalFormerLive?.filter { it is CuttingRecipe }?.map { r ->
+            MetalFormerCuttingJeiRecipe(r.ingredient.displayStacks(), r.output)
+        } ?: MetalFormerRecipeDatagen.allEntries().filter { it.mode == MetalFormerRecipeDatagen.Mode.CUTTING }
+            .map { entry ->
+                MetalFormerCuttingJeiRecipe(
+                    entry.input.toItemStacks(1),
+                    ItemStack(entry.output, entry.outputCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.METAL_FORMER_CUTTING, cuttingRecipes)
+
+        val extrudingRecipes = metalFormerLive?.filter { it is ExtrudingRecipe }?.map { r ->
+            MetalFormerExtrudingJeiRecipe(r.ingredient.displayStacks(), r.output)
+        } ?: MetalFormerRecipeDatagen.allEntries().filter { it.mode == MetalFormerRecipeDatagen.Mode.EXTRUDING }
+            .map { entry ->
+                MetalFormerExtrudingJeiRecipe(
+                    entry.input.toItemStacks(1),
+                    ItemStack(entry.output, entry.outputCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING, extrudingRecipes)
+
+        // SolidCanner 配方：datagen 部分优先从 recipeManager，食物罐头动态配方始终生成
+        val solidCannerRecipes = (liveRecipes<SolidCannerRecipe>()?.map { r ->
+            SolidCannerJeiRecipe(
+                slot0 = r.slot0Ingredient.displayStacks(r.slot0Count),
+                slot1 = r.slot1Ingredient.displayStacks(r.slot1Count),
+                output = r.output
+            )
+        } ?: SolidCannerRecipeDatagen.allEntries().map { entry ->
+            SolidCannerJeiRecipe(
+                slot0 = entry.slot0Ingredient.toItemStacks(entry.slot0Count),
+                slot1 = entry.slot1Ingredient.toItemStacks(entry.slot1Count),
+                output = ItemStack(entry.outputItem, entry.outputCount)
+            )
+        }) + BuiltInRegistries.ITEM.mapNotNull { item ->
+                // 1.21.1：FoodComponent 移除，改从 DataComponents.FOOD 读取营养值
+                val food = item.components().get(net.minecraft.core.component.DataComponents.FOOD) ?: return@mapNotNull null
+                val canCount = food.nutrition().coerceAtLeast(1)
+                SolidCannerJeiRecipe(
+                    slot0 = listOf(ItemStack(EmptyTinCanItem::class.instance(), canCount)),
+                    slot1 = listOf(ItemStack(item, 1)),
+                    output = ItemStack(FilledTinCanItem::class.instance(), canCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.SOLID_CANNER, solidCannerRecipes)
+
+        val cannerMixingRecipes = CannerMixingRecipes.allRecipes()
+            .map { recipe ->
+                CannerMixingJeiRecipe(
+                    inputFluid = recipe.inputFluid,
+                    inputSolid = recipe.inputSolid.toItemStacks(recipe.inputSolidCount),
+                    outputFluid = recipe.outputFluid,
+                    inputFluidCell = ic2_120.content.item.fluidToFilledCellStack(recipe.inputFluid),
+                    outputFluidCell = ic2_120.content.item.fluidToFilledCellStack(recipe.outputFluid),
+                    inputBucket = ic2_120.content.item.fluidToBucketStack(recipe.inputFluid),
+                    outputBucket = ic2_120.content.item.fluidToBucketStack(recipe.outputFluid)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.CANNER_MIXING, cannerMixingRecipes)
+
+        val recyclerScrap = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "scrap"))
+        registration.addRecipes(
+            Ic2JeiRecipeTypes.RECYCLER,
+            listOf(
+                RecyclerJeiRecipe(
+                    ItemStack(Items.COBBLESTONE, 1),
+                    ItemStack(recyclerScrap, 1)
+                )
+            )
+        )
+
+        // Replicator 配方
+        replicatorRecipes = Ic2Config.getAllReplicationCosts()
+            .mapNotNull { (itemId, uuCostUb) ->
+                val item = BuiltInRegistries.ITEM.getValue(Identifier.tryParse(itemId))
+                if (item == Items.AIR) null
+                else ReplicatorJeiRecipe(ItemStack(item, 1), uuCostUb)
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.REPLICATOR, replicatorRecipes)
+
+    }
+
+    override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
+        // Macerator
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "macerator"))),
+            Ic2JeiRecipeTypes.MACERATOR
+        )
+
+        // Compressor
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "compressor"))),
+            Ic2JeiRecipeTypes.COMPRESSOR
+        )
+
+        // Extractor
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "extractor"))),
+            Ic2JeiRecipeTypes.EXTRACTOR
+        )
+
+        // Centrifuge
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "centrifuge"))),
+            Ic2JeiRecipeTypes.CENTRIFUGE
+        )
+
+        // BlockCutter
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "block_cutter"))),
+            Ic2JeiRecipeTypes.BLOCK_CUTTER
+        )
+
+        // BlastFurnace
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "blast_furnace"))),
+            Ic2JeiRecipeTypes.BLAST_FURNACE
+        )
+
+        // OreWashing
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "ore_washing_plant"))),
+            Ic2JeiRecipeTypes.ORE_WASHING
+        )
+
+        // MetalFormer - 同一机器显示在三个分类下
+        val metalFormerStack = ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "metal_former")))
+        registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_ROLLING)
+        registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_CUTTING)
+        registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING)
+
+        // SolidCanner
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "solid_canner"))),
+            Ic2JeiRecipeTypes.SOLID_CANNER
+        )
+
+        // Canner（流体/固体装罐机）
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "canner"))),
+            Ic2JeiRecipeTypes.CANNER_MIXING
+        )
+
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "recycler"))),
+            Ic2JeiRecipeTypes.RECYCLER
+        )
+
+        registration.addRecipeCatalyst(
+            ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "replicator"))),
+            Ic2JeiRecipeTypes.REPLICATOR
+        )
+    }
+
+    /**
+     * 电力物品 NBT 子类型解释器
+     *
+     * 使用 "Energy" NBT 标签来区分不同电量状态的物品。
+     * JEI 会根据此解释器识别不同的 ItemStack 为独立的物品。
+     */
+    class ElectricItemSubtypeInterpreter : ISubtypeInterpreter<ItemStack> {
+        companion object {
+            /** 子类型标识符：空电版本 */
+            private const val EMPTY_TAG = "empty"
+
+            /** 子类型标识符：满电版本 */
+            private const val FULL_TAG = "full"
+
+            /** 子类型标识符：部分电量 */
+            private const val PARTIAL_TAG = "partial"
+        }
+
+        override fun getSubtypeData(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String {
+            // 在配方匹配上下文中忽略电量细分，避免“部分电量”无法查到用途/配方。
+            if (uidContext == mezz.jei.api.ingredients.subtypes.UidContext.Recipe) {
+                return ""
+            }
+
+            // 通过接口读取电量，避免依赖固定 NBT 键名
+            val maxCapacity = when (val item = itemStack.item) {
+                is IBatteryItem -> item.maxCapacity
+                is IElectricTool -> item.maxCapacity
+                else -> 1L
+            }
+            val energy = when (val item = itemStack.item) {
+                is IBatteryItem -> item.getCurrentCharge(itemStack)
+                is IElectricTool -> item.getEnergy(itemStack)
+                else -> return ""
+            }
+
+            // 根据电量比例返回子类型标识符
+            return when {
+                energy <= 0 -> EMPTY_TAG
+                energy >= maxCapacity -> FULL_TAG
+                else -> "$PARTIAL_TAG:$energy"
+            }
+        }
+    }
+
+    /**
+     * 喷气背包 NBT 子类型解释器
+     *
+     * 使用 "Fuel" NBT 标签来区分不同燃料状态的物品。
+     * JEI 会根据此解释器识别不同的 ItemStack 为独立的物品。
+     */
+    class JetpackItemSubtypeInterpreter : ISubtypeInterpreter<ItemStack> {
+        companion object {
+            /** 子类型标识符：空燃料版本 */
+            private const val EMPTY_TAG = "empty"
+
+            /** 子类型标识符：满燃料版本 */
+            private const val FULL_TAG = "full"
+
+            /** 子类型标识符：部分燃料 */
+            private const val PARTIAL_TAG = "partial"
+        }
+
+        override fun getSubtypeData(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String {
+            val fuel = JetpackItem.getFuel(itemStack)
+            return when {
+                fuel <= 0 -> EMPTY_TAG
+                fuel >= JetpackItem.MAX_FUEL -> FULL_TAG
+                else -> "$PARTIAL_TAG:$fuel"
+            }
+        }
+    }
+
+    /**
+     * 建筑泡沫喷枪：按 NBT 内流体滴数区分子类型（空 / 满 / 部分）。
+     */
+    class FoamSprayerSubtypeInterpreter : ISubtypeInterpreter<ItemStack> {
+        companion object {
+            private const val EMPTY_TAG = "empty"
+            private const val FULL_TAG = "full"
+            private const val PARTIAL_TAG = "partial"
+        }
+
+        override fun getSubtypeData(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String {
+            val amt = FoamSprayerItem.getFluidAmount(itemStack)
+            val cap = FoamSprayerItem.CAPACITY_DROPLETS
+            return when {
+                amt <= 0L -> EMPTY_TAG
+                amt >= cap -> FULL_TAG
+                else -> "$PARTIAL_TAG:$amt"
+            }
+        }
+    }
+
+    class PainterSubtypeInterpreter : ISubtypeInterpreter<ItemStack> {
+        override fun getSubtypeData(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String =
+            "painter:${PainterItem.getColor(itemStack)?.getName() ?: "uncolored"}"
+    }
+
+    /**
+     * 通用流体单元 NBT 子类型解释器。
+     *
+     * 使用 NBT 中 "FluidVariant" 标签来区分不同流体类型的单元。
+     * JEI 会根据此解释器将不同流体的 fluid_cell 识别为独立的物品。
+     */
+    class FluidCellSubtypeInterpreter : ISubtypeInterpreter<ItemStack> {
+        override fun getSubtypeData(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String {
+            val variant = itemStack.getFluidCellVariant() ?: return "empty"
+            if (variant.isBlank) return "empty"
+            // 在配方匹配上下文中忽略流体细分，使所有 fluid_cell 类型都能在配方中匹配
+            if (uidContext == mezz.jei.api.ingredients.subtypes.UidContext.Recipe) {
+                return ""
+            }
+            return (BuiltInRegistries.FLUID.getKey(variant.fluid)?.toString() ?: "?")
+        }
+    }
+
+    /**
+     * 储电盒/充电座 NBT 子类型解释器
+     *
+     * 使用 "Full" NBT 标签来区分空电和满电状态的物品。
+     * JEI 会根据此解释器识别不同的 ItemStack 为独立的物品。
+     */
+    class EnergyStorageBlockItemSubtypeInterpreter : ISubtypeInterpreter<ItemStack> {
+        companion object {
+            /** 子类型标识符：空电版本 */
+            private const val EMPTY_TAG = "empty"
+
+            /** 子类型标识符：满电版本 */
+            private const val FULL_TAG = "full"
+        }
+
+        override fun getSubtypeData(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String {
+            val nbt = itemStack.orCreateNbt
+            if (nbt.isEmpty) return EMPTY_TAG
+            return if (nbt.getBooleanOr(EnergyStorageBlock.NBT_FULL, false)) FULL_TAG else EMPTY_TAG
+        }
+    }
+
+    /**
+     * 注册储电盒/充电座物品的空电和满电变体。
+     * 直接通过物品 ID 获取，绕过类层级检查。
+     */
+    private fun registerEnergyStorageFullVariants(extraStacks: MutableList<ItemStack>) {
+        val storageIds = listOf(
+            "batbox", "cesu", "mfe", "mfsu",
+            "batbox_chargepad", "cesu_chargepad", "mfe_chargepad", "mfsu_chargepad"
+        )
+        for (id in storageIds) {
+            val item = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", id))
+            if (item === net.minecraft.world.item.Items.AIR) continue
+            // 空电
+            extraStacks += ItemStack(item).also { stack ->
+                stack.orCreateNbt = net.minecraft.nbt.CompoundTag().also { nbt ->
+                    nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
+                }
+            }
+            // 满电
+            extraStacks += ItemStack(item).also { stack ->
+                stack.orCreateNbt = net.minecraft.nbt.CompoundTag().also { nbt ->
+                    nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
+                }
+            }
+        }
+    }
+}

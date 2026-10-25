@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -42,7 +44,7 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -57,7 +59,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.network.chat.Component
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
@@ -85,7 +87,7 @@ class RecyclerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = RecyclerBlock.ACTIVE
 
@@ -128,11 +130,11 @@ class RecyclerBlockEntity(
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT)
         const val INVENTORY_SIZE = 7
-        private val SCRAP_ID = ResourceLocation.fromNamespaceAndPath("ic2_120", "scrap")
+        private val SCRAP_ID = Identifier.fromNamespaceAndPath("ic2_120", "scrap")
     }
 
     private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
-    private val cachedScrapItem by lazy { BuiltInRegistries.ITEM.get(SCRAP_ID) }
+    private val cachedScrapItem by lazy { BuiltInRegistries.ITEM.getValue(SCRAP_ID) }
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -211,7 +213,7 @@ class RecyclerBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.recycler")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         RecyclerScreenHandler(
             syncId,
             playerInventory,
@@ -223,23 +225,23 @@ class RecyclerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(RecyclerSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(RecyclerSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         // 老存档只有整型 Progress（syncedData 已读入 sync.progress），回退为浮点进度
         progressF = if (nbt.contains("ProgressF")) {
-            nbt.getFloat("ProgressF").coerceIn(0f, RecyclerSync.PROGRESS_MAX.toFloat())
+            nbt.getFloatOr("ProgressF", 0f).coerceIn(0f, RecyclerSync.PROGRESS_MAX.toFloat())
         } else {
             sync.progress.toFloat().coerceIn(0f, RecyclerSync.PROGRESS_MAX.toFloat())
         }
-        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
+        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloatOr("EnergyDebt", 0f).coerceAtLeast(0f) else 0f
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(RecyclerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)

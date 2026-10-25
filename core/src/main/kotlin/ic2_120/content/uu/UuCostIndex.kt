@@ -1,5 +1,6 @@
 package ic2_120.content.uu
 
+import ic2_120.compat.recipeManager
 import ic2_120.Ic2_120
 import ic2_120.config.UuReplicationDefaults
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -7,7 +8,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.RecipeManager
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.MinecraftServer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 import java.util.IdentityHashMap
 
@@ -146,7 +147,7 @@ object UuCostIndex {
             "ic2_120:plutonium", "ic2_120:depleted_quad_mox_fuel_rod"
         )
         for (idStr in spot) {
-            val item = BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(idStr))
+            val item = BuiltInRegistries.ITEM.getValue(Identifier.tryParse(idStr))
             if (item === Items.AIR) continue
             val expected = UuReplicationDefaults.defaultWhitelist[idStr]
             val actual = UuGraph.costUb(item)
@@ -226,7 +227,7 @@ object UuCostIndex {
         val merged = HashMap<String, String>()
         val rm = server.resourceManager
         for (ns in listOf("minecraft", "ic2", "ic2_120")) {
-            val id = ResourceLocation.fromNamespaceAndPath(ns, "lang/zh_cn.json")
+            val id = Identifier.fromNamespaceAndPath(ns, "lang/zh_cn.json")
             try {
                 val res = rm.getResource(id)
                 if (res.isPresent) {
@@ -246,8 +247,8 @@ object UuCostIndex {
 
     /** 获取物品的本地化显示名（强制中文）*/
     private fun displayName(itemId: String): String {
-        val id = ResourceLocation.tryParse(itemId) ?: return "?"
-        val item = BuiltInRegistries.ITEM.get(id)
+        val id = Identifier.tryParse(itemId) ?: return "?"
+        val item = BuiltInRegistries.ITEM.getValue(id)
         if (item === Items.AIR) return "?"
         return try {
             val key = item.descriptionId

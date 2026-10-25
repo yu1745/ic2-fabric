@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -38,7 +40,7 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
@@ -70,7 +72,7 @@ class CropHarvesterBlockEntity(
     IEjectorUpgradeSupport,
     ITransformerUpgradeSupport,
     IOverclockerUpgradeSupport,
-    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CropHarvesterBlock.ACTIVE
     override val tier: Int = CROP_HARVESTER_TIER
@@ -155,7 +157,7 @@ class CropHarvesterBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.crop_harvester")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         CropHarvesterScreenHandler(
             syncId,
             playerInventory,
@@ -167,24 +169,24 @@ class CropHarvesterBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(CropHarvesterSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(CropHarvesterSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        scanX = if (nbt.contains(NBT_SCAN_X)) nbt.getInt(NBT_SCAN_X).coerceIn(SCAN_X_MIN, SCAN_X_MAX) else SCAN_X_MIN
-        scanY = if (nbt.contains(NBT_SCAN_Y)) nbt.getInt(NBT_SCAN_Y).coerceIn(SCAN_Y_MIN, SCAN_Y_MAX) else SCAN_Y_MIN
-        scanZ = if (nbt.contains(NBT_SCAN_Z)) nbt.getInt(NBT_SCAN_Z).coerceIn(SCAN_Z_MIN, SCAN_Z_MAX) else SCAN_Z_MIN
+        scanX = if (nbt.contains(NBT_SCAN_X)) nbt.getIntOr(NBT_SCAN_X, 0).coerceIn(SCAN_X_MIN, SCAN_X_MAX) else SCAN_X_MIN
+        scanY = if (nbt.contains(NBT_SCAN_Y)) nbt.getIntOr(NBT_SCAN_Y, 0).coerceIn(SCAN_Y_MIN, SCAN_Y_MAX) else SCAN_Y_MIN
+        scanZ = if (nbt.contains(NBT_SCAN_Z)) nbt.getIntOr(NBT_SCAN_Z, 0).coerceIn(SCAN_Z_MIN, SCAN_Z_MAX) else SCAN_Z_MIN
         sync.scanX = scanX
         sync.scanY = scanY
         sync.scanZ = scanZ
-        workOffset = nbt.getInt(NBT_WORK_OFFSET).coerceIn(0, WORK_INTERVAL_TICKS - 1)
+        workOffset = nbt.getIntOr(NBT_WORK_OFFSET, 0).coerceIn(0, WORK_INTERVAL_TICKS - 1)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropHarvesterSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_SCAN_X, scanX)

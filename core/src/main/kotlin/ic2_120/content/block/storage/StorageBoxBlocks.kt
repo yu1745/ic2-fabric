@@ -1,10 +1,12 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.save
+
 import ic2_120.compat.orCreateNbt
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -66,50 +68,38 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
      * 储物箱物品禁止堆叠：内容物保存在 BlockEntityTag NBT 中，堆叠会丢失/复制内容。
      * 所有储物箱子类通过父类链继承该设置。
      */
-    class StorageBoxBlockItem(block: Block, settings: Item.Properties) : BlockItem(block, settings.stacksTo(1))
-
-    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
-        return StorageBoxBlockEntity(pos, state)
-    }
-
-    /**
-     * 确保方块使用模型渲染（而不是实体渲染）
-     */
-    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
-
-    /**
-     * 添加物品提示信息
-     */
+    class StorageBoxBlockItem(block: Block, settings: Item.Properties) : BlockItem(block, settings.stacksTo(1)) {
     @Environment(EnvType.CLIENT)
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
 
         // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
-        val blockEntityTag = stack.orCreateNbt.getCompound("BlockEntityTag")
+        val blockEntityTag = stack.orCreateNbt.getCompoundOrEmpty("BlockEntityTag")
         if (!blockEntityTag.contains("Container")) {
             tooltip.add(Component.literal("物品数量: 0").withStyle(ChatFormatting.GRAY))
             return
         }
 
-        val inventoryNbt = blockEntityTag.getCompound("Container")
+        val inventoryNbt = blockEntityTag.getCompoundOrEmpty("Container")
         if (inventoryNbt.isEmpty) {
             tooltip.add(Component.literal("物品数量: 0").withStyle(ChatFormatting.GRAY))
             return
         }
 
         // 解析物品栏数据
-        val items = inventoryNbt.getList("Items", 10)
+        val items = inventoryNbt.getListOrEmpty("Items")
         var totalItems = 0
         var filledSlots = 0
 
         for (i in 0 until items.size) {
-            val itemNbt = items.getCompound(i)
-            val count = itemNbt.getInt("Count")
+            val itemNbt = items.getCompoundOrEmpty(i)
+            val count = itemNbt.getIntOr("Count", 0)
             if (count > 0) {
                 filledSlots++
                 totalItems += count
@@ -124,6 +114,20 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
         }
     }
 
+    }
+
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
+        return StorageBoxBlockEntity(pos, state)
+    }
+
+    /**
+     * 确保方块使用模型渲染（而不是实体渲染）
+     */
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
+
+    /**
+     * 添加物品提示信息
+     */
     /**
      * 玩家右键点击打开 GUI
      */
@@ -141,35 +145,6 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
     /**
      * 方块被替换/破坏时掉落带有物品栏的物品（类似潜影盒）
      */
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.`is`(newState.block)) {
-            val blockEntity = world.getBlockEntity(pos)
-            if (blockEntity is StorageBoxBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
-                // 创建带有 BlockEntity NBT 的物品
-                val itemStack = ItemStack(this.asItem())
-                val nbt = blockEntity.saveWithFullMetadata(world.registryAccess())
-                if (!nbt.isEmpty) {
-                    itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
-                }
-
-                // 掉落物品
-                if (!itemStack.isEmpty) {
-                    val itemEntity = net.minecraft.world.entity.item.ItemEntity(
-                        world,
-                        pos.x.toDouble() + 0.5,
-                        pos.y.toDouble() + 0.5,
-                        pos.z.toDouble() + 0.5,
-                        itemStack
-                    )
-                    itemEntity.setDefaultPickUpDelay()
-                    world.addFreshEntity(itemEntity)
-                }
-            }
-        }
-        super.onRemove(state, world, pos, newState, moved)
-    }
-
     override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player): BlockState {
         if (!world.isClient && player.abilities.instabuild) {
             (world.getBlockEntity(pos) as? StorageBoxBlockEntity)?.shouldDropOnBreak = false
@@ -184,8 +159,8 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
     /**
      * 获取掉落的物品（包含 BlockEntity NBT 数据）- 用于创造模式拾取
      */
-    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState): ItemStack {
-        val itemStack = super.getCloneItemStack(world, pos, state)
+    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState, includeData: Boolean): ItemStack {
+        val itemStack = super.getCloneItemStack(world, pos, state, includeData)
         val blockEntity = (world as? Level)?.getBlockEntity(pos)
 
         if (blockEntity is StorageBoxBlockEntity) {
@@ -198,7 +173,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
         return itemStack
     }
 
-    override fun getAnalogOutputSignal(state: BlockState, world: net.minecraft.world.level.Level, pos: BlockPos): Int {
+    override fun getAnalogOutputSignal(state: BlockState, world: net.minecraft.world.level.Level, pos: BlockPos, direction: net.minecraft.core.Direction): Int {
         // 类似箱子，根据物品栏填充度输出红石信号
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is StorageBoxBlockEntity) {
@@ -237,7 +212,7 @@ class WoodenStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCo
         fun generateRecipes(exporter: RecipeOutput) {
             val log = Items.OAK_LOG
             val plank = Items.OAK_PLANKS
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoodenStorageBoxBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, WoodenStorageBoxBlock::class.item(), 1)
                 .pattern("LPL")
                 .pattern("P P")
                 .pattern("LPL")
@@ -261,11 +236,11 @@ class BronzeStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCo
             val plate = BronzePlate::class.instance()
             val casing = BronzeCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzeStorageBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BronzeStorageBoxBlock::class.item(), 1)
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
+                    .define('P', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_BRONZE))
                     .define('C', casing)
                     .unlockedBy(getHasName(plate), has(plate))
                     .save(exporter, BronzeStorageBoxBlock::class.id())
@@ -286,11 +261,11 @@ class IronStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy
             val plate = IronPlate::class.instance()
             val casing = IronCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronStorageBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IronStorageBoxBlock::class.item(), 1)
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                    .define('P', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON))
                     .define('C', casing)
                     .unlockedBy(getHasName(plate), has(plate))
                     .save(exporter, IronStorageBoxBlock::class.id())
@@ -311,11 +286,11 @@ class SteelStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCop
             val plate = SteelPlate::class.instance()
             val casing = SteelCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelStorageBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SteelStorageBoxBlock::class.item(), 1)
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_STEEL))
+                    .define('P', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_STEEL))
                     .define('C', casing)
                     .unlockedBy(getHasName(plate), has(plate))
                     .save(exporter, SteelStorageBoxBlock::class.id())
@@ -336,7 +311,7 @@ class IridiumStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullC
             val iridium = IridiumPlate::class.instance()
             val steel = SteelPlate::class.instance()
             if (iridium != Items.AIR && steel != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumStorageBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IridiumStorageBoxBlock::class.item(), 1)
                     .pattern("ISI")
                     .pattern("S S")
                     .pattern("ISI")

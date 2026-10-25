@@ -13,7 +13,7 @@ object ConfigCommand {
         CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback { dispatcher, _, _ ->
             dispatcher.register(
                 literal("ic2config")
-                    .requires { source -> source.hasPermission(2) }
+                    .requires(net.minecraft.commands.Commands.hasPermission(net.minecraft.commands.Commands.LEVEL_GAMEMASTERS))
                     .then(
                         literal("reload")
                             .executes { context ->

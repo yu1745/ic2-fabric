@@ -16,6 +16,9 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.LevelAccessor
+import net.minecraft.world.level.LevelReader
+import net.minecraft.world.level.ScheduledTickAccess
+import net.minecraft.util.RandomSource
 
 /**
  * 反应堆透明外壳基类：压力容器与三种接口共用（铅框 + 强化玻璃，堆芯从外面直接可见）。
@@ -58,11 +61,11 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Properties = shellSett
         return state
     }
 
-    @Deprecated("Deprecated in Java")
     override fun updateShape(
-        state: BlockState, direction: Direction, neighborState: BlockState,
-        world: LevelAccessor, pos: BlockPos, neighborPos: BlockPos,
-    ): BlockState = super.updateShape(state, direction, neighborState, world, pos, neighborPos)
+        state: BlockState, world: LevelReader, ticks: ScheduledTickAccess,
+        pos: BlockPos, direction: Direction, neighborPos: BlockPos,
+        neighborState: BlockState, random: RandomSource,
+    ): BlockState = super.updateShape(state, world, ticks, pos, direction, neighborPos, neighborState, random)
         .let { if (it.block === this) it.setValue(CONNECT.getValue(direction), connects(neighborState)) else it }
 
     private fun connects(neighbor: BlockState): Boolean =
@@ -75,5 +78,5 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Properties = shellSett
     @Deprecated("Deprecated in Java")
     override fun getShadeBrightness(state: BlockState, world: BlockGetter, pos: BlockPos): Float = 1.0f
 
-    override fun propagatesSkylightDown(state: BlockState, world: BlockGetter, pos: BlockPos): Boolean = true
+    override fun propagatesSkylightDown(state: BlockState): Boolean = true
 }

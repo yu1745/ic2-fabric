@@ -1,19 +1,10 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "K": {
-      "item": "ic2_120:coil"
-    },
-    "M": {
-      "item": "ic2_120:machine"
-    },
-    "T": {
-      "item": "ic2_120:tool_box"
-    },
-    "c": {
-      "item": "ic2_120:circuit"
-    }
+    "K": "ic2_120:coil",
+    "M": "ic2_120:machine",
+    "T": "ic2_120:tool_box",
+    "c": "ic2_120:circuit"
   },
   "pattern": [
     " c ",
@@ -21,7 +12,6 @@
     "KKK"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:metal_former"
   }
 }

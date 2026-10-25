@@ -6,7 +6,7 @@ import ic2_120.registry.ClassScanner
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.level.levelgen.GenerationStep
 import org.slf4j.LoggerFactory
 
@@ -14,7 +14,7 @@ object BuildCraftAddon : ModInitializer {
     const val MOD_ID = "buildcraft_addon"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
-    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
+    fun id(path: String): Identifier = Identifier.fromNamespaceAndPath(MOD_ID, path)
 
     override fun onInitialize() {
         // Register fluids first

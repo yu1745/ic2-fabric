@@ -1,6 +1,6 @@
 package ic2_120.client.ui
 
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 
 /**
  * 原版风格的进度条：深色底、浅色填充、细边框。

@@ -28,7 +28,7 @@ object QuantumLeggingsSpeedController {
             val leggings = stack.item as? QuantumLeggings ?: return@register
             val tier = QuantumLeggings.getSpeedTier(stack)
             if (tier <= 0 || leggings.getEnergy(stack) <= 0L) return@register
-            if (!player.input.up) return@register
+            if (!player.input.keyPresses.forward()) return@register
 
             val inWater = player.isInWater
             if (!inWater && !player.onGround()) return@register
@@ -41,7 +41,7 @@ object QuantumLeggingsSpeedController {
             if (boost <= 0.0) return@register
 
             player.moveRelative(boost.toFloat(), Vec3(0.0, 0.0, 1.0))
-            if (inWater && player.input.jumping) {
+            if (inWater && player.input.keyPresses.jump()) {
                 player.deltaMovement = player.deltaMovement.add(0.0, boost, 0.0)
             }
             ClientPlayNetworking.send(QuantumLeggingsSpeedTickPayload)

@@ -14,13 +14,13 @@ import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.registry.instance
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider
 import net.minecraft.world.level.block.Block
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.BlockTags
 import net.minecraft.tags.TagKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 
@@ -32,9 +32,12 @@ import kotlin.reflect.KClass
  * 否则不会进入 mineable 类标签，表现为镐挖极慢。
  */
 class ModBlockTagProvider(
-    output: FabricDataOutput,
+    output: FabricPackOutput,
     registriesFuture: CompletableFuture<HolderLookup.Provider>,
-) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
+) : FabricTagsProvider.BlockTagsProvider(output, registriesFuture) {
+    private fun getOrCreateTagBuilder(key: TagKey<Block>) =
+        ic2_120.compat.LegacyTagAppender26(BuiltInRegistries.BLOCK) { replace -> net.minecraft.data.tags.TagAppender.forBuilder(getOrCreateRawBuilder(key).setReplace(replace)) }
+
     private val compatPathsBuilt = mutableSetOf<String>()
 
     private val oreBlockIds = setOf(
@@ -86,14 +89,14 @@ class ModBlockTagProvider(
         val axeBuilder = getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_AXE).setReplace(false)
         val hoeBuilder = getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_HOE).setReplace(false)
         val logsBuilder = getOrCreateTagBuilder(BlockTags.LOGS).setReplace(false)
-        val logsThatBurnBuilder = getOrCreateTagBuilder(BlockTags.LOGS_THAT_BURN).setReplace(false)
-        val saplingBuilder = getOrCreateTagBuilder(BlockTags.SAPLINGS).setReplace(false)
+        val logsThatBurnBuilder = getOrCreateTagBuilder(net.minecraft.tags.BlockItemTags.LOGS_THAT_BURN.block()).setReplace(false)
+        val saplingBuilder = getOrCreateTagBuilder(net.minecraft.tags.BlockItemTags.SAPLINGS.block()).setReplace(false)
         val climbableBuilder = getOrCreateTagBuilder(BlockTags.CLIMBABLE).setReplace(false)
 
         // 将橡胶原木添加到原版 logs 标签，使橡胶树叶能正确识别原木
-        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_log")))
-        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "stripped_rubber_log")))
-        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_wood")))
+        logsBuilder.add(BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_log")))
+        logsBuilder.add(BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "stripped_rubber_log")))
+        logsBuilder.add(BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_wood")))
 
         for (block in BuiltInRegistries.BLOCK) {
             val id = BuiltInRegistries.BLOCK.getKey(block)
@@ -175,11 +178,11 @@ class ModBlockTagProvider(
     }
 
     private fun cBlock(path: String): TagKey<Block> =
-        TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", path))
+        TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", path))
 
     private fun forgeBlock(path: String): TagKey<Block> =
-        TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("forge", path))
+        TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("forge", path))
 
     private fun compatBlock(path: String): TagKey<Block> =
-        TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
+        TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("ic2_120", "compat/$path"))
 }

@@ -111,7 +111,7 @@ class LeashKineticGeneratorBlockEntity(
         val mobValid = mob != null && mob.isAlive && knot != null && knot.isAlive
         if (!mobValid) {
             if (leashedMobUuid != null) {
-                knot?.kill()
+                (world as? ServerLevel)?.let { knot?.kill(it) }
                 knot?.remove(Entity.RemovalReason.DISCARDED)
                 setLeashedMob(null, "")
             }
@@ -228,22 +228,18 @@ class LeashKineticGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
-        if (nbt.hasUUID("LeashedMobUuid")) {
-            leashedMobUuid = nbt.getUUID("LeashedMobUuid")
-        }
-        if (nbt.hasUUID("KnotUuid")) {
-            knotUuid = nbt.getUUID("KnotUuid")
-        }
-        mobName = nbt.getString("MobName")
+        pendingOutputKu = nbt.getIntOr("PendingKu", 0).coerceAtLeast(0)
+        leashedMobUuid = nbt.read("LeashedMobUuid", net.minecraft.core.UUIDUtil.CODEC).orElse(null)
+        knotUuid = nbt.read("KnotUuid", net.minecraft.core.UUIDUtil.CODEC).orElse(null)
+        mobName = nbt.getStringOr("MobName", "")
         syncedData.readNbt(nbt)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
         nbt.putInt("PendingKu", pendingOutputKu)
-        leashedMobUuid?.let { nbt.putUUID("LeashedMobUuid", it) }
-        knotUuid?.let { nbt.putUUID("KnotUuid", it) }
+        leashedMobUuid?.let { nbt.store("LeashedMobUuid", net.minecraft.core.UUIDUtil.CODEC, it) }
+        knotUuid?.let { nbt.store("KnotUuid", net.minecraft.core.UUIDUtil.CODEC, it) }
         nbt.putString("MobName", mobName)
         syncedData.writeNbt(nbt)
     }

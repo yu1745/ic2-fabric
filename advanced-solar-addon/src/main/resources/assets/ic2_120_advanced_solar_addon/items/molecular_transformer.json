@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:special",
+    "base": "ic2_120_advanced_solar_addon:item/molecular_transformer",
+    "model": {
+      "type": "ic2_120_advanced_solar_addon:molecular_transformer_item"
+    }
+  }
+}

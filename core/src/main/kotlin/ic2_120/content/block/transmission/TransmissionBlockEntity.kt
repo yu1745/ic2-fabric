@@ -1,5 +1,7 @@
 package ic2_120.content.block.transmission
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 import ic2_120.compat.world
@@ -37,7 +39,7 @@ class TransmissionBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state) {
+) : LegacyBlockEntity26(type, pos, state) {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         TransmissionBlockEntity::class.type(),
@@ -61,7 +63,7 @@ class TransmissionBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        currentKu = nbt.getInt("CurrentKu").coerceAtLeast(0)
+        currentKu = nbt.getIntOr("CurrentKu", 0).coerceAtLeast(0)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {

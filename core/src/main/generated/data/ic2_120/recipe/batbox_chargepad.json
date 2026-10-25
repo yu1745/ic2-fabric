@@ -1,26 +1,16 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "B": {
-      "item": "ic2_120:batbox"
-    },
-    "C": {
-      "item": "ic2_120:circuit"
-    },
-    "P": {
-      "item": "minecraft:stone_pressure_plate"
-    },
-    "R": {
-      "tag": "ic2_120:compat/rubber"
-    }
+    "B": "ic2_120:batbox",
+    "C": "ic2_120:circuit",
+    "P": "minecraft:stone_pressure_plate",
+    "R": "#ic2_120:compat/rubber"
   },
   "pattern": [
     "CPC",
     "RBR"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:batbox_chargepad"
   }
 }

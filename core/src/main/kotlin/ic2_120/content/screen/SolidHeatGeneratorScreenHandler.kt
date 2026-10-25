@@ -11,7 +11,6 @@ import ic2_120.content.sync.SolidHeatGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
@@ -98,7 +97,10 @@ class SolidHeatGeneratorScreenHandler(
         const val HOTBAR_END = 38
 
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
-            !stack.isEmpty && (FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0
+            !stack.isEmpty && (stack.item == net.minecraft.world.item.Items.COAL ||
+                stack.item == net.minecraft.world.item.Items.CHARCOAL ||
+                stack.item == net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(
+                    net.minecraft.resources.Identifier.fromNamespaceAndPath("ic2_120", "coke")))
         })
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false })
 

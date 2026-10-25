@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "D": {
-      "item": "minecraft:diamond"
-    },
-    "V": {
-      "item": "ic2_120:drill"
-    }
+    "D": "minecraft:diamond",
+    "V": "ic2_120:drill"
   },
   "pattern": [
     "   ",
@@ -15,7 +11,6 @@
     "DVD"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:diamond_drill"
   }
 }

@@ -32,7 +32,7 @@ object SeedCommand {
             dispatcher.register(
                 Commands.literal("ic2seed")
                     .requires { source ->
-                        source.hasPermission(PERMISSION_LEVEL) ||
+                        source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) ||
                         source.player?.isCreative() == true
                     }
                     .then(

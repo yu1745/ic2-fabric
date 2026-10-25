@@ -8,7 +8,7 @@ import com.mojang.serialization.Codec
 import ic2_120.config.Ic2Config
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.TagKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.util.RandomSource
 import net.minecraft.world.level.levelgen.Heightmap
@@ -32,15 +32,15 @@ import java.util.stream.Stream
 object RubberTreeBiomeTags {
     /** 入口层：所有允许生成橡胶树的群系（= forest ∪ swamp）。 */
     val GENERATES_RUBBER_TREES: TagKey<Biome> =
-        TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "generates_rubber_trees"))
+        TagKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath("ic2_120", "generates_rubber_trees"))
 
     /** 概率层：森林/丛林类（Forge FOREST + JUNGLE）。 */
     val FOREST: TagKey<Biome> =
-        TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_tree_forest"))
+        TagKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath("ic2_120", "rubber_tree_forest"))
 
     /** 概率层：沼泽类（Forge SWAMP）。 */
     val SWAMP: TagKey<Biome> =
-        TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_tree_swamp"))
+        TagKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath("ic2_120", "rubber_tree_swamp"))
 }
 
 /**
@@ -108,7 +108,7 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
 
     companion object {
         val CODEC: Codec<RubberTreeConfigPlacementModifier> =
-            Codec.unit(::RubberTreeConfigPlacementModifier)
+            com.mojang.serialization.MapCodec.unit(::RubberTreeConfigPlacementModifier).codec()
     }
 }
 
@@ -137,6 +137,6 @@ class RubberTreeConfigWaterDepthFilterPlacementModifier : PlacementFilter() {
 
     companion object {
         val CODEC: Codec<RubberTreeConfigWaterDepthFilterPlacementModifier> =
-            Codec.unit(::RubberTreeConfigWaterDepthFilterPlacementModifier)
+            com.mojang.serialization.MapCodec.unit(::RubberTreeConfigWaterDepthFilterPlacementModifier).codec()
     }
 }

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "ic2_120:item/crafting/coal_block"
+    "all": "ic2_120:block/crafting/coal_block"
   }
 }

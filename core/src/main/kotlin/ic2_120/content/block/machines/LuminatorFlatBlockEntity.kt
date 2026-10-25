@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -33,7 +35,7 @@ class LuminatorFlatBlockEntity(
     type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ITieredMachine {
+) : LegacyBlockEntity26(type, pos, state), ITieredMachine {
 
     override val tier: Int = 5
 
@@ -55,8 +57,8 @@ class LuminatorFlatBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
-        sync.restoreEnergy(nbt.getLong(LuminatorSync.NBT_ENERGY_STORED))
-        cycleTicks = nbt.getInt("CycleTicks")
+        sync.restoreEnergy(nbt.getLongOr(LuminatorSync.NBT_ENERGY_STORED, 0L))
+        cycleTicks = nbt.getIntOr("CycleTicks", 0)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {

@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -78,7 +80,7 @@ class SteamGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
             val copperBoiler = ic2_120.content.item.CopperBoiler::class.instance()
             val heatConductor = ic2_120.content.item.HeatConductor::class.instance()
             if (ironCasing != net.minecraft.world.item.Items.AIR && copperBoiler != net.minecraft.world.item.Items.AIR && heatConductor != net.minecraft.world.item.Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteamGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SteamGeneratorBlock::class.item(), 1)
                     .pattern("CHC")
                     .pattern("CBC")
                     .pattern("CCC")

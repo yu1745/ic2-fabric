@@ -75,8 +75,8 @@ class RFEngineBlock(properties: BlockBehaviour.Properties = Properties.of().stre
         return defaultBlockState().setValue(BlockStateProperties.FACING, ctx.clickedFace.opposite)
     }
 
-    override fun neighborChanged(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
-        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
+    override fun neighborChanged(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, orientation: net.minecraft.world.level.redstone.Orientation?, notify: Boolean) {
+        super.neighborChanged(state, world, pos, sourceBlock, orientation, notify)
         val be = world.getBlockEntity(pos) as? RFEngineBlockEntity ?: return
         be.checkRedstonePower()
     }
@@ -86,7 +86,7 @@ class RFEngineBlock(properties: BlockBehaviour.Properties = Properties.of().stre
     }
 
     override fun getRenderShape(state: BlockState): RenderShape {
-        return RenderShape.ENTITYBLOCK_ANIMATED
+        return RenderShape.INVISIBLE
     }
 
     override fun getShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: net.minecraft.world.phys.shapes.CollisionContext): VoxelShape {

@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120_industrial_upgrade:rainlinse",
+    "B": "ic2_120_advanced_solar_addon:ultimate_solar_panel"
+  },
+  "pattern": [
+    "B",
+    "A"
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:ultimate_solar_panelrain"
+  }
+}

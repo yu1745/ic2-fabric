@@ -5,7 +5,7 @@ import ic2_120.content.block.machines.IronFurnaceBlockEntity
 import ic2_120.content.screen.IronFurnaceScreenHandler
 import ic2_120.content.sync.IronFurnaceSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(block = IronFurnaceBlock::class)
@@ -21,13 +21,11 @@ class IronFurnaceScreen(
     val handler: IronFurnaceScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<IronFurnaceScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<IronFurnaceScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     private lateinit var collectXpBtn: Button
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun init() {
@@ -125,7 +123,7 @@ class IronFurnaceScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiironfurnace.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiironfurnace.png")
         private const val TEXTURE_SIZE = 256
 
         // 燃烧值纹理 (180,5)-(193,18) = 13×13

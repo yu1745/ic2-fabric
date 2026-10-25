@@ -1,3 +1,12 @@
 {
-  "type": "ic2_120:ore_washing"
+  "type": "ic2_120:ore_washing",
+  "ingredient": {
+    "item": "minecraft:gravel"
+  },
+  "outputs": [
+    {
+      "item": "ic2_120:stone_dust"
+    }
+  ],
+  "water_consumption_mb": 1000
 }

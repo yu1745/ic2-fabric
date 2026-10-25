@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -84,12 +86,12 @@ class MaceratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MaceratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MaceratorBlock::class.item(), 1)
                     .pattern("FFF")
                     .pattern("XMX")
                     .pattern(" c ")
                     .define('F', Items.FLINT)
-                    .define('X', ItemTags.STONE_CRAFTING_MATERIALS)
+                    .define('X', ic2_120.compat.tagIngredient(ItemTags.STONE_CRAFTING_MATERIALS))
                     .define('M', machine)
                     .define('c', circuit)
                     .unlockedBy(getHasName(machine), has(machine))

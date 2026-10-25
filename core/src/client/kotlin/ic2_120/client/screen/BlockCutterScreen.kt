@@ -6,23 +6,21 @@ import ic2_120.content.block.BlockCutterBlock
 import ic2_120.content.screen.BlockCutterScreenHandler
 import ic2_120.content.sync.BlockCutterSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = BlockCutterBlock::class)
 class BlockCutterScreen(
     val handler: BlockCutterScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<BlockCutterScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<BlockCutterScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -141,16 +139,16 @@ class BlockCutterScreen(
             val upgradeTooltip = mutableListOf<Component>()
             upgradeTooltip.add(Component.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
-                val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", id))
-                upgradeTooltip.add(item.description)
+                val item = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", id))
+                upgradeTooltip.add(item.defaultInstance.hoverName)
             }
             context.renderComponentTooltip(font, upgradeTooltip, mouseX, mouseY)
         }
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiblockcuttingmachine.png")
-        private val UPTIPS = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiblockcuttingmachine.png")
+        private val UPTIPS = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 升级提示图标

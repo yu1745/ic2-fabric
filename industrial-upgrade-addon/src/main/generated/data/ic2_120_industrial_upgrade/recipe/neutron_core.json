@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120_industrial_upgrade:neutron",
+    "B": "ic2_120_industrial_upgrade:quant_core2"
+  },
+  "pattern": [
+    " A ",
+    "ABA",
+    " A "
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:neutron_core"
+  }
+}

@@ -111,7 +111,7 @@ def make_texture(key):
 
 
 def to_obj_mtl(model, name):
-    lines = ['# ic2_120 tools/model3d/item3d 生成，勿手改', f'mtllib {name}.mtl']
+    lines = ['# ic2_120 tools/model3d/item3d 生成，勿手改', f'mtllib {Path(name).name}.mtl']
     vi = 0
     used = []
     for tex, pts, uvs, nrm in polys(model):

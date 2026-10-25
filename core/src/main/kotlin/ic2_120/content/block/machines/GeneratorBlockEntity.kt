@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -27,7 +29,6 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
@@ -58,7 +59,7 @@ class GeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         const val INVENTORY_SIZE = 2
@@ -168,23 +169,23 @@ class GeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         GeneratorScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(GeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, GeneratorSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(GeneratorSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, GeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.burnTime = nbt.getInt("BurnTime")
-        sync.totalBurnTime = nbt.getInt("TotalBurnTime")
+        sync.burnTime = nbt.getIntOr("BurnTime", 0)
+        sync.totalBurnTime = nbt.getIntOr("TotalBurnTime", 0)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(GeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("BurnTime", sync.burnTime)
@@ -205,7 +206,7 @@ class GeneratorBlockEntity(
                 if (burnTicks > 0) {
                     sync.totalBurnTime = burnTicks
                     sync.burnTime = burnTicks
-                    val remainder = fuelSlot.item.getRecipeRemainder(fuelSlot)
+                    val remainder = fuelSlot.item.craftingRemainder?.create() ?: ItemStack.EMPTY
                     fuelSlot.shrink(1)
                     if (fuelSlot.isEmpty && !remainder.isEmpty) setItem(0, remainder.copy())
                     else setItem(0, fuelSlot)
@@ -244,7 +245,7 @@ class GeneratorBlockEntity(
      */
     private fun getFuelTime(stack: ItemStack): Int {
         if (stack.isEmpty) return 0
-        val furnaceTicks = FuelRegistry.INSTANCE.get(stack.item) ?: return 0
+        val furnaceTicks = world?.fuelValues()?.burnDuration(stack) ?: return 0
         if (furnaceTicks <= 0) return 0
         return (furnaceTicks / GeneratorSync.BURN_TICKS_DIVISOR).coerceAtLeast(1)
     }

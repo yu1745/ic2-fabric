@@ -1,5 +1,7 @@
 package buildcraft_addon.content.block
 
+import ic2_120.compat.displayClientMessage
+
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.PumpBlockEntity
 import ic2_120.integration.ftbchunks.ClaimProtection
@@ -49,8 +51,8 @@ class PumpBlock(properties: BlockBehaviour.Properties = Properties.of().strength
         return InteractionResult.SUCCESS
     }
 
-    override fun neighborChanged(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
-        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
+    override fun neighborChanged(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, orientation: net.minecraft.world.level.redstone.Orientation?, notify: Boolean) {
+        super.neighborChanged(state, world, pos, sourceBlock, orientation, notify)
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? PumpBlockEntity ?: return
             be.checkRedstonePower()
@@ -68,26 +70,8 @@ class PumpBlock(properties: BlockBehaviour.Properties = Properties.of().strength
         }
     }
 
-    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState, includeData: Boolean): ItemStack {
         return ItemStack(this)
     }
 
-    @Suppress("DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        // BC TileMiner.onRemove: 方块被破坏时清除管道
-        if (!state.`is`(newState.block) && !world.isClient) {
-            val tubeBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("tube"))
-            val planned = mutableListOf<BlockPos>()
-            for (y in pos.y - 1 downTo pos.y - PumpBlockEntity.MAX_DEPTH) {
-                val bp = BlockPos(pos.x, y, pos.z)
-                if (world.getBlockState(bp).`is`(tubeBlock)) {
-                    planned.add(bp)
-                } else break
-            }
-            if (ClaimProtection.allAllowedUuid(world, planned, null, ClaimProtection.EDIT_BLOCK)) {
-                for (bp in planned) world.setBlock(bp, Blocks.AIR.defaultBlockState(), 3)
-            }
-        }
-        super.onRemove(state, world, pos, newState, moved)
-    }
 }

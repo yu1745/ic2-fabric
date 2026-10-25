@@ -4,13 +4,13 @@ import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.screen.TeleporterScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component as McText
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(block = TeleporterBlock::class)
@@ -18,11 +18,9 @@ class TeleporterScreen(
     val handler: TeleporterScreenHandler,
     playerInventory: Inventory,
     title: McText
-) : AbstractContainerScreen<TeleporterScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<TeleporterScreenHandler>(handler, playerInventory, title, 176, 162) {
 
     init {
-        imageWidth = 176
-        imageHeight = 162
         titleLabelY = 6
     }
 
@@ -144,9 +142,9 @@ class TeleporterScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiother.png")
-        private val WRENCH = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/tool/wrench.png")
-        private val UPTIPS = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiother.png")
+        private val WRENCH = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/tool/wrench.png")
+        private val UPTIPS = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val WRENCH_SIZE = 16
         private const val UPTIPS_SIZE = 16

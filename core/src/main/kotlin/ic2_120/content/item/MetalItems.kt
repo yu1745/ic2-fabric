@@ -1,7 +1,9 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.instance
@@ -33,22 +35,23 @@ class TinIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, TinIngot::class.instance(), 9)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TinIngot::class.instance(), 9)
                 .requires(TinBlock::class.instance())
                 .unlockedBy(getHasName(TinBlock::class.instance()), has(TinBlock::class.instance()))
                 .save(exporter, TinIngot::class.recipeId("from_block"))
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TinBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TinBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_TIN))
                 .unlockedBy(getHasName(TinIngot::class.instance()), has(TinIngot::class.instance()))
                 .save(exporter, TinBlock::class.recipeId("from_ingot"))
 
             SimpleCookingRecipeBuilder.smelting(
                 Ingredient.of(TinOreBlock::class.item()),
                 RecipeCategory.MISC,
+                net.minecraft.world.item.crafting.CookingBookCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
@@ -59,6 +62,7 @@ class TinIngot : Item(Item.Properties()) {
             SimpleCookingRecipeBuilder.smelting(
                 Ingredient.of(DeepslateTinOreBlock::class.item()),
                 RecipeCategory.MISC,
+                net.minecraft.world.item.crafting.CookingBookCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
@@ -72,6 +76,7 @@ class TinIngot : Item(Item.Properties()) {
             SimpleCookingRecipeBuilder.smelting(
                 Ingredient.of(RawTin::class.instance()),
                 RecipeCategory.MISC,
+                net.minecraft.world.item.crafting.CookingBookCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
@@ -82,6 +87,7 @@ class TinIngot : Item(Item.Properties()) {
             SimpleCookingRecipeBuilder.smelting(
                 Ingredient.of(CrushedTin::class.instance()),
                 RecipeCategory.MISC,
+                net.minecraft.world.item.crafting.CookingBookCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
@@ -92,6 +98,7 @@ class TinIngot : Item(Item.Properties()) {
             SimpleCookingRecipeBuilder.smelting(
                 Ingredient.of(PurifiedTin::class.instance()),
                 RecipeCategory.MISC,
+                net.minecraft.world.item.crafting.CookingBookCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
                 200
@@ -110,16 +117,16 @@ class BronzeIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
                 .requires(BronzeBlock::class.instance())
                 .unlockedBy(getHasName(BronzeBlock::class.instance()), has(BronzeBlock::class.instance()))
                 .save(exporter, BronzeIngot::class.recipeId("from_block"))
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzeBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BronzeBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_BRONZE))
                 .unlockedBy(getHasName(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
                 .save(exporter, BronzeBlock::class.recipeId("from_ingot"))
         }

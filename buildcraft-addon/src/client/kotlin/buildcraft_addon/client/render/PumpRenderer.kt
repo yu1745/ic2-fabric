@@ -4,24 +4,26 @@ import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.PumpBlockEntity
 import buildcraft_addon.client.render.EngineRenderHelper.emitQuadBothSides
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.client.renderer.texture.TextureAtlas
+import net.minecraft.data.AtlasIds
+import ic2_120.client.renderers.LegacyBlockEntityRenderer26
+import ic2_120.client.renderers.LegacyMultiBufferSource26
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.LevelRenderer
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.inventory.InventoryMenu
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 import ic2_120.compat.*
 
-class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
-    BlockEntityRenderer<PumpBlockEntity> {
+class PumpRenderer(ctx: BlockEntityRendererProvider.Context?) :
+    LegacyBlockEntityRenderer26<PumpBlockEntity>() {
 
     private var spritesLoaded = false
     private lateinit var tubeSprite: TextureAtlasSprite
@@ -30,26 +32,26 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = Minecraft.getInstance().modelManager.getAtlas(InventoryMenu.BLOCK_ATLAS)
-        fun sprite(path: String) = atlas.getSprite(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
+        val atlas = Minecraft.getInstance().atlasManager.getAtlasOrThrow(AtlasIds.BLOCKS)
+        fun sprite(path: String) = atlas.getSprite(Identifier.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
         tubeSprite = sprite("block/pump/tube")
         ledGreen = sprite("block/pump/led_green")
         ledRed = sprite("block/pump/led_red")
         spritesLoaded = true
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: PumpBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
-        vertexConsumers: MultiBufferSource,
+        vertexConsumers: LegacyMultiBufferSource26,
         light: Int,
         overlay: Int
     ) {
         ensureSprites()
         val world = entity.world ?: return
         val pos = entity.pos
-        val buffer = vertexConsumers.getBuffer(RenderType.cutout())
+        val buffer = vertexConsumers.getBuffer(RenderTypes.entityCutout(TextureAtlas.LOCATION_BLOCKS))
 
         // ========== 管道渲染 ==========
         // PoseStack 已平移到方块位置，使用局部坐标
@@ -67,7 +69,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         }
 
         // ========== LED 指示灯 ==========
-        val pumpLight = LevelRenderer.getLightColor(world, pos)
+        val pumpLight = lightCoords26(world, pos)
         val active = entity.isActive
         val tankFill = if (entity.tank.capacity > 0)
             entity.tank.amount.toFloat() / entity.tank.capacity.toFloat() else 0f
@@ -113,7 +115,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
             val segTop = y1 + frac
             // 取该格的世界坐标算光照
             val worldY = pos.y + kotlin.math.floor(segBot.toDouble()).toInt()
-            val segLight = LevelRenderer.getLightColor(world, BlockPos(pos.x, worldY, pos.z))
+            val segLight = lightCoords26(world, BlockPos(pos.x, worldY, pos.z))
             renderTubeSegment(ctx, buffer, segLight, overlay, x1, segBot, z1, x2, segTop, z2, frac)
         }
 
@@ -122,7 +124,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
             val segBot = y1 + frac + i
             val segTop = segBot + 1f
             val worldY = pos.y + kotlin.math.floor(segBot.toDouble()).toInt()
-            val segLight = LevelRenderer.getLightColor(world, BlockPos(pos.x, worldY, pos.z))
+            val segLight = lightCoords26(world, BlockPos(pos.x, worldY, pos.z))
             renderTubeSegment(ctx, buffer, segLight, overlay, x1, segBot, z1, x2, segTop, z2, 1f)
         }
     }
@@ -180,5 +182,5 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         }
     }
 
-    override fun shouldRenderOffScreen(entity: PumpBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 }

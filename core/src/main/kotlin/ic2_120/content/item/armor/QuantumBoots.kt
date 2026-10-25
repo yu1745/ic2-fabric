@@ -15,7 +15,7 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.minecraft.data.recipes.RecipeOutput
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
@@ -59,12 +59,12 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
 
         @JvmStatic
         fun isSuperJumpEnabled(stack: ItemStack): Boolean =
-            stack.orCreateNbt.getBoolean(SUPER_JUMP_KEY)
+            stack.orCreateNbt.getBooleanOr(SUPER_JUMP_KEY, false)
 
         @JvmStatic
         fun toggleSuperJump(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
-            val enabled = !nbt.getBoolean(SUPER_JUMP_KEY)
+            val enabled = !nbt.getBooleanOr(SUPER_JUMP_KEY, false)
             nbt.putBoolean(SUPER_JUMP_KEY, enabled)
             return enabled
         }
@@ -132,9 +132,10 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
         }
     }
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
-        val jumpEnabled = stack.orCreateNbt.getBoolean(SUPER_JUMP_KEY)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
+        val jumpEnabled = stack.orCreateNbt.getBooleanOr(SUPER_JUMP_KEY, false)
         val energy = getEnergy(stack)
         val jumpCount = if (jumpEnergyCost > 0) energy / jumpEnergyCost else 0L
 

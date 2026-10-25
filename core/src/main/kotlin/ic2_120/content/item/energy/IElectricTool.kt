@@ -87,7 +87,7 @@ interface IElectricTool : ITiered {
         const val ENERGY_KEY = "Energy"
 
         /** 从物品栈获取电量 */
-        fun getEnergy(stack: ItemStack): Long = stack.getCustomData()?.getLong(ENERGY_KEY) ?: 0L
+        fun getEnergy(stack: ItemStack): Long = stack.getCustomData()?.getLongOr(ENERGY_KEY, 0L) ?: 0L
 
         /** 设置物品栈的电量 */
         fun setEnergy(stack: ItemStack, energy: Long, maxCapacity: Long) {

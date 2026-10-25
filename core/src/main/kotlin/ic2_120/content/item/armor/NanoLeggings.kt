@@ -11,7 +11,7 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.minecraft.data.recipes.RecipeOutput
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
@@ -58,8 +58,9 @@ class NanoLeggings : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.
         }
     }
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
                 val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
         tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).withStyle(ChatFormatting.GRAY))
     }

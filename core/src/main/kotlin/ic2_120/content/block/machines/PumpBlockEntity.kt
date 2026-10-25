@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import net.minecraft.network.FriendlyByteBuf
@@ -52,7 +54,7 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -75,7 +77,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -96,7 +98,7 @@ class PumpBlockEntity(
     IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport,
     IClaimSensitive,
-    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = PumpBlock.ACTIVE
 
@@ -207,8 +209,8 @@ class PumpBlockEntity(
         fun setStored(fluidId: String, stored: Long) {
             amount = stored.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) {
-                val id = ResourceLocation.tryParse(fluidId)
-                if (id != null && BuiltInRegistries.FLUID.containsKey(id)) FluidVariant.of(BuiltInRegistries.FLUID.get(id)) else FluidVariant.blank()
+                val id = Identifier.tryParse(fluidId)
+                if (id != null && BuiltInRegistries.FLUID.containsKey(id)) FluidVariant.of(BuiltInRegistries.FLUID.getValue(id)) else FluidVariant.blank()
             } else {
                 FluidVariant.blank()
             }
@@ -244,7 +246,7 @@ class PumpBlockEntity(
     override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == SLOT_INPUT -> {
-            val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell"))
+            val emptyCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "empty_cell"))
             stack.item == emptyCell || stack.item is FluidCellItem
         }
         slot == SLOT_OUTPUT -> false
@@ -262,28 +264,28 @@ class PumpBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.pump")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         PumpScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(PumpSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(PumpSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         progressF = if (nbt.contains("ProgressF")) {
-            nbt.getFloat("ProgressF").coerceIn(0f, PumpSync.PROGRESS_MAX.toFloat())
+            nbt.getFloatOr("ProgressF", 0f).coerceIn(0f, PumpSync.PROGRESS_MAX.toFloat())
         } else {
             sync.progress.toFloat().coerceIn(0f, PumpSync.PROGRESS_MAX.toFloat())
         }
-        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
-        tankInternal.setStored(nbt.getString(NBT_TANK_FLUID), nbt.getLong(NBT_TANK_AMOUNT))
+        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloatOr("EnergyDebt", 0f).coerceAtLeast(0f) else 0f
+        tankInternal.setStored(nbt.getStringOr(NBT_TANK_FLUID, ""), nbt.getLongOr(NBT_TANK_AMOUNT, 0L))
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(PumpSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -445,7 +447,7 @@ class PumpBlockEntity(
 
         val output = getItem(SLOT_OUTPUT)
         val filled = when {
-            input.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) ->
+            input.item == BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) ->
                 fluidToFilledCellStack(tankInternal.variant.fluid)
             input.item is FluidCellItem && input.isFluidCellEmpty() ->
                 ItemStack(input.item).apply { setFluidCellVariant(FluidVariant.of(tankInternal.variant.fluid)) }

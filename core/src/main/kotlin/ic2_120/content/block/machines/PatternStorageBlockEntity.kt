@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -19,7 +23,7 @@ import ic2_120.content.uu.getUuTemplate
 import ic2_120.content.uu.setUuTemplate
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
@@ -42,7 +46,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 
@@ -51,7 +55,7 @@ class PatternStorageBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(type, pos, state), Container, IRoutedSidedInventory, ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         const val SLOT_CRYSTAL = 0
@@ -73,7 +77,7 @@ class PatternStorageBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val crystalMemoryId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "crystal_memory")
+    private val crystalMemoryId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "crystal_memory")
 
     private val templates = mutableListOf<UuTemplateEntry>()
 
@@ -191,15 +195,15 @@ class PatternStorageBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.pattern_storage")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         PatternStorageScreenHandler(syncId, playerInventory, this, pos, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), itemStorage)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         templates.clear()
-        templates += decodeUuTemplateList(nbt.getList(UU_TEMPLATE_LIST_NBT_KEY, 10))
-        selectedTemplateIndex = nbt.getInt(NBT_SELECTED_INDEX)
+        templates += decodeUuTemplateList(nbt.getListOrEmpty(UU_TEMPLATE_LIST_NBT_KEY))
+        selectedTemplateIndex = nbt.getIntOr(NBT_SELECTED_INDEX, 0)
         if (templates.isEmpty()) selectedTemplateIndex = -1 else {
             selectedTemplateIndex = selectedTemplateIndex.coerceIn(0, templates.lastIndex)
         }
@@ -207,7 +211,7 @@ class PatternStorageBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         nbt.put(UU_TEMPLATE_LIST_NBT_KEY, encodeUuTemplateList(templates))
         nbt.putInt(NBT_SELECTED_INDEX, selectedTemplateIndex)
     }

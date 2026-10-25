@@ -20,7 +20,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.SimpleContainerData
@@ -28,7 +28,7 @@ import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.entity.EquipmentSlot
@@ -211,7 +211,7 @@ class EnergyStorageScreenHandler(
             val ctx = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val blockInv = SimpleContainer(slotCount.coerceAtLeast(1))
             val blockId = BuiltInRegistries.BLOCK.getKey(playerInventory.player.level().getBlockState(pos).block) ?: error("block not registered")
-            val screenHandlerType = BuiltInRegistries.MENU.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
+            val screenHandlerType = BuiltInRegistries.MENU.getValue(Identifier.fromNamespaceAndPath(blockId.namespace, blockId.path))
                 ?: error("AbstractContainerMenu type not found for $blockId")
             @Suppress("UNCHECKED_CAST")
             return EnergyStorageScreenHandler(

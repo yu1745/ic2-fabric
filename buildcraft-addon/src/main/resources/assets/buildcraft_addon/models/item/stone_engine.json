@@ -1,5 +1,5 @@
 {
-  "parent": "builtin/entity",
+  "parent": "minecraft:item/generated",
   "textures": {
     "particle": "buildcraft_addon:block/engine/stone/side"
   },

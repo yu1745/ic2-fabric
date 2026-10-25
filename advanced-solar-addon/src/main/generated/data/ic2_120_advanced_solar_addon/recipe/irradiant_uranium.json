@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "item": "minecraft:glowstone_dust"
-    },
-    "U": {
-      "item": "ic2_120:uranium_ingot"
-    }
+    "G": "minecraft:glowstone_dust",
+    "U": "ic2_120:uranium_ingot"
   },
   "pattern": [
     " G ",
@@ -15,7 +10,6 @@
     " G "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120_advanced_solar_addon:irradiant_uranium"
   }
 }

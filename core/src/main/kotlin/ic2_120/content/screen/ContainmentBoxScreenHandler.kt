@@ -49,7 +49,7 @@ class ContainmentBoxScreenHandler(
     }
 
     private fun createPlayerSlot(inventorySlot: Int, x: Int, y: Int): Slot {
-        if (hand != InteractionHand.MAIN_HAND || inventorySlot != playerInventory.selected) {
+        if (hand != InteractionHand.MAIN_HAND || inventorySlot != playerInventory.selectedSlot) {
             return Slot(playerInventory, inventorySlot, x, y)
         }
         return object : Slot(playerInventory, inventorySlot, x, y) {

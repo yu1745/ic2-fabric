@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "ic2_120:item/peat_ore",
+    "tints": [
+      {
+        "type": "minecraft:constant",
+        "value": 4863784
+      }
+    ]
+  }
+}

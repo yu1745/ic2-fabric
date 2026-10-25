@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -41,7 +43,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
@@ -139,9 +141,9 @@ class LvTransformerBlock : TransformerBlock() {
             val insulatedTinCable = InsulatedTinCableBlock::class.item()
             val coil = ic2_120.content.item.Coil::class.instance()
             if (coil != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, LvTransformerBlock::class.item(), 1)
                     .pattern("PWP").pattern("PCP").pattern("PWP")
-                    .define('P', ItemTags.PLANKS).define('W', insulatedTinCable).define('C', coil)
+                    .define('P', ic2_120.compat.tagIngredient(ItemTags.PLANKS)).define('W', insulatedTinCable).define('C', coil)
                     .unlockedBy(getHasName(coil), has(coil))
                     .save(exporter, LvTransformerBlock::class.id())
             }
@@ -160,7 +162,7 @@ class MvTransformerBlock : TransformerBlock() {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val machine = MachineCasingBlock::class.item()
             if (machine != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern(" M ").pattern(" W ")
                     .define('W', insulatedCopperCable).define('M', machine)
                     .unlockedBy(getHasName(machine), has(machine))
@@ -182,7 +184,7 @@ class HvTransformerBlock : TransformerBlock() {
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val advancedReBattery = ic2_120.content.item.energy.AdvancedReBatteryItem::class.instance()
             if (MvTransformerBlock::class.item() != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, HvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern("CTB").pattern(" W ")
                     .define('W', insulatedGoldCable).define('C', circuit).define('T', MvTransformerBlock::class.item()).define('B', advancedReBattery)
                     .unlockedBy(getHasName(MvTransformerBlock::class.item()), has(MvTransformerBlock::class.item()))
@@ -204,7 +206,7 @@ class EvTransformerBlock : TransformerBlock() {
             val advancedCircuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val lapotronCrystal = ic2_120.content.item.energy.LapotronCrystalItem::class.instance()
             if (HvTransformerBlock::class.item() != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern("CTL").pattern(" W ")
                     .define('W', insulatedIronCable).define('C', advancedCircuit).define('T', HvTransformerBlock::class.item()).define('L', lapotronCrystal)
                     .unlockedBy(getHasName(HvTransformerBlock::class.item()), has(HvTransformerBlock::class.item()))

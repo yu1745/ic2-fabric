@@ -1,11 +1,11 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_iridium": {
+    "has_photovoltaic_iridium_plate": {
       "conditions": {
         "items": [
           {
-            "items": "ic2_120:iridium"
+            "items": "ic2_120_advanced_solar_addon:photovoltaic_iridium_plate"
           }
         ]
       },
@@ -21,7 +21,7 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_iridium"
+      "has_photovoltaic_iridium_plate"
     ]
   ],
   "rewards": {

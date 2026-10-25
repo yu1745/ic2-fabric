@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120_advanced_solar_addon.content.block.AdvancedSolarPanelBlock
@@ -34,7 +36,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_advanced_solar_addon.ultimate_solar_panel
 // zh_cn: 终极混合太阳能发电机
@@ -79,7 +81,7 @@ open class UltimateSolarPanelBlock : MachineBlock() {
             val advancedSolar = AdvancedSolarPanelBlock::class.item()
             val enrichedSunnarium = EnrichedSunnarium::class.instance()
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, UltimateSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, UltimateSolarPanelBlock::class.item(), 1)
                 .pattern(" L ")
                 .pattern("CAC")
                 .pattern("SCS")
@@ -94,7 +96,7 @@ open class UltimateSolarPanelBlock : MachineBlock() {
             val hybridSolar = HybridSolarPanelBlock::class.item()
             val advancedCircuit = AdvancedCircuit::class.instance()
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, UltimateSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, UltimateSolarPanelBlock::class.item(), 1)
                 .pattern("HHH")
                 .pattern("HCH")
                 .pattern("HHH")

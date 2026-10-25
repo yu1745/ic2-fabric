@@ -1,5 +1,7 @@
 package ic2_120.registry.annotation
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import kotlin.reflect.KClass
 
 /**
@@ -10,18 +12,18 @@ import kotlin.reflect.KClass
  * ```kotlin
  * // 方式一：指定 block，注册名与方块一致（推荐）
  * @ModBlockEntity(block = ElectricFurnaceBlock::class)
- * class ElectricFurnaceBlockEntity(...) : BlockEntity(...)
+ * class ElectricFurnaceBlockEntity(...) : LegacyBlockEntity26(...)
  *
  * // 方式二：显式写 name
  * @ModBlockEntity(name = "electric_furnace")
- * class ElectricFurnaceBlockEntity(...) : BlockEntity(...)
+ * class ElectricFurnaceBlockEntity(...) : LegacyBlockEntity26(...)
  *
  * // 方式三：多个方块共用同一个 BlockEntityType
  * @ModBlockEntity(
  *     name = "storage_box",
  *     blocks = [WoodenStorageBoxBlock::class, IronStorageBoxBlock::class]
  * )
- * class StorageBoxBlockEntity(...) : BlockEntity(...)
+ * class StorageBoxBlockEntity(...) : LegacyBlockEntity26(...)
  * ```
  *
  * @param name 注册名（不含命名空间）。为空且未指定 block 时使用类名转换（驼峰转下划线小写）

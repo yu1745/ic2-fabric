@@ -20,7 +20,7 @@ import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.crafting.ShapedRecipe
 import net.minecraft.world.item.crafting.ShapelessRecipe
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 
 /**
@@ -192,53 +192,35 @@ object UuRecipeBridge {
 
     // ===== 原版配方适配 =====
 
-    private fun AbstractCookingRecipe.toSmeltingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? {
-        // AbstractCookingRecipe.getIngredients() (public) 返回单元素 list，getOutput(rm) 返回输出
-        val ingredientList = this.ingredients
-        if (ingredientList.isEmpty()) return null
-        val out = this.getResultItem(rm)
-        if (out.isEmpty) return null
-        val groups = ingredientList.map { it.toLeanGroup(1) }.filter { it.isNotEmpty() }
-        if (groups.isEmpty()) return null
-        return UuGraph.Transformation(
-            transformCost = UuGraph.SMELTING_COST,
-            inputs = groups,
-            outputs = listOf(out.toLean())
-        )
+    private fun AbstractCookingRecipe.toSmeltingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? =
+        singleItemTransformation(this.input(), this.outputStackFromDisplay(), UuGraph.SMELTING_COST)
+
+    private fun McCuttingRecipe.toStonecuttingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? =
+        singleItemTransformation(this.input(), this.outputStackFromDisplay(), UuGraph.CRAFTING_COST)
+
+    private fun singleItemTransformation(ingredient: Ingredient, output: ItemStack, cost: Double): UuGraph.Transformation? {
+        if (output.isEmpty) return null
+        val group = ingredient.toLeanGroup(1)
+        if (group.isEmpty()) return null
+        return UuGraph.Transformation(cost, listOf(group), listOf(output.toLean()))
     }
 
-    private fun McCuttingRecipe.toStonecuttingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? {
-        val ingredientList = this.ingredients
-        if (ingredientList.isEmpty()) return null
-        val out = this.getResultItem(rm)
-        val groups = ingredientList.map { it.toLeanGroup(1) }.filter { it.isNotEmpty() }
-        if (groups.isEmpty()) return null
-        return UuGraph.Transformation(
-            transformCost = UuGraph.CRAFTING_COST,
-            inputs = groups,
-            outputs = if (out.isEmpty) emptyList() else listOf(out.toLean())
-        )
+    private fun ShapedRecipe.toCraftingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? = toCraftingTxCommon()
+
+    private fun ShapelessRecipe.toCraftingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? = toCraftingTxCommon()
+
+    private fun Recipe<*>.outputStackFromDisplay(): ItemStack {
+        val result = this.display().firstOrNull()?.result()
+            as? net.minecraft.world.item.crafting.display.SlotDisplay.ItemStackSlotDisplay
+        return result?.stack()?.create() ?: ItemStack.EMPTY
     }
 
-    private fun ShapedRecipe.toCraftingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? =
-        toCraftingTxCommon(rm)
-
-    private fun ShapelessRecipe.toCraftingTx(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? =
-        toCraftingTxCommon(rm)
-
-    private fun Recipe<*>.toCraftingTxCommon(rm: net.minecraft.core.RegistryAccess): UuGraph.Transformation? {
-        val out = this.getResultItem(rm)
+    private fun Recipe<*>.toCraftingTxCommon(): UuGraph.Transformation? {
+        val out = this.outputStackFromDisplay()
         if (out.isEmpty) return null
-        val ingredientList = this.ingredients
-        if (ingredientList.isEmpty()) return null
-        // 过滤空槽位（pattern 里的空格产生 Ingredient.empty，matchingStacks 为空）
-        val groups = ingredientList.map { it.toLeanGroup(1) }.filter { it.isNotEmpty() }
+        val groups = this.placementInfo().ingredients().map { it.toLeanGroup(1) }.filter { it.isNotEmpty() }
         if (groups.isEmpty()) return null
-        return UuGraph.Transformation(
-            transformCost = UuGraph.CRAFTING_COST,
-            inputs = groups,
-            outputs = listOf(out.toLean())
-        )
+        return UuGraph.Transformation(UuGraph.CRAFTING_COST, groups, listOf(out.toLean()))
     }
 
     // ===== 工具：Ingredient / ItemStack -> LeanStack =====
@@ -248,18 +230,8 @@ object UuRecipeBridge {
      * [count] 为该输入槽位需要的物品数量（每个备选都按此数量）。
      */
     private fun Ingredient.toLeanGroup(count: Int): List<UuGraph.LeanStack> {
-        val stacks = this.items
-        if (stacks.isEmpty()) return emptyList()
-        // 按 Item 去重（同 item 不同 nbt 只取第一个，UU 计算不关心 NBT）
-        val seen = mutableSetOf<Item>()
-        val result = mutableListOf<UuGraph.LeanStack>()
-        for (s in stacks) {
-            if (s.isEmpty || s.item === Items.AIR) continue
-            if (seen.add(s.item)) {
-                result.add(UuGraph.LeanStack(s.item, count))
-            }
-        }
-        return result
+        val items = this.items().map { it.value() }.distinct().toList()
+        return items.filter { it !== Items.AIR }.map { UuGraph.LeanStack(it, count) }
     }
 
     private fun Array<ItemStack>.toLeanGroup(count: Int): List<UuGraph.LeanStack> {

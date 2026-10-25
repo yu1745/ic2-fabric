@@ -18,7 +18,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.GsonHelper
 
 /**
@@ -37,15 +37,15 @@ import net.minecraft.util.GsonHelper
  * }
  */
 @ModMachineRecipe(id = "ore_washing", recipeClass = OreWashingRecipe::class)
-object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
-    private fun fromJson(id: ResourceLocation, json: JsonObject): OreWashingRecipe {
+object OreWashingRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<OreWashingRecipe>() {
+    private fun fromJson(id: Identifier, json: JsonObject): OreWashingRecipe {
         val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
 
         val outputsArray = json.getAsJsonArray("outputs")
         val outputs = outputsArray.map { element ->
             val outputObj = element.asJsonObject
-            val itemId = ResourceLocation.parse(outputObj.get("item").asString)
-            val item = BuiltInRegistries.ITEM.get(itemId)
+            val itemId = Identifier.parse(outputObj.get("item").asString)
+            val item = BuiltInRegistries.ITEM.getValue(itemId)
             val count = (if (outputObj.has("count")) outputObj.get("count").asInt else 1)
             ItemStack(item, count)
         }
@@ -84,7 +84,17 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
     override fun codec(): MapCodec<OreWashingRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:ore_washing",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", ic2_120.content.recipes.ingredientJson26(recipe.ingredient))
+            json.add("outputs", com.google.gson.JsonArray().apply {
+                recipe.outputItems.forEach { add(ic2_120.content.recipes.stackJson26(it)) }
+            })
+            val bucket = net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET
+            require(recipe.waterConsumptionDroplets * 1000L % bucket == 0L) {
+                "Ore washing water amount must be an integer number of mB"
+            }
+            json.addProperty("water_consumption_mb", recipe.waterConsumptionDroplets * 1000L / bucket)
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, OreWashingRecipe> =

@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "A": {
-      "item": "ic2_120_advanced_solar_addon:sunnarium_alloy"
-    },
-    "E": {
-      "item": "ic2_120_advanced_solar_addon:enriched_sunnarium"
-    }
+    "A": "ic2_120_advanced_solar_addon:sunnarium_alloy",
+    "E": "ic2_120_advanced_solar_addon:enriched_sunnarium"
   },
   "pattern": [
     " E ",
@@ -15,7 +10,6 @@
     " E "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120_advanced_solar_addon:enriched_sunnarium_alloy"
   }
 }

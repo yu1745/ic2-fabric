@@ -1,5 +1,9 @@
 package ic2_120.content.item
 
+import ic2_120.compat.displayClientMessage
+
+import ic2_120.compat.save
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -27,7 +31,7 @@ import ic2_120.registry.item
 import ic2_120.registry.recipeId
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
@@ -37,7 +41,7 @@ import net.minecraft.tags.ItemTags
 import java.util.function.Consumer
 import net.fabricmc.api.Environment
 import net.fabricmc.api.EnvType
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
@@ -49,7 +53,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.ChatFormatting
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
 
@@ -65,8 +68,9 @@ interface IUpgradeItem
 
 abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     @Environment(EnvType.CLIENT)
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         val filter = FluidPipeUpgradeComponent.readFilter(stack)
         if (filter != null) {
             val fluidName: Component = Component.translatable(filter.defaultFluidState().createLegacyBlock().block.descriptionId)
@@ -78,9 +82,9 @@ abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
         tooltip.add(Component.literal("方向: ${directionLabel(sides)}").withStyle(ChatFormatting.GRAY))
     }
 
-    override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResult {
         val stack = user.getItemInHand(hand)
-        if (world.isClient) return InteractionResultHolder.success(stack)
+        if (world.isClient) return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
 
         if (user.isCrouching) {
             val current = FluidPipeUpgradeComponent.readDirections(stack)
@@ -89,12 +93,12 @@ abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
             if (user is ServerPlayer) {
                 user.displayClientMessage(Component.literal("已设置工作方向: ${directionLabel(next)}"), true)
             }
-            return InteractionResultHolder.success(stack)
+            return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
         }
 
         // 打开配置 GUI
         if (user is ServerPlayer) {
-            user.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+            user.openMenu(object : ExtendedMenuProvider<FriendlyByteBuf> {
                 override fun getDisplayName(): Component = Component.translatable("gui.ic2_120.fluid_upgrade.title")
                 override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                     val buf = FriendlyByteBuf(Unpooled.buffer())
@@ -106,7 +110,7 @@ abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
                 }
             })
         }
-        return InteractionResultHolder.success(stack)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
     }
 
     private fun directionLabel(sides: Set<Direction>): String = if (sides.isEmpty()) {
@@ -129,8 +133,9 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     protected open val directionActionLabel: String = "弹出方向"
 
     @Environment(EnvType.CLIENT)
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         val filterItem = EjectorUpgradeComponent.readFilter(stack)
         if (filterItem != null) {
             tooltip.add(Component.literal("过滤物品: ").append(Component.translatable(filterItem.descriptionId)).withStyle(ChatFormatting.GRAY))
@@ -141,9 +146,9 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
         tooltip.add(Component.literal("方向: ${directionLabel(sides)}").withStyle(ChatFormatting.GRAY))
     }
 
-    override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResult {
         val stack = user.getItemInHand(hand)
-        if (world.isClient) return InteractionResultHolder.success(stack)
+        if (world.isClient) return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
 
         if (user.isCrouching) {
             val current = EjectorUpgradeComponent.readDirections(stack)
@@ -152,12 +157,12 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
             if (user is ServerPlayer) {
                 user.displayClientMessage(Component.literal("已设置$directionActionLabel: ${directionLabel(next)}"), true)
             }
-            return InteractionResultHolder.success(stack)
+            return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
         }
 
         // 打开配置 GUI
         if (user is ServerPlayer) {
-            user.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+            user.openMenu(object : ExtendedMenuProvider<FriendlyByteBuf> {
                 override fun getDisplayName(): Component = Component.translatable("gui.ic2_120.item_upgrade.title")
                 override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                     val buf = FriendlyByteBuf(Unpooled.buffer())
@@ -169,7 +174,7 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
                 }
             })
         }
-        return InteractionResultHolder.success(stack)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
     }
 
     private fun directionLabel(sides: Set<Direction>): String = if (sides.isEmpty()) {
@@ -202,7 +207,7 @@ class OverclockerUpgrade : Item(Item.Properties()), IUpgradeItem {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             fun offer(coolant: Item, count: Int, suffix: String) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, OverclockerUpgrade::class.instance(), count)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, OverclockerUpgrade::class.instance(), count)
                     .pattern("CCC")
                     .pattern("WRW")
                     .define('C', coolant)
@@ -226,7 +231,7 @@ class TransformerUpgrade : Item(Item.Properties()), IUpgradeItem {
             val mv = MvTransformerBlock::class.item()
             val goldCable = DoubleInsulatedGoldCableBlock::class.item()
             val circuit = Circuit::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TransformerUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TransformerUpgrade::class.instance(), 1)
                 .pattern("GGG")
                 .pattern("WTW")
                 .pattern("GRG")
@@ -246,11 +251,11 @@ class EnergyStorageUpgrade : Item(Item.Properties()), IUpgradeItem {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val cable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnergyStorageUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EnergyStorageUpgrade::class.instance(), 1)
                 .pattern("PPP")
                 .pattern("WBW")
                 .pattern("PRP")
-                .define('P', ItemTags.PLANKS)
+                .define('P', ic2_120.compat.tagIngredient(ItemTags.PLANKS))
                 .define('W', cable)
                 .define('B', ReBatteryItem::class.instance())
                 .define('R', Circuit::class.instance())
@@ -267,15 +272,15 @@ class RedstoneInverterUpgrade : Item(Item.Properties()), IUpgradeItem {
         fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" L ")
                 .pattern("T T")
-                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                 .define('L', Items.LEVER)
                 .unlockedBy(getHasName(tin), has(tin))
                 .save(exporter)
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 9)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" L ")
                 .pattern("T T")
@@ -294,15 +299,15 @@ class EjectorUpgrade : ItemFilterUpgradeItem() {
         fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EjectorUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" P ")
                 .pattern("T T")
-                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                 .define('P', Items.PISTON)
                 .unlockedBy(getHasName(tin), has(tin))
                 .save(exporter)
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 9)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EjectorUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" P ")
                 .pattern("T T")
@@ -324,15 +329,15 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val hopper = Items.HOPPER
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PullingUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, PullingUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" H ")
                 .pattern("T T")
-                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                 .define('H', hopper)
                 .unlockedBy(getHasName(hopper), has(hopper))
                 .save(exporter)
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PullingUpgrade::class.instance(), 9)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, PullingUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" H ")
                 .pattern("T T")
@@ -352,15 +357,15 @@ class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val motor = ElectricMotor::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" M ")
                 .pattern("T T")
-                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_TIN))
                 .define('M', motor)
                 .unlockedBy(getHasName(motor), has(motor))
                 .save(exporter)
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 9)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" M ")
                 .pattern("T T")

@@ -9,8 +9,8 @@ import net.minecraft.core.registries.Registries
 
 import ic2_120.Ic2_120
 import ic2_120.registry.instance
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.item.Item
@@ -18,7 +18,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.ItemTags
 import net.minecraft.tags.TagKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 
@@ -27,9 +27,12 @@ import kotlin.reflect.KClass
  * 同时根据 [@ModItem] tags 注册到指定的原版/第三方标签。
  */
 class ModItemTagProvider(
-    output: FabricDataOutput,
+    output: FabricPackOutput,
     registriesFuture: CompletableFuture<HolderLookup.Provider>,
-) : FabricTagProvider.ItemTagProvider(output, registriesFuture) {
+) : FabricTagsProvider.ItemTagsProvider(output, registriesFuture) {
+    private fun getOrCreateTagBuilder(key: TagKey<Item>) =
+        ic2_120.compat.LegacyTagAppender26(BuiltInRegistries.ITEM) { replace -> net.minecraft.data.tags.TagAppender.forBuilder(getOrCreateRawBuilder(key).setReplace(replace)) }
+
 
     private val compatPathsBuilt = mutableSetOf<String>()
 
@@ -58,14 +61,14 @@ class ModItemTagProvider(
                 val parts = tagId.split(":", limit = 2)
                 val namespace = parts[0]
                 val path = if (parts.size == 2) parts[1] else parts[0]
-                val tagKey = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(namespace, path))
+                val tagKey = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(namespace, path))
                 getOrCreateTagBuilder(tagKey).add(item)
             }
         }
 
         // 橡胶木系列原木（含 stripped 变体）：填入原版方块/物品标签，并保留 IC2 自用标签。
         listOf("rubber_log", "rubber_wood", "stripped_rubber_log", "stripped_rubber_wood").forEach { path ->
-            val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, path))
+            val block = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, path))
             if (block !== Blocks.AIR && block.asItem() !== Items.AIR) {
                 val item = block.asItem()
                 getOrCreateTagBuilder(ItemTags.LOGS).setReplace(false).add(item)
@@ -76,7 +79,7 @@ class ModItemTagProvider(
 
         // 橡胶树苗和树叶同步加入原版物品标签，供 Create 等兼容方块使用。
         listOf("rubber_sapling", "rubber_leaves").forEach { path ->
-            val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, path))
+            val block = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, path))
             if (block !== Blocks.AIR && block.asItem() !== Items.AIR) {
                 val item = block.asItem()
                 if (path == "rubber_sapling") {
@@ -137,11 +140,11 @@ class ModItemTagProvider(
     }
 
     private fun cItem(path: String): TagKey<Item> =
-        TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", path))
+        TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", path))
 
     private fun forgeItem(path: String): TagKey<Item> =
-        TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("forge", path))
+        TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("forge", path))
 
     private fun compatItem(path: String): TagKey<Item> =
-        TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
+        TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("ic2_120", "compat/$path"))
 }

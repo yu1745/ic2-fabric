@@ -6,26 +6,24 @@ import ic2_120.content.block.CannerBlock
 import ic2_120.content.screen.CannerScreenHandler
 import ic2_120.content.sync.CannerSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(block = CannerBlock::class)
 class CannerScreen(
     val handler: CannerScreenHandler, playerInventory: Inventory, title: Component
-) : AbstractContainerScreen<CannerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<CannerScreenHandler>(handler, playerInventory, title, 176, 184) {
 
     init {
-        imageWidth = 176
-        imageHeight = 184
         titleLabelY = -1000
         inventoryLabelY = -1000
     }
@@ -263,8 +261,8 @@ class CannerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guicanner.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guicanner.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
 

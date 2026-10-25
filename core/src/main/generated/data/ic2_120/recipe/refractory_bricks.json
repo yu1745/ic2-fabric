@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "B": {
-      "item": "minecraft:bricks"
-    },
-    "C": {
-      "item": "minecraft:clay_ball"
-    }
+    "B": "minecraft:bricks",
+    "C": "minecraft:clay_ball"
   },
   "pattern": [
     "BBB",

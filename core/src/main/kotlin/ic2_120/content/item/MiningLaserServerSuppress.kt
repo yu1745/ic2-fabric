@@ -12,7 +12,7 @@ object MiningLaserServerSuppress {
     private val toggleTickByPlayer = ConcurrentHashMap<UUID, Int>()
 
     fun onMiningLaserModeToggled(player: ServerPlayer) {
-        toggleTickByPlayer[player.uuid] = player.server.tickCount
+        toggleTickByPlayer[player.uuid] = player.level().server.tickCount
     }
 
     /**
@@ -20,7 +20,7 @@ object MiningLaserServerSuppress {
      */
     fun consumeSuppressNextFire(player: ServerPlayer): Boolean {
         val marked = toggleTickByPlayer[player.uuid] ?: return false
-        val cur = player.server.tickCount
+        val cur = player.level().server.tickCount
         if (marked != cur) {
             toggleTickByPlayer.remove(player.uuid)
             return false

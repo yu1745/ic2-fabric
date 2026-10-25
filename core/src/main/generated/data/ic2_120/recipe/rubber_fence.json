@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "P": {
-      "item": "ic2_120:rubber_planks"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    }
+    "P": "ic2_120:rubber_planks",
+    "S": "minecraft:stick"
   },
   "pattern": [
     "PSP",

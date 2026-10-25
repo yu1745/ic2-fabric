@@ -7,10 +7,10 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.NuclearReactorScreenHandler
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
@@ -18,14 +18,14 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = NuclearReactorBlock::class)
 class NuclearReactorScreen(
     val handler: NuclearReactorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<NuclearReactorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<NuclearReactorScreenHandler>(handler, playerInventory, title, NuclearReactorScreenHandler.FRAME_WIDTH, maxOf(if (handler.isThermalMode || handler.sync.isThermalMode == 1) TH_BG_H else NT_BG_H, handler.hotbarY + NuclearReactorScreenHandler.SLOT_SIZE + PANEL_BOTTOM_PADDING)) {
 
     private val isThermal get() = menu.isThermalMode || menu.sync.isThermalMode == 1
     private var lockButton: Button? = null
@@ -47,8 +47,6 @@ class NuclearReactorScreen(
         } else {
             maxOf(NT_BG_H, handler.hotbarY + NuclearReactorScreenHandler.SLOT_SIZE + PANEL_BOTTOM_PADDING)
         }
-        imageWidth = NuclearReactorScreenHandler.FRAME_WIDTH
-        imageHeight = frameH
         titleLabelY = -1000
         inventoryLabelY = -1000
     }
@@ -343,7 +341,7 @@ class NuclearReactorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val COOLANT_TANK_DROPLETS = (FluidConstants.BUCKET * NuclearReactorSync.COOLANT_TANK_CAPACITY_BUCKETS).toInt()
         private val COOLANT_TANK_CAPACITY_MB = (COOLANT_TANK_DROPLETS / DROPLETS_PER_MB)

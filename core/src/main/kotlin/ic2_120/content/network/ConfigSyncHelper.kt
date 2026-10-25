@@ -1,12 +1,12 @@
 package ic2_120.content.network
 
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerPlayer
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import kotlin.math.min
 
 object ConfigSyncHelper {
-    fun sendToPlayer(player: ServerPlayer, channelId: ResourceLocation, json: String) {
+    fun sendToPlayer(player: ServerPlayer, channelId: Identifier, json: String) {
         val bytes = json.toByteArray(Charsets.UTF_8)
         val totalChunks = (bytes.size + ConfigSyncPacket.MAX_CHUNK_BYTES - 1) / ConfigSyncPacket.MAX_CHUNK_BYTES
         var offset = 0

@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "D": {
-      "item": "minecraft:diamond"
-    },
-    "H": {
-      "item": "ic2_120:heat_vent"
-    },
-    "I": {
-      "item": "minecraft:iron_bars"
-    }
+    "D": "minecraft:diamond",
+    "H": "ic2_120:heat_vent",
+    "I": "minecraft:iron_bars"
   },
   "pattern": [
     "IHI",
@@ -18,7 +11,6 @@
     "IHI"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:advanced_heat_vent"
   }
 }

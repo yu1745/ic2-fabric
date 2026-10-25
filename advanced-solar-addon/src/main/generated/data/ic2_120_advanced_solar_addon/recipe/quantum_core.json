@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "E": {
-      "item": "ic2_120_advanced_solar_addon:enriched_sunnarium_alloy"
-    },
-    "N": {
-      "item": "minecraft:ender_eye"
-    },
-    "S": {
-      "item": "minecraft:nether_star"
-    }
+    "E": "ic2_120_advanced_solar_addon:enriched_sunnarium_alloy",
+    "N": "minecraft:ender_eye",
+    "S": "minecraft:nether_star"
   },
   "pattern": [
     "ESE",
@@ -18,7 +11,6 @@
     "ESE"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120_advanced_solar_addon:quantum_core"
   }
 }

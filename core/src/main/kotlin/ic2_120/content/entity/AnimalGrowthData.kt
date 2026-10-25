@@ -1,4 +1,6 @@
 package ic2_120.content.entity
+import ic2_120.compat.getUUID
+import ic2_120.compat.putUUID
 
 import net.minecraft.nbt.CompoundTag
 
@@ -49,13 +51,13 @@ data class AnimalGrowthData(
         fun fromNbt(nbt: CompoundTag): AnimalGrowthData {
             return AnimalGrowthData(
                 uuid = nbt.getUUID("UUID"),
-                foodConsumed = nbt.getInt("FoodConsumed"),
-                breedUnlocked = nbt.getBoolean("BreedUnlocked"),
-                canBreed = nbt.getBoolean("CanBreed"),
-                lastFeedTick = nbt.getLong("LastFeedTick"),
-                foodToday = nbt.getInt("FoodToday"),
-                currentDay = nbt.getInt("CurrentDay"),
-                lastHarvestTick = nbt.getLong("LastHarvestTick")
+                foodConsumed = nbt.getIntOr("FoodConsumed", 0),
+                breedUnlocked = nbt.getBooleanOr("BreedUnlocked", false),
+                canBreed = nbt.getBooleanOr("CanBreed", false),
+                lastFeedTick = nbt.getLongOr("LastFeedTick", 0L),
+                foodToday = nbt.getIntOr("FoodToday", 0),
+                currentDay = nbt.getIntOr("CurrentDay", 0),
+                lastHarvestTick = nbt.getLongOr("LastHarvestTick", 0L)
             )
         }
     }

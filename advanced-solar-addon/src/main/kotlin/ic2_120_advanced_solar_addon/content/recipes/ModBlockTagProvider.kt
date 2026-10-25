@@ -2,20 +2,25 @@ package ic2_120_advanced_solar_addon.content.recipes
 
 import ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon
 import ic2_120.content.block.MachineBlock
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider
 import net.minecraft.world.level.block.Block
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.HolderLookup
 import net.minecraft.tags.BlockTags
 import net.minecraft.tags.TagKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.concurrent.CompletableFuture
 
 class ModBlockTagProvider(
-    output: FabricDataOutput,
+    output: FabricPackOutput,
     registriesFuture: CompletableFuture<HolderLookup.Provider>,
-) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
+) : FabricTagsProvider.BlockTagsProvider(output, registriesFuture) {
+
+    private fun getOrCreateTagBuilder(key: TagKey<Block>) =
+        ic2_120.compat.LegacyTagAppender26(BuiltInRegistries.BLOCK) { replace ->
+            net.minecraft.data.tags.TagAppender.forBuilder(getOrCreateRawBuilder(key).setReplace(replace))
+        }
 
     override fun addTags(provider: HolderLookup.Provider) {
         val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE).setReplace(false)

@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.extractor
 
+import ic2_120.compat.accept
+
 import com.google.gson.JsonObject
 import ic2_120.content.block.*
 import ic2_120.content.item.*
@@ -12,7 +14,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.function.Consumer
 
 object ExtractorRecipeDatagen {
@@ -29,21 +31,21 @@ object ExtractorRecipeDatagen {
         Entry("rubber_log_to_rubber", IngredientInput.item(RubberLogBlock::class.item()), RubberItem::class.instance(), 1),
         Entry("rubber_sapling_to_rubber", IngredientInput.item(RubberSaplingBlock::class.item()), RubberItem::class.instance(), 1),
 
-        Entry("orange_wool_to_wool", IngredientInput.item(Items.ORANGE_WOOL), Items.WHITE_WOOL, 1),
-        Entry("magenta_wool_to_wool", IngredientInput.item(Items.MAGENTA_WOOL), Items.WHITE_WOOL, 1),
-        Entry("light_blue_wool_to_wool", IngredientInput.item(Items.LIGHT_BLUE_WOOL), Items.WHITE_WOOL, 1),
-        Entry("yellow_wool_to_wool", IngredientInput.item(Items.YELLOW_WOOL), Items.WHITE_WOOL, 1),
-        Entry("lime_wool_to_wool", IngredientInput.item(Items.LIME_WOOL), Items.WHITE_WOOL, 1),
-        Entry("pink_wool_to_wool", IngredientInput.item(Items.PINK_WOOL), Items.WHITE_WOOL, 1),
-        Entry("gray_wool_to_wool", IngredientInput.item(Items.GRAY_WOOL), Items.WHITE_WOOL, 1),
-        Entry("light_gray_wool_to_wool", IngredientInput.item(Items.LIGHT_GRAY_WOOL), Items.WHITE_WOOL, 1),
-        Entry("cyan_wool_to_wool", IngredientInput.item(Items.CYAN_WOOL), Items.WHITE_WOOL, 1),
-        Entry("purple_wool_to_wool", IngredientInput.item(Items.PURPLE_WOOL), Items.WHITE_WOOL, 1),
-        Entry("blue_wool_to_wool", IngredientInput.item(Items.BLUE_WOOL), Items.WHITE_WOOL, 1),
-        Entry("brown_wool_to_wool", IngredientInput.item(Items.BROWN_WOOL), Items.WHITE_WOOL, 1),
-        Entry("green_wool_to_wool", IngredientInput.item(Items.GREEN_WOOL), Items.WHITE_WOOL, 1),
-        Entry("red_wool_to_wool", IngredientInput.item(Items.RED_WOOL), Items.WHITE_WOOL, 1),
-        Entry("black_wool_to_wool", IngredientInput.item(Items.BLACK_WOOL), Items.WHITE_WOOL, 1),
+        Entry("orange_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.ORANGE)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("magenta_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.MAGENTA)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("light_blue_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.LIGHT_BLUE)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("yellow_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.YELLOW)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("lime_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.LIME)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("pink_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.PINK)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("gray_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.GRAY)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("light_gray_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.LIGHT_GRAY)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("cyan_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.CYAN)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("purple_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.PURPLE)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("blue_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.BLUE)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("brown_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.BROWN)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("green_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.GREEN)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("red_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.RED)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
+        Entry("black_wool_to_wool", IngredientInput.item(Items.WOOL.pick(net.minecraft.world.item.DyeColor.BLACK)), Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1),
 
         Entry("air_cell_to_empty", IngredientInput.item(AirCell::class.instance()), EmptyCell::class.instance(), 1),
 
@@ -62,7 +64,7 @@ object ExtractorRecipeDatagen {
 
     fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "extracting/${entry.name}")
+            val recipeId = Identifier.fromNamespaceAndPath("ic2_120", "extracting/${entry.name}")
             val recipe = ExtractorRecipe(
                 recipeId,
                 entry.input.toIngredient(),

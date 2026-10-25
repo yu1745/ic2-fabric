@@ -1,12 +1,16 @@
 package ic2_120.content.block
 
+import ic2_120.compat.displayClientMessage
+
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -35,7 +39,8 @@ import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.world.level.block.state.StateDefinition
-import net.minecraft.world.level.block.state.properties.DirectionProperty
+import net.minecraft.world.level.block.state.properties.EnumProperty
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
@@ -55,15 +60,15 @@ class RefractoryBricksBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        super.onRemove(state, world, pos, newState, moved)
-        if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
+    override fun affectNeighborsAfterRemoval(state: BlockState, world: ServerLevel, pos: BlockPos, moved: Boolean) {
+        super.affectNeighborsAfterRemoval(state, world, pos, moved)
+        CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, RefractoryBricksBlock::class.item(), 8)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, RefractoryBricksBlock::class.item(), 8)
                 .pattern("BBB")
                 .pattern("BCB")
                 .pattern("BBB")
@@ -87,9 +92,9 @@ class CokeKilnBlock : MachineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.B
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        super.onRemove(state, world, pos, newState, moved)
-        if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
+    override fun affectNeighborsAfterRemoval(state: BlockState, world: ServerLevel, pos: BlockPos, moved: Boolean) {
+        super.affectNeighborsAfterRemoval(state, world, pos, moved)
+        CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
@@ -118,7 +123,7 @@ class CokeKilnBlock : MachineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.B
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val refractory = RefractoryBricksBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, CokeKilnBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.DECORATIONS, CokeKilnBlock::class.item(), 1)
                 .pattern("RRR")
                 .pattern("R R")
                 .pattern("RRR")
@@ -139,9 +144,9 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        super.onRemove(state, world, pos, newState, moved)
-        if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
+    override fun affectNeighborsAfterRemoval(state: BlockState, world: ServerLevel, pos: BlockPos, moved: Boolean) {
+        super.affectNeighborsAfterRemoval(state, world, pos, moved)
+        CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     override fun codec(): com.mojang.serialization.MapCodec<out net.minecraft.world.level.block.BaseEntityBlock> =
@@ -170,12 +175,12 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
     }
 
     companion object {
-        val FACING: DirectionProperty = DirectionProperty.create("facing")
+        val FACING: EnumProperty<Direction> = EnumProperty.create("facing", Direction::class.java)
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val refractory = RefractoryBricksBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, CokeKilnGrateBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.DECORATIONS, CokeKilnGrateBlock::class.item(), 1)
                 .pattern("III")
                 .pattern("IRI")
                 .pattern("III")
@@ -212,9 +217,9 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        super.onRemove(state, world, pos, newState, moved)
-        if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
+    override fun affectNeighborsAfterRemoval(state: BlockState, world: ServerLevel, pos: BlockPos, moved: Boolean) {
+        super.affectNeighborsAfterRemoval(state, world, pos, moved)
+        CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -230,12 +235,12 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
     }
 
     companion object {
-        val FACING: DirectionProperty = DirectionProperty.create("facing")
+        val FACING: EnumProperty<Direction> = EnumProperty.create("facing", Direction::class.java)
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val refractory = RefractoryBricksBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, CokeKilnHatchBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.DECORATIONS, CokeKilnHatchBlock::class.item(), 1)
                 .pattern("RRR")
                 .pattern("RIR")
                 .pattern("RRR")

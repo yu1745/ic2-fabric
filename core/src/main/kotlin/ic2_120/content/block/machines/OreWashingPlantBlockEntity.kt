@@ -1,5 +1,8 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.recipeManager
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -74,7 +77,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import ic2_120.Ic2_120
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 洗矿机方块实体。
@@ -100,7 +103,7 @@ class OreWashingPlantBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = OreWashingPlantBlock.ACTIVE
 
@@ -288,29 +291,29 @@ class OreWashingPlantBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.ore_washing_plant")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         OreWashingPlantScreenHandler(syncId, playerInventory, this,
             net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(OreWashingPlantSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(OreWashingPlantSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         progressF = if (nbt.contains("ProgressF")) {
-            nbt.getFloat("ProgressF").coerceIn(0f, OreWashingPlantSync.PROGRESS_MAX.toFloat())
+            nbt.getFloatOr("ProgressF", 0f).coerceIn(0f, OreWashingPlantSync.PROGRESS_MAX.toFloat())
         } else {
             sync.progress.toFloat().coerceIn(0f, OreWashingPlantSync.PROGRESS_MAX.toFloat())
         }
-        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
-        waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
+        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloatOr("EnergyDebt", 0f).coerceAtLeast(0f) else 0f
+        waterTankInternal.setStoredWater(nbt.getLongOr(NBT_WATER_AMOUNT, 0L))
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(OreWashingPlantSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -514,8 +517,8 @@ class OreWashingPlantBlockEntity(
         val emptyStack = when (waterInput.item) {
             Items.WATER_BUCKET -> ItemStack(Items.BUCKET)
             is WaterCell -> {
-                val cellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")
-                ItemStack(BuiltInRegistries.ITEM.get(cellId))
+                val cellId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")
+                ItemStack(BuiltInRegistries.ITEM.getValue(cellId))
             }
             else -> return
         }

@@ -29,13 +29,13 @@ class ModMenuIntegration : ModMenuApi {
                 addRenderableWidget(
                     net.minecraft.client.gui.components.Button.builder(
                         Component.literal("§c$message"),
-                        { minecraft!!.setScreen(parent) }
+                        { minecraft!!.gui.setScreen(parent) }
                     ).bounds(width / 2 - 100, height / 2 - 10, 200, 20).build()
                 )
                 addRenderableWidget(
                     net.minecraft.client.gui.components.Button.builder(
                         Component.literal("返回"),
-                        { minecraft!!.setScreen(parent) }
+                        { minecraft!!.gui.setScreen(parent) }
                     ).bounds(width / 2 - 50, height / 2 + 20, 100, 20).build()
                 )
             }

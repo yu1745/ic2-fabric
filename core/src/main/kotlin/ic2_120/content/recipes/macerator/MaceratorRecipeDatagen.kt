@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.macerator
 
+import ic2_120.compat.accept
+
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.recipes.ModTags
@@ -54,7 +56,7 @@ import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.ItemTags
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 object MaceratorRecipeDatagen {
     data class Entry(
@@ -68,8 +70,8 @@ object MaceratorRecipeDatagen {
     /** 外部模组配方：直接写物品 ID，避免 AE2 未加载时通过 BuiltInRegistries 得到 air。 */
     private data class ExternalEntry(
         val name: String,
-        val input: ResourceLocation,
-        val output: ResourceLocation,
+        val input: Identifier,
+        val output: Identifier,
         val count: Int = 1,
         val inputCount: Int = 1
     )
@@ -104,7 +106,7 @@ object MaceratorRecipeDatagen {
         Entry("coal_to_coal_dust", IngredientInput.item(Items.COAL), CoalDust::class.instance(), 1),
         Entry("coal_block_to_coal_dust", IngredientInput.item(Items.COAL_BLOCK), CoalDust::class.instance(), 9),
         Entry("clay_block_to_clay_dust", IngredientInput.item(Items.CLAY), ClayDust::class.instance(), 2),
-        Entry("wool_to_string", IngredientInput.tag(ItemTags.WOOL, Items.WHITE_WOOL), Items.STRING, 4),
+        Entry("wool_to_string", IngredientInput.tag(ItemTags.WOOL, Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE)), Items.STRING, 4),
         // 植物打粉配方
         Entry("plant_ball_to_bio_chaff", IngredientInput.item(PlantBall::class.instance()), BioChaff::class.instance(), 1),
         Entry("pumpkin_to_bio_chaff", IngredientInput.item(Items.PUMPKIN), BioChaff::class.instance(), 1, 8),
@@ -149,13 +151,13 @@ object MaceratorRecipeDatagen {
         // Applied Energistics 2：两种水晶分别打成对应的 AE2 粉尘。
         ExternalEntry(
             "ae2_certus_quartz_crystal_to_dust",
-            ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
-            ResourceLocation.fromNamespaceAndPath("ae2", "certus_quartz_dust")
+            Identifier.fromNamespaceAndPath("ae2", "certus_quartz_crystal"),
+            Identifier.fromNamespaceAndPath("ae2", "certus_quartz_dust")
         ),
         ExternalEntry(
             "ae2_fluix_crystal_to_dust",
-            ResourceLocation.fromNamespaceAndPath("ae2", "fluix_crystal"),
-            ResourceLocation.fromNamespaceAndPath("ae2", "fluix_dust")
+            Identifier.fromNamespaceAndPath("ae2", "fluix_crystal"),
+            Identifier.fromNamespaceAndPath("ae2", "fluix_dust")
         )
     )
 
@@ -165,7 +167,7 @@ object MaceratorRecipeDatagen {
         // TODO(1.21.1): RecipeOutput 不再接受自定义 RecipeJsonProvider，改为直接构造
         // MaceratorRecipe 实例交给 exporter（JSON 由 serializer codec 序列化）。
         entries.forEach { entry ->
-            val id = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}")
+            val id = Identifier.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}")
             val recipe = MaceratorRecipe(
                 id,
                 entry.input.toIngredient(),
@@ -175,12 +177,13 @@ object MaceratorRecipeDatagen {
             exporter.accept(id, recipe, null)
         }
         externalEntries.forEach { entry ->
-            val id = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}")
-            val inputItem = BuiltInRegistries.ITEM.get(entry.input)
-            val outputItem = BuiltInRegistries.ITEM.get(entry.output)
+            val id = Identifier.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}")
+            val inputItem = BuiltInRegistries.ITEM.getValue(entry.input)
+            val outputItem = BuiltInRegistries.ITEM.getValue(entry.output)
+            if (inputItem == net.minecraft.world.item.Items.AIR || outputItem == net.minecraft.world.item.Items.AIR) return@forEach
             val recipe = MaceratorRecipe(
                 id,
-                Ingredient.of(ItemStack(inputItem)),
+                Ingredient.of(inputItem),
                 ItemStack(outputItem, entry.count),
                 entry.inputCount
             )

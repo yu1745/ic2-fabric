@@ -16,20 +16,20 @@ import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.GsonHelper
 
 /**
  * 金属成型机配方序列化器（三种模式共用）
  */
 @ModMachineRecipe(id = "metal_forming", recipeClass = MetalFormerRecipe::class)
-object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
-    private fun fromJson(id: ResourceLocation, json: JsonObject): MetalFormerRecipe {
+object MetalFormerRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<MetalFormerRecipe>() {
+    private fun fromJson(id: Identifier, json: JsonObject): MetalFormerRecipe {
         val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
 
         val result = json.getAsJsonObject("result")
-        val itemId = ResourceLocation.parse(result.get("item").asString)
-        val item = BuiltInRegistries.ITEM.get(itemId)
+        val itemId = Identifier.parse(result.get("item").asString)
+        val item = BuiltInRegistries.ITEM.getValue(itemId)
         val count = (if (result.has("count")) result.get("count").asInt else 1)
         val output = ItemStack(item, count)
 
@@ -69,7 +69,15 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
     override fun codec(): MapCodec<MetalFormerRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:metal_forming",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", ic2_120.content.recipes.ingredientJson26(recipe.ingredient))
+            json.add("result", ic2_120.content.recipes.stackJson26(recipe.output))
+            json.addProperty("mode", when (recipe) {
+                is CuttingRecipe -> "cutting"
+                is ExtrudingRecipe -> "extruding"
+                else -> "rolling"
+            })
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, MetalFormerRecipe> =

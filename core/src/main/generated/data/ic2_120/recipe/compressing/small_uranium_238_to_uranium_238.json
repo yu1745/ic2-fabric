@@ -1,3 +1,10 @@
 {
-  "type": "ic2_120:compressing"
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "ic2_120:small_uranium_238"
+  },
+  "input_count": 9,
+  "result": {
+    "item": "ic2_120:uranium_238"
+  }
 }

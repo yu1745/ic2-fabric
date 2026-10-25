@@ -15,7 +15,7 @@ import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.Slot
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.InteractionHand
 import net.minecraft.core.Direction
 
@@ -116,8 +116,8 @@ class ItemUpgradeScreenHandler(
         return true
     }
 
-    override fun clicked(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
-        if (slotIndex == FILTER_SLOT && actionType == ClickType.PICKUP) {
+    override fun clicked(slotIndex: Int, button: Int, actionType: ContainerInput, player: Player) {
+        if (slotIndex == FILTER_SLOT && actionType == ContainerInput.PICKUP) {
             val cursor = carried
             if (cursor.isEmpty || button == 1) {
                 setItemFilter(FILTER_SLOT, ItemStack.EMPTY)

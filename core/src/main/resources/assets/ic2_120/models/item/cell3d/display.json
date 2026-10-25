@@ -1,5 +1,6 @@
 {
-  "parent": "minecraft:builtin/entity",
+  "parent": "minecraft:item/generated",
+  "textures": { "particle": "minecraft:block/stone" },
   "gui_light": "side",
   "display": {
     "gui": {

@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -36,7 +38,7 @@ import ic2_120.registry.type
 import ic2_120_industrial_upgrade.content.fluid.NeutronFluid
 import ic2_120_industrial_upgrade.content.screen.NeutronFabricatorScreenHandler
 import ic2_120_industrial_upgrade.content.sync.NeutronFabricatorSync
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -61,7 +63,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -71,7 +73,7 @@ import ic2_120.compat.*
 @ModBlockEntity(block = NeutronFabricatorBlock::class)
 class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     MachineBlockEntity(NeutronFabricatorBlockEntity::class.type(), pos, state),
-    ITieredMachine, ExtendedScreenHandlerFactory<FriendlyByteBuf>, Container, IRoutedSidedInventory,
+    ITieredMachine, ExtendedMenuProvider<FriendlyByteBuf>, Container, IRoutedSidedInventory,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport {
 
@@ -141,8 +143,8 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     /** ic2 通用流体单元（万能单元，可装任意流体） */
-    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "empty_cell")) }
-    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "fluid_cell")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "fluid_cell")) }
 
     /** 中子流体槽（内部产出写入，外部只能取出） */
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -386,10 +388,10 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
         setChanged()
     }
 
-    // ====== ExtendedScreenHandlerFactory<FriendlyByteBuf> ======
+    // ====== ExtendedMenuProvider<FriendlyByteBuf> ======
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120_industrial_upgrade.neutron_fabricator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         NeutronFabricatorScreenHandler(
             syncId, playerInventory,
             ContainerLevelAccess.create(world!!, pos),
@@ -407,13 +409,13 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     // ====== NBT ======
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        sync.restoreEnergy(nbt.getLong(NeutronFabricatorSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
+        sync.restoreEnergy(nbt.getLongOr(NeutronFabricatorSync.NBT_ENERGY, 0L).coerceIn(0L, sync.capacity))
         syncedData.readNbt(nbt)
         readInventoryWithMigration(nbt, lookup)
-        val tankAmount = nbt.getLong("TankAmount")
+        val tankAmount = nbt.getLongOr("TankAmount", 0L)
         tankInternal.amount = tankAmount.coerceIn(0L, TANK_CAPACITY_DROPLETS)
         if (tankInternal.amount > 0L) tankInternal.variant = FluidVariant.of(NeutronFluid.NEUTRON_STILL)
-        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
+        redstoneInverted = nbt.getBooleanOr("RedstoneInverted", false)
     }
 
     /**
@@ -422,15 +424,17 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
      * （新布局下变成升级槽，若存有电池由玩家自行取出）。
      */
     private fun readInventoryWithMigration(nbt: CompoundTag, lookup: HolderLookup.Provider) {
-        val invNbt = nbt.getCompound("Inv")
-        val oldSize = if (invNbt.contains("Size")) invNbt.getInt("Size") else INVENTORY_SIZE
-        val items = invNbt.getList("Items", Tag.TAG_COMPOUND.toInt())
+        val invNbt = nbt.getCompoundOrEmpty("Inv")
+        val oldSize = invNbt.getIntOr("Size", INVENTORY_SIZE)
+        val items = invNbt.getListOrEmpty("Items")
         for (i in 0 until items.size) {
-            val slotNbt = items.getCompound(i)
-            val oldSlot = slotNbt.getInt("Slot")
+            val slotNbt = items.getCompoundOrEmpty(i)
+            val oldSlot = slotNbt.getIntOr("Slot", -1)
             val newSlot = if (oldSize <= 5 && oldSlot >= SLOT_CONTAINER_INPUT) oldSlot + 1 else oldSlot
             if (newSlot !in inventory.indices) continue
-            inventory[newSlot] = ItemStack.parseOptional(lookup, slotNbt)
+            inventory[newSlot] = net.minecraft.world.ItemStackWithSlot.CODEC
+                .parse(lookup.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), slotNbt)
+                .result().map { it.stack() }.orElse(ItemStack.EMPTY)
         }
     }
 
@@ -438,7 +442,9 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
         super.saveAdditional(nbt, lookup)
         nbt.putLong(NeutronFabricatorSync.NBT_ENERGY, sync.amount)
         syncedData.writeNbt(nbt)
-        nbt.put("Inv", ContainerHelper.saveAllItems(CompoundTag(), inventory, lookup))
+        val invNbt = CompoundTag()
+        ContainerHelper26.saveAllItems(invNbt, inventory, lookup)
+        nbt.put("Inv", invNbt)
         nbt.putLong("TankAmount", tankInternal.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }

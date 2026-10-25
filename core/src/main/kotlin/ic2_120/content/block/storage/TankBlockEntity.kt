@@ -1,5 +1,7 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -17,7 +19,7 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -41,7 +43,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import java.util.ArrayDeque
 
@@ -71,7 +73,7 @@ import java.util.ArrayDeque
 class TankBlockEntity(
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(TankBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(TankBlockEntity::class.type(), pos, state), ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         /** 青铜/铁储罐容量 (mB) */
@@ -141,6 +143,14 @@ class TankBlockEntity(
     val sync = TankSync(syncedData) { getCapacityMb() }
     val guiSlotInv = SimpleContainer(1)
     var shouldDropOnBreak = true
+
+    override fun preRemoveSideEffects(pos: BlockPos, state: BlockState) {
+        val level = world as? net.minecraft.server.level.ServerLevel ?: return
+        if (!shouldDropOnBreak) return
+        val stack = ItemStack(state.block.asItem())
+        (state.block as? TankBlock)?.applyTankBlockEntityNbt(stack, this)
+        net.minecraft.world.level.block.Block.popResource(level, pos, stack)
+    }
     private var trackingInitialized = false
     private var observedAmountMb = 0
     private var activeSecond = Long.MIN_VALUE
@@ -270,14 +280,14 @@ class TankBlockEntity(
     fun getFluidAmountMb(): Int =
         (tankInternal.amount * 1000 / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
 
-    // ========== ExtendedScreenHandlerFactory<FriendlyByteBuf> ==========
+    // ========== ExtendedMenuProvider<FriendlyByteBuf> ==========
 
     override fun getDisplayName(): Component {
         val block = cachedState.block
         return Component.translatable(block.descriptionId)
     }
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
         syncFluidState()
         refreshRateStatistics()
         return TankScreenHandler(
@@ -326,8 +336,8 @@ class TankBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
-        val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
+        tankInternal.amount = nbt.getLongOr(NBT_FLUID_AMOUNT, 0L).coerceIn(0L, getCapacity())
+        val fluidTag = nbt.getCompoundOrEmpty(NBT_FLUID_VARIANT)
         tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else
             // TODO(1.21.1): FluidVariant.fromNbt 移除，改走 FluidVariant.CODEC（NbtOps）
             FluidVariant.CODEC.parse(NbtOps.INSTANCE, fluidTag).result().orElseGet { FluidVariant.blank() }

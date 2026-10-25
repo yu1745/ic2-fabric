@@ -3,22 +3,20 @@ package ic2_120.client.screen
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.screen.WindKineticGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = WindKineticGeneratorBlock::class)
 class WindKineticGeneratorScreen(
     val handler: WindKineticGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<WindKineticGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<WindKineticGeneratorScreenHandler>(handler, playerInventory, title, 175, 166) {
 
     init {
-        imageWidth = 175
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -76,7 +74,7 @@ class WindKineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiwindkineticgenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiwindkineticgenerator.png")
         private val TEXT_COLOR = 0xFF90EE90.toInt()
     }
 }

@@ -16,7 +16,7 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import net.minecraft.data.recipes.RecipeOutput
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
@@ -70,14 +70,14 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
          */
         fun cycleSpeedTier(stack: ItemStack): Int {
             val nbt = stack.orCreateNbt
-            val current = nbt.getInt(SPEED_TIER_KEY)
+            val current = nbt.getIntOr(SPEED_TIER_KEY, 0)
             val next = if (current >= 2) 0 else current + 1
             nbt.putInt(SPEED_TIER_KEY, next)
             return next
         }
 
         fun getSpeedTier(stack: ItemStack): Int =
-            stack.orCreateNbt.getInt(SPEED_TIER_KEY)
+            stack.orCreateNbt.getIntOr(SPEED_TIER_KEY, 0)
 
         /**
          * 服务端按一个实际推进 tick 扣除能量。
@@ -86,7 +86,7 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         fun consumeSpeedEnergyTick(stack: ItemStack): Boolean {
             val leggings = stack.item as? QuantumLeggings ?: return false
             val nbt = stack.orCreateNbt
-            val tier = nbt.getInt(SPEED_TIER_KEY)
+            val tier = nbt.getIntOr(SPEED_TIER_KEY, 0)
             if (tier <= 0) return false
 
             val energy = leggings.getEnergy(stack)
@@ -100,7 +100,7 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
             } else {
                 Ic2Config.getQuantumLeggingsEuPerTick()
             }
-            var remainder = nbt.getDouble(SPEED_REMAINDER_KEY) + euPerTick
+            var remainder = nbt.getDoubleOr(SPEED_REMAINDER_KEY, 0.0) + euPerTick
             val toConsume = remainder.toLong()
             if (toConsume > 0L) {
                 if (energy < toConsume) {
@@ -138,9 +138,10 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         }
     }
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
-        val tier = stack.orCreateNbt.getInt(SPEED_TIER_KEY)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
+        val tier = stack.orCreateNbt.getIntOr(SPEED_TIER_KEY, 0)
         val energy = getEnergy(stack)
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {
             // 关闭时按下次开启的 1 档耗电估算；只有 2 档按全耗电估算。

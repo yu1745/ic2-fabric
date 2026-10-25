@@ -6,22 +6,22 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.SolarDistillerScreenHandler
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.FluidRenderHandlerRegistry
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.chat.Component
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = SolarDistillerBlock::class)
 class SolarDistillerScreen(
     val handler: SolarDistillerScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<SolarDistillerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<SolarDistillerScreenHandler>(handler, playerInventory, title, 176, 184) {
 
     private val waterFlowSprite: TextureAtlasSprite? by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER)
@@ -40,8 +40,6 @@ class SolarDistillerScreen(
     private val distilledColor: Int by lazy { FluidUtils.getFluidColor(ModFluids.DISTILLED_WATER_STILL) }
 
     init {
-        imageWidth = 176
-        imageHeight = 184
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -150,8 +148,8 @@ class SolarDistillerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisolardistiller.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guisolardistiller.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

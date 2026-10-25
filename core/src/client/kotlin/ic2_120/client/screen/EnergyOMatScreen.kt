@@ -3,13 +3,13 @@ package ic2_120.client.screen
 import ic2_120.content.block.EnergyOMatBlock
 import ic2_120.content.screen.EnergyOMatScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(block = EnergyOMatBlock::class)
@@ -17,14 +17,12 @@ class EnergyOMatScreen(
     val handler: EnergyOMatScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<EnergyOMatScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<EnergyOMatScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     private val isOwner = handler.isOwner
     private val buttons = mutableListOf<Button>()
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun init() {
@@ -89,7 +87,7 @@ class EnergyOMatScreen(
     }
 
     companion object {
-        private val TEXTURE_OPEN = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/gui/guienergyomatopen.png")
-        private val TEXTURE_CLOSED = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/gui/guienergyomatclosed.png")
+        private val TEXTURE_OPEN = Identifier.fromNamespaceAndPath("ic2_120", "textures/gui/guienergyomatopen.png")
+        private val TEXTURE_CLOSED = Identifier.fromNamespaceAndPath("ic2_120", "textures/gui/guienergyomatclosed.png")
     }
 }

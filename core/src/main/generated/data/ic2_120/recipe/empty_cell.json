@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "item": "minecraft:glass_pane"
-    },
-    "T": {
-      "item": "ic2_120:tin_casing"
-    }
+    "G": "minecraft:glass_pane",
+    "T": "ic2_120:tin_casing"
   },
   "pattern": [
     " T ",
@@ -15,7 +10,6 @@
     " T "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:empty_cell"
   }
 }

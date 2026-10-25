@@ -23,7 +23,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.ItemStack
@@ -86,7 +86,7 @@ open class JetpackItem : ArmorItem(
 
         @JvmStatic
         fun getFuel(stack: ItemStack): Long =
-            stack.orCreateNbt.getLong(FUEL_KEY).coerceIn(0L, maxFuel)
+            stack.orCreateNbt.getLongOr(FUEL_KEY, 0L).coerceIn(0L, maxFuel)
 
         @JvmStatic
         fun setFuel(stack: ItemStack, fuel: Long) {
@@ -94,9 +94,9 @@ open class JetpackItem : ArmorItem(
         }
 
         fun getFuelFluid(stack: ItemStack): net.minecraft.world.level.material.Fluid? {
-            val id = stack.orCreateNbt.getString(FUEL_FLUID_KEY)
+            val id = stack.orCreateNbt.getStringOr(FUEL_FLUID_KEY, "")
             if (!id.isNullOrBlank()) {
-                val fluid = net.minecraft.core.registries.BuiltInRegistries.FLUID.get(net.minecraft.resources.ResourceLocation.parse(id))
+                val fluid = net.minecraft.core.registries.BuiltInRegistries.FLUID.getValue(net.minecraft.resources.Identifier.parse(id))
                 if (FluidFuelRegistry.isSupported(fluid)) return fluid
             }
             // 兼容旧版只有 Fuel 数值的背包：旧燃料就是生物燃料。
@@ -117,7 +117,7 @@ open class JetpackItem : ArmorItem(
             val fuel = getFuel(stack)
             if (fuel <= 0) return false
             val nbt = stack.orCreateNbt
-            var remainder = nbt.getDouble(FUEL_REMAINDER_KEY)
+            var remainder = nbt.getDoubleOr(FUEL_REMAINDER_KEY, 0.0)
             val cost = fuelPerTick * fuelConsumptionMultiplier(stack)
             remainder += cost
             val toConsume = remainder.toLong()
@@ -135,10 +135,11 @@ open class JetpackItem : ArmorItem(
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
 
         val fuel = getFuel(stack)
         val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0

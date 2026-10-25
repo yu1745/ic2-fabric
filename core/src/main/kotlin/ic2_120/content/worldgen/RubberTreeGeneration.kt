@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.biome.v1.BiomeModifications
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.level.levelgen.GenerationStep
 import org.slf4j.LoggerFactory
 
@@ -24,7 +24,7 @@ object RubberTreeGeneration {
     private val logger = LoggerFactory.getLogger("ic2_120.rubber_tree")
 
     val RUBBER_TREE_PLACED_KEY: ResourceKey<net.minecraft.world.level.levelgen.placement.PlacedFeature> =
-        ResourceKey.create(Registries.PLACED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
+        ResourceKey.create(Registries.PLACED_FEATURE, Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
 
     fun register() {
         val config = Ic2Config.current.worldgen.rubberTree.normalized()

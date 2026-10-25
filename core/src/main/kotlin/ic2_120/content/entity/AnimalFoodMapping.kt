@@ -4,7 +4,7 @@ import net.minecraft.world.entity.AgeableMob
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import kotlin.jvm.JvmStatic
 
 /**
@@ -15,24 +15,24 @@ import kotlin.jvm.JvmStatic
  */
 object AnimalFoodMapping {
     // 仅包含产生肉和皮革的动物
-    private val FOOD_MAP = mapOf<ResourceLocation, List<Item>>(
+    private val FOOD_MAP = mapOf<Identifier, List<Item>>(
         // 猪（猪肉）
-        ResourceLocation.fromNamespaceAndPath("minecraft", "pig") to listOf(Items.CARROT),
+        Identifier.fromNamespaceAndPath("minecraft", "pig") to listOf(Items.CARROT),
         // 牛/哞菇（牛肉、皮革、牛奶）
-        ResourceLocation.fromNamespaceAndPath("minecraft", "cow") to listOf(Items.WHEAT),
-        ResourceLocation.fromNamespaceAndPath("minecraft", "mooshroom") to listOf(Items.WHEAT),
+        Identifier.fromNamespaceAndPath("minecraft", "cow") to listOf(Items.WHEAT),
+        Identifier.fromNamespaceAndPath("minecraft", "mooshroom") to listOf(Items.WHEAT),
         // 羊（羊肉、羊毛）
-        ResourceLocation.fromNamespaceAndPath("minecraft", "sheep") to listOf(Items.WHEAT),
+        Identifier.fromNamespaceAndPath("minecraft", "sheep") to listOf(Items.WHEAT),
         // 鸡（鸡肉、羽毛、鸡蛋）
-        ResourceLocation.fromNamespaceAndPath("minecraft", "chicken") to listOf(Items.WHEAT_SEEDS),
+        Identifier.fromNamespaceAndPath("minecraft", "chicken") to listOf(Items.WHEAT_SEEDS),
         // 兔子（兔子肉、兔子皮）
-        ResourceLocation.fromNamespaceAndPath("minecraft", "rabbit") to listOf(Items.CARROT, Items.DANDELION),
+        Identifier.fromNamespaceAndPath("minecraft", "rabbit") to listOf(Items.CARROT, Items.DANDELION),
         // 马/驴/骡（皮革）
-        ResourceLocation.fromNamespaceAndPath("minecraft", "horse") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
-        ResourceLocation.fromNamespaceAndPath("minecraft", "donkey") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
-        ResourceLocation.fromNamespaceAndPath("minecraft", "mule") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
+        Identifier.fromNamespaceAndPath("minecraft", "horse") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
+        Identifier.fromNamespaceAndPath("minecraft", "donkey") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
+        Identifier.fromNamespaceAndPath("minecraft", "mule") to listOf(Items.GOLDEN_APPLE, Items.GOLDEN_CARROT),
         // 羊驼（皮革）
-        ResourceLocation.fromNamespaceAndPath("minecraft", "llama") to listOf(Items.HAY_BLOCK)
+        Identifier.fromNamespaceAndPath("minecraft", "llama") to listOf(Items.HAY_BLOCK)
     )
 
     /**
@@ -65,5 +65,5 @@ object AnimalFoodMapping {
      * 获取食物映射表
      */
     @JvmStatic
-    fun getFoodMap(): Map<ResourceLocation, List<Item>> = FOOD_MAP
+    fun getFoodMap(): Map<Identifier, List<Item>> = FOOD_MAP
 }

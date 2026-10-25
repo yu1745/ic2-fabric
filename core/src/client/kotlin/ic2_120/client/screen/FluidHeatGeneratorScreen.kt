@@ -5,20 +5,20 @@ import ic2_120.content.block.FluidHeatGeneratorBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.FluidHeatGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = FluidHeatGeneratorBlock::class)
 class FluidHeatGeneratorScreen(
     val handler: FluidHeatGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<FluidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<FluidHeatGeneratorScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     private val fluidSprite by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.BIOFUEL_STILL)
@@ -26,8 +26,6 @@ class FluidHeatGeneratorScreen(
     }
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -110,7 +108,7 @@ class FluidHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiliquidheatingmachine.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiliquidheatingmachine.png")
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
     }
 }

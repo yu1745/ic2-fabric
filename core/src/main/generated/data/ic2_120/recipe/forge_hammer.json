@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "I": {
-      "tag": "ic2_120:compat/ingots/iron"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    }
+    "I": "#ic2_120:compat/ingots/iron",
+    "S": "minecraft:stick"
   },
   "pattern": [
     "II",
@@ -15,7 +11,6 @@
     "II"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:forge_hammer"
   }
 }

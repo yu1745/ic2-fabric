@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "R": {
-      "tag": "ic2_120:compat/rubber"
-    }
+    "R": "#ic2_120:compat/rubber"
   },
   "pattern": [
     "   ",
@@ -12,7 +9,6 @@
     "RRR"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:rubber_boat"
   }
 }

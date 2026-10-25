@@ -1,5 +1,7 @@
 package ic2_120.registry.annotation
 
+import ic2_120.compat.LegacyBlockEntity26
+
 /**
  * 标记方块实体中作为 Fabric Transfer Item Storage 的属性。
  * 扫描注册时会对该 BlockEntityType 调用 [net.fabricmc.fabric.api.transfer.v1.item.ItemStorage.SIDED].registerForBlockEntity，
@@ -8,7 +10,7 @@ package ic2_120.registry.annotation
  * 使用示例：
  * ```kotlin
  * @ModBlockEntity(block = ElectricFurnaceBlock::class)
- * class ElectricFurnaceBlockEntity(...) : BlockEntity(...) {
+ * class ElectricFurnaceBlockEntity(...) : LegacyBlockEntity26(...) {
  *     @RegisterItemStorage
  *     private val itemStorage = RoutedItemStorage(...)
  * }

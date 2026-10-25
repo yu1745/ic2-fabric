@@ -7,7 +7,7 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.MinecraftServer
@@ -33,8 +33,8 @@ object RadiationHandler {
                 if (hasRadioactiveItem(player)) {
                     // TODO(1.21.1): 1.21.1 MobEffectInstance 需要 Holder<MobEffect>；
                     // 直接按注册键取 registry holder，保证与原版效果查询的 holder 语义一致。
-                    BuiltInRegistries.MOB_EFFECT.getHolder(
-                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2", "radiation")
+                    BuiltInRegistries.MOB_EFFECT.get(
+                        net.minecraft.resources.Identifier.fromNamespaceAndPath("ic2", "radiation")
                     ).ifPresent { holder ->
                         player.addEffect(
                             MobEffectInstance(holder, 400, 0, true, true, true)
@@ -79,10 +79,10 @@ object RadiationHandler {
         }
 
         if (entity is Player) {
-            for (stack in entity.inventory.items) {
+            for (stack in entity.inventory.nonEquipmentItems) {
                 if (isRadioactiveItem(stack)) return true
             }
-            for (stack in entity.inventory.offhand) {
+            for (stack in listOf(entity.getItemBySlot(EquipmentSlot.OFFHAND))) {
                 if (isRadioactiveItem(stack)) return true
             }
         }

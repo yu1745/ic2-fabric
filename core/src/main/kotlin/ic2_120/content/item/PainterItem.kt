@@ -1,12 +1,14 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import ic2_120.compat.orCreateNbt
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.compat.stack
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -49,7 +51,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.DyeColor
 import net.minecraft.ChatFormatting
-import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
@@ -75,7 +76,7 @@ class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
         val stack = context.itemInHand
         val dye = player.getItemInHand(InteractionHand.OFF_HAND).item as? DyeItem
         if (dye != null) {
-            if (setColor(stack, dye.dyeColor, player, InteractionHand.OFF_HAND)) {
+            if (setColor(stack, player.getItemInHand(InteractionHand.OFF_HAND).get(net.minecraft.core.component.DataComponents.DYE) ?: return InteractionResult.PASS, player, InteractionHand.OFF_HAND)) {
                 return if (context.level.isClientSide) InteractionResult.SUCCESS else InteractionResult.CONSUME
             }
         }
@@ -95,23 +96,24 @@ class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
         return InteractionResult.PASS
     }
 
-    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResult {
         val stack = user.getItemInHand(hand)
         val dyeHand = if (hand == InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
         val dye = user.getItemInHand(dyeHand).item as? DyeItem
-        if (dye != null && setColor(stack, dye.dyeColor, user, dyeHand)) {
-            return InteractionResultHolder.success(stack)
+        if (dye != null && setColor(stack, user.getItemInHand(dyeHand).get(net.minecraft.core.component.DataComponents.DYE) ?: return InteractionResult.PASS, user, dyeHand)) {
+            return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
         }
-        return InteractionResultHolder.pass(stack)
+        return InteractionResult.PASS
     }
 
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         val color = getColor(stack)
         tooltip.add(
             Component.translatable(
@@ -157,7 +159,7 @@ class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
             val nbt = stack.orCreateNbt
         if (nbt.isEmpty) return null
             if (!nbt.contains(COLOR_KEY)) return null
-            return DyeColor.byId(nbt.getInt(COLOR_KEY))
+            return DyeColor.byId(nbt.getIntOr(COLOR_KEY, 0))
         }
 
         /** 创造栏和 JEI 使用的 16 个带色刷子变体。 */
@@ -190,7 +192,7 @@ class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, PainterItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.TOOLS, PainterItem::class.instance(), 1)
                 .pattern("II ")
                 .pattern(" IS")
                 .pattern("  I")

@@ -10,7 +10,7 @@ import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvent
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.RandomSource
 import org.slf4j.LoggerFactory
 
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 object JetpackSoundController {
     private val minecraft = Minecraft.getInstance()
     private val logger = LoggerFactory.getLogger("ic2_120/JetpackSoundController")
-    private val JETPACK_SOUND_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item.jetpack.loop")
+    private val JETPACK_SOUND_ID = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "item.jetpack.loop")
     private val JETPACK_SOUND = SoundEvent.createVariableRangeEvent(JETPACK_SOUND_ID)
 
     private var loopSound: JetpackLoopSoundInstance? = null

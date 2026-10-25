@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -19,6 +21,7 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.NbtOps
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.server.level.ServerPlayer
@@ -36,7 +39,7 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.type
 import ic2_120.content.AdjacentEnergyTransferComponent
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import ic2_120.compat.*
 import net.minecraft.world.level.block.Block
 
@@ -45,7 +48,7 @@ class MolecularTransformerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(MolecularTransformerBlockEntity::class.type(), pos, state),
-    Container, ITieredMachine, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    Container, ITieredMachine, ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         const val TIER = 10
@@ -222,10 +225,10 @@ class MolecularTransformerBlockEntity(
         return currentOutput.count + output.count <= currentOutput.maxStackSize
     }
 
-    // ExtendedScreenHandlerFactory<FriendlyByteBuf>
+    // ExtendedMenuProvider<FriendlyByteBuf>
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120_advanced_solar_addon.molecular_transformer")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         MolecularTransformerScreenHandler(
             syncId, playerInventory, this,
             ContainerLevelAccess.create(world!!, pos),
@@ -242,12 +245,14 @@ class MolecularTransformerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
-        energyUsed = nbt.getLong("energyUsed")
-        consumedInputItem = ItemStack.parseOptional(lookup, nbt.getCompound("consumedInput"))
-        noEnergyTicks = nbt.getInt("noEnergyTicks")
-        isLit = nbt.getBoolean("isLit")
-        sync.restoreEnergy(nbt.getLong(MolecularTransformerSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
+        energyUsed = nbt.getLongOr("energyUsed", 0L)
+        consumedInputItem = ItemStack.OPTIONAL_CODEC
+            .parse(lookup.createSerializationContext(NbtOps.INSTANCE), nbt.getCompoundOrEmpty("consumedInput"))
+            .result().orElse(ItemStack.EMPTY)
+        noEnergyTicks = nbt.getIntOr("noEnergyTicks", 0)
+        isLit = nbt.getBooleanOr("isLit", false)
+        sync.restoreEnergy(nbt.getLongOr(MolecularTransformerSync.NBT_ENERGY, 0L).coerceIn(0L, sync.capacity))
         syncedData.readNbt(nbt)
         // Restore recipe on load
         if (energyUsed > 0 && !consumedInputItem.isEmpty) {
@@ -257,9 +262,10 @@ class MolecularTransformerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         nbt.putLong("energyUsed", energyUsed)
-        nbt.put("consumedInput", consumedInputItem.save(lookup, CompoundTag()))
+        ItemStack.OPTIONAL_CODEC.encodeStart(lookup.createSerializationContext(NbtOps.INSTANCE), consumedInputItem)
+            .result().ifPresent { nbt.put("consumedInput", it) }
         nbt.putInt("noEnergyTicks", noEnergyTicks)
         nbt.putBoolean("isLit", isLit)
         nbt.putLong(MolecularTransformerSync.NBT_ENERGY, sync.amount)

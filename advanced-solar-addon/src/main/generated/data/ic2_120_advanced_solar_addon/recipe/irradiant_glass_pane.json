@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "item": "ic2_120:reinforced_glass"
-    },
-    "I": {
-      "item": "ic2_120_advanced_solar_addon:irradiant_uranium"
-    },
-    "X": {
-      "item": "minecraft:glowstone_dust"
-    }
+    "G": "ic2_120:reinforced_glass",
+    "I": "ic2_120_advanced_solar_addon:irradiant_uranium",
+    "X": "minecraft:glowstone_dust"
   },
   "pattern": [
     "GGG",

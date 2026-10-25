@@ -14,14 +14,12 @@ import ic2_120.content.block.transmission.ShaftMaterial
 import ic2_120.content.block.transmission.TransmissionBlockEntity
 import ic2_120.content.block.transmission.TransmissionShaftBlock
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes as RenderType
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.Direction
 import com.mojang.math.Axis
 import kotlin.math.PI
@@ -31,10 +29,10 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class TransmissionBlockEntityRenderer(
-    context: BlockEntityRendererProvider.Context
-) : BlockEntityRenderer<TransmissionBlockEntity> {
+    context: BlockEntityRendererProvider.Context?
+) : LegacyBlockEntityRenderer26<TransmissionBlockEntity>() {
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.withDefaultNamespace("textures/misc/white.png")
         private const val SHAFT_HALF = 1.0f / 6.0f
         private const val SHAFT_LENGTH_HALF = 0.5f
         private const val BEVEL_GEAR_TOOTH_COUNT = 8
@@ -52,7 +50,7 @@ class TransmissionBlockEntityRenderer(
         val ignored = context
     }
 
-    override fun render(
+    public override fun renderLegacy(
         entity: TransmissionBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
@@ -68,7 +66,7 @@ class TransmissionBlockEntityRenderer(
         when (val block = state.block) {
             is TransmissionShaftBlock -> {
                 val axis = if (isItem) Direction.Axis.Y else state.getValue(BlockStateProperties.AXIS)
-                val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE))
+                val vc = vertexConsumers.getBuffer(RenderType.entityCutout(WHITE_TEXTURE))
                 val materialColor = baseColorForMaterial(block.material)
                 matrices.pushPose()
                 matrices.translate(0.5, 0.5, 0.5)
@@ -82,7 +80,7 @@ class TransmissionBlockEntityRenderer(
                 val gearFaceWidthHalf = (gearThickness * 0.5f).coerceAtLeast(0.02f)
                 val pitchRadius = (0.5f - gearFaceWidthHalf).coerceAtLeast(0.05f)
                 val gearOffset = pitchRadius
-                val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE))
+                val vc = vertexConsumers.getBuffer(RenderType.entityCutout(WHITE_TEXTURE))
                 val materialColor = intArrayOf(122, 126, 132)
 
                 matrices.pushPose()

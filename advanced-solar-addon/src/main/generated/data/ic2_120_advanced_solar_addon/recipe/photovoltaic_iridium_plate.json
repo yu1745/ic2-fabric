@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120:alloy",
+    "D": "#ic2_120:compat/gems/diamond",
+    "I": "ic2_120_advanced_solar_addon:iridium_ingot"
+  },
+  "pattern": [
+    "IAI",
+    "ADA",
+    "IAI"
+  ],
+  "result": {
+    "id": "ic2_120_advanced_solar_addon:photovoltaic_iridium_plate"
+  }
+}

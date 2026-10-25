@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "B": {
-      "item": "ic2_120:re_battery"
-    },
-    "F": {
-      "item": "ic2_120:iron_furnace"
-    },
-    "I": {
-      "item": "ic2_120:iron_plate"
-    }
+    "B": "ic2_120:re_battery",
+    "F": "ic2_120:iron_furnace",
+    "I": "ic2_120:iron_plate"
   },
   "pattern": [
     " B ",
@@ -18,7 +11,6 @@
     " F "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:generator"
   }
 }

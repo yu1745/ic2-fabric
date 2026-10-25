@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120_advanced_solar_addon:photovoltaic_iridium_plate",
+    "B": "minecraft:ender_eye",
+    "C": "minecraft:nether_star"
+  },
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:ender_quantum_component"
+  }
+}

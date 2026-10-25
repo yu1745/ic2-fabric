@@ -8,5 +8,5 @@ import kotlin.reflect.KClass
 data class MachineRecipeScanEntry(
     val id: String,
     val recipeClass: KClass<out Recipe<*>>,
-    val serializerClass: KClass<out RecipeSerializer<*>>,
+    val serializerClass: KClass<out ic2_120.content.recipes.RecipeSerializerHolder26<*>>,
 )

@@ -1,5 +1,7 @@
 package buildcraft_addon.content.blockentity
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -12,7 +14,7 @@ import buildcraft_addon.content.screen.RFEngineScreenHandler
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -57,7 +59,7 @@ class RFEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory<FriendlyByteBuf>, Container, IKineticMachinePort {
+) : LegacyBlockEntity26(type, pos, state), ExtendedMenuProvider<FriendlyByteBuf>, Container, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         RFEngineBlockEntity::class.type(), pos, state
@@ -93,7 +95,7 @@ class RFEngineBlockEntity(
         override fun getCount(): Int = 2
     }
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
         return RFEngineScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
@@ -304,37 +306,31 @@ class RFEngineBlockEntity(
         nbt.putInt("powerStage", currentStage.ordinal)
         nbt.putInt("pendingOutputKu", pendingOutputKu)
         nbt.putInt("currentRF", currentRF)
-        val invNbt = CompoundTag()
         for (i in 0..3) {
-            val slotNbt = CompoundTag()
             if (!upgradeInventory[i].isEmpty) {
-                upgradeInventory[i].save(lookup, slotNbt)
+                nbt.store("upgrade_slot_$i", ItemStack.OPTIONAL_CODEC, lookup.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), upgradeInventory[i])
             }
-            invNbt.put("slot_$i", slotNbt)
         }
-        nbt.put("upgradeInventory", invNbt)
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        heat = nbt.getDouble("heat")
-        progress = nbt.getFloat("progress")
-        progressPart = nbt.getInt("progressPart")
-        val dirIdx = nbt.getInt("direction")
+        heat = nbt.getDoubleOr("heat", 0.0)
+        progress = nbt.getFloatOr("progress", 0f)
+        progressPart = nbt.getIntOr("progressPart", 0)
+        val dirIdx = nbt.getIntOr("direction", 0)
         currentDirection = Direction.entries.getOrElse(dirIdx) { Direction.UP }
-        isRedstonePowered = nbt.getBoolean("isRedstonePowered")
-        isBurning = nbt.getBoolean("isBurning")
-        val stageIdx = nbt.getInt("powerStage")
+        isRedstonePowered = nbt.getBooleanOr("isRedstonePowered", false)
+        isBurning = nbt.getBooleanOr("isBurning", false)
+        val stageIdx = nbt.getIntOr("powerStage", 0)
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
-        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
-        currentRF = nbt.getInt("currentRF")
-        if (nbt.contains("upgradeInventory")) {
-            val invNbt = nbt.getCompound("upgradeInventory")
-            for (i in 0..3) {
-                if (invNbt.contains("slot_$i")) {
-                    upgradeInventory[i] = ItemStack.parseOptional(lookup, invNbt.getCompound("slot_$i"))
-                }
-            }
+        pendingOutputKu = nbt.getIntOr("pendingOutputKu", 0).coerceAtLeast(0)
+        currentRF = nbt.getIntOr("currentRF", 0)
+        val oldInventory = nbt.getCompoundOrEmpty("upgradeInventory")
+        val context = lookup.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE)
+        for (i in 0..3) {
+            upgradeInventory[i] = nbt.read("upgrade_slot_$i", ItemStack.OPTIONAL_CODEC, context)
+                .orElseGet { oldInventory.read("slot_$i", ItemStack.OPTIONAL_CODEC, context).orElse(ItemStack.EMPTY) }
         }
     }
 }

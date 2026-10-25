@@ -1,3 +1,13 @@
 {
-  "type": "ic2_120:centrifuging"
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "minecraft:quartz"
+  },
+  "input_count": 2,
+  "min_heat": 250,
+  "results": [
+    {
+      "item": "ic2_120:small_lithium_dust"
+    }
+  ]
 }

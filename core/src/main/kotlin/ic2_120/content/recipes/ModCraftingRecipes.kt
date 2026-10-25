@@ -21,25 +21,25 @@ object ModCraftingRecipes {
         override fun toString(): String = "${Ic2_120.MOD_ID}:battery_energy_shaped"
     }
 
-    val BATTERY_ENERGY_SHAPED_SERIALIZER: RecipeSerializer<BatteryEnergyShapedRecipe> = BatteryEnergyShapedRecipeSerializer
+    val BATTERY_ENERGY_SHAPED_SERIALIZER: RecipeSerializer<BatteryEnergyShapedRecipe> = BatteryEnergyShapedRecipeSerializer.serializer
 
     val CONSUME_TREETAP_SHAPED_TYPE: RecipeType<ConsumeTreetapShapedRecipe> = object : RecipeType<ConsumeTreetapShapedRecipe> {
         override fun toString(): String = "${Ic2_120.MOD_ID}:consume_treetap_shaped"
     }
 
-    val CONSUME_TREETAP_SHAPED_SERIALIZER: RecipeSerializer<ConsumeTreetapShapedRecipe> = ConsumeTreetapShapedRecipeSerializer
+    val CONSUME_TREETAP_SHAPED_SERIALIZER: RecipeSerializer<ConsumeTreetapShapedRecipe> = ConsumeTreetapShapedRecipeSerializer.serializer
 
     val CONSUME_WRENCH_SHAPED_TYPE: RecipeType<ConsumeWrenchShapedRecipe> = object : RecipeType<ConsumeWrenchShapedRecipe> {
         override fun toString(): String = "${Ic2_120.MOD_ID}:consume_wrench_shaped"
     }
 
-    val CONSUME_WRENCH_SHAPED_SERIALIZER: RecipeSerializer<ConsumeWrenchShapedRecipe> = ConsumeWrenchShapedRecipeSerializer
+    val CONSUME_WRENCH_SHAPED_SERIALIZER: RecipeSerializer<ConsumeWrenchShapedRecipe> = ConsumeWrenchShapedRecipeSerializer.serializer
 
     val DAMAGE_TOOL_SHAPELESS_TYPE: RecipeType<DamageToolShapelessRecipe> = object : RecipeType<DamageToolShapelessRecipe> {
         override fun toString(): String = "${Ic2_120.MOD_ID}:damage_tool_shapeless"
     }
 
-    val DAMAGE_TOOL_SHAPELESS_SERIALIZER: RecipeSerializer<DamageToolShapelessRecipe> = DamageToolShapelessRecipeSerializer
+    val DAMAGE_TOOL_SHAPELESS_SERIALIZER: RecipeSerializer<DamageToolShapelessRecipe> = DamageToolShapelessRecipeSerializer.serializer
 
     val EMPTY_FLUID_CELL_TO_EMPTY_CELL_TYPE: RecipeType<EmptyFluidCellToEmptyCellRecipe> =
         object : RecipeType<EmptyFluidCellToEmptyCellRecipe> {
@@ -47,7 +47,7 @@ object ModCraftingRecipes {
         }
 
     val EMPTY_FLUID_CELL_TO_EMPTY_CELL_SERIALIZER: RecipeSerializer<EmptyFluidCellToEmptyCellRecipe> =
-        EmptyFluidCellToEmptyCellRecipeSerializer
+        EmptyFluidCellToEmptyCellRecipeSerializer.serializer
 
     fun register() {
         Registry.register(BuiltInRegistries.RECIPE_TYPE, Ic2_120.id("battery_energy_shaped"), BATTERY_ENERGY_SHAPED_TYPE)

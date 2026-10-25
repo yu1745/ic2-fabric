@@ -1,5 +1,7 @@
 package addon_template.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import addon_template.AddonTemplate
@@ -13,14 +15,14 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
-@ModItem(name = "example_item", tab = CreativeTab.IC2_MATERIALS, group = "material")
+@ModItem(name = "example_item", tab = CreativeTab.ADDON_TEMPLATE, group = "material")
 class ExampleItem : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ExampleItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ExampleItem::class.instance(), 1)
                 .pattern(" D ")
                 .pattern("DID")
                 .pattern(" D ")

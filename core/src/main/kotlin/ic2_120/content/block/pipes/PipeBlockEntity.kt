@@ -1,5 +1,7 @@
 package ic2_120.content.block.pipes
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -14,7 +16,7 @@ import ic2_120.compat.world
 
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -27,7 +29,7 @@ import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.chat.Component
@@ -48,7 +50,7 @@ import net.minecraft.world.level.Level
         CarbonPumpAttachmentBlock::class
     ]
 )
-class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+class PipeBlockEntity(pos: BlockPos, state: BlockState) : LegacyBlockEntity26(PipeBlockEntity::class.type(), pos, state), ExtendedMenuProvider<FriendlyByteBuf> {
     var network: PipeNetwork? = null
     var pipeLoad: Long = 0L
     var currentFluidId: String? = null
@@ -74,8 +76,8 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
 
     fun pumpFilterFluid(): Fluid? {
         val raw = pumpFilterFluidId ?: return null
-        val id = ResourceLocation.tryParse(raw) ?: return null
-        return if (BuiltInRegistries.FLUID.containsKey(id)) BuiltInRegistries.FLUID.get(id) else null
+        val id = Identifier.tryParse(raw) ?: return null
+        return if (BuiltInRegistries.FLUID.containsKey(id)) BuiltInRegistries.FLUID.getValue(id) else null
     }
 
     fun isPumpAttachment(): Boolean = cachedState.block is PumpAttachmentBlock
@@ -94,10 +96,10 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        disabledMask = nbt.getInt("DisabledMask")
-        pipeLoad = nbt.getLong("PipeLoad")
-        currentFluidId = nbt.getString("CurrentFluid").takeIf { it.isNotBlank() }
-        pumpFilterFluidId = nbt.getString("PumpFilterFluid").takeIf { it.isNotBlank() }
+        disabledMask = nbt.getIntOr("DisabledMask", 0)
+        pipeLoad = nbt.getLongOr("PipeLoad", 0L)
+        currentFluidId = nbt.getStringOr("CurrentFluid", "").takeIf { it.isNotBlank() }
+        pumpFilterFluidId = nbt.getStringOr("PumpFilterFluid", "").takeIf { it.isNotBlank() }
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
@@ -105,9 +107,7 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         nbt.putInt("DisabledMask", disabledMask)
         nbt.putLong("PipeLoad", pipeLoad)
         currentFluidId?.let { nbt.putString("CurrentFluid", it) }
-        if (!pumpFilterFluidId.isNullOrBlank()) {
-            nbt.putString("PumpFilterFluid", pumpFilterFluidId)
-        }
+        pumpFilterFluidId?.takeIf { it.isNotBlank() }?.let { nbt.putString("PumpFilterFluid", it) }
     }
 
     override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveWithoutMetadata(lookup)
@@ -122,6 +122,6 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.pump_attachment")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         ic2_120.content.screen.PumpAttachmentScreenHandler(syncId, playerInventory, this)
 }

@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import net.minecraft.core.HolderLookup
@@ -64,7 +66,7 @@ class WaterKineticGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IKineticMachinePort, IKineticRotorProvider,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = WaterKineticGeneratorBlock.ACTIVE
 
@@ -175,7 +177,7 @@ class WaterKineticGeneratorBlockEntity(
     fun getRotorRemainingClearHours(): Double {
         val rotor = inventory[ROTOR_SLOT]
         if (rotor.isEmpty || !rotor.isDamageableItem) return 0.0
-        val remainder = rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
+        val remainder = rotor.getCustomData()?.getDoubleOr(ROTOR_WEAR_REMAINDER_KEY, 0.0) ?: 0.0
         val remainingTicks = ((rotor.maxDamage - rotor.damageValue).toDouble() - remainder).coerceAtLeast(0.0)
         // 显示静水条件下的寿命（与风力显示晴天寿命一致，都是理想条件）
         return remainingTicks / TICKS_PER_HOUR / BASE_WEAR_PER_TICK
@@ -191,7 +193,7 @@ class WaterKineticGeneratorBlockEntity(
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
             markDirtyAndSync()
             if (!player.getInventory().add(extracted)) {
-                player.spawnAtLocation(extracted)
+                (player.level() as? net.minecraft.server.level.ServerLevel)?.let { player.spawnAtLocation(it, extracted) }
             }
             return InteractionResult.SUCCESS
         }
@@ -431,7 +433,7 @@ class WaterKineticGeneratorBlockEntity(
 
     private fun applyRotorWear(rotor: ItemStack, wearMultiplier: Double): Boolean {
         if (!rotor.isDamageableItem || wearMultiplier <= 0.0) return false
-        val accumulated = ((rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0) + wearMultiplier).coerceAtLeast(0.0)
+        val accumulated = ((rotor.getCustomData()?.getDoubleOr(ROTOR_WEAR_REMAINDER_KEY, 0.0) ?: 0.0) + wearMultiplier).coerceAtLeast(0.0)
         val wear = floor(accumulated).toInt()
         val remainder = accumulated - wear
 
@@ -518,7 +520,7 @@ class WaterKineticGeneratorBlockEntity(
                 mutablePos.set(checkX, checkY, checkZ)
                 val blockState = world.getBlockState(mutablePos)
 
-                if (blockState.isSolidRender(world, mutablePos)) {
+                if (blockState.isSolidRender) {
                     return true
                 }
             }
@@ -686,13 +688,13 @@ class WaterKineticGeneratorBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
@@ -709,7 +711,7 @@ class WaterKineticGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.water_kinetic_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         WaterKineticGeneratorScreenHandler(
             syncId,
             playerInventory,

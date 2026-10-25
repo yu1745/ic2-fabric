@@ -3,22 +3,20 @@ package ic2_120.client.screen
 import ic2_120.content.block.SolarGeneratorBlock
 import ic2_120.content.screen.SolarGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = SolarGeneratorBlock::class)
 class SolarGeneratorScreen(
     val handler: SolarGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<SolarGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<SolarGeneratorScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -52,6 +50,6 @@ class SolarGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisolargenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guisolargenerator.png")
     }
 }

@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionResultHolder
 import ic2_120.content.network.ToggleChainsawShearPayload
 
 /** 链锯模式切换：按住 Alt 并右键切换剪刀功能。 */
@@ -22,10 +21,10 @@ object ChainsawModeHandler {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getItemInHand(hand)
             if (!world.isClientSide || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
-                return@register InteractionResultHolder.pass(stack)
+                return@register InteractionResult.PASS
             }
             sendToggleOnceThisTick(player.tickCount)
-            InteractionResultHolder.success(stack)
+            InteractionResult.SUCCESS.heldItemTransformedTo(stack)
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->

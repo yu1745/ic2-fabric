@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -23,7 +25,7 @@ import ic2_120.content.block.EvTransformerBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.player.Player
@@ -68,7 +70,7 @@ open class TransformerBlockEntity(
     pos: BlockPos,
     state: BlockState,
     private val transformerTier: Int
-) : BlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(type, pos, state), ITieredMachine, ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(TransformerBlockEntity::class.java)
@@ -128,7 +130,7 @@ open class TransformerBlockEntity(
         return Component.translatable(key)
     }
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
         // 变压器使用通用的 TransformerScreenHandler
         return ic2_120.content.screen.TransformerScreenHandler(
             syncId,
@@ -142,10 +144,10 @@ open class TransformerBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(TransformerSync.NBT_ENERGY_STORED).coerceIn(0L, sync.capacity)
+        sync.amount = nbt.getLongOr(TransformerSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, sync.capacity)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.setMode(TransformerSync.Mode.fromId(nbt.getInt(TransformerSync.NBT_MODE)))
+        sync.setMode(TransformerSync.Mode.fromId(nbt.getIntOr(TransformerSync.NBT_MODE, 0)))
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {

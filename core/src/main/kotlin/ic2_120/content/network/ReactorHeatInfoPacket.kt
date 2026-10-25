@@ -3,7 +3,7 @@ package ic2_120.content.network
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 
 /**
@@ -19,7 +19,7 @@ class ReactorHeatInfoPacket(val pos: BlockPos, val slotHeatInfo: Map<Int, SlotHe
     override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Type<ReactorHeatInfoPacket>(ResourceLocation.fromNamespaceAndPath("ic2_120", "reactor_heat_info"))
+        val ID = CustomPacketPayload.Type<ReactorHeatInfoPacket>(Identifier.fromNamespaceAndPath("ic2_120", "reactor_heat_info"))
         val CODEC: StreamCodec<FriendlyByteBuf, ReactorHeatInfoPacket> = StreamCodec.of(
             { buf, value -> write(value, buf) },
             { read(it) }

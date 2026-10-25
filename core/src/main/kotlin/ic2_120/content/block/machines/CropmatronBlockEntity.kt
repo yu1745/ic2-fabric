@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import net.minecraft.network.FriendlyByteBuf
@@ -46,7 +48,7 @@ import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -57,7 +59,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.FarmBlock
+import net.minecraft.world.level.block.FarmlandBlock
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
@@ -71,7 +73,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -91,7 +93,7 @@ class CropmatronBlockEntity(
     ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport,
-    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = CropmatronBlock.ACTIVE
     override val tier: Int = CROPMATRON_TIER
@@ -292,11 +294,11 @@ class CropmatronBlockEntity(
 
     private var workOffset: Int = random.nextIntBetweenInclusive(0, WORK_INTERVAL_TICKS - 1)
 
-    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val waterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")) }
-    private val distilledWaterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")) }
-    private val weedExCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex_cell")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val waterCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")) }
+    private val distilledWaterCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")) }
+    private val weedExCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex_cell")) }
 
     constructor(pos: BlockPos, state: BlockState) : this(CropmatronBlockEntity::class.type(), pos, state)
 
@@ -317,9 +319,9 @@ class CropmatronBlockEntity(
 
     private fun cropmatronMatchesWaterInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val fluidCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")
-        val waterCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")
-        val distilledWaterCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")
+        val fluidCellId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")
+        val waterCellId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")
+        val distilledWaterCellId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")
         return when {
             stack.item == Items.WATER_BUCKET || stack.item == ModFluids.DISTILLED_WATER_BUCKET -> true
             BuiltInRegistries.ITEM.getKey(stack.item) == waterCellId -> true
@@ -335,8 +337,8 @@ class CropmatronBlockEntity(
 
     private fun cropmatronMatchesWeedExInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val fluidCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")
-        val weedExCellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex_cell")
+        val fluidCellId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")
+        val weedExCellId = Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "weed_ex_cell")
         return when {
             stack.item == ModFluids.WEED_EX_BUCKET -> true
             BuiltInRegistries.ITEM.getKey(stack.item) == weedExCellId -> true
@@ -367,7 +369,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.cropmatron")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         CropmatronScreenHandler(
             syncId,
             playerInventory,
@@ -379,21 +381,21 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(CropmatronSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(CropmatronSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
+        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloatOr("EnergyDebt", 0f).coerceAtLeast(0f) else 0f
 
-        waterTankInternal.setStoredFluid(nbt.getLong(NBT_WATER_MB).coerceIn(0, waterTankCapacity))
-        weedExTankInternal.setStoredFluid(nbt.getLong(NBT_WEED_EX_MB).coerceIn(0, weedExTankCapacity))
-        workOffset = nbt.getInt(NBT_WORK_OFFSET).coerceIn(0, WORK_INTERVAL_TICKS - 1)
+        waterTankInternal.setStoredFluid(nbt.getLongOr(NBT_WATER_MB, 0L).coerceIn(0, waterTankCapacity))
+        weedExTankInternal.setStoredFluid(nbt.getLongOr(NBT_WEED_EX_MB, 0L).coerceIn(0, weedExTankCapacity))
+        workOffset = nbt.getIntOr(NBT_WORK_OFFSET, 0).coerceIn(0, WORK_INTERVAL_TICKS - 1)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropmatronSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
@@ -535,8 +537,8 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     private fun tryHydrateFarmland(world: Level, pos: BlockPos): Boolean {
         val state = world.getBlockState(pos)
-        if (state.block !is FarmBlock) return false
-        val moisture = state.getValue(FarmBlock.MOISTURE)
+        if (state.block !is FarmlandBlock) return false
+        val moisture = state.getValue(FarmlandBlock.MOISTURE)
         if (moisture >= 7) return false
 
         val waterMb = waterTankInternal.getStoredWater().toInt()
@@ -544,7 +546,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         if (add <= 0) return false
 
         waterTankInternal.consumeInternal(mbToDroplets(add))
-        world.setBlock(pos, state.setValue(FarmBlock.MOISTURE, moisture + add), 2)
+        world.setBlock(pos, state.setValue(FarmlandBlock.MOISTURE, moisture + add), 2)
         return true
     }
 

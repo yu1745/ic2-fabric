@@ -5,16 +5,14 @@ import ic2_120.compat.world
 
 import ic2_120.content.block.machines.WaterKineticGeneratorBlockEntity
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes as RenderType
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.Direction
 import com.mojang.math.Axis
 import org.joml.Matrix3f
@@ -22,13 +20,13 @@ import org.joml.Matrix4f
 
 class WaterKineticGeneratorBlockEntityRenderer(
     context: BlockEntityRendererProvider.Context
-) : BlockEntityRenderer<WaterKineticGeneratorBlockEntity> {
+) : LegacyBlockEntityRenderer26<WaterKineticGeneratorBlockEntity>() {
     companion object {
-        private val WOOD_ROTOR_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/wood_rotor_model.png")
-        private val BRONZE_ROTOR_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/bronze_rotor_model.png")
-        private val IRON_ROTOR_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/iron_rotor_model.png")
-        private val STEEL_ROTOR_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/steel_rotor_model.png")
-        private val CARBON_ROTOR_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
+        private val WOOD_ROTOR_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/wood_rotor_model.png")
+        private val BRONZE_ROTOR_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/bronze_rotor_model.png")
+        private val IRON_ROTOR_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/iron_rotor_model.png")
+        private val STEEL_ROTOR_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/steel_rotor_model.png")
+        private val CARBON_ROTOR_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120", "textures/item/rotor/carbon_rotor_model.png")
 
         private const val PIXEL = 1.0f / 16.0f
         private const val BLADE_HALF_WIDTH = 6.0f * PIXEL
@@ -57,7 +55,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
         }
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: WaterKineticGeneratorBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
@@ -85,7 +83,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
         matrices.translate(0.0, 0.0, -FRONT_OFFSET_FROM_CENTER)
         matrices.mulPose(Axis.ZP.rotationDegrees(angle))
 
-        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(rotorTexture))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutout(rotorTexture))
 
         repeat(4) { i ->
             matrices.pushPose()
@@ -126,7 +124,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
         matrices.popPose()
     }
 
-    private fun textureForRotor(stack: ItemStack): ResourceLocation? =
+    private fun textureForRotor(stack: ItemStack): Identifier? =
         when (BuiltInRegistries.ITEM.getKey(stack.item).path) {
             "wooden_rotor" -> WOOD_ROTOR_TEXTURE
             "bronze_rotor" -> BRONZE_ROTOR_TEXTURE
@@ -227,7 +225,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
             
     }
 
-    override fun shouldRenderOffScreen(blockEntity: WaterKineticGeneratorBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 
     override fun getViewDistance(): Int = 256
 }

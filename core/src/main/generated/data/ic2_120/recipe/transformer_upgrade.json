@@ -1,19 +1,10 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "item": "minecraft:glass"
-    },
-    "R": {
-      "item": "ic2_120:circuit"
-    },
-    "T": {
-      "item": "ic2_120:mv_transformer"
-    },
-    "W": {
-      "item": "ic2_120:double_insulated_gold_cable"
-    }
+    "G": "minecraft:glass",
+    "R": "ic2_120:circuit",
+    "T": "ic2_120:mv_transformer",
+    "W": "ic2_120:double_insulated_gold_cable"
   },
   "pattern": [
     "GGG",
@@ -21,7 +12,6 @@
     "GRG"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:transformer_upgrade"
   }
 }

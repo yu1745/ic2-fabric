@@ -32,7 +32,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.registry.annotation.ScreenFactory
 
 /**
@@ -222,7 +222,7 @@ class NuclearReactorScreenHandler(
             val lockedSlots = mutableMapOf<Int, Item>()
             for (i in 0 until lockSize) {
                 val slot = buf.readVarInt()
-                val item = BuiltInRegistries.ITEM.get(buf.readResourceLocation())
+                val item = BuiltInRegistries.ITEM.getValue(buf.readIdentifier())
                 lockedSlots[slot] = item
             }
             val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)

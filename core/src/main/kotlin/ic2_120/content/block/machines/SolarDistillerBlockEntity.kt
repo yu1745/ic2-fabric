@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -61,12 +65,12 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 
 /**
  * 太阳能蒸馏机方块实体
@@ -90,7 +94,7 @@ class SolarDistillerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(type, pos, state), Container, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
     override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
@@ -395,7 +399,7 @@ class SolarDistillerBlockEntity(
         setChanged()
     }
 
-    // ExtendedScreenHandlerFactory<FriendlyByteBuf> 接口实现（用于打开 GUI）
+    // ExtendedMenuProvider<FriendlyByteBuf> 接口实现（用于打开 GUI）
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
@@ -405,7 +409,7 @@ class SolarDistillerBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solar_distiller")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         SolarDistillerScreenHandler(
             syncId,
             playerInventory,
@@ -418,15 +422,15 @@ class SolarDistillerBlockEntity(
     // NBT 数据读写
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        inputTankInternal.setStoredWater(nbt.getLong(NBT_INPUT_TANK))
-        outputTankInternal.setStoredDistilled(nbt.getLong(NBT_OUTPUT_TANK))
+        inputTankInternal.setStoredWater(nbt.getLongOr(NBT_INPUT_TANK, 0L))
+        outputTankInternal.setStoredDistilled(nbt.getLongOr(NBT_OUTPUT_TANK, 0L))
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
@@ -439,16 +443,16 @@ class SolarDistillerBlockEntity(
     private fun canWorkNow(world: Level, pos: BlockPos): Boolean {
         if (world.dimension() != Level.OVERWORLD) return false  // 只在主世界工作
         if (world.isRaining) return false  // 雨天不工作
-        val time = world.dayTime % 24000
+        val time = world.overworldClockTime % 24000
         if (time < DAY_START_TICK || time > DAY_END_TICK) return false  // 只在白天工作
 
         // 检查顶部是否有遮挡物
-        val topY = world.maxBuildHeight
+        val topY = world.maxY
         var y = pos.y + 1
         while (y < topY) {
             val scanPos = BlockPos(pos.x, y, pos.z)
             val blockState = world.getBlockState(scanPos)
-            if (blockState.isSolidRender(world, scanPos)) return false
+            if (blockState.isSolidRender()) return false
             y++
         }
         return true
@@ -519,7 +523,7 @@ class SolarDistillerBlockEntity(
         if (input.isEmpty) return
 
         val emptyOutput = getItem(SLOT_OUTPUT_EMPTY)
-        val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCellItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
 
         // 确定输入容器类型和对应的空容器
         val emptyContainer = when {
@@ -562,11 +566,11 @@ class SolarDistillerBlockEntity(
         val input = getItem(SLOT_INPUT_CELL)
         if (input.isEmpty) return
 
-        val distilledCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")))
+        val distilledCell = ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")))
 
         // 确定输出电池类型
         val outputCell = when {
-            input.item == BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) -> distilledCell
+            input.item == BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) -> distilledCell
             input.item is FluidCellItem && input.isFluidCellEmpty() -> {
                 ItemStack(input.item).apply { setFluidCellVariant(FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)) }
             }
@@ -609,7 +613,7 @@ class SolarDistillerBlockEntity(
 
     private fun isInputCellStack(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
         return stack.item == emptyCell || (stack.item is FluidCellItem && stack.isFluidCellEmpty())
     }
 }

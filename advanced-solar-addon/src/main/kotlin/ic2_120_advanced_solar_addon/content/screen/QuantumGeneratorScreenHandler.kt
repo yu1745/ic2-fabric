@@ -78,11 +78,9 @@ class QuantumGeneratorScreenHandler(
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (player.level().isClientSide) return true
-        // 使用双参数版本 get(BiFunction, defaultValue)，返回 T? 而不是 Optional<T>
-        val be = context.evaluate<net.minecraft.world.level.block.entity.BlockEntity?>({ world, pos -> world.getBlockEntity(pos) }, null)
-            as? QuantumGeneratorBlockEntity ?: return false
-
-        when (id) {
+        return context.evaluate({ world, pos ->
+            val be = world.getBlockEntity(pos) as? QuantumGeneratorBlockEntity ?: return@evaluate false
+            when (id) {
             BTN_EM_MINUS_100 -> be.addEnergyMac(-100)
             BTN_EM_MINUS_10  -> be.addEnergyMac(-10)
             BTN_EM_MINUS_1   -> be.addEnergyMac(-1)
@@ -96,9 +94,10 @@ class QuantumGeneratorScreenHandler(
             BTN_VAR_5   -> be.applyVariable(5)
             BTN_VAR_6   -> be.applyVariable(6)
             BTN_VAR_MAX -> be.applyVariable(8)
-            else -> return false
-        }
-        return true
+                else -> return@evaluate false
+            }
+            true
+        }, false)
     }
 
     override fun stillValid(player: Player): Boolean =

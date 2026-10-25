@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120_industrial_upgrade:singular_core",
+    "B": "ic2_120_industrial_upgrade:proton_solar_panel"
+  },
+  "pattern": [
+    " B ",
+    "BAB",
+    " B "
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:singular_solar_panel"
+  }
+}

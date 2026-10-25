@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import net.minecraft.core.HolderLookup
@@ -67,7 +69,7 @@ class WindKineticGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IKineticMachinePort, IKineticRotorProvider,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = WindKineticGeneratorBlock.ACTIVE
 
@@ -119,9 +121,9 @@ class WindKineticGeneratorBlockEntity(
         }
 
         fun worldGustFactor(world: Level, pos: BlockPos): Double {
-            val worldKey = world.dimension().location().toString()
-            val chunkPos = ChunkPos(pos)
-            val chunkKey = chunkPos.toLong()
+            val worldKey = world.dimension().identifier().toString()
+            val chunkPos = ChunkPos.containing(pos)
+            val chunkKey = chunkPos.pack()
             val byChunk = gustByWorldAndChunk.getOrPut(worldKey) { HashMap() }
             val state = byChunk.getOrPut(chunkKey) { GustState() }
             val chunkOffset = chunkUpdateOffset(chunkPos)
@@ -135,10 +137,10 @@ class WindKineticGeneratorBlockEntity(
         }
 
         private fun chunkUpdateOffset(chunkPos: ChunkPos): Long =
-            (mixChunkSeed(chunkPos.toLong()) and Long.MAX_VALUE) % WIND_UPDATE_INTERVAL_TICKS
+            (mixChunkSeed(chunkPos.pack()) and Long.MAX_VALUE) % WIND_UPDATE_INTERVAL_TICKS
 
         private fun chunkRandom01(chunkPos: ChunkPos, tickBucket: Long): Double {
-            val seed = mixChunkSeed(chunkPos.toLong() xor tickBucket)
+            val seed = mixChunkSeed(chunkPos.pack() xor tickBucket)
             val bits = (seed ushr 11) and ((1L shl 53) - 1)
             return bits.toDouble() / (1L shl 53).toDouble()
         }
@@ -239,7 +241,7 @@ class WindKineticGeneratorBlockEntity(
     fun getRotorRemainingClearHours(): Double {
         val rotor = inventory[ROTOR_SLOT]
         if (rotor.isEmpty || !rotor.isDamageableItem) return 0.0
-        val remainder = rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
+        val remainder = rotor.getCustomData()?.getDoubleOr(ROTOR_WEAR_REMAINDER_KEY, 0.0) ?: 0.0
         return ((rotor.maxDamage - rotor.damageValue).toDouble() - remainder).coerceAtLeast(0.0) / TICKS_PER_HOUR
     }
 
@@ -254,7 +256,7 @@ class WindKineticGeneratorBlockEntity(
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
             markDirtyAndSync()
             if (!player.getInventory().add(extracted)) {
-                player.spawnAtLocation(extracted)
+                (player.level() as? net.minecraft.server.level.ServerLevel)?.let { player.spawnAtLocation(it, extracted) }
             }
             return InteractionResult.SUCCESS
         }
@@ -421,7 +423,7 @@ class WindKineticGeneratorBlockEntity(
      */
     private fun applyRotorWear(rotor: ItemStack, wearMultiplier: Double): Boolean {
         if (!rotor.isDamageableItem || wearMultiplier <= 0.0) return false
-        val accumulated = ((rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0) + wearMultiplier).coerceAtLeast(0.0)
+        val accumulated = ((rotor.getCustomData()?.getDoubleOr(ROTOR_WEAR_REMAINDER_KEY, 0.0) ?: 0.0) + wearMultiplier).coerceAtLeast(0.0)
         val wear = floor(accumulated).toInt()
         val remainder = accumulated - wear
 
@@ -523,7 +525,7 @@ class WindKineticGeneratorBlockEntity(
                 mutablePos.set(checkX, checkY, checkZ)
                 val blockState = world.getBlockState(mutablePos)
 
-                if (blockState.isSolidRender(world, mutablePos)) {
+                if (blockState.isSolidRender()) {
                     return true
                 }
             }
@@ -706,13 +708,13 @@ class WindKineticGeneratorBlockEntity(
         super.loadAdditional(nbt, lookup)
         // ContainerHelper.readNbt 不会在 nbt 中缺失该槽位时自动清空旧值，先清槽避免客户端残留渲染状态
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
@@ -729,7 +731,7 @@ class WindKineticGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.wind_kinetic_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         WindKineticGeneratorScreenHandler(
             syncId,
             playerInventory,

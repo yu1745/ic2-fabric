@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -32,7 +34,7 @@ import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
@@ -92,7 +94,7 @@ class RtGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val ironCasing = IronCasing::class.instance()
             val reactorChamber = ReactorChamberBlock::class.item()
             if (generator != Items.AIR && ironCasing != Items.AIR && reactorChamber != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RtGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RtGeneratorBlock::class.item(), 1)
                     .pattern("CCC")
                     .pattern("CRC")
                     .pattern("CGC")

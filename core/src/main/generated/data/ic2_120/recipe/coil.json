@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:copper_cable"
-    },
-    "I": {
-      "tag": "ic2_120:compat/ingots/iron"
-    }
+    "C": "ic2_120:copper_cable",
+    "I": "#ic2_120:compat/ingots/iron"
   },
   "pattern": [
     "CCC",
@@ -15,7 +10,6 @@
     "CCC"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:coil"
   }
 }

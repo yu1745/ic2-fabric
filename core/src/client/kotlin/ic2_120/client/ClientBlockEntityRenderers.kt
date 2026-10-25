@@ -11,6 +11,7 @@ import ic2_120.client.renderers.WaterKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.ManualKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.LeashKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.MinerBlockEntityRenderer
+import ic2_120.client.renderers.TransmissionItemSpecialRenderer
 import ic2_120.content.block.ComposeDebugBlockEntity
 import ic2_120.content.block.machines.AdvancedMinerBlockEntity
 import ic2_120.content.block.machines.PumpBlockEntity
@@ -48,13 +49,11 @@ import ic2_120.content.block.machines.WindKineticGeneratorBlockEntity
 import ic2_120.content.block.machines.WaterKineticGeneratorBlockEntity
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry
-import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers
-import net.minecraft.core.BlockPos
 
 object ClientBlockEntityRenderers {
     fun register() {
+        TransmissionItemSpecialRenderer.register()
         // 3D 机器运动件（动画参数见 assets/ic2_120/machine3d/animations.json）
         BlockEntityRenderers.register(MaceratorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
         BlockEntityRenderers.register(CompressorBlockEntity::class.type(), ::Machine3dBlockEntityRenderer)
@@ -120,21 +119,5 @@ object ClientBlockEntityRenderers {
             ::MinerBlockEntityRenderer
         )
 
-        // 为传动轴和伞齿轮注册物品渲染器（使用方块实体渲染器在物品栏中渲染 3D 模型）
-        val shaftBlocks = listOf(
-            WoodTransmissionShaftBlock::class.instance(),
-            IronTransmissionShaftBlock::class.instance(),
-            SteelTransmissionShaftBlock::class.instance(),
-            CarbonTransmissionShaftBlock::class.instance(),
-            BevelGearBlock::class.instance()
-        )
-        for (block in shaftBlocks) {
-            val dummyEntity = TransmissionBlockEntity(BlockPos.ZERO, block.defaultBlockState())
-            BuiltinItemRendererRegistry.INSTANCE.register(block.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-                Minecraft.getInstance().blockEntityRenderDispatcher
-                    .getRenderer(dummyEntity)!!
-                    .render(dummyEntity, 1.0f, matrices, vertexConsumers, light, overlay)
-            }
-        }
     }
 }

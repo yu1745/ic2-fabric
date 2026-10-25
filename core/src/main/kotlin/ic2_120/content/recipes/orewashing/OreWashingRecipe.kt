@@ -11,7 +11,7 @@ import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.world.item.crafting.RecipeSerializer
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.crafting.RecipeInput
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.level.Level
 
 /**
@@ -20,12 +20,12 @@ import net.minecraft.world.level.Level
  * 支持多输出（最多3个）和流体消耗
  */
 class OreWashingRecipe(
-    private val id: ResourceLocation,
+    private val id: Identifier,
     val ingredient: Ingredient,
     val outputItems: List<ItemStack>,
     /** 水消耗量（droplets） */
     val waterConsumptionDroplets: Long
-) : Recipe<OreWashingRecipe.Input> {
+) : ic2_120.content.recipes.LegacyMachineRecipe26<OreWashingRecipe.Input> {
 
     init {
         require(outputItems.size <= 3) { "OreWashingRecipe supports at most 3 outputs" }
@@ -36,21 +36,21 @@ class OreWashingRecipe(
         return ingredient.test(inventory.getItem(0))
     }
 
-    override fun assemble(inventory: Input, lookup: HolderLookup.Provider): ItemStack {
+    override fun assemble(inventory: Input): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
 
-    override fun getSerializer(): RecipeSerializer<*> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(OreWashingRecipe::class)
+    override fun getSerializer(): RecipeSerializer<OreWashingRecipe> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(OreWashingRecipe::class)
 
-    override fun getType(): RecipeType<*> = ic2_120.content.recipes.ModMachineRecipes.recipeType(OreWashingRecipe::class)
+    override fun getType(): RecipeType<OreWashingRecipe> = ic2_120.content.recipes.ModMachineRecipes.recipeType(OreWashingRecipe::class)
 
-    override fun canCraftInDimensions(width: Int, height: Int): Boolean = true
+    fun canCraftInDimensions(width: Int, height: Int): Boolean = true
 
-    override fun getResultItem(lookup: HolderLookup.Provider): ItemStack {
+    fun getResultItem(lookup: HolderLookup.Provider): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
 
-    override fun getRemainingItems(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
+    fun getRemainingItems(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
         return net.minecraft.core.NonNullList.withSize(1, ItemStack.EMPTY)
     }
 

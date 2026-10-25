@@ -10,21 +10,19 @@ import ic2_120.content.screen.MatterGeneratorScreenHandler
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import ic2_120.content.sync.MatterGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.FluidRenderHandlerRegistry
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = MatterGeneratorBlock::class)
 class MatterGeneratorScreen(
     val handler: MatterGeneratorScreenHandler, playerInventory: Inventory, title: Component
-) : AbstractContainerScreen<MatterGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<MatterGeneratorScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -127,8 +125,8 @@ class MatterGeneratorScreen(
 
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guimattergenerator.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guimattergenerator.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
 
         private const val TANK_X = 100

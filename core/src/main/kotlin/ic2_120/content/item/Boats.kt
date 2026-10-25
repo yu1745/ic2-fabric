@@ -1,8 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.entity.ModEntities
@@ -29,7 +31,7 @@ class BrokenRubberBoatItem : Ic2BoatItem(ModEntities.BROKEN_RUBBER_BOAT, Item.Pr
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
                 .requires(BrokenRubberBoatItem::class.instance())
                 .requires(RubberItem::class.instance())
                 .unlockedBy(getHasName(BrokenRubberBoatItem::class.instance()), has(BrokenRubberBoatItem::class.instance()))
@@ -46,7 +48,7 @@ class CarbonBoatItem : Ic2BoatItem(ModEntities.CARBON_BOAT, Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             val plate = CarbonPlate::class.instance()
             if (plate != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.TRANSPORTATION, CarbonBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.TRANSPORTATION, CarbonBoatItem::class.instance(), 1)
                     .pattern("   ")
                     .pattern("P P")
                     .pattern("PPP")
@@ -66,11 +68,11 @@ class RubberBoatItem : Ic2BoatItem(ModEntities.RUBBER_BOAT, Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             val rubber = RubberItem::class.instance()
             if (rubber != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
                     .pattern("   ")
                     .pattern("R R")
                     .pattern("RRR")
-                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('R', ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                     .unlockedBy(getHasName(rubber), has(rubber))
                     .save(exporter, RubberBoatItem::class.id())
             }
@@ -89,12 +91,12 @@ class ElectricBoatItem : Ic2BoatItem(ModEntities.ELECTRIC_BOAT, Item.Properties(
             val motor = ElectricMotor::class.instance()
             val rotor = IronRotor::class.instance()
             if (cable != Items.AIR && plate != Items.AIR && motor != Items.AIR && rotor != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.TRANSPORTATION, ElectricBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.TRANSPORTATION, ElectricBoatItem::class.instance(), 1)
                     .pattern("CCC")
                     .pattern("IMI")
                     .pattern("IRI")
                     .define('C', cable)
-                    .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                    .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON))
                     .define('M', motor)
                     .define('R', rotor)
                     .unlockedBy(getHasName(cable), has(cable))

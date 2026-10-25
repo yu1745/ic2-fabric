@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
-  "category": "misc",
   "ingredients": [
-    {
-      "item": "ic2_120:iridium_ore_item"
-    }
+    "ic2_120:iridium_ore_item"
   ],
   "result": {
     "count": 9,

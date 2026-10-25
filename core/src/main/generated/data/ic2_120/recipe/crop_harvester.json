@@ -1,22 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:circuit"
-    },
-    "H": {
-      "item": "minecraft:chest"
-    },
-    "M": {
-      "item": "ic2_120:machine"
-    },
-    "P": {
-      "item": "ic2_120:iron_plate"
-    },
-    "S": {
-      "item": "ic2_120:crop_stick"
-    }
+    "C": "ic2_120:circuit",
+    "H": "minecraft:chest",
+    "M": "ic2_120:machine",
+    "P": "ic2_120:iron_plate",
+    "S": "ic2_120:crop_stick"
   },
   "pattern": [
     "CHC",
@@ -24,7 +13,6 @@
     "PPP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:crop_harvester"
   }
 }

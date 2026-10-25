@@ -2,24 +2,22 @@ package ic2_120.client.screen
 
 import ic2_120.content.screen.StorageBoxScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(handler = "storage_box")
 class StorageBoxScreen(
     val handler: StorageBoxScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<StorageBoxScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<StorageBoxScreenHandler>(handler, playerInventory, title, BoxType.of(handler.inventory.getContainerSize()).guiWidth, BoxType.of(handler.inventory.getContainerSize()).guiHeight) {
 
     private val boxType = BoxType.of(handler.inventory.getContainerSize())
 
     init {
-        imageWidth = boxType.guiWidth
-        imageHeight = boxType.guiHeight
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -58,7 +56,7 @@ class StorageBoxScreen(
     }
 
     private enum class BoxType(
-        val texture: ResourceLocation?,
+        val texture: Identifier?,
         val guiWidth: Int,
         val guiHeight: Int,
         val rows: Int,
@@ -69,10 +67,10 @@ class StorageBoxScreen(
         val slotBgV: Int,
         val textureSize: Int
     ) {
-        WOODEN(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiwoodenbox.png"), 224, 162, 3, 9, 31, 18, 227, 3, 256),
-        IRON(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiironbox.png"), 224, 202, 5, 9, 31, 17, 227, 3, 256),
-        STEEL(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisteelbox.png"), 224, 236, 7, 9, 31, 17, 227, 3, 256),
-        IRIDIUM(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiiridiumbox.png"), 262, 275, 9, 14, 5, 18, 265, 3, 300),
+        WOODEN(Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiwoodenbox.png"), 224, 162, 3, 9, 31, 18, 227, 3, 256),
+        IRON(Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiironbox.png"), 224, 202, 5, 9, 31, 17, 227, 3, 256),
+        STEEL(Identifier.fromNamespaceAndPath("ic2", "textures/gui/guisteelbox.png"), 224, 236, 7, 9, 31, 17, 227, 3, 256),
+        IRIDIUM(Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiiridiumbox.png"), 262, 275, 9, 14, 5, 18, 265, 3, 300),
         OTHER(null, 176, 166, 0, 0, 0, 0, 0, 0, 256);
 
         companion object {

@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
-  "category": "misc",
   "ingredients": [
-    {
-      "tag": "ic2_120:compat/dusts/lapis"
-    }
+    "#ic2_120:compat/dusts/lapis"
   ],
   "result": {
     "count": 9,

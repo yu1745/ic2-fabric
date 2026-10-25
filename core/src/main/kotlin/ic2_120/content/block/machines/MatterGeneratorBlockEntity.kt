@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -44,7 +46,7 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -68,7 +70,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -82,7 +84,7 @@ class MatterGeneratorBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
-    IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty = MatterGeneratorBlock.ACTIVE
     override val tier: Int = MatterGeneratorSync.MATTER_GENERATOR_TIER
@@ -153,11 +155,11 @@ class MatterGeneratorBlockEntity(
     )
 
     override val routedItemStorage get() = itemStorage
-    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val uuMatterCellItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "uu_matter_cell")) }
-    private val scrapItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "scrap")) }
-    private val scrapBoxItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "scrap_box")) }
+    private val emptyCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val uuMatterCellItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "uu_matter_cell")) }
+    private val scrapItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "scrap")) }
+    private val scrapBoxItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "scrap_box")) }
 
     private val outputPerCycle = mbToDroplets(1)
     /** 当前 1 mB 生成周期内已经消耗的废料数量。 */
@@ -299,9 +301,9 @@ class MatterGeneratorBlockEntity(
     private fun matterGenIsFillableContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = BuiltInRegistries.ITEM.getKey(stack.item)
-        return itemId == ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell") ||
+        return itemId == Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell") ||
             stack.item == Items.BUCKET ||
-            (itemId == ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
+            (itemId == Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
     }
 
     override fun canPlaceItem(slot: Int, stack: ItemStack): Boolean = when (slot) {
@@ -320,7 +322,7 @@ class MatterGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.matter_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         MatterGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -332,21 +334,21 @@ class MatterGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.restoreEnergy(nbt.getLong(MatterGeneratorSync.NBT_ENERGY_STORED))
+        sync.restoreEnergy(nbt.getLongOr(MatterGeneratorSync.NBT_ENERGY_STORED, 0L))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.progress = nbt.getInt(NBT_PROGRESS).coerceAtLeast(0)
-        scrapConsumedThisCycle = nbt.getInt(NBT_SCRAP_CONSUMED).coerceIn(0, MatterGeneratorSync.SCRAP_PER_MB)
-        tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
+        sync.progress = nbt.getIntOr(NBT_PROGRESS, 0).coerceAtLeast(0)
+        scrapConsumedThisCycle = nbt.getIntOr(NBT_SCRAP_CONSUMED, 0).coerceIn(0, MatterGeneratorSync.SCRAP_PER_MB)
+        tankInternal.setStoredAmount(nbt.getLongOr(NBT_TANK_AMOUNT, 0L))
         sync.fluidCapacity = tankInternal.getEffectiveCapacity()
         sync.mode = resolveDisplayedMode()
-        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBooleanOr("RedstoneInverted", false) else false
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MatterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())

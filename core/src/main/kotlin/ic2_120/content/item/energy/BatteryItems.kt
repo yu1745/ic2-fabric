@@ -1,8 +1,14 @@
 package ic2_120.content.item.energy
 
+import ic2_120.compat.displayClientMessage
+
+import net.minecraft.world.InteractionResult
+
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.getCustomData
@@ -57,7 +63,7 @@ class ReBatteryItem : BatteryItemBase(
             val tinIngot = TinIngot::class.instance()
             val redstone = Items.REDSTONE
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
                 .pattern(" W ")
                 .pattern("CRC")
                 .pattern("CRC")
@@ -67,7 +73,7 @@ class ReBatteryItem : BatteryItemBase(
                 .unlockedBy(getHasName(tinCable), has(tinCable))
                 .save(exporter, ReBatteryItem::class.recipeId("from_tin_casing"))
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
                 .pattern(" W ")
                 .pattern("IRI")
                 .pattern("IRI")
@@ -93,7 +99,7 @@ class AdvancedReBatteryItem : BatteryItemBase(
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val copperCable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdvancedReBatteryItem::class.instance(), 1)
                 .pattern("WBW")
                 .pattern("BSB")
                 .pattern("BLB")
@@ -118,15 +124,15 @@ class AdvancedReBatteryItem : BatteryItemBase(
 class EnergyCrystalItem : BatteryItemBase(
     name = "energy_crystal", tier = 3, maxCapacity = 1_000_000, canChargeWireless = false
 ) {
-    override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
+    override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResult {
         val crystal = user.getItemInHand(hand)
-        if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
+        if (world.isClient) return InteractionResult.SUCCESS.heldItemTransformedTo(crystal)
 
         // 获取水晶当前电量
         val availableEnergy = getCurrentCharge(crystal)
         if (availableEnergy <= 0) {
             user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c能量水晶电量不足！"), true)
-            return net.minecraft.world.InteractionResultHolder.fail(crystal)
+            return InteractionResult.FAIL
         }
 
         var totalCharged = 0L
@@ -134,11 +140,11 @@ class EnergyCrystalItem : BatteryItemBase(
         var energyRemaining = availableEnergy
 
         // 遍历玩家主背包
-        for (slot in 0..<user.inventory.items.size) {
+        for (slot in 0..<user.inventory.nonEquipmentItems.size) {
             if (energyRemaining <= 0) break
 
             // 跳过当前手持的水晶
-            val stack = user.inventory.items[slot]
+            val stack = user.inventory.nonEquipmentItems[slot]
             if (stack.isEmpty || stack === crystal) continue
 
             // 检查物品是否可以被充电
@@ -168,10 +174,10 @@ class EnergyCrystalItem : BatteryItemBase(
         }
 
         // 遍历玩家护甲栏
-        for (slot in 0..<user.inventory.armor.size) {
+        for (slot in listOf(net.minecraft.world.entity.EquipmentSlot.FEET, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.HEAD)) {
             if (energyRemaining <= 0) break
 
-            val stack = user.inventory.armor[slot]
+            val stack = user.getItemBySlot(slot)
             if (stack.isEmpty || !stack.canBeCharged()) continue
 
             val targetBattery = stack.item as? IBatteryItem
@@ -227,7 +233,7 @@ class EnergyCrystalItem : BatteryItemBase(
             user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！"), true)
         }
 
-        return net.minecraft.world.InteractionResultHolder.success(crystal)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(crystal)
     }
 }
 
@@ -260,15 +266,15 @@ class LapotronCrystalItem : BatteryItemBase(
         }
     }
 
-    override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
+    override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResult {
         val crystal = user.getItemInHand(hand)
-        if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
+        if (world.isClient) return InteractionResult.SUCCESS.heldItemTransformedTo(crystal)
 
         // 获取水晶当前电量
         val availableEnergy = getCurrentCharge(crystal)
         if (availableEnergy <= 0) {
             user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c蓝波顿水晶电量不足！"), true)
-            return net.minecraft.world.InteractionResultHolder.fail(crystal)
+            return InteractionResult.FAIL
         }
 
         var totalCharged = 0L
@@ -276,11 +282,11 @@ class LapotronCrystalItem : BatteryItemBase(
         var energyRemaining = availableEnergy
 
         // 遍历玩家主背包
-        for (slot in 0..<user.inventory.items.size) {
+        for (slot in 0..<user.inventory.nonEquipmentItems.size) {
             if (energyRemaining <= 0) break
 
             // 跳过当前手持的水晶
-            val stack = user.inventory.items[slot]
+            val stack = user.inventory.nonEquipmentItems[slot]
             if (stack.isEmpty || stack === crystal) continue
 
             // 检查物品是否可以被充电
@@ -310,10 +316,10 @@ class LapotronCrystalItem : BatteryItemBase(
         }
 
         // 遍历玩家护甲栏
-        for (slot in 0..<user.inventory.armor.size) {
+        for (slot in listOf(net.minecraft.world.entity.EquipmentSlot.FEET, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.HEAD)) {
             if (energyRemaining <= 0) break
 
-            val stack = user.inventory.armor[slot]
+            val stack = user.getItemBySlot(slot)
             if (stack.isEmpty || !stack.canBeCharged()) continue
 
             val targetBattery = stack.item as? IBatteryItem
@@ -369,7 +375,7 @@ class LapotronCrystalItem : BatteryItemBase(
             user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！"), true)
         }
 
-        return net.minecraft.world.InteractionResultHolder.success(crystal)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(crystal)
     }
 }
 
@@ -503,7 +509,7 @@ class SingleUseBatteryItem : BatteryItemBase(
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val copperCable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingleUseBatteryItem::class.instance(), 8)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SingleUseBatteryItem::class.instance(), 8)
                 .pattern(" W ")
                 .pattern(" R ")
                 .pattern(" F ")

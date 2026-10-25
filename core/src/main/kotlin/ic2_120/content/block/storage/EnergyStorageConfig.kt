@@ -1,6 +1,6 @@
 package ic2_120.content.block.storage
 
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 储电盒配置。四个等级（BatBox/CESU/MFE/MFSU）共用此配置结构。

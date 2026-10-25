@@ -1,8 +1,10 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
@@ -33,11 +35,11 @@ class MachineCasingBlock : Block(
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MachineCasingBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MachineCasingBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("I I")
                 .pattern("III")
-                .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON))
                 .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, MachineCasingBlock::class.recipeId("from_plates"))
         }
@@ -54,11 +56,11 @@ class AdvancedMachineCasingBlock : Block(
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedMachineCasingBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdvancedMachineCasingBlock::class.instance(), 1)
                 .pattern("sgs")
                 .pattern("cxc")
                 .pattern("sgs")
-                .define('s', Ingredient.of(ModTags.Compat.Items.PLATES_STEEL))
+                .define('s', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_STEEL))
                 .define('g', Alloy::class.instance())
                 .define('c', CarbonPlate::class.instance())
                 .define('x', MachineCasingBlock::class.instance())

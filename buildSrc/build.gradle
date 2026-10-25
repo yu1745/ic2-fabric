@@ -8,6 +8,6 @@ repositories {
 }
 
 dependencies {
-    implementation("net.fabricmc:fabric-loom:1.15.5")
+    implementation("net.fabricmc:fabric-loom:1.17.21")
     compileOnly("net.fabricmc:tiny-remapper:0.12.3")
 }

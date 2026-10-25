@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.content.block.MachineBlock
@@ -32,7 +34,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_industrial_upgrade.neutron_fabricator
 // zh_cn: 中子制造机
@@ -73,7 +75,7 @@ class NeutronFabricatorBlock : MachineBlock() {
             val enderComponent = EnderQuantumComponent::class.instance()
             val advancedMachine = ic2_120.content.block.AdvancedMachineCasingBlock::class.item()
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NeutronFabricatorBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, NeutronFabricatorBlock::class.item(), 1)
                 .pattern(" A ")
                 .pattern("BCB")
                 .pattern(" A ")

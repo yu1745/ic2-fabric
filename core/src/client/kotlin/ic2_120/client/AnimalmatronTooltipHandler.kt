@@ -4,22 +4,22 @@ import ic2_120.content.entity.AnimalFoodMapping
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
-import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.Minecraft
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @Environment(EnvType.CLIENT)
 object AnimalmatronTooltipHandler {
 
-    private val ANIMALMATRON_ID = ResourceLocation.fromNamespaceAndPath("ic2_120", "animalmatron")
+    private val ANIMALMATRON_ID = Identifier.fromNamespaceAndPath("ic2_120", "animalmatron")
 
-    private data class ExtraProductInfo(val entityId: ResourceLocation, val productId: ResourceLocation, val needsShears: Boolean)
+    private data class ExtraProductInfo(val entityId: Identifier, val productId: Identifier, val needsShears: Boolean)
 
     private val EXTRA_PRODUCTS = listOf(
-        ExtraProductInfo(ResourceLocation.fromNamespaceAndPath("minecraft", "chicken"), ResourceLocation.fromNamespaceAndPath("minecraft", "egg"), false),
-        ExtraProductInfo(ResourceLocation.fromNamespaceAndPath("minecraft", "sheep"), ResourceLocation.fromNamespaceAndPath("minecraft", "white_wool"), true),
+        ExtraProductInfo(Identifier.fromNamespaceAndPath("minecraft", "chicken"), Identifier.fromNamespaceAndPath("minecraft", "egg"), false),
+        ExtraProductInfo(Identifier.fromNamespaceAndPath("minecraft", "sheep"), Identifier.fromNamespaceAndPath("minecraft", "white_wool"), true),
     )
 
     fun register() {
@@ -27,7 +27,7 @@ object AnimalmatronTooltipHandler {
             val itemId = BuiltInRegistries.ITEM.getKey(stack.item)
             if (itemId != ANIMALMATRON_ID) return@register
 
-            if (Screen.hasShiftDown()) {
+            if (Minecraft.getInstance().hasShiftDown()) {
                 lines.add(Component.translatable("item.ic2_120.animalmatron.tooltip.food_table").withStyle(ChatFormatting.GRAY))
                 AnimalFoodMapping.getFoodMap().forEach { (id, food) ->
                     val animalKey = "entity.${id.namespace}.${id.path}"
@@ -41,7 +41,7 @@ object AnimalmatronTooltipHandler {
                 EXTRA_PRODUCTS.forEach { (entityId, productId, needsShears) ->
                     val animalKey = "entity.${entityId.namespace}.${entityId.path}"
                     val animalName = Component.translatable(animalKey).string
-                    val productItem = BuiltInRegistries.ITEM.get(productId)
+                    val productItem = BuiltInRegistries.ITEM.getValue(productId)
                     val productName = Component.translatable(productItem.descriptionId).string
                     val noteKey = if (needsShears)
                         "item.ic2_120.animalmatron.tooltip.extra_product_shears"

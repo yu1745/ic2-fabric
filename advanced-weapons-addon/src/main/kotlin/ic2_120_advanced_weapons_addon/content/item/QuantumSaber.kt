@@ -1,15 +1,17 @@
 package ic2_120_advanced_weapons_addon.content.item
 
+import ic2_120.compat.displayClientMessage
+
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.tags.BlockTags
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.EquipmentSlotGroup
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
@@ -17,27 +19,22 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.SwordItem
-import net.minecraft.world.item.Tier
+import net.minecraft.world.item.ToolMaterial
 import net.minecraft.world.item.component.ItemAttributeModifiers
-import net.minecraft.world.item.crafting.Ingredient
+import net.minecraft.world.item.component.Weapon
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import ic2_120.compat.*
 
-private object QuantumSaberMaterial : Tier {
-    override fun getUses() = 1
-    override fun getSpeed() = 1.0f
-    override fun getAttackDamageBonus() = 0f
-    override fun getIncorrectBlocksForDrops(): net.minecraft.tags.TagKey<Block> = BlockTags.INCORRECT_FOR_WOODEN_TOOL
-    override fun getEnchantmentValue() = 0
-    override fun getRepairIngredient(): Ingredient = Ingredient.EMPTY
-}
+private val QuantumSaberMaterial = ToolMaterial(
+    BlockTags.INCORRECT_FOR_WOODEN_TOOL, 1, 1.0f, 0.0f, 0,
+    net.minecraft.tags.ItemTags.WOODEN_TOOL_MATERIALS
+)
 
 @ModItem(name = "quantum_saber", tab = CreativeTab.IC2_ADVANCED_WEAPONS, group = "electric_tools")
-class QuantumSaber : SwordItem(
-    QuantumSaberMaterial,
-    Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(QuantumSaberMaterial, 0, -2.4f))
+class QuantumSaber : Item(
+    Item.Properties().stacksTo(1).sword(QuantumSaberMaterial, 0.0f, -2.4f)
+        .component(DataComponents.WEAPON, Weapon(0))
 ), IElectricTool {
 
     companion object {
@@ -47,11 +44,11 @@ class QuantumSaber : SwordItem(
         private const val DAMAGE_INACTIVE_TOTAL = 5.0
         private const val DAMAGE_ACTIVE_TOTAL = 31.0
 
-        fun isActive(stack: ItemStack): Boolean = stack.orCreateNbt.getBoolean(NBT_ACTIVE)
+        fun isActive(stack: ItemStack): Boolean = stack.orCreateNbt.getBooleanOr(NBT_ACTIVE, false)
 
         fun toggleActive(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
-            val v = !nbt.getBoolean(NBT_ACTIVE)
+            val v = !nbt.getBooleanOr(NBT_ACTIVE, false)
             nbt.putBoolean(NBT_ACTIVE, v)
             return v
         }
@@ -62,8 +59,6 @@ class QuantumSaber : SwordItem(
 
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
-
-    override fun isEnchantable(stack: ItemStack) = false
 
     private fun weaponAttackModifier(stack: ItemStack): Double {
         val active = isActive(stack)
@@ -78,7 +73,7 @@ class QuantumSaber : SwordItem(
             .add(
                 Attributes.ATTACK_DAMAGE,
                 AttributeModifier(
-                    ResourceLocation.withDefaultNamespace("quantum_saber_attack_damage"),
+                    Identifier.withDefaultNamespace("quantum_saber_attack_damage"),
                     weaponAttackModifier(stack),
                     AttributeModifier.Operation.ADD_VALUE
                 ),
@@ -87,7 +82,7 @@ class QuantumSaber : SwordItem(
             .add(
                 Attributes.ATTACK_SPEED,
                 AttributeModifier(
-                    ResourceLocation.withDefaultNamespace("quantum_saber_attack_speed"),
+                    Identifier.withDefaultNamespace("quantum_saber_attack_speed"),
                     -2.4,
                     AttributeModifier.Operation.ADD_VALUE
                 ),
@@ -97,7 +92,7 @@ class QuantumSaber : SwordItem(
         stack.set(DataComponents.ATTRIBUTE_MODIFIERS, mods)
     }
 
-    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResult {
         val stack = user.getItemInHand(hand)
         if (!world.isClient) {
             val on = toggleActive(stack)
@@ -110,10 +105,10 @@ class QuantumSaber : SwordItem(
                 true
             )
         }
-        return InteractionResultHolder.success(stack)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
     }
 
-    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: net.minecraft.server.level.ServerLevel, entity: net.minecraft.world.entity.Entity, slot: net.minecraft.world.entity.EquipmentSlot?) {
         syncAttributeModifiers(stack)
     }
 
@@ -136,9 +131,12 @@ class QuantumSaber : SwordItem(
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay,
+        consumer: java.util.function.Consumer<Component>,
         type: net.minecraft.world.item.TooltipFlag
     ) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         appendEnergyTooltip(stack, tooltip)
         val key = if (isActive(stack))
             "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.active"

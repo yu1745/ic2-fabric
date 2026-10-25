@@ -9,16 +9,16 @@ import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.SteamKineticGeneratorScreenHandler
 import ic2_120.content.sync.SteamKineticGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.chat.Component as McText
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 蒸汽动能发电机 GUI — 1:1 对齐 ic2_origin GuiSteamKineticGenerator (176×166)。
@@ -38,10 +38,10 @@ class SteamKineticGeneratorScreen(
     val handler: SteamKineticGeneratorScreenHandler,
     playerInventory: Inventory,
     title: McText
-) : AbstractContainerScreen<SteamKineticGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<SteamKineticGeneratorScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176; imageHeight = 166
+
         titleLabelX = 999
     }
 
@@ -144,8 +144,8 @@ class SteamKineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisteamkineticgenerator.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guisteamkineticgenerator.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private val DISTILLED_WATER_TANK_DROPLETS = FluidConstants.BUCKET.toInt()
         private const val PLAYER_INV_Y = 84
         private const val HOTBAR_Y = 142

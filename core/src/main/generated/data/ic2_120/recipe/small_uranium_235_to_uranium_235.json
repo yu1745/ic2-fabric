@@ -1,37 +1,17 @@
 {
   "type": "minecraft:crafting_shapeless",
-  "category": "misc",
   "ingredients": [
-    {
-      "item": "ic2_120:small_uranium_235"
-    },
-    {
-      "item": "ic2_120:small_uranium_235"
-    },
-    {
-      "item": "ic2_120:small_uranium_235"
-    },
-    {
-      "item": "ic2_120:small_uranium_235"
-    },
-    {
-      "item": "ic2_120:small_uranium_235"
-    },
-    {
-      "item": "ic2_120:small_uranium_235"
-    },
-    {
-      "item": "ic2_120:small_uranium_235"
-    },
-    {
-      "item": "ic2_120:small_uranium_235"
-    },
-    {
-      "item": "ic2_120:small_uranium_235"
-    }
+    "ic2_120:small_uranium_235",
+    "ic2_120:small_uranium_235",
+    "ic2_120:small_uranium_235",
+    "ic2_120:small_uranium_235",
+    "ic2_120:small_uranium_235",
+    "ic2_120:small_uranium_235",
+    "ic2_120:small_uranium_235",
+    "ic2_120:small_uranium_235",
+    "ic2_120:small_uranium_235"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:uranium_235"
   }
 }

@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -24,7 +26,7 @@ import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_industrial_upgrade.quantum_solar_panelrain
 // zh_cn: 量子雨能太阳能发电机  en_us: Quantum Rain Panel
@@ -45,7 +47,7 @@ class QuantumSolarPanelRainBlock : QuantumSolarPanelBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：量子太阳能发电机（ASA）+ RainLinse
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantumSolarPanelRainBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, QuantumSolarPanelRainBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', QuantumSolarPanelBlock::class.item())
@@ -53,7 +55,7 @@ class QuantumSolarPanelRainBlock : QuantumSolarPanelBlock() {
                 .unlockedBy(getHasName(QuantumSolarPanelBlock::class.item()), has(QuantumSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("quantum_solar_panelrain"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, QuantumSolarPanelBlock::class.item(), 1)
+            ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, QuantumSolarPanelBlock::class.item(), 1)
                 .requires(QuantumSolarPanelRainBlock::class.item())
                 .unlockedBy(getHasName(QuantumSolarPanelRainBlock::class.item()), has(QuantumSolarPanelRainBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("quantum_solar_panelrain_revert"))

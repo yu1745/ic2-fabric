@@ -1,7 +1,7 @@
 package ic2_120.content.recipes.blastfurnace
 
 import net.minecraft.core.HolderLookup
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.Recipe
@@ -16,11 +16,11 @@ import net.minecraft.world.level.Level
  * 配方处理物品转换，压缩空气在运行时由机器单独消耗（每1000 ticks 1瓶）。
  */
 class BlastFurnaceRecipe(
-    private val id: ResourceLocation,
+    private val id: Identifier,
     val ingredient: Ingredient,
     val steelOutput: ItemStack,
     val slagOutput: ItemStack
-) : Recipe<BlastFurnaceRecipe.Input> {
+) : ic2_120.content.recipes.LegacyMachineRecipe26<BlastFurnaceRecipe.Input> {
 
     override fun matches(inventory: Input, world: Level): Boolean {
         return ingredient.test(inventory.getItem(0))
@@ -30,19 +30,19 @@ class BlastFurnaceRecipe(
         return steelOutput.copy()
     }
 
-    override fun assemble(inventory: Input, registry: HolderLookup.Provider): ItemStack {
+    override fun assemble(inventory: Input): ItemStack {
         return steelOutput.copy()
     }
 
-    override fun getResultItem(registry: HolderLookup.Provider): ItemStack = steelOutput.copy()
+    fun getResultItem(registry: HolderLookup.Provider): ItemStack = steelOutput.copy()
 
-    fun getId(): ResourceLocation = id
+    fun getId(): Identifier = id
 
-    override fun getSerializer(): RecipeSerializer<*> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(BlastFurnaceRecipe::class)
+    override fun getSerializer(): RecipeSerializer<BlastFurnaceRecipe> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(BlastFurnaceRecipe::class)
 
-    override fun getType(): RecipeType<*> = ic2_120.content.recipes.ModMachineRecipes.recipeType(BlastFurnaceRecipe::class)
+    override fun getType(): RecipeType<BlastFurnaceRecipe> = ic2_120.content.recipes.ModMachineRecipes.recipeType(BlastFurnaceRecipe::class)
 
-    override fun canCraftInDimensions(width: Int, height: Int): Boolean = true
+    fun canCraftInDimensions(width: Int, height: Int): Boolean = true
 
     /**
      * 简单输入容器，仅包含单个物品栈用于配方匹配

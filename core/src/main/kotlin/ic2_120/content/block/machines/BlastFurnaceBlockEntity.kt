@@ -1,5 +1,8 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.recipeManager
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -35,7 +38,7 @@ import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.ModMachineRecipeBinding
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -55,7 +58,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -97,7 +100,7 @@ class BlastFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : HeatConsumerBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = BlastFurnaceBlock.ACTIVE
     override fun getInventory(): Container = this
@@ -273,22 +276,22 @@ class BlastFurnaceBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.blast_furnace")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         BlastFurnaceScreenHandler(syncId, playerInventory, this,
             net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        temperature = nbt.getInt(NBT_TEMPERATURE).coerceIn(0, BlastFurnaceSync.TEMP_MAX)
-        heatAccum = nbt.getLong(NBT_HEAT_ACCUM)
-        huBuffer = nbt.getLong(NBT_HU_BUFFER).coerceIn(0L, HU_BUFFER_CAPACITY)
+        temperature = nbt.getIntOr(NBT_TEMPERATURE, 0).coerceIn(0, BlastFurnaceSync.TEMP_MAX)
+        heatAccum = nbt.getLongOr(NBT_HEAT_ACCUM, 0L)
+        huBuffer = nbt.getLongOr(NBT_HU_BUFFER, 0L).coerceIn(0L, HU_BUFFER_CAPACITY)
         sync.temperature = temperature
-        airTankInternal.setStoredAir(nbt.getLong(NBT_AIR_AMOUNT).coerceAtLeast(0L))
+        airTankInternal.setStoredAir(nbt.getLongOr(NBT_AIR_AMOUNT, 0L).coerceAtLeast(0L))
         // 优先从 NBT 恢复；旧存档没有此 key 时从 progress 反推，避免 reload 后 need 暴涨
         airConsumedThisSteel = if (nbt.contains(NBT_AIR_CONSUMED)) {
-            nbt.getLong(NBT_AIR_CONSUMED).coerceAtLeast(0L)
+            nbt.getLongOr(NBT_AIR_CONSUMED, 0L).coerceAtLeast(0L)
         } else {
             val progressMax = getProgressMax(temperature)
             if (progressMax > 0) {
@@ -299,7 +302,7 @@ class BlastFurnaceBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_HU_RECEIVED, huReceivedThisTick)
         nbt.putLong(NBT_HU_BUFFER, huBuffer)
@@ -500,7 +503,7 @@ class BlastFurnaceBlockEntity(
         if (airItem is AirCell || airItem is FluidCellItem) {
             if (airItem is FluidCellItem && !isCompressedAirFluidCellCached(airSlot)) return
             val emptySlot = getItem(SLOT_OUTPUT_EMPTY)
-            val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")))
+            val emptyCell = ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")))
             val canAcceptEmpty = emptySlot.isEmpty ||
                 (ItemStack.isSameItem(emptySlot, emptyCell) && emptySlot.count + 1 <= emptyCell.maxStackSize)
             if (!canAcceptEmpty) return

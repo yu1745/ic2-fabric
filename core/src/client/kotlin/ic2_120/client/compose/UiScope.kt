@@ -2,7 +2,7 @@ package ic2_120.client.compose
 
 import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.HeatProgressBar
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * DSL 作用域。每个容器的 content lambda 接收一个 UiScope，
@@ -99,7 +99,7 @@ class UiScope {
      *
      * 最简用法（完整纹理）：
      * ```
-     * Image(ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/icon.png"), width = 16, height = 16)
+     * Image(Identifier.fromNamespaceAndPath("ic2", "textures/gui/icon.png"), width = 16, height = 16)
      * ```
      *
      * TextureAtlasSprite sheet 裁剪：
@@ -110,7 +110,7 @@ class UiScope {
      * ```
      */
     fun Image(
-        texture: ResourceLocation,
+        texture: Identifier,
         width: Int,
         height: Int,
         u: Float = 0f,

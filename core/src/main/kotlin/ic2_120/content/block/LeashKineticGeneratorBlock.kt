@@ -1,11 +1,15 @@
 package ic2_120.content.block
 
+import ic2_120.compat.displayClientMessage
+
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -23,7 +27,8 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
+import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.Mob
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Items
@@ -51,7 +56,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val casing = MachineCasingBlock::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LeashKineticGeneratorBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, LeashKineticGeneratorBlock::class.item(), 1)
                 .pattern(" L ")
                 .pattern(" C ")
                 .define('L', Items.LEAD)
@@ -99,8 +104,8 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 // Unleash: detach mob, kill anchor, return lead
                 val mob = be.findLeashedMob()
                 val knot = be.findKnot()
-                mob?.dropLeash(true, true)
-                knot?.kill()
+                mob?.dropLeash()
+                (world as? ServerLevel)?.let { knot?.kill(it) }
                 knot?.remove(Entity.RemovalReason.DISCARDED)
                 be.setLeashedMob(null, "")
                 if (!player.isCreative) {
@@ -120,10 +125,10 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
 
             val mob = nearbyMobs.firstOrNull()
             if (mob != null) {
-                mob.dropLeash(true, false)
+                mob.removeLeash()
                 val serverWorld = world as? ServerLevel
                 if (serverWorld != null) {
-                    val anchor = EntityType.ARMOR_STAND.create(serverWorld)
+                    val anchor = EntityTypes.ARMOR_STAND.create(serverWorld, EntitySpawnReason.TRIGGERED)
                     if (anchor != null) {
                         // Armor stand getLeashPos adds eyeHeight*0.7 offset (~1.24),
                         // compensate so the leash visually ends at the knot position (y+1.4)
@@ -155,11 +160,11 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
             be?.let {
                 val mob = it.findLeashedMob()
                 if (mob != null && mob.isAlive) {
-                    mob.dropLeash(true, true)
+                    mob.dropLeash()
                 }
                 val knot = it.findKnot()
                 if (knot != null && knot.isAlive) {
-                    knot.kill()
+                    (world as? ServerLevel)?.let { knot.kill(it) }
                     knot.remove(Entity.RemovalReason.DISCARDED)
                 }
             }

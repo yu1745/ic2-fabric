@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -62,15 +64,18 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion
             be.tick(w, p, s)
         }
 
-    @Environment(EnvType.CLIENT)
-    override fun appendHoverText(
-        stack: ItemStack,
-        context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
-        type: TooltipFlag
-    ) {
-        super.appendHoverText(stack, context, tooltip, type)
-        tooltip.add(Component.translatable("tooltip.ic2_120.kinetic_generator.ratio").withStyle(ChatFormatting.GRAY))
+    class KineticGeneratorBlockItem(block: net.minecraft.world.level.block.Block, properties: Item.Properties) : net.minecraft.world.item.BlockItem(block, properties) {
+        @Environment(EnvType.CLIENT)
+        override fun appendHoverText(
+            stack: ItemStack,
+            context: Item.TooltipContext,
+            display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
+            type: TooltipFlag
+        ) {
+            val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+            super.appendHoverText(stack, context, display, consumer, type)
+            tooltip.add(Component.translatable("tooltip.ic2_120.kinetic_generator.ratio").withStyle(ChatFormatting.GRAY))
+        }
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -100,7 +105,7 @@ class KineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion
             val motor = ElectricMotor::class.instance()
             val crank = IronCrankHandle::class.instance()
             if (generator != Items.AIR && motor != Items.AIR && crank != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, KineticGeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, KineticGeneratorBlock::class.item(), 1)
                     .pattern("GMF")
                     .define('G', generator)
                     .define('M', motor)

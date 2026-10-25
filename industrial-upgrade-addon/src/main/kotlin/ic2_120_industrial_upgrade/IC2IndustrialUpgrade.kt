@@ -5,14 +5,14 @@ import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import ic2_120_advanced_solar_addon.content.recipe.MTRecipes
 import ic2_120_industrial_upgrade.content.fluid.NeutronFluid
 import net.fabricmc.api.ModInitializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 
 object IC2IndustrialUpgrade : ModInitializer {
     const val MOD_ID = "ic2_120_industrial_upgrade"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
-    fun id(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
+    fun id(path: String): Identifier = Identifier.fromNamespaceAndPath(MOD_ID, path)
 
     override fun onInitialize() {
         LOGGER.info("Initializing IC2 Industrial Upgrade addon...")

@@ -92,7 +92,7 @@ class NuclearExplosion private constructor(
 
     /** FTB Chunks 保护检查（按 chunk 缓存，受保护的方块截断射线） */
     private fun isProtected(pos: BlockPos): Boolean {
-        val chunkKey = net.minecraft.world.level.ChunkPos.asLong(pos.x shr 4, pos.z shr 4)
+        val chunkKey = net.minecraft.world.level.ChunkPos.pack(pos)
         return chunkProtectionCache.getOrPut(chunkKey) {
             ic2_120.integration.ftbchunks.ClaimProtection.isExplosionProtected(world, pos, ownerUuid)
         }
@@ -203,7 +203,7 @@ class NuclearExplosion private constructor(
         while (remaining > 0) {
             rx += dx; ry += dy; rz += dz
 
-            if (ry < world.minBuildHeight.toDouble() || ry > world.maxBuildHeight.toDouble()) break
+            if (ry < world.minY.toDouble() || ry > world.maxY.toDouble()) break
 
             mutablePos.set(rx.toInt(), ry.toInt(), rz.toInt())
             val state = world.getBlockState(mutablePos)
@@ -259,7 +259,7 @@ class NuclearExplosion private constructor(
         var remaining = initialPower
         while (remaining > 0) {
             rx += dx; ry += dy; rz += dz
-            if (ry < world.minBuildHeight.toDouble() || ry > world.maxBuildHeight.toDouble()) break
+            if (ry < world.minY.toDouble() || ry > world.maxY.toDouble()) break
             mutablePos.set(rx.toInt(), ry.toInt(), rz.toInt())
             val state = world.getBlockState(mutablePos)
             val block = state.block
@@ -349,7 +349,6 @@ class NuclearExplosion private constructor(
 
             val dir = entity.position().subtract(Vec3(centerX, centerY, centerZ)).normalize()
             entity.push(dir.x * exposure, dir.y * exposure, dir.z * exposure)
-            entity.hasImpulse = true
         }
     }
 

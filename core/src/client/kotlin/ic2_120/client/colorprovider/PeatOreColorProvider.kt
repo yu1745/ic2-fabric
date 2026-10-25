@@ -1,9 +1,10 @@
 package ic2_120.client.colorprovider
 
 import ic2_120.Ic2_120
-import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
+import net.fabricmc.fabric.api.client.rendering.v1.BlockColorRegistry
+import net.minecraft.client.color.block.BlockTintSources
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 泥炭矿着色器。
@@ -17,15 +18,7 @@ object PeatOreColorProvider {
     private const val PEAT_COLOR = 0x4A3728
 
     fun register() {
-        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "peat_ore"))
-        val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "peat_ore"))
-
-        ColorProviderRegistry.BLOCK.register({ _, _, _, _ ->
-            PEAT_COLOR
-        }, block)
-
-        ColorProviderRegistry.ITEM.register({ _, _ ->
-            PEAT_COLOR
-        }, item)
+        val block = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "peat_ore"))
+        BlockColorRegistry.register(listOf(BlockTintSources.constant(PEAT_COLOR or -0x1000000)), block)
     }
 }

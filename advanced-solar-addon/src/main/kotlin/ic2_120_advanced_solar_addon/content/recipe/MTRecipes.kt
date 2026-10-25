@@ -3,7 +3,7 @@ package ic2_120_advanced_solar_addon.content.recipe
 import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.registries.BuiltInRegistries
 import org.slf4j.LoggerFactory
 
@@ -18,6 +18,7 @@ object MTRecipes {
      * 若 ASA 配置文件中存在相同 input id 的条目，则以配置文件中的 energy 为准（玩家可覆盖耗电量）。
      */
     private val extensionRecipes = mutableListOf<ExtensionRecipe>()
+    private var initialized = false
 
     data class MTRecipe(
         val input: ItemStack,
@@ -45,6 +46,7 @@ object MTRecipes {
             addRecipe(configRecipe.input, configRecipe.output, configRecipe.energy, configRecipe.outputCount)
         }
         reinjectExtensionRecipes()
+        initialized = true
     }
 
     fun loadFromSync(entries: List<MTRecipeEntry>) {
@@ -53,6 +55,7 @@ object MTRecipes {
             addRecipe(entry.inputId, entry.outputId, entry.energy, entry.outputCount)
         }
         reinjectExtensionRecipes()
+        initialized = true
     }
 
     /**
@@ -98,7 +101,7 @@ object MTRecipes {
         // 前提：ASA onInitialize 已执行 loadOrThrow（创建/加载配置文件）；附属通过 fabric.mod.json
         // depends 声明依赖 ASA，Fabric loader 保证附属 onInitialize 在 ASA 之后执行。
         Ic2AdvancedSolarAddonConfig.ensureRecipe(inputId, outputId, defaultEnergy, outputCount)
-        reinjectExtensionRecipes()
+        if (initialized) reinjectExtensionRecipes()
     }
 
     /**
@@ -124,14 +127,14 @@ object MTRecipes {
     }
 
     private fun addRecipe(inputId: String, outputId: String, energy: Long, outputCount: Int = 1) {
-        val inId = ResourceLocation.tryParse(inputId)
-        val outId = ResourceLocation.tryParse(outputId)
+        val inId = Identifier.tryParse(inputId)
+        val outId = Identifier.tryParse(outputId)
         if (inId == null || outId == null) {
             LOGGER.warn("MT recipe dropped (invalid id): {} -> {}", inputId, outputId)
             return
         }
-        val inputItem = BuiltInRegistries.ITEM.get(inId)
-        val outputItem = BuiltInRegistries.ITEM.get(outId)
+        val inputItem = BuiltInRegistries.ITEM.getValue(inId)
+        val outputItem = BuiltInRegistries.ITEM.getValue(outId)
         if (inputItem == Items.AIR || outputItem == Items.AIR || energy <= 0) {
             // 静默丢弃会表现为「物品无法放入分子重组仪」，必须留痕：
             // 常见诱因是加载时机早于物品注册（如 Connector 服务器上 core 初始化晚于附属）。

@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "ic2_120:item/bronze_pipe_medium",
+    "tints": [
+      {
+        "type": "minecraft:constant",
+        "value": 8733184
+      }
+    ]
+  }
+}

@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shapeless",
   "category": "building",
   "ingredients": [
-    {
-      "tag": "ic2_120:rubber_logs"
-    }
+    "#ic2_120:rubber_logs"
   ],
   "result": {
     "count": 4,

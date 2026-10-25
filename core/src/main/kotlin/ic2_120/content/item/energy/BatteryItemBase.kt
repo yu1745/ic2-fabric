@@ -40,7 +40,7 @@ abstract class BatteryItemBase(
          * 从物品栈获取电量
          */
         fun getEnergy(stack: ItemStack): Long {
-            return stack.getCustomData()?.getLong(ENERGY_KEY) ?: 0L
+            return stack.getCustomData()?.getLongOr(ENERGY_KEY, 0L) ?: 0L
         }
 
         /**
@@ -95,10 +95,11 @@ abstract class BatteryItemBase(
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
 
         val energy = getCurrentCharge(stack)
         val ratio = getChargeRatio(stack)

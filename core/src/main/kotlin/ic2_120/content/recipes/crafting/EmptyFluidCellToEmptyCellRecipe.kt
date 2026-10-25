@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.crafting
 
+import ic2_120.compat.accept
+
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.serialization.MapCodec
@@ -11,7 +13,7 @@ import net.minecraft.core.NonNullList
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.crafting.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -26,12 +28,14 @@ import net.minecraft.world.level.Level
  * 需要覆写余物逻辑，避免 fluid_cell 自带余物再次返还 empty_cell。
  */
 class EmptyFluidCellToEmptyCellRecipe(
-    private val recipeIngredients: List<Ingredient>,
+    internal val recipeIngredients: List<Ingredient>,
     result: ItemStack,
     group: String = "",
-) : ShapelessRecipe(group, CraftingBookCategory.MISC, result, NonNullList.of(Ingredient.EMPTY, *recipeIngredients.toTypedArray())) {
+) : ShapelessRecipe(net.minecraft.world.item.crafting.Recipe.CommonInfo(true), net.minecraft.world.item.crafting.CraftingRecipe.CraftingBookInfo(CraftingBookCategory.MISC, group), net.minecraft.world.item.ItemStackTemplate.fromNonEmptyStack(result), recipeIngredients) {
+    internal val recipeResult: ItemStack = result.copy()
+
     private val fluidCellItem: Item? =
-        recipeIngredients.firstOrNull()?.items?.firstOrNull()?.item
+        recipeIngredients.firstOrNull()?.items()?.findFirst()?.orElse(null)?.value()
 
     override fun matches(inventory: CraftingInput, world: Level): Boolean {
         if (!super.matches(inventory, world)) return false
@@ -51,13 +55,14 @@ class EmptyFluidCellToEmptyCellRecipe(
     override fun getRemainingItems(inventory: CraftingInput): NonNullList<ItemStack> =
         NonNullList.withSize(inventory.size(), ItemStack.EMPTY)
 
-    override fun getSerializer(): RecipeSerializer<*> = EmptyFluidCellToEmptyCellRecipeSerializer
+    @Suppress("UNCHECKED_CAST")
+    override fun getSerializer(): RecipeSerializer<ShapelessRecipe> = EmptyFluidCellToEmptyCellRecipeSerializer.serializer as RecipeSerializer<ShapelessRecipe>
 }
 
-fun decodeEmptyFluidCellToEmptyCellJson(id: ResourceLocation, json: JsonObject): EmptyFluidCellToEmptyCellRecipe {
+fun decodeEmptyFluidCellToEmptyCellJson(id: Identifier, json: JsonObject): EmptyFluidCellToEmptyCellRecipe {
     val ingredients = json.getAsJsonArray("ingredients").map { INGREDIENT_CODEC(it.asJsonObject) }
     val resultObj = json.getAsJsonObject("result")
-    val resultItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(resultObj.get("item").asString))
+    val resultItem = BuiltInRegistries.ITEM.getValue(Identifier.parse(resultObj.get("item").asString))
     val count = if (resultObj.has("count")) resultObj.get("count").asInt else 1
     return EmptyFluidCellToEmptyCellRecipe(ingredients, ItemStack(resultItem, count))
 }
@@ -66,15 +71,12 @@ fun encodeEmptyFluidCellToEmptyCellJson(json: JsonObject, recipe: EmptyFluidCell
     json.addProperty("type", "ic2_120:empty_fluid_cell_to_empty_cell")
 
     val ingredients = JsonArray()
-    for (ingredient in recipe.getIngredients()) {
-        val obj = JsonObject()
-        val first = ingredient.items.firstOrNull()
-        obj.addProperty("item", first?.let { BuiltInRegistries.ITEM.getKey(it.item)?.toString() } ?: "minecraft:air")
-        ingredients.add(obj)
+    for (ingredient in recipe.recipeIngredients) {
+        ingredients.add(ic2_120.content.recipes.ingredientJson26(ingredient))
     }
     json.add("ingredients", ingredients)
 
-    val result = recipe.getResultItem(net.minecraft.core.RegistryAccess.EMPTY)
+    val result = recipe.recipeResult.copy()
     val resultObj = JsonObject()
     BuiltInRegistries.ITEM.getKey(result.item)?.let { resultObj.addProperty("item", it.toString()) }
     if (result.count > 1) resultObj.addProperty("count", result.count)
@@ -82,7 +84,7 @@ fun encodeEmptyFluidCellToEmptyCellJson(json: JsonObject, recipe: EmptyFluidCell
 }
 
 @ModMachineRecipe(id = "empty_fluid_cell_to_empty_cell", recipeClass = EmptyFluidCellToEmptyCellRecipe::class)
-object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCellToEmptyCellRecipe> {
+object EmptyFluidCellToEmptyCellRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<EmptyFluidCellToEmptyCellRecipe>() {
     override fun codec(): MapCodec<EmptyFluidCellToEmptyCellRecipe> = ic2_120.content.recipes.RecipeCodecBridge.jsonMapCodec(
         "ic2_120:empty_fluid_cell_to_empty_cell",
         ::decodeEmptyFluidCellToEmptyCellJson,
@@ -90,21 +92,22 @@ object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCe
     )
 
     // TODO(1.21.1): 配方不走网络同步（双端各自读 datapack），流编解码仅做占位实现
-    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, EmptyFluidCellToEmptyCellRecipe> {
-        val delegate = RecipeSerializer.SHAPELESS_RECIPE.streamCodec()
-        return StreamCodec.ofMember(
-            { recipe: EmptyFluidCellToEmptyCellRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
-            { _ ->
-                EmptyFluidCellToEmptyCellRecipe(listOf(Ingredient.EMPTY), ItemStack.EMPTY)
+    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, EmptyFluidCellToEmptyCellRecipe> =
+        StreamCodec.ofMember(
+            { recipe: EmptyFluidCellToEmptyCellRecipe, buf: RegistryFriendlyByteBuf ->
+                CraftingRecipeNetwork26.writeShapeless(buf, recipe.recipeIngredients, recipe.recipeResult)
+            },
+            { buf: RegistryFriendlyByteBuf ->
+                val (ingredients, result) = CraftingRecipeNetwork26.readShapeless(buf)
+                EmptyFluidCellToEmptyCellRecipe(ingredients, result)
             }
         )
-    }
 }
 
 object EmptyFluidCellToEmptyCellRecipeDatagen {
     fun offer(
         exporter: net.minecraft.data.recipes.RecipeOutput,
-        recipeId: ResourceLocation,
+        recipeId: Identifier,
         input: Item,
         result: Item,
         count: Int = 1,

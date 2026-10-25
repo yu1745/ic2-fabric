@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": {
-      "item": "ic2_120:advanced_circuit"
-    },
-    "P": {
-      "item": "minecraft:paper"
-    },
-    "T": {
-      "item": "ic2_120:teleporter"
-    }
+    "A": "ic2_120:advanced_circuit",
+    "P": "minecraft:paper",
+    "T": "ic2_120:teleporter"
   },
   "pattern": [
     "PAP",
@@ -18,7 +12,6 @@
     "PAP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:recall_scroll"
   }
 }

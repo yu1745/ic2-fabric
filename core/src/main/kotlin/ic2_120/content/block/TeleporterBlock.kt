@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -91,7 +93,7 @@ class TeleporterBlock : MachineBlock() {
             val glassFibre = GlassFibreCableBlock::class.item()
 
             if (advancedMachine != Items.AIR && freq != Items.AIR && advancedCircuit != Items.AIR && glassFibre != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TeleporterBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TeleporterBlock::class.item(), 1)
                     .pattern("afa")
                     .pattern("gmg")
                     .pattern("ada")

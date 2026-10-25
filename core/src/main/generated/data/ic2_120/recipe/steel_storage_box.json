@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:steel_casing"
-    },
-    "P": {
-      "tag": "ic2_120:compat/plates/steel"
-    }
+    "C": "ic2_120:steel_casing",
+    "P": "#ic2_120:compat/plates/steel"
   },
   "pattern": [
     "PCP",
@@ -15,7 +10,6 @@
     "PCP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:steel_storage_box"
   }
 }

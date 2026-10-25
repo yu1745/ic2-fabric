@@ -6,22 +6,20 @@ import ic2_120.content.block.SolidCannerBlock
 import ic2_120.content.screen.SolidCannerScreenHandler
 import ic2_120.content.sync.SolidCannerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = SolidCannerBlock::class)
 class SolidCannerScreen(
     val handler: SolidCannerScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<SolidCannerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<SolidCannerScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -134,8 +132,8 @@ class SolidCannerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisolidcanner.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guisolidcanner.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,3)-(193,17) = 14×14

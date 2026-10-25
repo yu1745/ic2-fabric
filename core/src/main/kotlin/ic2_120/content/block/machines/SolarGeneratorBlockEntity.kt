@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -59,7 +61,7 @@ class SolarGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator,
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SolarGeneratorBlock.ACTIVE
 
@@ -152,7 +154,7 @@ class SolarGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solar_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         SolarGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -164,16 +166,16 @@ class SolarGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(SolarGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, SolarGeneratorSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(SolarGeneratorSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, SolarGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(SolarGeneratorSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -220,7 +222,7 @@ class SolarGeneratorBlockEntity(
                 // 下雨或下雪不发电
                 if (world.isRaining) return false
                 // 白天 6:20~17:45
-                val time = world.dayTime % 24000
+                val time = world.overworldClockTime % 24000
                 if (time < DAY_START_TICK || time > DAY_END_TICK) return false
                 // 正上方无非透明方块遮挡
                 hasSkyAccess(world, pos)
@@ -233,12 +235,12 @@ class SolarGeneratorBlockEntity(
      * 检查正上方是否有天空可见（无非透明方块遮挡）。
      */
     private fun hasSkyAccess(world: Level, basePos: BlockPos): Boolean {
-        val topY = world.maxBuildHeight
+        val topY = world.maxY
         var y = basePos.y + 1
         while (y < topY) {
             val pos = BlockPos(basePos.x, y, basePos.z)
             val blockState = world.getBlockState(pos)
-            if (blockState.isSolidRender(world, pos)) return false
+            if (blockState.isSolidRender()) return false
             y++
         }
         return true

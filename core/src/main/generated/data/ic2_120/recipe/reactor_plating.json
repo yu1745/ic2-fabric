@@ -1,20 +1,14 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "A": {
-      "item": "ic2_120:alloy"
-    },
-    "L": {
-      "tag": "ic2_120:compat/plates/lead"
-    }
+    "A": "ic2_120:alloy",
+    "L": "#ic2_120:compat/plates/lead"
   },
   "pattern": [
     "L",
     "A"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:reactor_plating"
   }
 }

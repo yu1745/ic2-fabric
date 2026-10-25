@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "P": {
-      "tag": "minecraft:planks"
-    }
+    "P": "#minecraft:planks"
   },
   "pattern": [
     " P ",
@@ -12,7 +10,6 @@
     "P  "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:treetap"
   }
 }

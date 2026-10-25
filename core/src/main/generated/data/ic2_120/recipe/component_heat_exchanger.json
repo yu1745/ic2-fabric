@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "tag": "ic2_120:compat/plates/gold"
-    },
-    "H": {
-      "item": "ic2_120:heat_exchanger"
-    }
+    "G": "#ic2_120:compat/plates/gold",
+    "H": "ic2_120:heat_exchanger"
   },
   "pattern": [
     " G ",
@@ -15,7 +10,6 @@
     " G "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:component_heat_exchanger"
   }
 }

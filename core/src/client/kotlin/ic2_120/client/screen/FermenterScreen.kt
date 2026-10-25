@@ -6,8 +6,8 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.FermenterScreenHandler
 import ic2_120.content.sync.FermenterSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.FluidRenderHandlerRegistry
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.world.entity.player.Inventory
@@ -15,18 +15,16 @@ import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = FermenterBlock::class)
 class FermenterScreen(
     val handler: FermenterScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<FermenterScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<FermenterScreenHandler>(handler, playerInventory, title, 175, 184) {
 
     init {
-        imageWidth = 175
-        imageHeight = 184
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -103,8 +101,8 @@ class FermenterScreen(
             val upgradeTooltip = mutableListOf<Component>()
             upgradeTooltip.add(Component.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
-                val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", id))
-                upgradeTooltip.add(item.description)
+                val item = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", id))
+                upgradeTooltip.add(item.defaultInstance.hoverName)
             }
             context.renderComponentTooltip(font, upgradeTooltip, mouseX, mouseY)
         }
@@ -163,8 +161,8 @@ class FermenterScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guifermenter.png")
-        private val UPTIPS = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guifermenter.png")
+        private val UPTIPS = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private val SUPPORTED_UPGRADES = listOf(
             "fluid_ejector_upgrade",
             "fluid_pulling_upgrade"

@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -15,7 +17,7 @@ import ic2_120.content.screen.TradeOMatScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
@@ -52,7 +54,7 @@ abstract class TradeOMatBlockEntityBase(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Container, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : MachineBlockEntity(type, pos, state), Container, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override fun getInventory(): Container = this
     override val tier: Int = 1
@@ -101,14 +103,14 @@ abstract class TradeOMatBlockEntityBase(
 
     fun isOwner(player: Player): Boolean {
         val uuid = ownerUuid ?: return true
-        return player.uuid == uuid || player.hasPermissions(2)
+        return player.uuid == uuid || player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)
     }
 
     /** 返回一个 ScreenHandlerFactory，携带 isOwner 标志。 */
-    fun getScreenHandlerFactory(player: Player): ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    fun getScreenHandlerFactory(player: Player): ExtendedMenuProvider<FriendlyByteBuf> {
         val owner = isOwner(player)
         val be = this
-        return object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+        return object : ExtendedMenuProvider<FriendlyByteBuf> {
             override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                 val buf = FriendlyByteBuf(Unpooled.buffer())
                     buf.writeBlockPos(pos)
@@ -118,7 +120,7 @@ abstract class TradeOMatBlockEntityBase(
 
             override fun getDisplayName(): Component = be.getDisplayName()
 
-            override fun createMenu(syncId: Int, playerInventory: Inventory, p: Player?): AbstractContainerMenu =
+            override fun createMenu(syncId: Int, playerInventory: Inventory, p: Player): AbstractContainerMenu =
                 TradeOMatScreenHandler(syncId, playerInventory, be,
                     ContainerLevelAccess.create(be.world!!, be.pos), owner)
         }
@@ -126,7 +128,7 @@ abstract class TradeOMatBlockEntityBase(
 
     abstract override fun getDisplayName(): Component
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         TradeOMatScreenHandler(syncId, playerInventory, this,
             ContainerLevelAccess.create(world!!, pos), player?.let { isOwner(it) } ?: false)
 
@@ -139,14 +141,14 @@ abstract class TradeOMatBlockEntityBase(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        totalTrades = nbt.getInt(NBT_TOTAL_TRADES)
+        totalTrades = nbt.getIntOr(NBT_TOTAL_TRADES, 0)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_TOTAL_TRADES, totalTrades)
     }

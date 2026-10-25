@@ -4,17 +4,20 @@ import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.IronEngineBlockEntity
 import buildcraft_addon.content.blockentity.PowerStage
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.RenderType
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.client.renderer.texture.TextureAtlas
+import net.minecraft.data.AtlasIds
+import ic2_120.client.renderers.LegacyBlockEntityRenderer26
+import ic2_120.client.renderers.LegacyMultiBufferSource26
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.inventory.InventoryMenu
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.compat.*
 
-class IronEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
-    BlockEntityRenderer<IronEngineBlockEntity> {
+class IronEngineRenderer(ctx: BlockEntityRendererProvider.Context?) :
+    LegacyBlockEntityRenderer26<IronEngineBlockEntity>() {
 
     private var spritesLoaded = false
     private lateinit var trunkBlue: TextureAtlasSprite
@@ -28,8 +31,8 @@ class IronEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = Minecraft.getInstance().modelManager.getAtlas(InventoryMenu.BLOCK_ATLAS)
-        fun sprite(path: String) = atlas.getSprite(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
+        val atlas = Minecraft.getInstance().atlasManager.getAtlasOrThrow(AtlasIds.BLOCKS)
+        fun sprite(path: String) = atlas.getSprite(Identifier.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
         trunkBlue = sprite("block/engine/trunk_blue")
         trunkGreen = sprite("block/engine/trunk_green")
         trunkYellow = sprite("block/engine/trunk_yellow")
@@ -50,16 +53,16 @@ class IronEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         PowerStage.BLACK -> trunkBlue
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: IronEngineBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
-        vertexConsumers: net.minecraft.client.renderer.MultiBufferSource,
+        vertexConsumers: LegacyMultiBufferSource26,
         light: Int,
         overlay: Int
     ) {
         ensureSprites()
-        val buffer = vertexConsumers.getBuffer(RenderType.cutout())
+        val buffer = vertexConsumers.getBuffer(RenderTypes.entityCutout(TextureAtlas.LOCATION_BLOCKS))
         EngineRenderHelper.renderEngine(
             matrices = matrices,
             buffer = buffer,
@@ -77,5 +80,5 @@ class IronEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         )
     }
 
-    override fun shouldRenderOffScreen(entity: IronEngineBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 }

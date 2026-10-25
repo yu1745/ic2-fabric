@@ -1345,7 +1345,7 @@ def chargepad_front(tier):
         m.box(2, 14, 2, 14, 14.5, 14, ring)
         m.box(3, 14.5, 3, 13, 15, 13, 'lamp_on' if active else 'dark_steel', 'nsewu')
         for k in range(3):
-            m.box(4 + k * 3, 14.9, 4, 5 + k * 3, 15, 12, 'steel', 'u')
+            m.box(4 + k * 3, 15, 4, 5 + k * 3, 15.0625, 12, 'steel', 'u')
         # 正面电量条
         m.box(3, 4, 0.5, 13, 7, 1, 'dark_steel')
         m.box(3.5, 4.5, 0.4, 12.5, 6.5, 0.5, 'screen_on' if active else 'screen_off', 'n')

@@ -1,8 +1,10 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.content.item.*
 import ic2_120.content.recipes.ModTags
@@ -41,9 +43,9 @@ class TinBlock : Block(
         fun generateRecipes(exporter: RecipeOutput) {
             val ingot = TinIngot::class.instance()
             if (ingot != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, TinBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, TinBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
+                    .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_TIN))
                     .unlockedBy(getHasName(ingot), has(ingot))
                     .save(exporter, TinBlock::class.id())
             }
@@ -63,9 +65,9 @@ class BronzeBlock : Block(
         fun generateRecipes(exporter: RecipeOutput) {
             val ingot = BronzeIngot::class.instance()
             if (ingot != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, BronzeBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, BronzeBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE))
+                    .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_BRONZE))
                     .unlockedBy(getHasName(ingot), has(ingot))
                     .save(exporter, BronzeBlock::class.id())
             }
@@ -83,13 +85,13 @@ class RawLeadBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IRON_
             val raw = RawLead::class.instance()
             val block = RawLeadBlock::class.instance()
             if (raw != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, RawLeadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, RawLeadBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
                     .define('I', raw)
                     .unlockedBy(getHasName(raw), has(raw))
                     .save(exporter, RawLeadBlock::class.id())
 
-                ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, raw, 9)
+                ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, raw, 9)
                     .requires(block)
                     .unlockedBy(getHasName(block), has(block))
                     .save(exporter, RawLeadBlock::class.recipeId("to_raw"))
@@ -106,13 +108,13 @@ class RawTinBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IRON_B
             val raw = RawTin::class.instance()
             val block = RawTinBlock::class.instance()
             if (raw != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, RawTinBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, RawTinBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
                     .define('I', raw)
                     .unlockedBy(getHasName(raw), has(raw))
                     .save(exporter, RawTinBlock::class.id())
 
-                ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, raw, 9)
+                ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, raw, 9)
                     .requires(block)
                     .unlockedBy(getHasName(block), has(block))
                     .save(exporter, RawTinBlock::class.recipeId("to_raw"))
@@ -129,13 +131,13 @@ class RawUraniumBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IR
             val raw = RawUranium::class.instance()
             val block = RawUraniumBlock::class.instance()
             if (raw != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, RawUraniumBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, RawUraniumBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
                     .define('I', raw)
                     .unlockedBy(getHasName(raw), has(raw))
                     .save(exporter, RawUraniumBlock::class.id())
 
-                ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, raw, 9)
+                ShapelessRecipeBuilder.shapeless(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, raw, 9)
                     .requires(block)
                     .unlockedBy(getHasName(block), has(block))
                     .save(exporter, RawUraniumBlock::class.recipeId("to_raw"))
@@ -153,9 +155,9 @@ class LeadBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).
         fun generateRecipes(exporter: RecipeOutput) {
             val ingot = LeadIngot::class.instance()
             if (ingot != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, LeadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, LeadBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_LEAD))
+                    .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_LEAD))
                     .unlockedBy(getHasName(ingot), has(ingot))
                     .save(exporter, LeadBlock::class.id())
             }
@@ -170,9 +172,9 @@ class SteelBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
         fun generateRecipes(exporter: RecipeOutput) {
             val ingot = SteelIngot::class.instance()
             if (ingot != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, SteelBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, SteelBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_STEEL))
+                    .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_STEEL))
                     .unlockedBy(getHasName(ingot), has(ingot))
                     .save(exporter, SteelBlock::class.id())
             }
@@ -187,9 +189,9 @@ class UraniumBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOC
         fun generateRecipes(exporter: RecipeOutput) {
             val ingot = UraniumIngot::class.instance()
             if (ingot != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, UraniumBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, UraniumBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_URANIUM))
+                    .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_URANIUM))
                     .unlockedBy(getHasName(ingot), has(ingot))
                     .save(exporter, UraniumBlock::class.id())
             }
@@ -204,9 +206,9 @@ class SilverBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK
         fun generateRecipes(exporter: RecipeOutput) {
             val ingot = SilverIngot::class.instance()
             if (ingot != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, SilverBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.BUILDING_BLOCKS, SilverBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_SILVER))
+                    .define('I', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_SILVER))
                     .unlockedBy(getHasName(ingot), has(ingot))
                     .save(exporter, SilverBlock::class.id())
             }

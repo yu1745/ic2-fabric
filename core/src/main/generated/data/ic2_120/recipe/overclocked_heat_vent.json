@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "tag": "ic2_120:compat/plates/gold"
-    },
-    "R": {
-      "item": "ic2_120:reactor_heat_vent"
-    }
+    "G": "#ic2_120:compat/plates/gold",
+    "R": "ic2_120:reactor_heat_vent"
   },
   "pattern": [
     " G ",
@@ -15,7 +10,6 @@
     " G "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:overclocked_heat_vent"
   }
 }

@@ -118,7 +118,7 @@ class SyncedData : ContainerData, SyncSchema {
     override fun getCount(): Int = entries.size
 
     fun readNbt(nbt: CompoundTag) {
-        for (entry in entries) entry.value = nbt.getInt(entry.name)
+        for (entry in entries) entry.value = nbt.getIntOr(entry.name, 0)
     }
 
     fun writeNbt(nbt: CompoundTag) {

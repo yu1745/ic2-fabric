@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "H": {
-      "item": "ic2_120:heat_exchanger"
-    },
-    "R": {
-      "item": "minecraft:redstone"
-    },
-    "V": {
-      "item": "ic2_120:heat_vent"
-    }
+    "H": "ic2_120:heat_exchanger",
+    "R": "minecraft:redstone",
+    "V": "ic2_120:heat_vent"
   },
   "pattern": [
     "RRR",
@@ -18,7 +11,6 @@
     "RHR"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:rsh_condensator"
   }
 }

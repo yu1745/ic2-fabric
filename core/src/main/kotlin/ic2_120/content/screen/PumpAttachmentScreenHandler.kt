@@ -18,7 +18,7 @@ import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(names = ["bronze_pump_attachment", "carbon_pump_attachment"])
@@ -62,8 +62,8 @@ class PumpAttachmentScreenHandler(
         return true
     }
 
-    override fun clicked(slotIndex: Int, button: Int, actionType: ClickType, player: Player) {
-        if (slotIndex == FILTER_SLOT && actionType == ClickType.PICKUP) {
+    override fun clicked(slotIndex: Int, button: Int, actionType: ContainerInput, player: Player) {
+        if (slotIndex == FILTER_SLOT && actionType == ContainerInput.PICKUP) {
             val cursor = carried
             if (cursor.isEmpty || button == 1) {
                 blockEntity?.clearPumpFilter()

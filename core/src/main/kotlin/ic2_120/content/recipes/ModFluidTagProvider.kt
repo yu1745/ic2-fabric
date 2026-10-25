@@ -8,18 +8,21 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.core.registries.Registries
 
 import ic2_120.content.fluid.ModFluids
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.TagKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.concurrent.CompletableFuture
 
 class ModFluidTagProvider(
-    output: FabricDataOutput,
+    output: FabricPackOutput,
     registriesFuture: CompletableFuture<HolderLookup.Provider>,
-) : FabricTagProvider.FluidTagProvider(output, registriesFuture) {
+) : FabricTagsProvider.FluidTagsProvider(output, registriesFuture) {
+    private fun getOrCreateTagBuilder(key: TagKey<Fluid>) =
+        ic2_120.compat.LegacyTagAppender26(BuiltInRegistries.FLUID) { replace -> net.minecraft.data.tags.TagAppender.forBuilder(getOrCreateRawBuilder(key).setReplace(replace)) }
+
 
     override fun addTags(registries: HolderLookup.Provider) {
         registerCommonFluidTags()
@@ -59,36 +62,36 @@ class ModFluidTagProvider(
             .setReplace(false)
             .add(ModFluids.BIOFUEL_STILL)
             .add(ModFluids.BIOFUEL_FLOWING)
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "fuel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "fuel_oil"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "diesel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "gasoline"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "refined_fuel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "biofuels"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "biofuel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "biodiesel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "ethanol"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "plant_oil"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "seed_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "fuel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "fuel_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "diesel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "gasoline"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "refined_fuel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "biofuels"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "biofuel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "biodiesel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "ethanol"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "plant_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "seed_oil"))
 
         getOrCreateTagBuilder(forgeTag)
             .setReplace(false)
             .add(ModFluids.BIOFUEL_STILL)
             .add(ModFluids.BIOFUEL_FLOWING)
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "fuel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "fuel_oil"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "diesel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "gasoline"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "refined_fuel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "fuels/biofuel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "biofuels"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "fuels/biodiesel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "fuels/ethanol"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "biofuel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "biodiesel"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "ethanol"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "plant_oil"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "seed_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "fuel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "fuel_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "diesel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "gasoline"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "refined_fuel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "fuels/biofuel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "biofuels"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "fuels/biodiesel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "fuels/ethanol"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "biofuel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "biodiesel"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "ethanol"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "plant_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "seed_oil"))
 
         getOrCreateTagBuilder(compatFluid(path))
             .setReplace(false)
@@ -104,18 +107,18 @@ class ModFluidTagProvider(
             .setReplace(false)
             .add(ModFluids.CREOSOTE_STILL)
             .add(ModFluids.CREOSOTE_FLOWING)
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "oil"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "crude_oil"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("c", "creosote"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "crude_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("c", "creosote"))
 
         getOrCreateTagBuilder(forgeTag)
             .setReplace(false)
             .add(ModFluids.CREOSOTE_STILL)
             .add(ModFluids.CREOSOTE_FLOWING)
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "oil"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "crude_oil"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "creosote"))
-            .addOptionalTag(ResourceLocation.fromNamespaceAndPath("forge", "creosote_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "crude_oil"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "creosote"))
+            .addOptionalTag(Identifier.fromNamespaceAndPath("forge", "creosote_oil"))
 
         getOrCreateTagBuilder(compatFluid(path))
             .setReplace(false)
@@ -124,16 +127,16 @@ class ModFluidTagProvider(
     }
 
     private fun ic2Fluid(path: String): TagKey<Fluid> =
-        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("ic2_120", path))
+        TagKey.create(Registries.FLUID, Identifier.fromNamespaceAndPath("ic2_120", path))
 
     private fun cFluid(path: String): TagKey<Fluid> =
-        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("c", path))
+        TagKey.create(Registries.FLUID, Identifier.fromNamespaceAndPath("c", path))
 
     private fun forgeFluid(path: String): TagKey<Fluid> =
-        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("forge", path))
+        TagKey.create(Registries.FLUID, Identifier.fromNamespaceAndPath("forge", path))
 
     private fun compatFluid(path: String): TagKey<Fluid> =
-        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("ic2_120", "compat/$path"))
+        TagKey.create(Registries.FLUID, Identifier.fromNamespaceAndPath("ic2_120", "compat/$path"))
 
     private fun registerFluidPair(path: String, still: Fluid, flowing: Fluid) {
         getOrCreateTagBuilder(cFluid(path))

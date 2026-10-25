@@ -1,3 +1,9 @@
 {
-  "type": "ic2_120:macerating"
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "tag": "ic2_120:compat/plates/copper"
+  },
+  "result": {
+    "item": "ic2_120:copper_dust"
+  }
 }

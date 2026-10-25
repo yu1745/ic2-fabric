@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.compressor
 
+import ic2_120.compat.accept
+
 import com.google.gson.JsonObject
 import ic2_120.content.block.*
 import ic2_120.content.item.*
@@ -14,7 +16,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.function.Consumer
 
 object CompressorRecipeDatagen {
@@ -31,7 +33,7 @@ object CompressorRecipeDatagen {
         // ===== 9 金属锭 -> 1 金属块（用 tag 跨 mod 兼容） =====
         Entry("iron_ingot_to_block", IngredientInput.tag(ModTags.Compat.Items.INGOTS_IRON, Items.IRON_INGOT), 9, Items.IRON_BLOCK, 1),
         Entry("gold_ingot_to_block", IngredientInput.tag(ModTags.Compat.Items.INGOTS_GOLD, Items.GOLD_INGOT), 9, Items.GOLD_BLOCK, 1),
-        Entry("copper_ingot_to_block", IngredientInput.tag(ModTags.Compat.Items.INGOTS_COPPER, Items.COPPER_INGOT), 9, Items.COPPER_BLOCK, 1),
+        Entry("copper_ingot_to_block", IngredientInput.tag(ModTags.Compat.Items.INGOTS_COPPER, Items.COPPER_INGOT), 9, Items.COPPER_BLOCK.weathering().unaffected(), 1),
         Entry("tin_ingot_to_block", IngredientInput.tag(ModTags.Compat.Items.INGOTS_TIN, TinIngot::class.instance()), 9, TinBlock::class.item(), 1),
         Entry("bronze_ingot_to_block", IngredientInput.tag(ModTags.Compat.Items.INGOTS_BRONZE, BronzeIngot::class.instance()), 9, BronzeBlock::class.item(), 1),
         Entry("steel_ingot_to_block", IngredientInput.tag(ModTags.Compat.Items.INGOTS_STEEL, SteelIngot::class.instance()), 9, SteelBlock::class.item(), 1),
@@ -134,7 +136,7 @@ object CompressorRecipeDatagen {
 
     fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "compressing/${entry.name}")
+            val recipeId = Identifier.fromNamespaceAndPath("ic2_120", "compressing/${entry.name}")
             val recipe = CompressorRecipe(
                 recipeId,
                 entry.input.toIngredient(),

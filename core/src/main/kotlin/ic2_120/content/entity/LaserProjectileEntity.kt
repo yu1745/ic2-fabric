@@ -1,5 +1,6 @@
 package ic2_120.content.entity
 
+import ic2_120.compat.recipeManager
 import ic2_120.config.Ic2Config
 import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.annotation.ModEntity
@@ -16,13 +17,14 @@ import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
-import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.level.storage.ValueInput
+import net.minecraft.world.level.storage.ValueOutput
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.tags.BlockTags
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvent
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.BlockHitResult
@@ -48,7 +50,7 @@ class LaserProjectileEntity(
         /** 最大存活 tick 数 */
         private val MAX_LIFE: Int get() = Ic2Config.current.miningLaser.maxLife
 
-        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.laser.hit"))
+        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("ic2", "item.laser.hit"))
 
         private val MODE: EntityDataAccessor<String> = net.minecraft.network.syncher.SynchedEntityData.defineId(
             LaserProjectileEntity::class.java, EntityDataSerializers.STRING
@@ -162,9 +164,7 @@ class LaserProjectileEntity(
             val g = ((col shr 8) and 0xFF) / 255f
             val b = (col and 0xFF) / 255f
             level().addParticle(
-                net.minecraft.core.particles.DustParticleOptions(
-                    org.joml.Vector3f(r, g, b), 0.4f
-                ),
+                net.minecraft.core.particles.DustParticleOptions(col and 0xFFFFFF, 0.4f),
                 x, y, z, 0.0, 0.0, 0.0
             )
         }
@@ -203,8 +203,8 @@ class LaserProjectileEntity(
         // 低聚焦模式：易燃物先破坏再在空格上随机点火（不可先放火再破坏，否则火随方块一起没了）
         val isFlammable = state.`is`(BlockTags.LEAVES) || state.`is`(BlockTags.PLANKS) || state.`is`(BlockTags.WOOL)
         if (currentMode == LaserMode.LOW_FOCUS && isFlammable) {
-            if (canBreak(state) && !ClaimProtection.isProtected(level(), pos, owner, ClaimProtection.EDIT_BLOCK)) {
-                level().destroyBlock(pos, true, owner)
+            if (canBreak(state) && !ClaimProtection.isProtected(level(), pos, getOwner(), ClaimProtection.EDIT_BLOCK)) {
+                level().destroyBlock(pos, true, getOwner())
                 tryRandomIgniteAfterBreak(pos)
             }
             level().playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
@@ -214,13 +214,13 @@ class LaserProjectileEntity(
 
         // 采矿模式：按方块硬度消耗射程，可连续击穿多个方块（与 LaserMode 描述一致）
         if (currentMode == LaserMode.MINING && canBreak(state)) {
-            if (ClaimProtection.isProtected(level(), pos, owner, ClaimProtection.EDIT_BLOCK)) {
+            if (ClaimProtection.isProtected(level(), pos, getOwner(), ClaimProtection.EDIT_BLOCK)) {
                 discard()
                 return
             }
             val hardness = state.block.defaultDestroyTime().coerceAtLeast(0.1f)
             remainingRange -= hardness.toDouble()
-            level().destroyBlock(pos, true, owner)
+            level().destroyBlock(pos, true, getOwner())
             level().playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
             if (remainingRange > 0) {
                 nudgePastBlock(hitResult)
@@ -231,8 +231,8 @@ class LaserProjectileEntity(
         }
 
         // 其他模式：破坏方块
-        if (canBreak(state) && !ClaimProtection.isProtected(level(), pos, owner, ClaimProtection.EDIT_BLOCK)) {
-            level().destroyBlock(pos, true, owner)
+        if (canBreak(state) && !ClaimProtection.isProtected(level(), pos, getOwner(), ClaimProtection.EDIT_BLOCK)) {
+            level().destroyBlock(pos, true, getOwner())
             level().playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
         }
 
@@ -243,7 +243,7 @@ class LaserProjectileEntity(
     private fun tryRandomIgniteAfterBreak(pos: BlockPos) {
         if (level().random.nextFloat() >= POST_BREAK_IGNITE_CHANCE) return
         if (!level().isInWorldBounds(pos)) return
-        if (ClaimProtection.isProtected(level(), pos, owner, ClaimProtection.EDIT_BLOCK)) return
+        if (ClaimProtection.isProtected(level(), pos, getOwner(), ClaimProtection.EDIT_BLOCK)) return
         if (!BaseFireBlock.canBePlacedAt(level(), pos, Direction.UP)) return
         if (!level().getBlockState(pos).canBeReplaced()) return
         level().setBlock(pos, Blocks.FIRE.defaultBlockState(), 3)
@@ -296,9 +296,9 @@ class LaserProjectileEntity(
      * 对原木无效。
      */
     private fun smeltBlock(pos: net.minecraft.core.BlockPos, state: BlockState) {
-        if (state.`is`(BlockTags.LOGS) || state.`is`(BlockTags.LOGS_THAT_BURN)) return
+        if (state.`is`(BlockTags.LOGS)) return
         if (!canBreak(state)) return
-        if (ClaimProtection.isProtected(level(), pos, owner, ClaimProtection.EDIT_BLOCK)) return
+        if (ClaimProtection.isProtected(level(), pos, getOwner(), ClaimProtection.EDIT_BLOCK)) return
 
         val serverWorld = level() as? ServerLevel ?: return
         val blockItem = state.block.asItem()
@@ -310,7 +310,7 @@ class LaserProjectileEntity(
         val recipe = recipeHolder?.value
 
         if (recipe != null) {
-            val output = recipe.assemble(recipeInput, serverWorld.registryAccess())
+            val output = recipe.assemble(recipeInput)
             if (!output.isEmpty) {
                 level().destroyBlock(pos, false)
                 net.minecraft.world.level.block.Block.popResource(serverWorld, pos, output.copy())
@@ -321,7 +321,7 @@ class LaserProjectileEntity(
         }
 
         // 没有熔炼配方的方块直接破坏
-        level().destroyBlock(pos, true, owner)
+        level().destroyBlock(pos, true, getOwner())
         tryRandomIgniteAfterBreak(pos)
         level().playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
     }
@@ -332,7 +332,7 @@ class LaserProjectileEntity(
             center.x - radius, center.y - radius, center.z - radius,
             center.x + radius, center.y + radius, center.z + radius
         ).map { it.immutable() }.toList()
-        return ClaimProtection.allExplosionAllowed(level(), positions, owner?.uuid)
+        return ClaimProtection.allExplosionAllowed(level(), positions, getOwner()?.uuid)
     }
 
     private fun canBreak(state: BlockState): Boolean {
@@ -343,23 +343,23 @@ class LaserProjectileEntity(
         return state.block.defaultDestroyTime() >= 0
     }
 
-    override fun readAdditionalSaveData(nbt: CompoundTag) {
-        remainingRange = nbt.getDouble("RemainingRange")
-        lifeTicks = nbt.getInt("LifeTicks")
+    override fun readAdditionalSaveData(nbt: ValueInput) {
+        remainingRange = nbt.getDoubleOr("RemainingRange", 0.0)
+        lifeTicks = nbt.getIntOr("LifeTicks", 0)
         try {
-            mode = LaserMode.valueOf(nbt.getString("Mode"))
+            mode = LaserMode.valueOf(nbt.getStringOr("Mode", ""))
         } catch (_: Exception) {
             mode = LaserMode.DEFAULT
         }
     }
 
-    override fun addAdditionalSaveData(nbt: CompoundTag) {
+    override fun addAdditionalSaveData(nbt: ValueOutput) {
         nbt.putDouble("RemainingRange", remainingRange)
         nbt.putInt("LifeTicks", lifeTicks)
         nbt.putString("Mode", mode.name)
     }
 
-    override fun canBeCollidedWith(): Boolean = false
+    override fun canBeCollidedWith(other: Entity?): Boolean = false
     override fun canUsePortal(allowPassengers: Boolean): Boolean = false
 
     /**

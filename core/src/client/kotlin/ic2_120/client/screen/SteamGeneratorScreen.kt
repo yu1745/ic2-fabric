@@ -6,10 +6,10 @@ import ic2_120.content.block.SteamGeneratorBlock
 import ic2_120.content.screen.SteamGeneratorScreenHandler
 import ic2_120.content.sync.SteamGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.world.entity.player.Inventory
@@ -17,7 +17,7 @@ import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component as McText
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 蒸汽发生器 GUI — 1:1 对齐 ic2_origin GuiSteamGenerator (176×220)。
@@ -34,11 +34,9 @@ class SteamGeneratorScreen(
     val handler: SteamGeneratorScreenHandler,
     playerInventory: Inventory,
     title: McText
-) : AbstractContainerScreen<SteamGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<SteamGeneratorScreenHandler>(handler, playerInventory, title, 176, 220) {
 
     init {
-        imageWidth = 176
-        imageHeight = 220
     }
 
     private val waterSprite: TextureAtlasSprite? by lazy {
@@ -180,7 +178,7 @@ class SteamGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guisteamgenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guisteamgenerator.png")
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val HEAT_COLOR = 0xFFFF4444.toInt()
         private val CALC_COLOR = 0xFF888888.toInt()

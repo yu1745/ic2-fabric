@@ -47,7 +47,7 @@ object RecyclerRecipes {
 
     /** 内置黑名单（配置为空时兜底） */
     private val FALLBACK_BLOCKED_ITEMS: Set<Item> = setOf(
-        BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("minecraft", "stick"))
+        BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "stick"))
     )
 
     /*
@@ -83,7 +83,7 @@ object RecyclerRecipes {
                         FALLBACK_BLOCKED_ITEMS
                     } else {
                         configured.mapNotNull { id ->
-                            val identifier = net.minecraft.resources.ResourceLocation.tryParse(id) ?: return@mapNotNull null
+                            val identifier = net.minecraft.resources.Identifier.tryParse(id) ?: return@mapNotNull null
                             BuiltInRegistries.ITEM.getOptional(identifier).orElse(null)
                         }.toSet()
                     }

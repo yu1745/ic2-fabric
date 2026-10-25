@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.crafting
 
+import ic2_120.compat.accept
+
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.serialization.MapCodec
@@ -15,7 +17,7 @@ import net.minecraft.core.HolderLookup
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.crafting.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -39,9 +41,11 @@ class BatteryEnergyShapedRecipe(
     internal val patternKeys: Map<Char, Ingredient>,
     result: ItemStack,
     group: String = "",
-) : ShapedRecipe(group, CraftingBookCategory.MISC, ShapedRecipePattern.of(patternKeys, patternRows), result, true) {
-    override fun assemble(input: CraftingInput, registryAccess: HolderLookup.Provider): ItemStack {
-        val result = super.assemble(input, registryAccess)
+) : ShapedRecipe(net.minecraft.world.item.crafting.Recipe.CommonInfo(true), net.minecraft.world.item.crafting.CraftingRecipe.CraftingBookInfo(CraftingBookCategory.MISC, group), ShapedRecipePattern.of(patternKeys, patternRows), net.minecraft.world.item.ItemStackTemplate.fromNonEmptyStack(result)) {
+    internal val recipeResult: ItemStack = result.copy()
+
+    override fun assemble(input: CraftingInput): ItemStack {
+        val result = super.assemble(input)
 
         val totalEnergy = sumEnergyFromIngredients(input)
         if (totalEnergy <= 0L) return result
@@ -64,7 +68,8 @@ class BatteryEnergyShapedRecipe(
         return result
     }
 
-    override fun getSerializer(): RecipeSerializer<*> = BatteryEnergyShapedRecipeSerializer
+    @Suppress("UNCHECKED_CAST")
+    override fun getSerializer(): RecipeSerializer<ShapedRecipe> = BatteryEnergyShapedRecipeSerializer.serializer as RecipeSerializer<ShapedRecipe>
 }
 
 private fun sumEnergyFromIngredients(inventory: CraftingInput): Long {
@@ -93,14 +98,14 @@ private fun getEnergyFromStack(stack: ItemStack): Long {
         val config = EnergyStorageConfig.fromBlockPath(id.path) ?: return 0L
 
         // TODO(1.21.1): 原 yarn 语义为 getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
-        if (stack.orCreateNbt.getBoolean(EnergyStorageBlock.NBT_FULL)) {
+        if (stack.orCreateNbt.getBooleanOr(EnergyStorageBlock.NBT_FULL, false)) {
             return config.capacity
         }
 
-        val blockEntityTag = stack.orCreateNbt.getCompound(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
+        val blockEntityTag = stack.orCreateNbt.getCompoundOrEmpty(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
         if (blockEntityTag.isEmpty) return 0L
         return blockEntityTag
-            .getLong(EnergyStorageSync.NBT_ENERGY_STORED)
+            .getLongOr(EnergyStorageSync.NBT_ENERGY_STORED, 0L)
             .coerceIn(0L, config.capacity)
     }
 
@@ -128,13 +133,13 @@ private fun setStorageEnergy(result: ItemStack, energy: Long) {
         return
     }
 
-    val blockEntityTag = nbt.getCompound(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
+    val blockEntityTag = nbt.getCompoundOrEmpty(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
     blockEntityTag.putLong(EnergyStorageSync.NBT_ENERGY_STORED, clamped)
     nbt.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
     result.orCreateNbt = nbt
 }
 
-fun decodeBatteryEnergyShapedJson(id: ResourceLocation, json: JsonObject): BatteryEnergyShapedRecipe {
+fun decodeBatteryEnergyShapedJson(id: Identifier, json: JsonObject): BatteryEnergyShapedRecipe {
     val keyMap = linkedMapOf<Char, Ingredient>()
     val keyObj = json.getAsJsonObject("key")
     for ((charKey, value) in keyObj.entrySet()) {
@@ -142,7 +147,7 @@ fun decodeBatteryEnergyShapedJson(id: ResourceLocation, json: JsonObject): Batte
     }
     val rows = json.getAsJsonArray("pattern").map { it.asString }
     val resultObj = json.getAsJsonObject("result")
-    val resultItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(resultObj.get("item").asString))
+    val resultItem = BuiltInRegistries.ITEM.getValue(Identifier.parse(resultObj.get("item").asString))
     val count = if (resultObj.has("count")) resultObj.get("count").asInt else 1
     return BatteryEnergyShapedRecipe(rows, keyMap, ItemStack(resultItem, count))
 }
@@ -152,10 +157,7 @@ fun encodeBatteryEnergyShapedJson(json: JsonObject, recipe: BatteryEnergyShapedR
 
     val keyObj = JsonObject()
     for ((charKey, ingredient) in recipe.patternKeys) {
-        val obj = JsonObject()
-        val first = ingredient.items.firstOrNull()
-        obj.addProperty("item", first?.let { BuiltInRegistries.ITEM.getKey(it.item)?.toString() } ?: "minecraft:air")
-        keyObj.add(charKey.toString(), obj)
+        keyObj.add(charKey.toString(), ic2_120.content.recipes.ingredientJson26(ingredient))
     }
     json.add("key", keyObj)
 
@@ -163,7 +165,7 @@ fun encodeBatteryEnergyShapedJson(json: JsonObject, recipe: BatteryEnergyShapedR
     for (row in recipe.patternRows) patternArr.add(row)
     json.add("pattern", patternArr)
 
-    val result = recipe.getResultItem(net.minecraft.core.RegistryAccess.EMPTY)
+    val result = recipe.recipeResult.copy()
     val resultObj = JsonObject()
     BuiltInRegistries.ITEM.getKey(result.item)?.let {
         resultObj.addProperty("item", it.toString())
@@ -174,7 +176,7 @@ fun encodeBatteryEnergyShapedJson(json: JsonObject, recipe: BatteryEnergyShapedR
 }
 
 @ModMachineRecipe(id = "battery_energy_shaped", recipeClass = BatteryEnergyShapedRecipe::class)
-object BatteryEnergyShapedRecipeSerializer : RecipeSerializer<BatteryEnergyShapedRecipe> {
+object BatteryEnergyShapedRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<BatteryEnergyShapedRecipe>() {
     override fun codec(): MapCodec<BatteryEnergyShapedRecipe> = ic2_120.content.recipes.RecipeCodecBridge.jsonMapCodec(
         "ic2_120:battery_energy_shaped",
         ::decodeBatteryEnergyShapedJson,
@@ -182,15 +184,16 @@ object BatteryEnergyShapedRecipeSerializer : RecipeSerializer<BatteryEnergyShape
     )
 
     // TODO(1.21.1): 配方不走网络同步（双端各自读 datapack），流编解码仅做占位实现
-    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BatteryEnergyShapedRecipe> {
-        val delegate = RecipeSerializer.SHAPED_RECIPE.streamCodec()
-        return StreamCodec.ofMember(
-            { recipe: BatteryEnergyShapedRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
+    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BatteryEnergyShapedRecipe> =
+        StreamCodec.ofMember(
+            { recipe: BatteryEnergyShapedRecipe, buf: RegistryFriendlyByteBuf ->
+                CraftingRecipeNetwork26.writeShaped(buf, recipe.patternRows, recipe.patternKeys, recipe.recipeResult)
+            },
             { buf: RegistryFriendlyByteBuf ->
-                BatteryEnergyShapedRecipe(listOf("X"), linkedMapOf('X' to Ingredient.EMPTY), ItemStack.EMPTY)
+                val (rows, keys, result) = CraftingRecipeNetwork26.readShaped(buf)
+                BatteryEnergyShapedRecipe(rows, keys, result)
             }
         )
-    }
 }
 
 object BatteryEnergyShapedRecipeDatagen {
@@ -200,7 +203,7 @@ object BatteryEnergyShapedRecipeDatagen {
      */
     fun offer(
         exporter: net.minecraft.data.recipes.RecipeOutput,
-        recipeId: ResourceLocation,
+        recipeId: Identifier,
         result: Item,
         pattern: List<String>,
         keys: Map<Char, Item>,

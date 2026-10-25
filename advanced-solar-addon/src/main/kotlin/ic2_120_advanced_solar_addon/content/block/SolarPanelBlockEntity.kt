@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -19,7 +21,7 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.content.syncs.SyncedData
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.player.Player
@@ -61,7 +63,7 @@ abstract class SolarPanelBlockEntity(
      * 否则面板产得出、送不走，存满后浪费（积压）。产能速度不变。
      */
     val maxOutput: Long = ic2_120.content.energy.EnergyTier.euPerTickFromTier(tier)
-) : MachineBlockEntity(type, pos, state), IGenerator, ExtendedScreenHandlerFactory<FriendlyByteBuf>, Container {
+) : MachineBlockEntity(type, pos, state), IGenerator, ExtendedMenuProvider<FriendlyByteBuf>, Container {
 
     companion object {
         private const val CHARGE_SLOTS = 4
@@ -203,7 +205,7 @@ abstract class SolarPanelBlockEntity(
             return
         }
 
-        val time = world.dayTime % 24000
+        val time = world.overworldClockTime % 24000
         val isRaining = world.isRaining || world.isThundering
         val canRain = world.getBiome(pos).value().hasPrecipitation()
         val isDaytime = time in DAY_START_TICK..DAY_END_TICK
@@ -223,12 +225,12 @@ abstract class SolarPanelBlockEntity(
      * 参考 ic2-fabric 的 SolarGeneratorBlockEntity 实现。
      */
     protected fun hasSkyAccess(world: Level, basePos: BlockPos): Boolean {
-        val topY = world.maxBuildHeight
+        val topY = world.maxY
         var y = basePos.y + 1
         while (y <= topY) {
             val pos = BlockPos(basePos.x, y, basePos.z)
             val blockState = world.getBlockState(pos)
-            if (blockState.isSolidRender(world, pos)) return false
+            if (blockState.isSolidRender()) return false
             y++
         }
         return true
@@ -248,11 +250,11 @@ abstract class SolarPanelBlockEntity(
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    // ====== ExtendedScreenHandlerFactory<FriendlyByteBuf> ======
+    // ====== ExtendedMenuProvider<FriendlyByteBuf> ======
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120_advanced_solar_addon.${getBlockName()}")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         SolarPanelScreenHandler(
             syncId, playerInventory,
             ContainerLevelAccess.create(world!!, pos),
@@ -276,10 +278,10 @@ abstract class SolarPanelBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        sync.restoreEnergy(nbt.getLong(SolarPanelSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
-        generationState = GenerationState.entries[nbt.getInt("state").coerceIn(0, GenerationState.entries.size - 1)]
+        sync.restoreEnergy(nbt.getLongOr(SolarPanelSync.NBT_ENERGY, 0L).coerceIn(0L, sync.capacity))
+        generationState = GenerationState.entries[nbt.getIntOr("state", 0).coerceIn(0, GenerationState.entries.size - 1)]
         syncedData.readNbt(nbt)
-        ContainerHelper.loadAllItems(nbt.getCompound(INVENTORY_NBT_KEY), inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt.getCompoundOrEmpty(INVENTORY_NBT_KEY), inventory, lookup)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
@@ -287,6 +289,8 @@ abstract class SolarPanelBlockEntity(
         nbt.putLong(SolarPanelSync.NBT_ENERGY, sync.amount)
         nbt.putInt("state", generationState.ordinal)
         syncedData.writeNbt(nbt)
-        nbt.put(INVENTORY_NBT_KEY, ContainerHelper.saveAllItems(CompoundTag(), inventory, lookup))
+        val inventoryTag = CompoundTag()
+        ContainerHelper26.saveAllItems(inventoryTag, inventory, lookup)
+        nbt.put(INVENTORY_NBT_KEY, inventoryTag)
     }
 }

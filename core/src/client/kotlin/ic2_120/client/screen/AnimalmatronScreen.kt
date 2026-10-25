@@ -8,34 +8,32 @@ import ic2_120.content.sync.AnimalmatronSync
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlas
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = AnimalmatronBlock::class)
 class AnimalmatronScreen(
     val handler: AnimalmatronScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<AnimalmatronScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<AnimalmatronScreenHandler>(handler, playerInventory, title, 179, 191) {
 
     private val waterSprite by lazy {
         Minecraft.getInstance()
-            .getTextureAtlas(ResourceLocation.withDefaultNamespace("textures/atlas/blocks.png"))
-            .apply(WATER_STILL_ID)
+            .atlasManager.getAtlasOrThrow(net.minecraft.data.AtlasIds.BLOCKS)
+            .getSprite(WATER_STILL_ID)
     }
     private val weedExSprite by lazy {
         Minecraft.getInstance()
-            .getTextureAtlas(ResourceLocation.withDefaultNamespace("textures/atlas/blocks.png"))
-            .apply(WEED_EX_STILL_ID)
+            .atlasManager.getAtlasOrThrow(net.minecraft.data.AtlasIds.BLOCKS)
+            .getSprite(WEED_EX_STILL_ID)
     }
 
     init {
-        imageWidth = 179
-        imageHeight = 191
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -209,10 +207,10 @@ class AnimalmatronScreen(
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val WATER_TANK_DROPLETS = (FluidConstants.BUCKET * AnimalmatronSync.WATER_TANK_CAPACITY_BUCKETS).toInt()
         private val WEED_EX_TANK_DROPLETS = (FluidConstants.BUCKET * AnimalmatronSync.WEED_EX_TANK_CAPACITY_BUCKETS).toInt()
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiregulation.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
-        private val WATER_STILL_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "block/water_still")
-        private val WEED_EX_STILL_ID = ResourceLocation.fromNamespaceAndPath("ic2", "block/fluid/weed_ex_still")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiregulation.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val WATER_STILL_ID = Identifier.fromNamespaceAndPath("minecraft", "block/water_still")
+        private val WEED_EX_STILL_ID = Identifier.fromNamespaceAndPath("ic2", "block/fluid/weed_ex_still")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (180,3)-(194,16) = 14x13

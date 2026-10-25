@@ -1,3 +1,12 @@
 {
-  "type": "ic2_120:cutting"
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:warped_planks"
+  },
+  "input_count": 2,
+  "material_hardness": 2,
+  "result": {
+    "count": 6,
+    "item": "minecraft:stick"
+  }
 }

@@ -81,7 +81,7 @@ object FlightManager {
     }
 
     /**
-     * 玩家维度切换后调用（由 ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD 触发）。
+     * 玩家维度切换后调用（由 ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL 触发）。
      * 这里只做登记，真正的 abilities 重发放到 [tickPlayer] 里执行，保证是维度切换流程中最后的包。
      */
     fun onWorldChanged(player: net.minecraft.server.level.ServerPlayer) {
@@ -153,7 +153,7 @@ object FlightManager {
 
     private object QuantumSource : FlightSource {
         override fun hasEnergy(stack: ItemStack): Boolean =
-            stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY) > 0
+            stack.orCreateNbt.getLongOr(IElectricTool.ENERGY_KEY, 0L) > 0
         override fun consume(stack: ItemStack) { QuantumChestplate.consumeFlightEnergyPerTick(stack) }
     }
 }

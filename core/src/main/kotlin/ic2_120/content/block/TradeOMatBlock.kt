@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -81,7 +83,7 @@ class TradeOMatBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TradeOMatBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, TradeOMatBlock::class.item(), 1)
                     .pattern("S S").pattern("SMS").pattern("SCS")
                     .define('S', Items.IRON_INGOT).define('M', machine).define('C', circuit)
                     .unlockedBy(getHasName(machine), has(machine))

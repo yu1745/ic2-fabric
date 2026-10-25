@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "ic2_120_advanced_solar_addon:item/photovoltaic_iridium_plate"
+  }
+}

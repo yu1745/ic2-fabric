@@ -20,7 +20,7 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
@@ -47,7 +47,7 @@ class ChunkLoaderBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : MachineBlockEntity(type, pos, state), ITieredMachine, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = ChunkLoaderBlock.ACTIVE
     override fun getInventory(): net.minecraft.world.Container? = null
@@ -74,18 +74,18 @@ class ChunkLoaderBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.chunk_loader")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         ChunkLoaderScreenHandler(syncId, playerInventory, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(ChunkLoaderSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(ChunkLoaderSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         // 兼容旧存档：Range 0=1区块, 1=9区块, 2=25区块  或旧 5×5 bitmask
         if (nbt.contains("Range")) {
-            val range = nbt.getInt("Range").coerceIn(0, 2)
+            val range = nbt.getIntOr("Range", 0).coerceIn(0, 2)
             val oldHalf = 2
             val newHalf = ChunkLoaderSync.GRID_SIZE / 2
             sync.chunkBitmask0 = 0
@@ -110,7 +110,7 @@ class ChunkLoaderBlockEntity(
                 }
             }
         } else if (nbt.contains("ChunkBitmask")) {
-            val oldMask = nbt.getInt("ChunkBitmask")
+            val oldMask = nbt.getIntOr("ChunkBitmask", 0)
             val newHalf = ChunkLoaderSync.GRID_SIZE / 2
             sync.chunkBitmask0 = 0
             sync.chunkBitmask1 = 0
@@ -124,9 +124,9 @@ class ChunkLoaderBlockEntity(
                 }
             }
         } else {
-            sync.chunkBitmask0 = nbt.getInt("ChunkBitmask0")
-            sync.chunkBitmask1 = nbt.getInt("ChunkBitmask1")
-            sync.chunkBitmask2 = nbt.getInt("ChunkBitmask2")
+            sync.chunkBitmask0 = nbt.getIntOr("ChunkBitmask0", 0)
+            sync.chunkBitmask1 = nbt.getIntOr("ChunkBitmask1", 0)
+            sync.chunkBitmask2 = nbt.getIntOr("ChunkBitmask2", 0)
         }
     }
 
@@ -147,12 +147,12 @@ class ChunkLoaderBlockEntity(
     fun releaseChunks() {
         if (activeChunkPositions.isEmpty()) return
         val sw = world as? ServerLevel ?: return
-        // 1.21.1：ticket API 在 ChunkMap.getDistanceManager() 上（ServerChunkCache 已不直接暴露）
-        val cm = sw.chunkSource.chunkMap.distanceManager
+        // 26.2 使用 ServerChunkCache 的半径票据 API；半径 2 对应 ENTITY_TICKING。
+        val chunkSource = sw.chunkSource
         for (chunkPos in activeChunkPositions) {
-            // FORCED_TICKET_LEVEL 对应 ENTITY_TICKING 等级，
+            // 半径 2 对应 ENTITY_TICKING 等级，
             // 确保区块内的方块实体和实体逻辑在玩家离开后仍继续 tick。
-            cm.removeTicket(TicketType.FORCED, chunkPos, ChunkMap.FORCED_TICKET_LEVEL, chunkPos)
+            chunkSource.removeTicketWithRadius(TicketType.FORCED, chunkPos, 2)
         }
         activeChunkPositions = emptySet()
     }
@@ -177,18 +177,18 @@ class ChunkLoaderBlockEntity(
 
         if (sync.consumeEnergy(needPerTick) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            val center = ChunkPos(pos)
+            val center = ChunkPos.containing(pos)
             val needed = sync.getChunkPositions(center).toSet()
 
             val sw = world as? ServerLevel ?: return
-            val cm = sw.chunkSource.chunkMap.distanceManager
-            if (cm != null) {
+            val chunkSource = sw.chunkSource
+            run {
                 for (cp in needed - activeChunkPositions) {
-                    // FORCED_TICKET_LEVEL -> ENTITY_TICKING；更高等级只有 FULL，不会 tick 方块实体。
-                    cm.addTicket(TicketType.FORCED, cp, ChunkMap.FORCED_TICKET_LEVEL, cp)
+                    // 半径 2 -> ENTITY_TICKING，确保区块实体继续 tick。
+                    chunkSource.addTicketWithRadius(TicketType.FORCED, cp, 2)
                 }
                 for (cp in activeChunkPositions - needed) {
-                    cm.removeTicket(TicketType.FORCED, cp, ChunkMap.FORCED_TICKET_LEVEL, cp)
+                    chunkSource.removeTicketWithRadius(TicketType.FORCED, cp, 2)
                 }
                 activeChunkPositions = needed
             }

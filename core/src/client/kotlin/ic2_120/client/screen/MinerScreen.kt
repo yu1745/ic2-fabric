@@ -4,22 +4,20 @@ import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.t
 import ic2_120.content.screen.MinerScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(handlers = ["miner", "advanced_miner"])
 class MinerScreen(
     val handler: MinerScreenHandler, playerInventory: Inventory, title: Component
-) : AbstractContainerScreen<MinerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<MinerScreenHandler>(handler, playerInventory, title, 176, if (handler.isAdvanced) 203 else 165) {
 
     init {
-        imageWidth = 176
-        imageHeight = if (handler.isAdvanced) 203 else 165
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -181,9 +179,9 @@ class MinerScreen(
     }
 
     companion object {
-        private val TEX_ORDINARY = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiminer.png")
-        private val TEX_ADVANCED = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiadvminer.png")
-        private val UPTIPS_TEX = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEX_ORDINARY = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiminer.png")
+        private val TEX_ADVANCED = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiadvminer.png")
+        private val UPTIPS_TEX = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4

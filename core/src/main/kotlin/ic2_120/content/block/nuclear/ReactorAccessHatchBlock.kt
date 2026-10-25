@@ -1,8 +1,10 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -75,10 +77,10 @@ class ReactorAccessHatchBlock(settings: BlockBehaviour.Properties = ReactorShell
         fun generateRecipes(exporter: RecipeOutput) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
                     .define('A', vessel)
-                    .define('B', ItemTags.WOODEN_TRAPDOORS)
+                    .define('B', ic2_120.compat.tagIngredient(ItemTags.WOODEN_TRAPDOORS))
                     .unlockedBy(getHasName(vessel), has(vessel))
                     .save(exporter, ReactorAccessHatchBlock::class.id())
             }

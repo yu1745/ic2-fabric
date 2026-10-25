@@ -1,8 +1,12 @@
 package ic2_120.content.item
 
+import ic2_120.compat.displayClientMessage
+
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -34,11 +38,10 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.level.Level
 import net.minecraft.world.item.context.UseOnContext
-import net.minecraft.world.InteractionResult
 import ic2_120.editCustomData
 import ic2_120.getCustomData
 
@@ -62,7 +65,7 @@ class MiningLaserItem : Item(
         /** 从 ItemStack NBT 读取当前模式 */
         fun getMode(stack: ItemStack): LaserMode {
             val nbt = stack.getCustomData() ?: return LaserMode.DEFAULT
-            return try { LaserMode.valueOf(nbt.getString(MODE_KEY)) } catch (_: Exception) { LaserMode.DEFAULT }
+            return try { LaserMode.valueOf(nbt.getStringOr(MODE_KEY, "")) } catch (_: Exception) { LaserMode.DEFAULT }
         }
 
         /** 向 ItemStack NBT 写入模式 */
@@ -84,7 +87,7 @@ class MiningLaserItem : Item(
             val crystal = EnergyCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             if (alloy == Items.AIR || crystal == Items.AIR || advCircuit == Items.AIR) return
-            ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, MiningLaserItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.TOOLS, MiningLaserItem::class.instance(), 1)
                 .pattern("REE")
                 .pattern("AAC")
                 .pattern(" AA")
@@ -105,8 +108,8 @@ class MiningLaserItem : Item(
     override fun getEnergy(stack: ItemStack): Long = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
 
-    override fun inventoryTick(stack: ItemStack, world: Level, entity: Entity, slot: Int, selected: Boolean) {
-        super.inventoryTick(stack, world, entity, slot, selected)
+    override fun inventoryTick(stack: ItemStack, world: net.minecraft.server.level.ServerLevel, entity: Entity, slot: net.minecraft.world.entity.EquipmentSlot?) {
+        super.inventoryTick(stack, world, entity, slot)
         if (world.isClient || entity !is ServerPlayer) return
         val player = entity
         val uuid = player.uuid
@@ -130,7 +133,7 @@ class MiningLaserItem : Item(
      * 右键点击实体时不执行实体交互，仍发射激光。
      */
     override fun interactLivingEntity(stack: ItemStack, user: Player, entity: LivingEntity, hand: InteractionHand): InteractionResult {
-        return use(user.level(), user, hand).result
+        return use(user.level(), user, hand)
     }
 
     /**
@@ -140,21 +143,21 @@ class MiningLaserItem : Item(
         return InteractionResult.PASS
     }
 
-    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResult {
         val stack = user.getItemInHand(hand)
 
         // 客户端在按住模式键切模式时仍可能发来 use；与切模式包同 tick 的这一次不发射（见 [MiningLaserServerSuppress]）
         if (!world.isClient) {
             val sp = user as? ServerPlayer
             if (sp != null && MiningLaserServerSuppress.consumeSuppressNextFire(sp)) {
-                return InteractionResultHolder.success(stack)
+                return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
             }
         }
 
         val mode = getMode(stack)
 
         // 电量不足
-        if (getEnergy(stack) < mode.energyCost) return InteractionResultHolder.pass(stack)
+        if (getEnergy(stack) < mode.energyCost) return InteractionResult.PASS
 
         if (!world.isClient) {
             val pitch = user.xRot
@@ -199,10 +202,10 @@ class MiningLaserItem : Item(
             setEnergy(stack, getEnergy(stack) - mode.energyCost)
 
             // 设置使用冷却：5 tick（每秒最多 4 次）
-            user.cooldowns.addCooldown(this, 5)
+            user.cooldowns.addCooldown(stack, 5)
         }
 
-        return InteractionResultHolder.success(stack)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
     }
 
     private fun spawnProjectile(
@@ -224,10 +227,11 @@ class MiningLaserItem : Item(
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         appendEnergyTooltip(stack, tooltip)
     }
 

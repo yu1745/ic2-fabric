@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "L": {
-      "item": "minecraft:lever"
-    },
-    "T": {
-      "item": "ic2_120:dense_tin_plate"
-    }
+    "L": "minecraft:lever",
+    "T": "ic2_120:dense_tin_plate"
   },
   "pattern": [
     "T T",

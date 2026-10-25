@@ -7,7 +7,7 @@ import ic2_120.content.block.LeashKineticGeneratorBlock
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.LeashKineticGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component as McText
@@ -17,13 +17,11 @@ class LeashKineticGeneratorScreen(
     val handler: LeashKineticGeneratorScreenHandler,
     playerInventory: Inventory,
     title: McText
-) : AbstractContainerScreen<LeashKineticGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<LeashKineticGeneratorScreenHandler>(handler, playerInventory, title, GUI_SIZE.width, GUI_SIZE.height) {
 
     private val ui = ComposeUI()
 
     init {
-        imageWidth = GUI_SIZE.width
-        imageHeight = GUI_SIZE.height
         titleLabelY = -1000
     }
 

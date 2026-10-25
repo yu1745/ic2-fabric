@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "L": {
-      "item": "minecraft:lever"
-    },
-    "T": {
-      "tag": "ic2_120:compat/plates/tin"
-    }
+    "L": "minecraft:lever",
+    "T": "#ic2_120:compat/plates/tin"
   },
   "pattern": [
     "T T",
@@ -15,7 +10,6 @@
     "T T"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:redstone_inverter_upgrade"
   }
 }

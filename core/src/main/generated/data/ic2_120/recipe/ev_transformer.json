@@ -1,19 +1,10 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:advanced_circuit"
-    },
-    "L": {
-      "item": "ic2_120:lapotron_crystal"
-    },
-    "T": {
-      "item": "ic2_120:hv_transformer"
-    },
-    "W": {
-      "item": "ic2_120:triple_insulated_iron_cable"
-    }
+    "C": "ic2_120:advanced_circuit",
+    "L": "ic2_120:lapotron_crystal",
+    "T": "ic2_120:hv_transformer",
+    "W": "ic2_120:triple_insulated_iron_cable"
   },
   "pattern": [
     " W ",
@@ -21,7 +12,6 @@
     " W "
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:ev_transformer"
   }
 }

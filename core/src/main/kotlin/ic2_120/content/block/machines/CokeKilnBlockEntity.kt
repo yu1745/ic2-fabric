@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.LegacyBlockEntity26
+
+import ic2_120.compat.displayClientMessage
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -26,7 +32,7 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -39,7 +45,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.ItemTags
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
@@ -54,7 +60,7 @@ class CokeKilnBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(type, pos, state), Container, IRoutedSidedInventory, ExtendedMenuProvider<FriendlyByteBuf> {
 
     companion object {
         private const val SLOT_INPUT = 0
@@ -77,7 +83,7 @@ class CokeKilnBlockEntity(
     }
 
     private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
-    private val peatOreItem by lazy { BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "peat_ore")) }
+    private val peatOreItem by lazy { BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "peat_ore")) }
 
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
@@ -145,7 +151,7 @@ class CokeKilnBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.coke_kiln")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         CokeKilnScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     fun tryInteractItem(player: Player, hand: InteractionHand): InteractionResult {
@@ -259,15 +265,15 @@ class CokeKilnBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         nbt.putInt(NBT_PROGRESS, progress)
         syncedData.writeNbt(nbt)
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
-        progress = nbt.getInt(NBT_PROGRESS)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
+        progress = nbt.getIntOr(NBT_PROGRESS, 0)
         syncedData.readNbt(nbt)
         sync.progress = progress
         sync.structureValid = if (cachedStructureValid) 1 else 0

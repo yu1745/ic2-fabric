@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -28,7 +30,7 @@ import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.integration.ftbchunks.ClaimProtection
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -75,7 +77,7 @@ class SteamKineticGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), IKineticMachinePort, Container, IRoutedSidedInventory,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SteamKineticGeneratorBlock.ACTIVE
     override val tier: Int = 3
@@ -244,16 +246,16 @@ class SteamKineticGeneratorBlockEntity(
                 val neighborPos = pos.relative(side)
                 val storage = FluidStorage.SIDED.find(world, neighborPos, side.opposite) ?: continue
                 try {
-                   val extracted = storage.insert(variant, amount, null)
-                   if (extracted > 0L) {
-                        Transaction.openOuter().use { tx ->
+                    Transaction.openOuter().use { tx ->
+                        val extracted = storage.insert(variant, amount, tx)
+                        if (extracted > 0L) {
                             updateSnapshots(tx)
                             amount -= extracted
                             if (amount <= 0L) variant = FluidVariant.blank()
                             tx.commit()
+                            sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
+                            setChanged()
                         }
-                        sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
-                        setChanged()
                     }
                 } catch (_: Exception) { }
             }
@@ -362,7 +364,7 @@ class SteamKineticGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.steam_kinetic_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         SteamKineticGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -376,20 +378,20 @@ class SteamKineticGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        kuBuffer = nbt.getInt(NBT_KU_BUFFER)
-        condensationProgress = nbt.getInt(NBT_CONDENSATION)
+        kuBuffer = nbt.getIntOr(NBT_KU_BUFFER, 0)
+        condensationProgress = nbt.getIntOr(NBT_CONDENSATION, 0)
 
         if (nbt.contains(NBT_STEAM_TANK)) {
-            val tankNbt = nbt.getCompound(NBT_STEAM_TANK)
-            steamTank.variant = decodeFluidVariant(tankNbt.getCompound("variant"))
-            steamTank.amount = tankNbt.getLong("amount")
+            val tankNbt = nbt.getCompoundOrEmpty(NBT_STEAM_TANK)
+            steamTank.variant = decodeFluidVariant(tankNbt.getCompoundOrEmpty("variant"))
+            steamTank.amount = tankNbt.getLongOr("amount", 0L)
         }
         if (nbt.contains(NBT_WATER_TANK)) {
-            val tankNbt = nbt.getCompound(NBT_WATER_TANK)
-            distilledWaterTank.variant = decodeFluidVariant(tankNbt.getCompound("variant"))
-            distilledWaterTank.amount = tankNbt.getLong("amount")
+            val tankNbt = nbt.getCompoundOrEmpty(NBT_WATER_TANK)
+            distilledWaterTank.variant = decodeFluidVariant(tankNbt.getCompoundOrEmpty("variant"))
+            distilledWaterTank.amount = tankNbt.getLongOr("amount", 0L)
         }
         sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.distilledWaterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
@@ -397,7 +399,7 @@ class SteamKineticGeneratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_KU_BUFFER, kuBuffer)
         nbt.putInt(NBT_CONDENSATION, condensationProgress)

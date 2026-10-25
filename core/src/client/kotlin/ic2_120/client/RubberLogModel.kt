@@ -1,117 +1,76 @@
 package ic2_120.client
 
+import com.mojang.blaze3d.platform.Transparency
 import ic2_120.content.block.RubberFaceState
 import ic2_120.content.block.RubberLogBlock
-import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel
-import net.fabricmc.fabric.api.renderer.v1.render.RenderContext
-import net.minecraft.world.level.BlockAndTintGetter
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.RotatedPillarBlock
-import net.minecraft.client.resources.model.BakedModel
+import net.minecraft.client.model.geom.builders.UVPair
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel
+import net.minecraft.client.renderer.block.dispatch.SingleVariant
 import net.minecraft.client.resources.model.ModelBaker
-import net.minecraft.client.resources.model.ModelState
-import net.minecraft.client.resources.model.UnbakedModel
-import net.minecraft.client.renderer.block.model.ItemOverrides
-import net.minecraft.client.renderer.block.model.ItemTransforms
-import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.client.resources.model.Material
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.inventory.InventoryMenu
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.core.BlockPos
+import net.minecraft.client.resources.model.ResolvableModel
+import net.minecraft.client.resources.model.SimpleModelWrapper
+import net.minecraft.client.resources.model.geometry.BakedQuad
+import net.minecraft.client.resources.model.geometry.QuadCollection
+import net.minecraft.client.resources.model.sprite.Material
 import net.minecraft.core.Direction
-import net.minecraft.util.RandomSource
-import java.util.function.Function
-import java.util.function.Supplier
+import net.minecraft.resources.Identifier
+import net.minecraft.world.level.block.RotatedPillarBlock
+import net.minecraft.world.level.block.state.BlockState
+import org.joml.Vector3f
 
-/**
- * 橡胶树原木动态模型：根据 BlockState 的 rubber_north/south/east/west 在运行时选择每面纹理，
- * 无需 81 个静态模型 JSON 和 243 个 blockstate 变体。
- */
-@Suppress("OVERRIDE_DEPRECATION")
-class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
-
-    private var sprites: Array<TextureAtlasSprite?> = arrayOfNulls(6)
-
-    override fun getDependencies() = emptySet<ResourceLocation>()
-    override fun resolveParents(modelLoader: Function<ResourceLocation, UnbakedModel>) {}
-
-    override fun bake(
-        baker: ModelBaker,
-        textureGetter: Function<Material, TextureAtlasSprite>,
-        rotationContainer: ModelState
-    ): BakedModel {
-        val atlas = InventoryMenu.BLOCK_ATLAS
-        val tex = { path: String -> Material(atlas, ResourceLocation.fromNamespaceAndPath("ic2", "block/resource/$path")) }
-        sprites[0] = textureGetter.apply(tex("rubber_wood_wet_front"))
-        sprites[1] = textureGetter.apply(tex("rubber_wood_dry_front"))
-        sprites[2] = textureGetter.apply(tex("rubber_wood_wet_leftrightback"))
-        sprites[3] = textureGetter.apply(tex("rubber_wood_dry_leftrightback"))
-        sprites[4] = textureGetter.apply(tex("rubber_wood_wet_bottomtop"))
-        sprites[5] = textureGetter.apply(tex("rubber_wood_dry_bottomtop"))
-        return this
+/** Bakes one set of quads per rubber log state using the 26.2 block model pipeline. */
+class RubberLogModel(private val state: BlockState, private val sourceModel: Identifier) : BlockStateModel.UnbakedRoot {
+    override fun resolveDependencies(resolver: ResolvableModel.Resolver) {
+        resolver.markDependency(sourceModel)
     }
 
-    private fun spriteFor(face: RubberFaceState, anyWet: Boolean): TextureAtlasSprite = when (face) {
-        RubberFaceState.NONE -> if (anyWet) sprites[2]!! else sprites[3]!!
-        RubberFaceState.WET -> sprites[0]!!
-        RubberFaceState.DRY -> sprites[1]!!
-    }
+    override fun visualEqualityGroup(state: BlockState): Any = state
 
-    override fun getQuads(state: BlockState?, face: Direction?, random: RandomSource) = emptyList<net.minecraft.client.renderer.block.model.BakedQuad>()
-
-    override fun useAmbientOcclusion() = true
-    override fun isGui3d() = false
-    override fun usesBlockLight() = true
-    override fun isCustomRenderer() = false
-    override fun getParticleIcon() = sprites[2]!!
-    override fun getTransforms() = ItemTransforms.NO_TRANSFORMS
-    override fun getOverrides() = ItemOverrides.EMPTY
-
-    override fun isVanillaAdapter() = false
-
-    override fun emitBlockQuads(
-        blockView: BlockAndTintGetter,
-        state: BlockState,
-        pos: BlockPos,
-        randomSupplier: Supplier<RandomSource>,
-        context: RenderContext
-    ) {
-        if (state.block !is RubberLogBlock) return
+    override fun bake(state: BlockState, baker: ModelBaker): BlockStateModel {
         val block = state.block as RubberLogBlock
-        val axis = state.getValue(RotatedPillarBlock.AXIS) ?: Direction.Axis.Y
-        val n = block.getRubberState(state, Direction.NORTH)
-        val s = block.getRubberState(state, Direction.SOUTH)
-        val e = block.getRubberState(state, Direction.EAST)
-        val w = block.getRubberState(state, Direction.WEST)
-        val anyWet = n == RubberFaceState.WET || s == RubberFaceState.WET || e == RubberFaceState.WET || w == RubberFaceState.WET
-        val bottomTop = if (anyWet) sprites[4]!! else sprites[5]!!
-
+        val sides = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+        val anyWet = sides.any { block.getRubberState(state, it) == RubberFaceState.WET }
+        val axis = state.getValue(RotatedPillarBlock.AXIS)
         val endFaces = when (axis) {
             Direction.Axis.Y -> setOf(Direction.UP, Direction.DOWN)
             Direction.Axis.X -> setOf(Direction.EAST, Direction.WEST)
             Direction.Axis.Z -> setOf(Direction.NORTH, Direction.SOUTH)
         }
-
-        val emitter = context.emitter
-        for (dir in Direction.values()) {
-            val faceSprite = if (dir in endFaces) bottomTop else spriteFor(block.getRubberState(state, dir), anyWet)
-            emitter.square(dir, 0f, 0f, 1f, 1f, 0f)
-            emitter.spriteBake(faceSprite, MutableQuadView.BAKE_LOCK_UV)
-            emitter.color(-1, -1, -1, -1)
-            emitter.emit()
+        val out = QuadCollection.Builder()
+        val debug = net.minecraft.client.resources.model.ModelDebugName { sourceModel.toString() }
+        var particle: Material.Baked? = null
+        for (face in Direction.values()) {
+            val path = when {
+                face in endFaces -> if (anyWet) "rubber_wood_wet_bottomtop" else "rubber_wood_dry_bottomtop"
+                block.getRubberState(state, face) == RubberFaceState.WET -> "rubber_wood_wet_front"
+                block.getRubberState(state, face) == RubberFaceState.DRY -> "rubber_wood_dry_front"
+                anyWet -> "rubber_wood_wet_leftrightback"
+                else -> "rubber_wood_dry_leftrightback"
+            }
+            val baked = baker.materials().get(Material(Identifier.fromNamespaceAndPath("ic2", "block/resource/$path")), debug)
+            if (particle == null) particle = baked
+            val sprite = baked.sprite()
+            val corners = faceCorners(face)
+            val uv = arrayOf(0f to 1f, 1f to 1f, 1f to 0f, 0f to 0f)
+            val packed = LongArray(4) { UVPair.pack(sprite.getU(uv[it].first), sprite.getV(uv[it].second)) }
+            val info = baker.interner().materialInfo(BakedQuad.MaterialInfo.of(baked, Transparency.NONE, -1, true, 0))
+            out.addCulledFace(face, BakedQuad(
+                corners[0], corners[1], corners[2], corners[3],
+                packed[0], packed[1], packed[2], packed[3], face, info
+            ))
         }
+        return SingleVariant(SimpleModelWrapper(out.build(), true, particle!!))
     }
 
-    override fun emitItemQuads(stack: ItemStack?, randomSupplier: Supplier<RandomSource>?, context: RenderContext) {
-        val emitter = context.emitter
-        val sprite = sprites[2]!!
-        for (dir in Direction.values()) {
-            emitter.square(dir, 0f, 0f, 1f, 1f, 0f)
-            emitter.spriteBake(sprite, MutableQuadView.BAKE_LOCK_UV)
-            emitter.color(-1, -1, -1, -1)
-            emitter.emit()
+    private fun faceCorners(face: Direction): Array<Vector3f> {
+        val pts = when (face) {
+            Direction.DOWN -> arrayOf(0f,0f,1f, 0f,0f,0f, 1f,0f,0f, 1f,0f,1f)
+            Direction.UP -> arrayOf(0f,1f,0f, 0f,1f,1f, 1f,1f,1f, 1f,1f,0f)
+            Direction.NORTH -> arrayOf(1f,0f,0f, 0f,0f,0f, 0f,1f,0f, 1f,1f,0f)
+            Direction.SOUTH -> arrayOf(0f,0f,1f, 1f,0f,1f, 1f,1f,1f, 0f,1f,1f)
+            Direction.WEST -> arrayOf(0f,0f,0f, 0f,0f,1f, 0f,1f,1f, 0f,1f,0f)
+            Direction.EAST -> arrayOf(1f,0f,1f, 1f,0f,0f, 1f,1f,0f, 1f,1f,1f)
         }
+        return Array(4) { i -> Vector3f(pts[i * 3], pts[i * 3 + 1], pts[i * 3 + 2]) }
     }
 }

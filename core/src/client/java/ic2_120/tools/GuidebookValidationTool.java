@@ -2,7 +2,7 @@ package ic2_120.tools;
 
 import appengx.client.guidebook.compiler.PageCompiler;
 import appengx.client.guidebook.compiler.ParsedGuidePage;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -147,7 +147,7 @@ public final class GuidebookValidationTool {
 
         try {
             String content = Files.readString(page, StandardCharsets.UTF_8);
-            ParsedGuidePage parsed = PageCompiler.parse("ic2_120-dev", ResourceLocation.fromNamespaceAndPath(namespace, pageIdPath), content);
+            ParsedGuidePage parsed = PageCompiler.parse("ic2_120-dev", Identifier.fromNamespaceAndPath(namespace, pageIdPath), content);
 
             if (content.startsWith("---") && parsed.getFrontmatter().navigationEntry() == null) {
                 errors.add(rel + ": Guidebook parser did not produce a navigation entry from frontmatter");
@@ -187,7 +187,7 @@ public final class GuidebookValidationTool {
 
             String normalized = itemIdText.contains(":") ? itemIdText : namespace + ":" + itemIdText;
             try {
-                ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath(normalized);
+                Identifier identifier = Identifier.fromNamespaceAndPath(normalized);
                 normalized = identifier.toString();
             } catch (Exception e) {
                 errors.add(rel + ": malformed item_ids entry: " + itemIdText);

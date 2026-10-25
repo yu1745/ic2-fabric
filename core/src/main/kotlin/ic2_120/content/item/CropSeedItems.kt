@@ -1,5 +1,9 @@
 package ic2_120.content.item
 
+import ic2_120.compat.displayClientMessage
+
+import ic2_120.compat.save
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -14,7 +18,7 @@ import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.compat.stack
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -36,7 +40,7 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
@@ -47,7 +51,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.ChatFormatting
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.level.Level
 
 object CropSeedData {
@@ -60,8 +63,8 @@ object CropSeedData {
 
     fun readType(stack: ItemStack): CropType? {
         val nbt = stack.orCreateNbt
-        if (nbt.isEmpty) return null
-        val id = if (nbt.contains(NBT_ID)) nbt.getString(NBT_ID) else ""
+        if (nbt.keySet().isEmpty()) return null
+        val id = nbt.getStringOr(NBT_ID, "")
         if (id.isEmpty()) return null
         return CropType.entries.firstOrNull { it.serializedName == id }
     }
@@ -70,14 +73,14 @@ object CropSeedData {
         val nbt = stack.orCreateNbt
         if (nbt == null) return CropStats()
         return CropStats(
-            growth = nbt.getInt(NBT_GROWTH).coerceIn(0, 31),
-            gain = nbt.getInt(NBT_GAIN).coerceIn(0, 31),
-            resistance = nbt.getInt(NBT_RESISTANCE).coerceIn(0, 31)
+            growth = nbt.getIntOr(NBT_GROWTH, 0).coerceIn(0, 31),
+            gain = nbt.getIntOr(NBT_GAIN, 0).coerceIn(0, 31),
+            resistance = nbt.getIntOr(NBT_RESISTANCE, 0).coerceIn(0, 31)
         )
     }
 
     fun readScanLevel(stack: ItemStack): Int =
-        stack.orCreateNbt.getInt(NBT_SCAN_LEVEL).coerceIn(0, 4)
+        stack.orCreateNbt.getIntOr(NBT_SCAN_LEVEL, 0).coerceIn(0, 4)
 
     fun write(stack: ItemStack, type: CropType, stats: CropStats, scanLevel: Int) {
         val nbt = stack.orCreateNbt
@@ -97,10 +100,11 @@ class CropSeedBagItem : Item(Item.Properties().stacksTo(1)) {
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         val scanLevel = CropSeedData.readScanLevel(stack)
         val type = CropSeedData.readType(stack)
         tooltip.add(Component.literal("扫描等级: $scanLevel/4").withStyle(net.minecraft.ChatFormatting.GRAY))
@@ -164,19 +168,20 @@ class CropnalyzerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         appendEnergyTooltip(stack, tooltip)
         tooltip.add(Component.literal("右键打开 GUI 扫描种子袋").withStyle(net.minecraft.ChatFormatting.GRAY))
     }
 
-    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResult {
         val scanner = user.getItemInHand(hand)
-        if (world.isClient) return InteractionResultHolder.success(scanner)
+        if (world.isClient) return InteractionResult.SUCCESS.heldItemTransformedTo(scanner)
 
-        user.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+        user.openMenu(object : ExtendedMenuProvider<FriendlyByteBuf> {
             override fun getDisplayName(): Component = Component.translatable("item.ic2_120.cropnalyzer")
 
             override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
@@ -190,7 +195,7 @@ class CropnalyzerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
             }
         })
 
-        return InteractionResultHolder.success(scanner)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(scanner)
     }
 
     override fun useOn(context: UseOnContext): InteractionResult {
@@ -236,7 +241,7 @@ class CropnalyzerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CropnalyzerItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CropnalyzerItem::class.instance(), 1)
                 .pattern("CC ")
                 .pattern("RGR")
                 .pattern("RXR")

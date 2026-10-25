@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -22,7 +24,7 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.registry.id
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -74,13 +76,6 @@ class ChunkLoaderBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
         super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.`is`(newState.block) && !moved) {
-            (world.getBlockEntity(pos) as? ChunkLoaderBlockEntity)?.releaseChunks()
-        }
-        super.onRemove(state, world, pos, newState, moved)
-    }
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
@@ -91,7 +86,7 @@ class ChunkLoaderBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             if (tinPlate != Items.AIR && machine != Items.AIR && circuit != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ChunkLoaderBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ChunkLoaderBlock::class.item(), 1)
                     .pattern("TET").pattern("LML").pattern("TCT")
                     .define('T', tinPlate).define('E', Items.ENDER_PEARL).define('L', Items.LAPIS_LAZULI)
                     .define('M', machine).define('C', circuit)

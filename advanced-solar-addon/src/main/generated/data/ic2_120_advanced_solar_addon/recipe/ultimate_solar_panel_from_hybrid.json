@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "ic2_120:advanced_circuit",
+    "H": "ic2_120_advanced_solar_addon:hybrid_solar_panel"
+  },
+  "pattern": [
+    "HHH",
+    "HCH",
+    "HHH"
+  ],
+  "result": {
+    "id": "ic2_120_advanced_solar_addon:ultimate_solar_panel"
+  }
+}

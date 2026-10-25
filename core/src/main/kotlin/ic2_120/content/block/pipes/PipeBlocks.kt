@@ -1,10 +1,12 @@
 package ic2_120.content.block.pipes
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 import com.mojang.serialization.MapCodec
 import net.minecraft.world.entity.player.Player
@@ -42,6 +44,12 @@ import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelAccessor
+import net.minecraft.world.level.LevelReader
+import net.minecraft.world.level.ScheduledTickAccess
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.util.RandomSource
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.TooltipFlag
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
@@ -53,7 +61,7 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.function.Consumer
 import ic2_120.Ic2_120
 import ic2_120.content.item.*
@@ -104,7 +112,7 @@ abstract class BasePipeBlock(
     }
 
     override fun getRenderShape(state: BlockState): RenderShape =
-        if (state.getValue(TRANSPARENT)) RenderShape.ENTITYBLOCK_ANIMATED else RenderShape.MODEL
+        if (state.getValue(TRANSPARENT)) RenderShape.INVISIBLE else RenderShape.MODEL
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         val world = ctx.level
@@ -120,22 +128,16 @@ abstract class BasePipeBlock(
             .setValue(DOWN, canConnect(world, pos, Direction.DOWN, null))
     }
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
-        state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
-        pos: BlockPos,
-        neighborPos: BlockPos
+        state: BlockState, world: LevelReader, ticks: ScheduledTickAccess, pos: BlockPos,
+        direction: Direction, neighborPos: BlockPos, neighborState: BlockState, random: RandomSource
     ): BlockState {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
+            ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         val be = world.getBlockEntity(pos) as? PipeBlockEntity
-        val property = propertyFor(direction)
         val connected = canConnect(world, pos, direction, be)
-        val next = state.setValue(property, connected)
+        val next = state.setValue(propertyFor(direction), connected)
         if (world is Level && !world.isClient && next != state) {
             PipeNetworkManager.invalidateConnectionCachesAt(world, pos)
         }
@@ -146,7 +148,7 @@ abstract class BasePipeBlock(
     override fun getFluidState(state: BlockState): FluidState =
         if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultFluidState()
 
-    override fun canPlaceLiquid(player: Player?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canPlaceLiquid(player: LivingEntity?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.getValue(BlockStateProperties.WATERLOGGED) && fluid == Fluids.WATER
 
     override fun placeLiquid(
@@ -163,7 +165,7 @@ abstract class BasePipeBlock(
         return true
     }
 
-    override fun pickupBlock(player: Player?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
+    override fun pickupBlock(player: LivingEntity?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
 
     internal fun recomputeState(world: Level, pos: BlockPos, state: BlockState, be: PipeBlockEntity): BlockState {
         var next = state
@@ -173,7 +175,7 @@ abstract class BasePipeBlock(
         return next
     }
 
-    protected open fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean {
+    protected open fun canConnect(world: LevelReader, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean {
         if (be?.isDisabled(direction) == true) return false
         val neighborPos = pos.relative(direction)
         val neighborState = world.getBlockState(neighborPos)
@@ -189,12 +191,9 @@ abstract class BasePipeBlock(
         return false
     }
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!state.`is`(newState.block)) {
-            PipeNetworkManager.invalidateAt(world, pos)
-        }
-        super.onRemove(state, world, pos, newState, moved)
+    override fun affectNeighborsAfterRemoval(state: BlockState, world: ServerLevel, pos: BlockPos, moved: Boolean) {
+        PipeNetworkManager.invalidateAt(world, pos)
+        super.affectNeighborsAfterRemoval(state, world, pos, moved)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = PipeBlockEntity(pos, state)
@@ -202,21 +201,25 @@ abstract class BasePipeBlock(
     /**
      * 添加物品提示信息（显示流量）
      */
+    class PipeBlockItem(block: Block, settings: Item.Properties) : BlockItem(block, settings) {
     @Environment(EnvType.CLIENT)
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
-        val flowPerSec = flowRateBucketsPerSecond * 1000 // 转换为 mB/s
-        val bucketsPerSec = flowRateBucketsPerSecond
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
+        val flowPerSec = (block as BasePipeBlock).flowRateBucketsPerSecond * 1000 // 转换为 mB/s
+        val bucketsPerSec = (block as BasePipeBlock).flowRateBucketsPerSecond
         tooltip.add(Component.translatable(
             "tooltip.ic2_120.pipe.flow_rate",
             "%.1f".format(flowPerSec),
             "%.1f".format(bucketsPerSec)
         ))
+    }
+
     }
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
@@ -323,10 +326,10 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
             .setValue(DOWN, canConnect(world, pos, Direction.DOWN, be, facing))
     }
 
-    override fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean =
+    override fun canConnect(world: LevelReader, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean =
         canConnect(world, pos, direction, be, null)
 
-    private fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction, be: PipeBlockEntity?, overrideFacing: Direction?): Boolean {
+    private fun canConnect(world: LevelReader, pos: BlockPos, direction: Direction, be: PipeBlockEntity?, overrideFacing: Direction?): Boolean {
         if (be?.isDisabled(direction) == true) return false
         val state = world.getBlockState(pos)
         val facing = overrideFacing ?: (if (state.hasProperty(BlockStateProperties.FACING)) state.getValue(BlockStateProperties.FACING) else Direction.NORTH)
@@ -405,7 +408,7 @@ class BronzePipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeTinyBlock::class.item(), 6)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BronzePipeTinyBlock::class.item(), 6)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', BronzeCasing::class.instance())
                 .unlockedBy(getHasName(BronzeCasing::class.instance()), has(BronzeCasing::class.instance()))
@@ -420,7 +423,7 @@ class BronzePipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.BRONZE) 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeSmallBlock::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BronzePipeSmallBlock::class.item(), 3)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', BronzeCasing::class.instance())
                 .unlockedBy(getHasName(BronzeCasing::class.instance()), has(BronzeCasing::class.instance()))
@@ -435,9 +438,9 @@ class BronzePipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.BRONZE
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeMediumBlock::class.item(), 2)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BronzePipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
-                .define('X', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
+                .define('X', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_BRONZE))
                 .unlockedBy(getHasName(BronzePlate::class.instance()), has(BronzePlate::class.instance()))
                 .save(exporter, BronzePipeMediumBlock::class.id())
         }
@@ -450,9 +453,9 @@ class BronzePipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.BRONZE) 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeLargeBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BronzePipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
-                .define('X', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
+                .define('X', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_BRONZE))
                 .unlockedBy(getHasName(BronzePlate::class.instance()), has(BronzePlate::class.instance()))
                 .save(exporter, BronzePipeLargeBlock::class.id())
         }
@@ -465,7 +468,7 @@ class CarbonPipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeTinyBlock::class.item(), 6)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CarbonPipeTinyBlock::class.item(), 6)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', CarbonFibre::class.instance())
                 .unlockedBy(getHasName(CarbonFibre::class.instance()), has(CarbonFibre::class.instance()))
@@ -480,7 +483,7 @@ class CarbonPipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.CARBON) 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeSmallBlock::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CarbonPipeSmallBlock::class.item(), 3)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', CarbonFibre::class.instance())
                 .unlockedBy(getHasName(CarbonFibre::class.instance()), has(CarbonFibre::class.instance()))
@@ -495,7 +498,7 @@ class CarbonPipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.CARBON
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeMediumBlock::class.item(), 2)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CarbonPipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', CarbonMesh::class.instance())
                 .unlockedBy(getHasName(CarbonMesh::class.instance()), has(CarbonMesh::class.instance()))
@@ -510,7 +513,7 @@ class CarbonPipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.CARBON) 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeLargeBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CarbonPipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', CarbonMesh::class.instance())
                 .unlockedBy(getHasName(CarbonMesh::class.instance()), has(CarbonMesh::class.instance()))
@@ -525,9 +528,9 @@ class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePumpAttachmentBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BronzePumpAttachmentBlock::class.item(), 1)
                 .pattern(" P ").pattern(" T ").pattern(" P ")
-                .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
+                .define('P', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_BRONZE))
                 .define('T', BronzePipeTinyBlock::class.item())
                 .unlockedBy(getHasName(BronzePipeTinyBlock::class.item()), has(BronzePipeTinyBlock::class.item()))
                 .save(exporter, BronzePumpAttachmentBlock::class.id())
@@ -541,7 +544,7 @@ class CarbonPumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPumpAttachmentBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CarbonPumpAttachmentBlock::class.item(), 1)
                 .pattern(" P ").pattern(" T ").pattern(" P ")
                 .define('P', CarbonPlate::class.instance())
                 .define('T', CarbonPipeTinyBlock::class.item())

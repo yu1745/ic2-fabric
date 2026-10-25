@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "ic2_120:item/iron_storage_box",
+    "tints": [
+      {
+        "type": "minecraft:constant",
+        "value": 11842740
+      }
+    ]
+  }
+}

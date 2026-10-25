@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -21,8 +23,7 @@ import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
-import net.fabricmc.fabric.api.registry.FuelRegistry
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
@@ -49,7 +50,7 @@ class SolidHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Container, IRoutedSidedInventory, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = SolidHeatGeneratorBlock.ACTIVE
 
@@ -97,7 +98,7 @@ class SolidHeatGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.solid_heat_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         SolidHeatGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -126,17 +127,17 @@ class SolidHeatGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        burnTime = nbt.getInt("BurnTime").coerceAtLeast(0)
-        burnTotal = nbt.getInt("BurnTotal").coerceAtLeast(0)
+        burnTime = nbt.getIntOr("BurnTime", 0).coerceAtLeast(0)
+        burnTotal = nbt.getIntOr("BurnTotal", 0).coerceAtLeast(0)
         sync.burnTime = burnTime
         sync.burnTotal = burnTotal
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt("BurnTime", burnTime)
         nbt.putInt("BurnTotal", burnTotal)
@@ -183,9 +184,9 @@ class SolidHeatGeneratorBlockEntity(
         val item = stack.item
         val isSupported = item == Items.COAL ||
             item == Items.CHARCOAL ||
-            item == net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "coke"))
+            item == net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.fromNamespaceAndPath("ic2_120", "coke"))
         if (!isSupported) return 0
-        val furnaceTicks = FuelRegistry.INSTANCE.get(item) ?: return 0
+        val furnaceTicks = world?.fuelValues()?.burnDuration(stack) ?: return 0
         return (furnaceTicks / SOLID_HEAT_BURN_DIVISOR).coerceAtLeast(1)
     }
 }

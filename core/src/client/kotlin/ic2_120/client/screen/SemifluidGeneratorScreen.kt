@@ -8,10 +8,10 @@ import ic2_120.content.recipes.ModTags
 import ic2_120.content.screen.SemifluidGeneratorScreenHandler
 import ic2_120.content.sync.SemifluidGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.resources.language.I18n
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
@@ -19,18 +19,16 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.TagKey
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = SemifluidGeneratorBlock::class)
 class SemifluidGeneratorScreen(
     val handler: SemifluidGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<SemifluidGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<SemifluidGeneratorScreenHandler>(handler, playerInventory, title, 176, 161) {
 
     init {
-        imageWidth = 176
-        imageHeight = 161
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -182,8 +180,8 @@ class SemifluidGeneratorScreen(
         val fluidKey = "fluid.${id.namespace}.${id.path}"
         val blockKey = "block.${id.namespace}.${id.path}"
         val fluidName = when {
-            I18n.exists(fluidKey) -> Component.translatable(fluidKey)
-            I18n.exists(blockKey) -> Component.translatable(blockKey)
+            net.minecraft.locale.Language.getInstance().has(fluidKey) -> Component.translatable(fluidKey)
+            net.minecraft.locale.Language.getInstance().has(blockKey) -> Component.translatable(blockKey)
             else -> Component.literal(humanizeFluidPath(id.path))
         }.withStyle(ChatFormatting.DARK_AQUA)
         if (id.namespace == "ic2_120") return fluidName
@@ -209,7 +207,7 @@ class SemifluidGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiheatsourcegenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiheatsourcegenerator.png")
         private const val DROPLETS_PER_MB = FluidConstants.BUCKET / 1000
     }
 }

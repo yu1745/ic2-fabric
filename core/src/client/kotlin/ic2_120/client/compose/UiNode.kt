@@ -3,8 +3,8 @@ package ic2_120.client.compose
 import ic2_120.client.ui.GuiBackground
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.resources.ResourceLocation
+import ic2_120.client.compat.*
+import net.minecraft.resources.Identifier
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -207,9 +207,9 @@ class TextNode(
 // ──────────────────────────── Image ────────────────────────────
 
 /**
- * 纹理图片节点。渲染指定 ResourceLocation 的 PNG 纹理（或其中一个区域）。
+ * 纹理图片节点。渲染指定 Identifier 的 PNG 纹理（或其中一个区域）。
  *
- * @param texture      纹理资源路径，如 ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/slot.png")
+ * @param texture      纹理资源路径，如 Identifier.fromNamespaceAndPath("ic2", "textures/gui/slot.png")
  * @param width        绘制宽度（像素）
  * @param height       绘制高度（像素）
  * @param u            纹理裁剪起始 U（默认 0）
@@ -220,7 +220,7 @@ class TextNode(
  * @param textureHeight 纹理文件实际高度（默认 = height）
  */
 class ImageNode(
-    val texture: ResourceLocation,
+    val texture: Identifier,
     val imgWidth: Int,
     val imgHeight: Int,
     val u: Float = 0f,
@@ -339,7 +339,7 @@ class ButtonNode(
         val hovered = mouseInButton && mouseInClip
 
         val mousePressed = GLFW.glfwGetMouseButton(
-            Minecraft.getInstance().window.window,
+            Minecraft.getInstance().window.handle(),
             GLFW.GLFW_MOUSE_BUTTON_LEFT
         ) == GLFW.GLFW_PRESS
         val pressed = hovered && mousePressed

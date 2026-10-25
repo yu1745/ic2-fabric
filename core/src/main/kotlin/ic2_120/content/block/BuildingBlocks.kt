@@ -1,8 +1,10 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -19,6 +21,7 @@ import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.ConsumeTreetapShapedRecipeDatagen
 import ic2_120.registry.annotation.ModBlock
 import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.properties.BlockSetType
 import net.minecraft.world.level.block.state.BlockState
@@ -37,14 +40,17 @@ import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.core.Direction
 import net.minecraft.world.level.LevelAccessor
+import net.minecraft.world.level.LevelReader
+import net.minecraft.world.level.ScheduledTickAccess
+import net.minecraft.world.level.redstone.Orientation
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.InsideBlockEffectApplier
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.storage.loot.LootParams
-import net.minecraft.world.level.GameRules
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundSource
@@ -83,7 +89,7 @@ class ReinforcedGlassBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.G
         fun generateRecipes(exporter: RecipeOutput) {
             val glass = Items.GLASS
             val alloy = Alloy::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReinforcedGlassBlock::class.item(), 7)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReinforcedGlassBlock::class.item(), 7)
                 .pattern("XGX")
                 .pattern("XXX")
                 .pattern("XGX")
@@ -112,7 +118,7 @@ class ReinforcedDoorBlock(
         fun generateRecipes(exporter: RecipeOutput) {
             val stone = ReinforcedStoneBlock::class.item()
             val ironDoor = Items.IRON_DOOR
-            ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, ReinforcedDoorBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.REDSTONE, ReinforcedDoorBlock::class.item(), 1)
                 .pattern("SSS")
                 .pattern("SDS")
                 .pattern("SSS")
@@ -135,7 +141,7 @@ abstract class Ic2FoamBlock(
      * 泡沫必须允许实体进入，但原版 isInsideWall 依赖碰撞形状，不能直接复用它。
      * 因此仅在实体的头部位于当前泡沫方块内时，按原版频率造成 inWall 伤害。
      */
-    override fun entityInside(state: BlockState, world: Level, pos: BlockPos, entity: Entity) {
+    override fun entityInside(state: BlockState, world: Level, pos: BlockPos, entity: Entity, effectApplier: InsideBlockEffectApplier, isPrecise: Boolean) {
         val hasHazmatHelmet = entity is LivingEntity &&
             entity.getItemBySlot(EquipmentSlot.HEAD).item is HazmatHelmet
         if (!world.isClient && entity is LivingEntity && !hasHazmatHelmet &&
@@ -147,14 +153,14 @@ abstract class Ic2FoamBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun randomTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
         var light = world.getMaxLocalRawBrightness(pos)
-        if (!state.canOcclude() && state.getLightBlock(world, pos) == 0) {
+        if (!state.canOcclude()) {
             for (direction in Direction.values()) {
                 light = maxOf(light, world.getMaxLocalRawBrightness(pos.relative(direction)))
             }
         }
 
         val averageSeconds = hardenTime * (16 - light).coerceAtLeast(1)
-        val randomTickSpeed = world.gameRules.getInt(GameRules.RULE_RANDOMTICKING).coerceAtLeast(1)
+        val randomTickSpeed = world.gameRules.get(GameRules.RANDOM_TICK_SPEED).coerceAtLeast(1)
         val chance = (4096.0f / (averageSeconds * 20.0f * randomTickSpeed)).coerceAtMost(1.0f)
         if (random.nextFloat() < chance) {
             world.setBlock(pos, hardenedState(), Block.UPDATE_ALL)
@@ -175,9 +181,9 @@ abstract class Ic2FoamBlock(
  */
 @ModBlock(name = "foam", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building", renderLayer = "translucent")
 class FoamBlock(
-    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_WOOL)
+    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE))
         .strength(0.01f, 10.0f)
-        .noCollission()
+        .noCollision()
          .noOcclusion()
         .isSuffocating { _, _, _ -> true }
         .isViewBlocking { _, _, _ -> true }
@@ -210,9 +216,9 @@ class FoamBlock(
  */
 @ModBlock(name = "reinforced_foam", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building", renderLayer = "translucent")
 class ReinforcedFoamBlock(
-    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_WOOL)
+    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE))
         .strength(0.01f, 10.0f)
-        .noCollission()
+        .noCollision()
          .noOcclusion()
         .isSuffocating { _, _, _ -> true }
         .isViewBlocking { _, _, _ -> true }
@@ -242,12 +248,12 @@ class ReinforcedFoamBlock(
 
 @ModBlock(name = "resin_sheet", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
 class ResinSheetBlock : Block(
-    BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
+    BlockBehaviour.Properties.ofFullCopy(Blocks.CARPET.pick(net.minecraft.world.item.DyeColor.WHITE))
         .strength(0.5f)
         .speedFactor(0.4f)
         .jumpFactor(0.0f)
 ) {
-    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
+    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Double) {
         entity.causeFallDamage(fallDistance, 0.2f, world.damageSources().fall())
     }
 
@@ -255,7 +261,7 @@ class ResinSheetBlock : Block(
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val resin = Resin::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ResinSheetBlock::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ResinSheetBlock::class.item(), 3)
                 .pattern("xxx")
                 .pattern("xxx")
                 .define('x', resin)
@@ -267,12 +273,12 @@ class ResinSheetBlock : Block(
 
 @ModBlock(name = "rubber_sheet", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
 class RubberSheetBlock : Block(
-    BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
+    BlockBehaviour.Properties.ofFullCopy(Blocks.CARPET.pick(net.minecraft.world.item.DyeColor.WHITE))
         .strength(0.5f)
         .speedFactor(0.4f)
         .jumpFactor(0.0f)
 ) {
-    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
+    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Double) {
         entity.causeFallDamage(fallDistance, 0.2f, world.damageSources().fall())
     }
 
@@ -280,10 +286,10 @@ class RubberSheetBlock : Block(
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val rubber = RubberItem::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RubberSheetBlock::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RubberSheetBlock::class.item(), 3)
                 .pattern("xxx")
                 .pattern("xxx")
-                .define('x', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                .define('x', ic2_120.compat.tagIngredient(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(getHasName(rubber), has(rubber))
                 .save(exporter, RubberSheetBlock::class.id())
         }
@@ -292,23 +298,23 @@ class RubberSheetBlock : Block(
 
 @ModBlock(name = "wool_sheet", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
 class WoolSheetBlock : Block(
-    BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CARPET)
+    BlockBehaviour.Properties.ofFullCopy(Blocks.CARPET.pick(net.minecraft.world.item.DyeColor.WHITE))
         .strength(0.5f)
         .speedFactor(0.4f)
         .jumpFactor(0.0f)
 ) {
-    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
+    override fun fallOn(world: Level, state: net.minecraft.world.level.block.state.BlockState, pos: BlockPos, entity: Entity, fallDistance: Double) {
         entity.causeFallDamage(fallDistance, 0.2f, world.damageSources().fall())
     }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoolSheetBlock::class.item(), 3)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, WoolSheetBlock::class.item(), 3)
                 .pattern("xxx")
                 .pattern("xxx")
-                .define('x', ItemTags.WOOL)
-                .unlockedBy(getHasName(Items.WHITE_WOOL), has(Items.WHITE_WOOL))
+                .define('x', ic2_120.compat.tagIngredient(ItemTags.WOOL))
+                .unlockedBy(getHasName(Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE)), has(Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE)))
                 .save(exporter, WoolSheetBlock::class.id())
         }
     }
@@ -350,15 +356,17 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
         state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
+        world: LevelReader,
+        ticks: ScheduledTickAccess,
         pos: BlockPos,
-        neighborPos: BlockPos
+        direction: Direction,
+        neighborPos: BlockPos,
+        neighborState: BlockState,
+        random: RandomSource
     ): BlockState {
         // 与原版含水方块一致：含水时调度水 tick，不在这里反推 WATERLOGGED。
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
+            ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         return state.setValue(propertyFor(direction), canConnect(world, pos, direction))
     }
@@ -370,7 +378,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
     override fun getFluidState(state: BlockState): FluidState =
         if (state.getValue(WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultFluidState()
 
-    override fun canPlaceLiquid(player: Player?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canPlaceLiquid(player: LivingEntity?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.getValue(WATERLOGGED) && fluid == Fluids.WATER
 
     override fun placeLiquid(
@@ -387,9 +395,9 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         return true
     }
 
-    override fun pickupBlock(player: Player?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
+    override fun pickupBlock(player: LivingEntity?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
 
-    private fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction): Boolean {
+    private fun canConnect(world: LevelReader, pos: BlockPos, direction: Direction): Boolean {
         val neighborPos = pos.relative(direction)
         val neighborBlock = world.getBlockState(neighborPos).block
         return neighborBlock is MiningPipeBlock || neighborBlock is BaseMinerBlock
@@ -430,7 +438,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         shapeCache[state]!!
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getOcclusionShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape =
+    override fun getOcclusionShape(state: BlockState): VoxelShape =
         Shapes.empty()
 
     companion object {
@@ -474,52 +482,52 @@ class ItntBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.TNT).strengt
 // ========== 建筑泡沫墙（16 色） ==========
 
 @ModBlock(name = "white_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class WhiteWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).strength(3.0f, 30.0f))
+class WhiteWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.WHITE)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "orange_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class OrangeWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.ORANGE_CONCRETE).strength(3.0f, 30.0f))
+class OrangeWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.ORANGE)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "magenta_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class MagentaWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.MAGENTA_CONCRETE).strength(3.0f, 30.0f))
+class MagentaWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.MAGENTA)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "light_blue_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class LightBlueWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.LIGHT_BLUE_CONCRETE).strength(3.0f, 30.0f))
+class LightBlueWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.LIGHT_BLUE)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "yellow_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class YellowWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.YELLOW_CONCRETE).strength(3.0f, 30.0f))
+class YellowWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.YELLOW)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "lime_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class LimeWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.LIME_CONCRETE).strength(3.0f, 30.0f))
+class LimeWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.LIME)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "pink_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class PinkWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.PINK_CONCRETE).strength(3.0f, 30.0f))
+class PinkWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.PINK)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "gray_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class GrayWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.GRAY_CONCRETE).strength(3.0f, 30.0f))
+class GrayWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.GRAY)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "light_gray_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class LightGrayWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.LIGHT_GRAY_CONCRETE).strength(3.0f, 30.0f))
+class LightGrayWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.LIGHT_GRAY)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "cyan_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class CyanWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CYAN_CONCRETE).strength(3.0f, 30.0f))
+class CyanWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.CYAN)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "purple_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class PurpleWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.PURPLE_CONCRETE).strength(3.0f, 30.0f))
+class PurpleWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.PURPLE)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "blue_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class BlueWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BLUE_CONCRETE).strength(3.0f, 30.0f))
+class BlueWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.BLUE)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "brown_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class BrownWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BROWN_CONCRETE).strength(3.0f, 30.0f))
+class BrownWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.BROWN)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "green_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class GreenWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.GREEN_CONCRETE).strength(3.0f, 30.0f))
+class GreenWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.GREEN)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "red_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class RedWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RED_CONCRETE).strength(3.0f, 30.0f))
+class RedWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.RED)).strength(3.0f, 30.0f))
 
 @ModBlock(name = "black_wall", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wall")
-class BlackWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BLACK_CONCRETE).strength(3.0f, 30.0f))
+class BlackWallBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CONCRETE.pick(net.minecraft.world.item.DyeColor.BLACK)).strength(3.0f, 30.0f))
 
 // ========== 脚手架 ==========
 
@@ -569,14 +577,16 @@ abstract class Ic2ScaffoldBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
         state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
+        world: LevelReader,
+        ticks: ScheduledTickAccess,
         pos: BlockPos,
+        direction: Direction,
         neighborPos: BlockPos,
+        neighborState: BlockState,
+        random: RandomSource,
     ): BlockState {
-        if (!world.isClientSide) world.scheduleTick(pos, this, 1)
-        return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
+        ticks.scheduleTick(pos, this, 1)
+        return super.updateShape(state, world, ticks, pos, direction, neighborPos, neighborState, random)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -585,10 +595,10 @@ abstract class Ic2ScaffoldBlock(
         world: Level,
         pos: BlockPos,
         sourceBlock: Block,
-        sourcePos: BlockPos,
+        orientation: Orientation?,
         notify: Boolean,
     ) {
-        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
+        super.neighborChanged(state, world, pos, sourceBlock, orientation, notify)
         if (!world.isClient) world.scheduleTick(pos, this, 1)
     }
 
@@ -794,11 +804,11 @@ class WoodenScaffoldBlock(
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoodenScaffoldBlock::class.item(), 4)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, WoodenScaffoldBlock::class.item(), 4)
                 .pattern("PPP")
                 .pattern(" S ")
                 .pattern("S S")
-                .define('P', ItemTags.PLANKS)
+                .define('P', ic2_120.compat.tagIngredient(ItemTags.PLANKS))
                 .define('S', Items.STICK)
                 .unlockedBy(getHasName(Items.OAK_PLANKS), has(Items.OAK_PLANKS))
                 .save(exporter, WoodenScaffoldBlock::class.id())
@@ -833,11 +843,11 @@ class IronScaffoldBlock(
         fun generateRecipes(exporter: RecipeOutput) {
             val ironPlate = IronPlate::class.instance()
             val ironFence = IronFenceBlock::class.item()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronScaffoldBlock::class.item(), 16)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IronScaffoldBlock::class.item(), 16)
                 .pattern("PPP")
                 .pattern("FFF")
                 .pattern("PPP")
-                .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .define('P', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON))
                 .define('F', ironFence)
                 .unlockedBy(getHasName(ironPlate), has(ironPlate))
                 .unlockedBy(getHasName(ironFence), has(ironFence))

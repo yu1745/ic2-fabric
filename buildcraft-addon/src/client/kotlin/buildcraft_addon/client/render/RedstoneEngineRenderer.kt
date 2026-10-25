@@ -4,18 +4,20 @@ import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.PowerStage
 import buildcraft_addon.content.blockentity.RedstoneEngineBlockEntity
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.LightTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.util.LightCoordsUtil
+import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.client.renderer.texture.TextureAtlas
+import net.minecraft.data.AtlasIds
+import ic2_120.client.renderers.LegacyBlockEntityRenderer26
+import ic2_120.client.renderers.LegacyMultiBufferSource26
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.LevelRenderer
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.Direction
 import org.joml.Matrix3f
 import org.joml.Matrix4f
@@ -24,8 +26,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 import ic2_120.compat.*
 
-class RedstoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
-    BlockEntityRenderer<RedstoneEngineBlockEntity> {
+class RedstoneEngineRenderer(ctx: BlockEntityRendererProvider.Context?) :
+    LegacyBlockEntityRenderer26<RedstoneEngineBlockEntity>() {
 
     private lateinit var trunkBlue: TextureAtlasSprite
     private lateinit var trunkGreen: TextureAtlasSprite
@@ -40,8 +42,8 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = Minecraft.getInstance().modelManager.getAtlas(InventoryMenu.BLOCK_ATLAS)
-        fun sprite(name: String) = atlas.getSprite(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, "block/engine/$name"))
+        val atlas = Minecraft.getInstance().atlasManager.getAtlasOrThrow(AtlasIds.BLOCKS)
+        fun sprite(name: String) = atlas.getSprite(Identifier.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, "block/engine/$name"))
         trunkBlue = sprite("trunk_blue")
         trunkGreen = sprite("trunk_green")
         trunkYellow = sprite("trunk_yellow")
@@ -76,11 +78,11 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         matrices.translate(-0.5, -0.5, -0.5)
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: RedstoneEngineBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
-        vertexConsumers: MultiBufferSource,
+        vertexConsumers: LegacyMultiBufferSource26,
         light: Int,
         overlay: Int
     ) {
@@ -104,17 +106,17 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         val pos = entity.pos
 
         val baseLight = if (world != null) {
-            LevelRenderer.getLightColor(world, pos)
+            lightCoords26(world, pos)
         } else {
             light
         }
         val topLight = if (world != null) {
-            LevelRenderer.getLightColor(world, pos.above())
+            lightCoords26(world, pos.above())
         } else {
             light
         }
 
-        val buffer = vertexConsumers.getBuffer(RenderType.cutout())
+        val buffer = vertexConsumers.getBuffer(RenderTypes.entityCutout(TextureAtlas.LOCATION_BLOCKS))
 
         // Part 1: base (0,0,0) to (1, 0.25, 1)
         renderBox(matrices, buffer, baseLight, overlay,
@@ -278,5 +280,5 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
             .setUv(mapU(u3), mapV(v3)).setOverlay(overlay).setLight(light).setNormal(entry, nx, ny, nz)
     }
 
-    override fun shouldRenderOffScreen(entity: RedstoneEngineBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 }

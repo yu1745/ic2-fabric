@@ -1,6 +1,8 @@
 package ic2_120.content.item
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.save
+
+import ic2_120.compat.has
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
@@ -30,10 +32,10 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.FriendlyByteBuf
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.Level
 import ic2_120.registry.annotation.RecipeProvider
 
@@ -84,10 +86,11 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         appendEnergyTooltip(stack, tooltip)
         val uses = getUsesRemaining(stack)
         tooltip.add(Component.literal("剩余使用次数: $uses").withStyle(net.minecraft.ChatFormatting.GRAY))
@@ -101,7 +104,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
     /**
      * 右键：打开扫描仪 GUI。
      */
-    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResult {
         return openScannerScreen(world, player, hand)
     }
 
@@ -111,11 +114,11 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
         /**
          * 打开扫描仪 GUI（OD 与 OV 共用）。
          */
-        fun openScannerScreen(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+        fun openScannerScreen(world: Level, player: Player, hand: InteractionHand): InteractionResult {
             val stack = player.getItemInHand(player.usedItemHand)
-            if (world.isClient) return InteractionResultHolder.pass(stack)
+            if (world.isClient) return InteractionResult.PASS
 
-            player.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+            player.openMenu(object : ExtendedMenuProvider<FriendlyByteBuf> {
                 override fun getDisplayName(): Component {
                     // OD/OV 共用 GUI：标题必须跟随实际扫描仪类型，不能写死 OD 的 key
                     val t = getScannerType(player.getItemInHand(player.usedItemHand))
@@ -144,7 +147,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
                 }
             })
 
-            return InteractionResultHolder.success(stack)
+            return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
         }
 
         fun getScannerType(stack: ItemStack): ScannerType {
@@ -160,7 +163,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
         }
 
         fun getUsesRemaining(stack: ItemStack): Int {
-            return stack.orCreateNbt.getInt(NBT_USES).takeIf { it > 0 }
+            return stack.orCreateNbt.getIntOr(NBT_USES, 0).takeIf { it > 0 }
                 ?: getScannerType(stack).maxUses
         }
 
@@ -182,7 +185,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
             val insulatedCopper = ic2_120.content.block.cables.InsulatedCopperCableBlock::class.item()
             val glowstone = net.minecraft.world.item.Items.GLOWSTONE_DUST
 
-            net.minecraft.data.recipes.ShapedRecipeBuilder.shaped(
+            net.minecraft.data.recipes.ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM,
                 RecipeCategory.TOOLS,
                 OdScannerItem::class.instance(),
                 1
@@ -218,10 +221,11 @@ class AdvancedScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         appendEnergyTooltip(stack, tooltip)
         val uses = OdScannerItem.getUsesRemaining(stack)
         tooltip.add(Component.literal("剩余使用次数: $uses").withStyle(net.minecraft.ChatFormatting.GRAY))
@@ -237,7 +241,7 @@ class AdvancedScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
      * 右键：打开扫描仪 GUI。
      * 与 OD 扫描仪共用同一套逻辑（通过 getScannerType 区分类型）。
      */
-    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResult {
         return OdScannerItem.openScannerScreen(world, player, hand)
     }
 
@@ -258,7 +262,7 @@ class AdvancedScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
             val insulatedGold = ic2_120.content.block.cables.InsulatedGoldCableBlock::class.item()
             val odScanner = OdScannerItem::class.instance()
 
-            net.minecraft.data.recipes.ShapedRecipeBuilder.shaped(
+            net.minecraft.data.recipes.ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM,
                 RecipeCategory.TOOLS,
                 AdvancedScannerItem::class.instance(),
                 1

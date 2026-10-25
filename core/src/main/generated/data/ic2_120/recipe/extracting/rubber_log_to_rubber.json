@@ -1,3 +1,9 @@
 {
-  "type": "ic2_120:extracting"
+  "type": "ic2_120:extracting",
+  "ingredient": {
+    "item": "ic2_120:rubber_log"
+  },
+  "result": {
+    "item": "ic2_120:rubber"
+  }
 }

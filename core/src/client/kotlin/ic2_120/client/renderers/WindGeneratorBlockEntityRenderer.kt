@@ -6,24 +6,22 @@ import ic2_120.compat.world
 import ic2_120.content.block.WindGeneratorBlock
 import ic2_120.content.block.machines.WindGeneratorBlockEntity
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes as RenderType
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.Direction
 import com.mojang.math.Axis
 import org.joml.Matrix4f
 
 class WindGeneratorBlockEntityRenderer(
     context: BlockEntityRendererProvider.Context
-) : BlockEntityRenderer<WindGeneratorBlockEntity> {
+) : LegacyBlockEntityRenderer26<WindGeneratorBlockEntity>() {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.withDefaultNamespace("textures/misc/white.png")
         private const val BASE_SPEED_DEG_PER_TICK = 6.0f
         private const val SPEED_PER_EU = 3.0f
     }
@@ -33,7 +31,7 @@ class WindGeneratorBlockEntityRenderer(
         val ignored = context
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: WindGeneratorBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
@@ -57,7 +55,7 @@ class WindGeneratorBlockEntityRenderer(
         matrices.translate(0.0, 0.0, -0.505)
         matrices.mulPose(Axis.ZP.rotationDegrees(angle))
 
-        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutout(WHITE_TEXTURE))
 
         repeat(4) { i ->
             matrices.pushPose()
@@ -176,7 +174,7 @@ class WindGeneratorBlockEntityRenderer(
             .setNormal(entry, nx, ny, nz)
     }
 
-    override fun shouldRenderOffScreen(blockEntity: WindGeneratorBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 
     override fun getViewDistance(): Int = 256
 }

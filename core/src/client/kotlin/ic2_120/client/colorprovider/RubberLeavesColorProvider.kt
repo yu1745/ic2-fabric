@@ -1,10 +1,14 @@
 package ic2_120.client.colorprovider
 
 import ic2_120.Ic2_120
-import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
+import net.fabricmc.fabric.api.client.rendering.v1.BlockColorRegistry
+import net.minecraft.client.color.block.BlockTintSource
+import net.minecraft.client.renderer.block.BlockAndTintGetter
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.client.renderer.BiomeColors
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 //todo 目前橡胶树叶还是不够显眼，这是有问题的，不好找
 
@@ -22,23 +26,18 @@ object RubberLeavesColorProvider {
     private const val DEFAULT_RUBBER_LEAVES_COLOR = 0xc4b848
 
     fun register() {
-        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_leaves"))
-        val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_leaves"))
+        val block = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_leaves"))
+        val tint = object : BlockTintSource {
+            override fun color(state: BlockState): Int = DEFAULT_RUBBER_LEAVES_COLOR or -0x1000000
 
-        ColorProviderRegistry.BLOCK.register({ _, world, pos, _ ->
-            if (world != null && pos != null) {
+            override fun colorInWorld(state: BlockState, world: BlockAndTintGetter, pos: BlockPos): Int {
                 // 获取群系的白桦树风格 foliage 亮度
                 val baseBrightness = BiomeColors.getAverageFoliageColor(world, pos)
                 // 将橡胶树叶的基础黄色 (0xc4b848) 根据群系亮度进行调整
-                applyBiomeBrightness(DEFAULT_RUBBER_LEAVES_COLOR, baseBrightness)
-            } else {
-                DEFAULT_RUBBER_LEAVES_COLOR
+                return applyBiomeBrightness(DEFAULT_RUBBER_LEAVES_COLOR, baseBrightness) or -0x1000000
             }
-        }, block)
-
-        ColorProviderRegistry.ITEM.register({ _, _ ->
-            DEFAULT_RUBBER_LEAVES_COLOR
-        }, item)
+        }
+        BlockColorRegistry.register(listOf(tint), block)
     }
 
     /**

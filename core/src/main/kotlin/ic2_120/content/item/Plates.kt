@@ -14,7 +14,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.RecipeCategory
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 板类（金属成型机切割：1 锭 -> 1 板；青金石/黑曜石见配方） ==========
@@ -31,7 +31,7 @@ class BronzePlate : Item(Item.Properties()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_BRONZE)
                 )
             )
         }
@@ -49,7 +49,7 @@ class CopperPlate : Item(Item.Properties()) {
                 result = CopperPlate::class.instance(),
                 resultCount = 1,
                 ingredients = listOf(
-                    Ingredient.of(ModTags.Compat.Items.INGOTS_COPPER),
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_COPPER),
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance())
                 )
             )
@@ -68,7 +68,7 @@ class GoldPlate : Item(Item.Properties()) {
                 result = GoldPlate::class.instance(),
                 resultCount = 1,
                 ingredients = listOf(
-                    Ingredient.of(ModTags.Compat.Items.INGOTS_GOLD),
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_GOLD),
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance())
                 )
             )
@@ -88,7 +88,7 @@ class IronPlate : Item(Item.Properties()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.INGOTS_IRON)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_IRON)
                 )
             )
         }
@@ -107,7 +107,7 @@ class LapisPlate : Item(Item.Properties()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.GEMS_LAPIS)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.GEMS_LAPIS)
                 )
             )
         }
@@ -126,7 +126,7 @@ class LeadPlate : Item(Item.Properties()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.INGOTS_LEAD)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_LEAD)
                 )
             )
         }
@@ -151,7 +151,7 @@ class TinPlate : Item(Item.Properties()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.of(ModTags.Compat.Items.INGOTS_TIN)
+                    ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_TIN)
                 )
             )
         }

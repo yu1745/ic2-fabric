@@ -12,5 +12,5 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class ModMachineRecipeBinding(
-    val serializerClass: KClass<out RecipeSerializer<*>>,
+    val serializerClass: KClass<out ic2_120.content.recipes.RecipeSerializerHolder26<*>>,
 )

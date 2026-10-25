@@ -19,7 +19,7 @@ abstract class AbstractFiniteNeutronReflectorItem(
 ) : AbstractReactorComponent(settings) {
 
     private fun getConsumed(stack: ItemStack): Int =
-        (stack.getCustomData()?.getInt("use") ?: 0).coerceIn(0, maxPulses)
+        (stack.getCustomData()?.getIntOr("use", 0) ?: 0).coerceIn(0, maxPulses)
 
     private fun setConsumed(stack: ItemStack, value: Int) {
         stack.editCustomData { it.putInt("use", value.coerceIn(0, maxPulses)) }
@@ -77,8 +77,9 @@ abstract class AbstractFiniteNeutronReflectorItem(
         return (13.0 * frac).toInt().coerceIn(0, 13)
     }
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         if (!isDepleted(stack)) {
             tooltip.add(
                 Component.translatable("tooltip.ic2_120.neutron_reflector_pulses", remainingPulses(stack))

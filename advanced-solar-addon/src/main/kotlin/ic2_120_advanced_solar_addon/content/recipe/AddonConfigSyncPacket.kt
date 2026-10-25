@@ -4,7 +4,7 @@ import ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 class AddonConfigSyncPacket(
     val totalChunks: Int,
@@ -14,7 +14,7 @@ class AddonConfigSyncPacket(
     override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Type<AddonConfigSyncPacket>(ResourceLocation.fromNamespaceAndPath(IC2AdvancedSolarAddon.MOD_ID, "config_sync"))
+        val ID = CustomPacketPayload.Type<AddonConfigSyncPacket>(Identifier.fromNamespaceAndPath(IC2AdvancedSolarAddon.MOD_ID, "config_sync"))
         const val MAX_CHUNK_BYTES = 20000
 
         val CODEC: StreamCodec<FriendlyByteBuf, AddonConfigSyncPacket> = StreamCodec.of(

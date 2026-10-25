@@ -40,7 +40,7 @@ abstract class AbstractDamageableReactorComponent(
 
     protected fun getUse(stack: ItemStack): Int {
         val nbt = stack.getCustomData() ?: return 0
-        return nbt.getInt("use").coerceIn(0, maxUse)
+        return nbt.getIntOr("use", 0).coerceIn(0, maxUse)
     }
 
     /**
@@ -84,8 +84,9 @@ abstract class AbstractDamageableReactorComponent(
         return (13.0 * remaining).toInt().coerceIn(0, 13)
     }
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         val remaining = maxUse - getUse(stack)
         tooltip.add(Component.translatable("tooltip.ic2_120.reactor_durability", remaining, maxUse).withStyle(ChatFormatting.GRAY))
     }

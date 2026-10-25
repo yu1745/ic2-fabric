@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -82,7 +84,7 @@ class InductionFurnaceBlock : MachineBlock(defaultMachineSettings() .noOcclusion
             val electricFurnace = ElectricFurnaceBlock::class.item()
             val advCasing = AdvancedMachineCasingBlock::class.item()
             if (electricFurnace != Items.AIR && advCasing != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, InductionFurnaceBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, InductionFurnaceBlock::class.item(), 1)
                     .pattern("CCC")
                     .pattern("CEC")
                     .pattern("CAC")

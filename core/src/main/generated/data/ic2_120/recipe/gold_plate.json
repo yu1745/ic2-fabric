@@ -2,7 +2,7 @@
   "type": "ic2_120:damage_tool_shapeless",
   "ingredients": [
     {
-      "item": "minecraft:air"
+      "tag": "ic2_120:compat/ingots/gold"
     },
     {
       "item": "ic2_120:forge_hammer"

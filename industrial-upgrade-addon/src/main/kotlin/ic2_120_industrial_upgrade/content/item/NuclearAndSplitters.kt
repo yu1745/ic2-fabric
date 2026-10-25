@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.content.block.ReinforcedGlassBlock
@@ -16,7 +18,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // ===== 质子碎片 proton_shard =====
 // zh_cn: 质子碎片  en_us: Proton Shard
@@ -50,7 +52,7 @@ class RedComponent : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // AAA/BBB/AAA：5×防爆玻璃 + 3×红石
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RedComponent::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RedComponent::class.instance(), 1)
                 .pattern("AAA")
                 .pattern("BBB")
                 .pattern("AAA")
@@ -70,7 +72,7 @@ class BlueComponent : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // AAA/BBB/AAA：5×防爆玻璃 + 3×青金石
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BlueComponent::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BlueComponent::class.instance(), 1)
                 .pattern("AAA")
                 .pattern("BBB")
                 .pattern("AAA")
@@ -90,7 +92,7 @@ class GreenComponent : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // A  ：1×光辉玻璃板
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, GreenComponent::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, GreenComponent::class.instance(), 1)
                 .pattern("A  ")
                 .define('A', IrradiantGlassPane::class.instance())
                 .unlockedBy(getHasName(IrradiantGlassPane::class.instance()), has(IrradiantGlassPane::class.instance()))
@@ -107,7 +109,7 @@ class SolarSplitter : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // ABC/ABC/ABC：3×红色 + 3×绿色 + 3×蓝色
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SolarSplitter::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SolarSplitter::class.instance(), 1)
                 .pattern("ABC")
                 .pattern("ABC")
                 .pattern("ABC")

@@ -1,11 +1,7 @@
 {
   "type": "minecraft:smelting",
-  "category": "misc",
-  "cookingtime": 200,
   "experience": 0.1,
-  "ingredient": {
-    "tag": "ic2_120:compat/dusts/silver"
-  },
+  "ingredient": "#ic2_120:compat/dusts/silver",
   "result": {
     "id": "ic2_120:silver_ingot"
   }

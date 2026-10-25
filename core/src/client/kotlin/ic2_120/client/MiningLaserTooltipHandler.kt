@@ -67,8 +67,8 @@ object MiningLaserTooltipHandler {
     }
 
     private fun isShiftDown(): Boolean {
-        val handle = Minecraft.getInstance().window.window
-        return InputConstants.isKeyDown(handle, GLFW.GLFW_KEY_LEFT_SHIFT) ||
-            InputConstants.isKeyDown(handle, GLFW.GLFW_KEY_RIGHT_SHIFT)
+        val window = Minecraft.getInstance().window
+        return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT) ||
+            InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT)
     }
 }

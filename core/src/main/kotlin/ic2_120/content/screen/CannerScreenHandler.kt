@@ -1,4 +1,7 @@
 package ic2_120.content.screen
+import ic2_120.compat.blockEntityOrNull
+
+import ic2_120.compat.displayClientMessage
 
 import ic2_120.compat.stack
 
@@ -38,7 +41,7 @@ class CannerScreenHandler(
     val sync = CannerSync(SyncedDataView(propertyDelegate))
 
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.blockEntityOrNull() }
     }
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()

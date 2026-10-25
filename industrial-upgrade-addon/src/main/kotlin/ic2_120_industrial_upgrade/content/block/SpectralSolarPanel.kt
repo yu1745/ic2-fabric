@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import ic2_120.compat.save
+
 import ic2_120_advanced_solar_addon.content.block.QuantumSolarPanelBlock
 import ic2_120_advanced_solar_addon.content.block.SolarPanelBlockEntity
 import ic2_120.registry.CreativeTab
@@ -26,7 +28,7 @@ import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
 import net.minecraft.data.recipes.RecipeProvider.getHasName
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_industrial_upgrade.spectral_solar_panel
 // zh_cn: 光谱太阳能发电机
@@ -43,7 +45,7 @@ class SpectralSolarPanelBlock : IndustrialSolarPanelBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 十字：4 个量子太阳能 + 1 个光谱核心
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SpectralSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SpectralSolarPanelBlock::class.item(), 1)
                 .pattern(" B ")
                 .pattern("BAB")
                 .pattern(" B ")

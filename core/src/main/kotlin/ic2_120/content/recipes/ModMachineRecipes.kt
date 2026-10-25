@@ -33,8 +33,9 @@ object ModMachineRecipes {
         val entries = ClassScanner.collectMachineRecipeRegistrations()
         val modId = Ic2_120.MOD_ID
         for (e in entries) {
-            val serializer = e.serializerClass.objectInstance
+            val serializerHolder = e.serializerClass.objectInstance
                 ?: error("机器配方序列化器 ${e.serializerClass} 必须是 Kotlin object")
+            val serializer = serializerHolder.serializer
             val type = object : RecipeType<Recipe<*>> {
                 override fun toString() = "$modId:${e.id}"
             }
@@ -70,8 +71,9 @@ object ModMachineRecipes {
         recipeTypeByRecipeClass[recipeClass] as? RecipeType<T>
             ?: error("未注册的配方类: $recipeClass（序列化器需带 @ModMachineRecipe 且已先 register）")
 
-    fun recipeSerializer(recipeClass: KClass<out Recipe<*>>): RecipeSerializer<*> =
-        recipeSerializerByRecipeClass[recipeClass]
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Recipe<*>> recipeSerializer(recipeClass: KClass<T>): RecipeSerializer<T> =
+        recipeSerializerByRecipeClass[recipeClass] as? RecipeSerializer<T>
             ?: error("未注册的配方类: $recipeClass")
 
     /**

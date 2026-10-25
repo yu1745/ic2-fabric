@@ -46,6 +46,11 @@ class GeneratorScreenHandler(
         addSlot(slot)
     }
 
+    private val SLOT_SPEC_FALLBACK_FUEL = SlotSpec(
+            canInsert = { stack ->
+                !stack.isEmpty && ((playerInventory.player.level().fuelValues().burnDuration(stack)) > 0)
+            }
+        )
     init {
         checkContainerSize(blockInventory, 2)
         addDataSlots(propertyDelegate)
@@ -116,11 +121,6 @@ class GeneratorScreenHandler(
         const val HOTBAR_END = 38
         const val SLOT_SIZE = 18
 
-        private val SLOT_SPEC_FALLBACK_FUEL = SlotSpec(
-            canInsert = { stack ->
-                !stack.isEmpty && ((net.fabricmc.fabric.api.registry.FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0)
-            }
-        )
         private val SLOT_SPEC_FALLBACK_BATTERY = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack -> stack.canBeCharged() }

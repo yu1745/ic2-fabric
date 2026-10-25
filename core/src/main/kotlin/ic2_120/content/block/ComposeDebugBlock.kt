@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import ic2_120.compat.isClient
 import ic2_120.compat.pos
 
@@ -72,8 +74,8 @@ class ComposeDebugBlockEntity(
     type: BlockEntityType<ComposeDebugBlockEntity>,
     pos: net.minecraft.core.BlockPos,
     state: net.minecraft.world.level.block.state.BlockState
-) : BlockEntity(type, pos, state),
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : LegacyBlockEntity26(type, pos, state),
+    net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     constructor(pos: net.minecraft.core.BlockPos, state: net.minecraft.world.level.block.state.BlockState) : this(
         ComposeDebugBlockEntity::class.type(), pos, state
@@ -84,7 +86,7 @@ class ComposeDebugBlockEntity(
     override fun createMenu(
         syncId: Int,
         playerInventory: net.minecraft.world.entity.player.Inventory,
-        player: net.minecraft.world.entity.player.Player?
+        player: net.minecraft.world.entity.player.Player
     ): net.minecraft.world.inventory.AbstractContainerMenu =
         ic2_120.content.screen.ComposeDebugScreenHandler(syncId, playerInventory)
 

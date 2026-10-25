@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -79,12 +81,12 @@ class RecyclerBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
         fun generateRecipes(exporter: RecipeOutput) {
             val compressor = CompressorBlock::class.item()
             if (compressor != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RecyclerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RecyclerBlock::class.item(), 1)
                     .pattern(" G ")
                     .pattern("DCD")
                     .pattern("IDI")
                     .define('G', Items.GLOWSTONE_DUST)
-                    .define('D', ItemTags.DIRT)
+                    .define('D', ic2_120.compat.tagIngredient(ItemTags.DIRT))
                     .define('C', compressor)
                     .define('I', Items.IRON_INGOT)
                     .unlockedBy(getHasName(compressor), has(compressor))

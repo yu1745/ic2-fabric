@@ -1,5 +1,8 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.recipeManager
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -45,7 +48,7 @@ import ic2_120.registry.annotation.ModMachineRecipeBinding
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
@@ -67,7 +70,7 @@ class MetalFormerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = MetalFormerBlock.ACTIVE
 
@@ -179,7 +182,7 @@ class MetalFormerBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.metal_former")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         MetalFormerScreenHandler(
             syncId,
             playerInventory,
@@ -191,23 +194,23 @@ class MetalFormerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(MetalFormerSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(MetalFormerSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         progressF = if (nbt.contains("ProgressF")) {
-            nbt.getFloat("ProgressF").coerceIn(0f, MetalFormerSync.PROGRESS_MAX.toFloat())
+            nbt.getFloatOr("ProgressF", 0f).coerceIn(0f, MetalFormerSync.PROGRESS_MAX.toFloat())
         } else {
             sync.progress.toFloat().coerceIn(0f, MetalFormerSync.PROGRESS_MAX.toFloat())
         }
-        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
-        sync.setMode(MetalFormerSync.Mode.fromId(nbt.getInt(MetalFormerSync.NBT_MODE)))
+        energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloatOr("EnergyDebt", 0f).coerceAtLeast(0f) else 0f
+        sync.setMode(MetalFormerSync.Mode.fromId(nbt.getIntOr(MetalFormerSync.NBT_MODE, 0)))
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MetalFormerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -358,9 +361,9 @@ class MetalFormerBlockEntity(
         // 通过 RecipeManager 查找配方
         val recipeManager = world.recipeManager ?: return null
         val recipeInput = MetalFormerRecipe.Input(input)
-        // TODO(1.21.1): getAllRecipesFor 返回 RecipeHolder，需 .value 取配方本体。
-        val recipe = recipeManager.getAllRecipesFor(getRecipeType<MetalFormerRecipe>())
+        val recipe = recipeManager.recipes
             .map { it.value }
+            .filterIsInstance<MetalFormerRecipe>()
             .firstOrNull { recipeType.isInstance(it) && it.matches(recipeInput, world) }
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedQueryItem = input.item
@@ -374,9 +377,8 @@ class MetalFormerBlockEntity(
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val currentWorld = world ?: return true
         val input = MetalFormerRecipe.Input(stack.copyWithCount(1))
-        val found = currentWorld.recipeManager
-            .getAllRecipesFor(getRecipeType<MetalFormerRecipe>())
-            .any { it.value.matches(input, currentWorld) }
+        val found = currentWorld.recipeManager.recipes
+            .any { (it.value as? MetalFormerRecipe)?.matches(input, currentWorld) == true }
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
         cachedIsInput = found

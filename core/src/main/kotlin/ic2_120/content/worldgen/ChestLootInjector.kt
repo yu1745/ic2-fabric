@@ -13,7 +13,7 @@ import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 以代码方式向原版奖励箱追加 IC2 战利品，避免整表覆盖并降低与其他模组的冲突概率。
@@ -301,8 +301,8 @@ object ChestLootInjector {
         return withWeightedItem(modItem("iridium_shard"), weight, min / divisor, max / divisor)
     }
 
-    private fun modItem(path: String): Item = BuiltInRegistries.ITEM.get(Ic2_120.id(path))
+    private fun modItem(path: String): Item = BuiltInRegistries.ITEM.getValue(Ic2_120.id(path))
 
     private fun chest(path: String): ResourceKey<net.minecraft.world.level.storage.loot.LootTable> =
-        ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("minecraft", "chests/$path"))
+        ResourceKey.create(Registries.LOOT_TABLE, Identifier.fromNamespaceAndPath("minecraft", "chests/$path"))
 }

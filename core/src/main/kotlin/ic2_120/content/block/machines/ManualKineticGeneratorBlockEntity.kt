@@ -1,5 +1,9 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.displayClientMessage
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -286,16 +290,16 @@ class ManualKineticGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
+        pendingOutputKu = nbt.getIntOr("PendingKu", 0).coerceAtLeast(0)
         inventory[CRANK_SLOT] = ItemStack.EMPTY
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
         nbt.putInt("PendingKu", pendingOutputKu)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 

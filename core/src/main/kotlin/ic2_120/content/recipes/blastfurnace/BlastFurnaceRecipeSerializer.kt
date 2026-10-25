@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.GsonHelper
 
 /**
@@ -32,19 +32,19 @@ import net.minecraft.util.GsonHelper
  * }
  */
 @ModMachineRecipe(id = "blast_furnacing", recipeClass = BlastFurnaceRecipe::class)
-object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
-    private fun fromJson(id: ResourceLocation, json: JsonObject): BlastFurnaceRecipe {
+object BlastFurnaceRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<BlastFurnaceRecipe>() {
+    private fun fromJson(id: Identifier, json: JsonObject): BlastFurnaceRecipe {
         val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
 
         val steelOutputJson = json.getAsJsonObject("steel_output")
-        val steelItemId = ResourceLocation.parse(steelOutputJson.get("item").asString)
-        val steelItem = BuiltInRegistries.ITEM.get(steelItemId)
+        val steelItemId = Identifier.parse(steelOutputJson.get("item").asString)
+        val steelItem = BuiltInRegistries.ITEM.getValue(steelItemId)
         val steelCount = (if (steelOutputJson.has("count")) steelOutputJson.get("count").asInt else 1)
         val steelOutput = ItemStack(steelItem, steelCount)
 
         val slagOutputJson = json.getAsJsonObject("slag_output")
-        val slagItemId = ResourceLocation.parse(slagOutputJson.get("item").asString)
-        val slagItem = BuiltInRegistries.ITEM.get(slagItemId)
+        val slagItemId = Identifier.parse(slagOutputJson.get("item").asString)
+        val slagItem = BuiltInRegistries.ITEM.getValue(slagItemId)
         val slagCount = (if (slagOutputJson.has("count")) slagOutputJson.get("count").asInt else 1)
         val slagOutput = ItemStack(slagItem, slagCount)
 
@@ -68,7 +68,11 @@ object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
     override fun codec(): MapCodec<BlastFurnaceRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:blast_furnacing",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", ic2_120.content.recipes.ingredientJson26(recipe.ingredient))
+            json.add("steel_output", ic2_120.content.recipes.stackJson26(recipe.steelOutput))
+            json.add("slag_output", ic2_120.content.recipes.stackJson26(recipe.slagOutput))
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BlastFurnaceRecipe> =

@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.centrifuge
 
+import ic2_120.compat.accept
+
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.item.*
@@ -11,7 +13,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.function.Consumer
 
 /**
@@ -278,7 +280,7 @@ object CentrifugeRecipeDatagen {
         // 泥炭矿 200 -> 煤炭 + 糠
         Entry(
             "peat_ore",
-            IngredientInput.item(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "peat_ore"))), 1, 200,
+            IngredientInput.item(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("ic2_120", "peat_ore"))), 1, 200,
             listOf(
                 OutputEntry(Items.COAL, 1),
                 OutputEntry(BioChaff::class.instance(), 1)
@@ -290,7 +292,7 @@ object CentrifugeRecipeDatagen {
 
     fun generateRecipes(exporter: RecipeOutput) {
         entries.forEach { entry ->
-            val recipeId = ResourceLocation.fromNamespaceAndPath("ic2_120", "centrifuging/${entry.name}")
+            val recipeId = Identifier.fromNamespaceAndPath("ic2_120", "centrifuging/${entry.name}")
             val recipe = CentrifugeRecipe(
                 recipeId,
                 entry.input.toIngredient(),

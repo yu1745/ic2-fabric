@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
-  "category": "misc",
   "ingredients": [
-    {
-      "item": "ic2_120:uranium_235"
-    }
+    "ic2_120:uranium_235"
   ],
   "result": {
     "count": 9,

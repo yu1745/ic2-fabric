@@ -4,13 +4,13 @@ import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.screen.PumpAttachmentScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.renderer.Rect2i
 
 @ModScreen(handlers = ["bronze_pump_attachment", "carbon_pump_attachment"])
@@ -18,11 +18,9 @@ class PumpAttachmentScreen(
     val handler: PumpAttachmentScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<PumpAttachmentScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<PumpAttachmentScreenHandler>(handler, playerInventory, title, 176, 162) {
 
     init {
-        imageWidth = 176
-        imageHeight = 162
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -105,7 +103,7 @@ class PumpAttachmentScreen(
     fun ghostFilterArea(): Rect2i = Rect2i(leftPos + 80, topPos + 31, 16, 16)
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiother.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiother.png")
         private const val TEXTURE_SIZE = 256
 
         // 过滤器槽背景 (179,3)-(197,21) = 18×18
@@ -122,7 +120,7 @@ class PumpAttachmentScreen(
         private const val TEXT_AREA_H = 15
         private const val TEXT_AREA_X = 52
         private const val TEXT_AREA_Y = 55
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val HINT_X = 4
         private const val HINT_Y = 4
         private const val HINT_SIZE = 16

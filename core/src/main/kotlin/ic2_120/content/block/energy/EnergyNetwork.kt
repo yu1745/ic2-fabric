@@ -23,13 +23,12 @@ import net.minecraft.world.Container
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
-import org.apache.commons.logging.LogFactory
 import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
 import kotlin.math.pow
@@ -343,10 +342,10 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     private fun createCableShockDamageSource(world: ServerLevel): DamageSource {
-        val registry = world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
-        val key = ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "cable_shock"))
-        val entry = registry.getHolder(key).orElse(null)
-            ?: registry.getHolder(ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("minecraft", "lightning")))
+        val registry = world.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE)
+        val key = ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.fromNamespaceAndPath("ic2_120", "cable_shock"))
+        val entry = registry.get(key).orElse(null)
+            ?: registry.get(ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.fromNamespaceAndPath("minecraft", "lightning")))
                 .orElseThrow()
         return DamageSource(entry)
     }

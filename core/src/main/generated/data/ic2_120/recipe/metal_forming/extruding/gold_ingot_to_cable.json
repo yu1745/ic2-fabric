@@ -1,3 +1,11 @@
 {
-  "type": "ic2_120:metal_forming"
+  "type": "ic2_120:metal_forming",
+  "ingredient": {
+    "tag": "ic2_120:compat/ingots/gold"
+  },
+  "mode": "extruding",
+  "result": {
+    "count": 4,
+    "item": "ic2_120:gold_cable"
+  }
 }

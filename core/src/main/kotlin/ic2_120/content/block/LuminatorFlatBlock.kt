@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -38,7 +40,7 @@ import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.shapes.VoxelShape
@@ -142,7 +144,7 @@ class LuminatorFlatBlock : BaseEntityBlock(
             val tinCable = TinCableBlock::class.item()
             val ironCasing = IronCasing::class.instance()
             if (insulatedCopperCable != Items.AIR && tinCable != Items.AIR && ironCasing != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LuminatorFlatBlock::class.item(), 8)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, LuminatorFlatBlock::class.item(), 8)
                     .pattern("ICI")
                     .pattern("GTG")
                     .pattern("GGG")

@@ -10,7 +10,7 @@ import net.minecraft.world.level.material.FluidState
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.TagKey
 import net.minecraft.server.MinecraftServer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
@@ -32,7 +32,7 @@ object UUFluidEffectHandler {
 
     /** UU 物质流体专属 tag（both still + flowing），由 ModFluidTagProvider datagen 生成。 */
     val UU_MATTER: TagKey<net.minecraft.world.level.material.Fluid> =
-        TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("ic2_120", "uu_matter"))
+        TagKey.create(Registries.FLUID, Identifier.fromNamespaceAndPath("ic2_120", "uu_matter"))
 
     private var tickCounter = 0
 

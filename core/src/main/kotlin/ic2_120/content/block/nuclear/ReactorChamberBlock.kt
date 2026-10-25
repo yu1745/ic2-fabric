@@ -1,8 +1,10 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -27,7 +29,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -81,7 +83,7 @@ class ReactorChamberBlock(settings: BlockBehaviour.Properties = BlockBehaviour.P
             val machine = MachineCasingBlock::class.item()
             val leadPlate = ic2_120.content.item.LeadPlate::class.instance()
             if (machine != Items.AIR && leadPlate != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorChamberBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorChamberBlock::class.item(), 1)
                     .pattern("L L").pattern(" M ").pattern("L L")
                     .define('L', leadPlate).define('M', machine)
                     .unlockedBy(getHasName(leadPlate), has(leadPlate))

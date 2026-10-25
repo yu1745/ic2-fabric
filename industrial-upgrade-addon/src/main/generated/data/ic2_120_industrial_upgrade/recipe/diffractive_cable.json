@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "ic2_120_industrial_upgrade:universal_cable",
+    "B": "ic2_120:carbon_plate",
+    "C": "ic2_120:mixed_metal_ingot",
+    "D": "ic2_120:dense_obsidian_plate"
+  },
+  "pattern": [
+    "DAD",
+    "BCB",
+    "DAD"
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:diffractive_cable"
+  }
+}

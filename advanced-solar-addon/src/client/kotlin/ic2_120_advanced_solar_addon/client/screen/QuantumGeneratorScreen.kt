@@ -3,12 +3,12 @@ package ic2_120_advanced_solar_addon.client.screen
 import ic2_120_advanced_solar_addon.content.block.QuantumGeneratorBlock
 import ic2_120_advanced_solar_addon.content.screen.QuantumGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import ic2_120.client.compat.*
+import ic2_120.client.screen.LegacyContainerScreen26
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(block = QuantumGeneratorBlock::class)
@@ -16,15 +16,13 @@ class QuantumGeneratorScreen(
     handler: QuantumGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<QuantumGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<QuantumGeneratorScreenHandler>(handler, playerInventory, title, GUI_WIDTH, GUI_HEIGHT) {
     // yarn→mojmap 兼容别名
     private val x get() = leftPos
     private val y get() = topPos
     private val textRenderer get() = font
 
     init {
-        imageWidth = GUI_WIDTH
-        imageHeight = GUI_HEIGHT
         inventoryLabelY = -20000
     }
 
@@ -99,7 +97,7 @@ class QuantumGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/gui/quantumgenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/gui/quantumgenerator.png")
 
         private const val TEX_WIDTH = 256
         private const val TEX_HEIGHT = 256

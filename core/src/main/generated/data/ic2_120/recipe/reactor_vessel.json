@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "G": {
-      "item": "ic2_120:reinforced_glass"
-    },
-    "L": {
-      "tag": "ic2_120:compat/plates/lead"
-    }
+    "G": "ic2_120:reinforced_glass",
+    "L": "#ic2_120:compat/plates/lead"
   },
   "pattern": [
     "LGL",

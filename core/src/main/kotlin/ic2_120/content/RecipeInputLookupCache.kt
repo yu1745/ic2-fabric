@@ -1,5 +1,6 @@
 package ic2_120.content
 
+import ic2_120.compat.recipeManager
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.crafting.RecipeType

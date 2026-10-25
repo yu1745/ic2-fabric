@@ -17,7 +17,7 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.minecraft.data.recipes.RecipeOutput
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.Items
@@ -64,10 +64,10 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
          * @return true 如果消耗成功，false 如果能量不足
          */
         fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
-            val energy = stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY)
+            val energy = stack.orCreateNbt.getLongOr(IElectricTool.ENERGY_KEY, 0L)
             if (energy <= 0) return false
             val nbt = stack.orCreateNbt
-            var remainder = nbt.getDouble(FLIGHT_REMAINDER_KEY)
+            var remainder = nbt.getDoubleOr(FLIGHT_REMAINDER_KEY, 0.0)
             remainder += flightCostPerTick
             val toConsume = remainder.toLong()
             if (toConsume <= 0) {
@@ -108,10 +108,11 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
     override fun appendHoverText(
         stack: ItemStack,
         context: Item.TooltipContext,
-        tooltip: MutableList<Component>,
+        display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>,
         type: TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0) {

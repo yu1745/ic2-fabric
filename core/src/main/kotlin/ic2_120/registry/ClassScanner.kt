@@ -38,7 +38,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.MobCategory
 import net.minecraft.world.level.Level
 import team.reborn.energy.api.EnergyStorage
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
@@ -52,7 +52,7 @@ import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.InteractionHand
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.player.Inventory
@@ -66,7 +66,7 @@ import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.RegistryFriendlyByteBuf
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
@@ -176,13 +176,19 @@ object ClassScanner {
         group: String = "cable",
         renderLayer: String = "cutout_mipped"
     ): BaseCableBlock {
-        val id = ResourceLocation.fromNamespaceAndPath(modId, name)
+        val id = Identifier.fromNamespaceAndPath(modId, name)
         Registry.register(BuiltInRegistries.BLOCK, id, block)
         blockInstances[block::class] = block
         blockClassToName[block::class] = name
         BlockRenderLayerRegistry.put(id, renderLayer)
         // 方块物品（导线无自定义 BlockItem，直接默认）
-        val blockItem = createBlockItemForClass(block::class, block, id)
+        ItemConstructionId26.CURRENT.set(ResourceKey.create(Registries.ITEM, id))
+        val blockItem = try {
+            createBlockItemForClass(block::class, block, id)
+        } finally {
+            ItemConstructionId26.CURRENT.remove()
+        }
+        blockItem.registerBlocks(Item.BY_BLOCK, blockItem)
         Registry.register(BuiltInRegistries.ITEM, id, blockItem)
         registerItemEnergyStorage(blockItem)
         if (tab != CreativeTab.MINECRAFT_MISC) {
@@ -446,7 +452,7 @@ object ClassScanner {
             val jClass = Class.forName(className, false, loader)
             val kotlinClazz = jClass.kotlin
             val single = kotlinClazz.findAnnotation<ModMachineRecipe>() ?: return
-            if (!kotlinClazz.isSubclassOf(RecipeSerializer::class)) {
+            if (!kotlinClazz.isSubclassOf(ic2_120.content.recipes.RecipeSerializerHolder26::class)) {
                 logger.warn("@ModMachineRecipe 仅适用于 RecipeSerializer: {}", className)
                 return
             }
@@ -458,7 +464,7 @@ object ClassScanner {
                 return
             }
             @Suppress("UNCHECKED_CAST")
-            val serClass = kotlinClazz as KClass<out RecipeSerializer<*>>
+            val serClass = kotlinClazz as KClass<out ic2_120.content.recipes.RecipeSerializerHolder26<*>>
             into.add(MachineRecipeScanEntry(single.id, single.recipeClass, serClass))
         } catch (e: ClassNotFoundException) {
             logger.warn("无法加载类: {}", className)
@@ -472,8 +478,8 @@ object ClassScanner {
     /**
      * 收集 [ModMachineRecipeBinding]，建立 BlockEntity 类 → 序列化器类（用于 [ic2_120.content.recipes.ModMachineRecipes.getRecipeType]）。
      */
-    fun collectMachineRecipeBindings(): List<Pair<KClass<*>, KClass<out RecipeSerializer<*>>>> {
-        val out = mutableListOf<Pair<KClass<*>, KClass<out RecipeSerializer<*>>>>()
+    fun collectMachineRecipeBindings(): List<Pair<KClass<*>, KClass<out ic2_120.content.recipes.RecipeSerializerHolder26<*>>>> {
+        val out = mutableListOf<Pair<KClass<*>, KClass<out ic2_120.content.recipes.RecipeSerializerHolder26<*>>>>()
         for (pkg in machineRecipeBindingScanPackages) {
             forEachClassInPackage(pkg) { className ->
                 collectMachineRecipeBindingFromClass(className, out)
@@ -485,10 +491,10 @@ object ClassScanner {
 
     private fun collectMachineRecipeBindingFromClass(
         className: String,
-        into: MutableList<Pair<KClass<*>, KClass<out RecipeSerializer<*>>>>
+        into: MutableList<Pair<KClass<*>, KClass<out ic2_120.content.recipes.RecipeSerializerHolder26<*>>>>
     ) {
         try {
-            val clazz = Class.forName(className).kotlin
+            val clazz = Class.forName(className, false, Thread.currentThread().contextClassLoader).kotlin
             val ann = clazz.findAnnotation<ModMachineRecipeBinding>() ?: return
             if (!clazz.isSubclassOf(BlockEntity::class)) {
                 logger.warn("@ModMachineRecipeBinding 仅适用于 BlockEntity 子类: {}", className)
@@ -518,7 +524,7 @@ object ClassScanner {
             if (!processedClassNames.add(className)) {
                 return
             }
-            val clazz = Class.forName(className).kotlin
+            val clazz = Class.forName(className, false, Thread.currentThread().contextClassLoader).kotlin
             val modCreativeTab = clazz.findAnnotation<ModCreativeTab>()
             val modBlock = clazz.findAnnotation<ModBlock>()
             val modBlockEntity = clazz.findAnnotation<ModBlockEntity>()
@@ -598,7 +604,7 @@ object ClassScanner {
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = ResourceLocation.fromNamespaceAndPath(modId, name)
+                val id = Identifier.fromNamespaceAndPath(modId, name)
 
                 // 创建 ResourceKey
                 val tabKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, id)
@@ -625,14 +631,14 @@ object ClassScanner {
                     }
                     annotation.iconItem.isNotEmpty() -> {
                         // 使用已注册的物品作为图标
-                        val iconId = ResourceLocation.fromNamespaceAndPath(modId, annotation.iconItem)
-                        iconStackSupplier = { ItemStack(BuiltInRegistries.ITEM.get(iconId)) }
+                        val iconId = Identifier.fromNamespaceAndPath(modId, annotation.iconItem)
+                        iconStackSupplier = { ItemStack(BuiltInRegistries.ITEM.getValue(iconId)) }
                     }
                     else -> {
                         // 默认使用第一个物品
                         val firstEntry = entries.firstOrNull()
                         iconStackSupplier = if (firstEntry != null) {
-                            { ItemStack(BuiltInRegistries.ITEM.get(firstEntry.itemId)) }
+                            { ItemStack(BuiltInRegistries.ITEM.getValue(firstEntry.itemId)) }
                         } else {
                             { ItemStack(net.minecraft.world.item.Items.BARRIER) }
                         }
@@ -640,7 +646,7 @@ object ClassScanner {
                 }
 
                 // 创建物品栏，使用 entries() 方法添加物品
-                val itemGroup = FabricItemGroup.builder()
+                val itemGroup = FabricCreativeModeTab.builder()
                     .icon(iconStackSupplier)
                     .title(Component.translatable("itemGroup.$modId.$name"))
                     .displayItems { _, collector ->
@@ -651,7 +657,7 @@ object ClassScanner {
                             .sortedWith(compareBy({ it.group }, { it.itemId.toString() }))
                         // 添加所有属于这个物品栏的物品（已按 group 排序）
                         for (entry in liveEntries) {
-                            val item = BuiltInRegistries.ITEM.get(entry.itemId)
+                            val item = BuiltInRegistries.ITEM.getValue(entry.itemId)
                             if (item !== net.minecraft.world.item.Items.AIR) {
                                 // 检查物品是否实现了 IBatteryItem 或 IElectricTool 接口
                                 // 如果实现了，添加空电和满电两个版本
@@ -745,12 +751,12 @@ object ClassScanner {
                         name
                     }
 
-                    val id = ResourceLocation.fromNamespaceAndPath(modId, finalName)
+                    val id = Identifier.fromNamespaceAndPath(modId, finalName)
 
-                    // 1.21.1 fabric：ExtendedScreenHandlerType 带 D 数据类型 + StreamCodec。
+                    // 1.21.1 fabric：ExtendedMenuType 带 D 数据类型 + StreamCodec。
                     // D 用 FriendlyByteBuf（内容按 length-prefixed 字节转发），保持
                     // getScreenOpeningData(...): FriendlyByteBuf 与 fromBuffer(syncId, inv, buf) 旧签名不变。
-                    val type = ExtendedScreenHandlerType<AbstractContainerMenu, FriendlyByteBuf>(
+                    val type = ExtendedMenuType<AbstractContainerMenu, FriendlyByteBuf>(
                         { syncId, playerInventory, data ->
                             createFromBuffer(syncId, playerInventory, data)
                         },
@@ -888,7 +894,7 @@ object ClassScanner {
         for ((clazz, annotation) in blockEntityClasses) {
             try {
                 val name = resolveNameFromBlockOrAnnotation(annotation.name, annotation.block, clazz.simpleName ?: "unknown")
-                val id = ResourceLocation.fromNamespaceAndPath(modId, name)
+                val id = Identifier.fromNamespaceAndPath(modId, name)
                 val targetBlocks = resolveBlockEntityTargets(modId, clazz, annotation, id)
                 if (targetBlocks.isEmpty()) {
                     logger.error("注册方块实体类型 {} 失败: 未解析到任何目标方块", clazz.simpleName)
@@ -1004,7 +1010,7 @@ object ClassScanner {
         modId: String,
         clazz: kotlin.reflect.KClass<*>,
         annotation: ModBlockEntity,
-        id: ResourceLocation
+        id: Identifier
     ): List<Block> {
         if (annotation.blocks.isNotEmpty()) {
             val resolved = annotation.blocks.mapNotNull { blockClass ->
@@ -1021,8 +1027,8 @@ object ClassScanner {
                     )
                     return@mapNotNull null
                 }
-                val blockId = ResourceLocation.fromNamespaceAndPath(modId, blockName)
-                val block = BuiltInRegistries.BLOCK.get(blockId)
+                val blockId = Identifier.fromNamespaceAndPath(modId, blockName)
+                val block = BuiltInRegistries.BLOCK.getValue(blockId)
                 if (block == net.minecraft.world.level.block.Blocks.AIR && blockId.path != "air") {
                     logger.warn("方块实体 {} 对应的方块未找到: {}，请确保方块先于方块实体注册", clazz.simpleName, blockId)
                     return@mapNotNull null
@@ -1035,7 +1041,7 @@ object ClassScanner {
             return resolved
         }
 
-        val block = BuiltInRegistries.BLOCK.get(id)
+        val block = BuiltInRegistries.BLOCK.getValue(id)
         if (block == net.minecraft.world.level.block.Blocks.AIR && id.path != "air") {
             logger.warn("方块实体 {} 对应的方块未找到: {}，请确保方块先于方块实体注册", clazz.simpleName, id)
         }
@@ -1045,14 +1051,18 @@ object ClassScanner {
     private fun registerBlocks(modId: String, blockClasses: List<BlockClassInfo>) {
         for ((clazz, annotation) in blockClasses) {
             try {
-                val instance = clazz.createInstance() as Block
-
                 val name = if (annotation.name.isNotEmpty()) {
                     annotation.name
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = ResourceLocation.fromNamespaceAndPath(modId, name)
+                val id = Identifier.fromNamespaceAndPath(modId, name)
+                BlockConstructionId26.CURRENT.set(ResourceKey.create(Registries.BLOCK, id))
+                val instance = try {
+                    clazz.createInstance() as Block
+                } finally {
+                    BlockConstructionId26.CURRENT.remove()
+                }
 
                 // 注册方块
                 Registry.register(BuiltInRegistries.BLOCK, id, instance)
@@ -1069,7 +1079,13 @@ object ClassScanner {
 
                 // 注册方块物品
                 if (annotation.registerItem) {
-                   val blockItem = createBlockItemForClass(clazz, instance, id)
+                   ItemConstructionId26.CURRENT.set(ResourceKey.create(Registries.ITEM, id))
+                   val blockItem = try {
+                       createBlockItemForClass(clazz, instance, id)
+                   } finally {
+                       ItemConstructionId26.CURRENT.remove()
+                   }
+                   blockItem.registerBlocks(Item.BY_BLOCK, blockItem)
                    Registry.register(BuiltInRegistries.ITEM, id, blockItem)
                    registerItemEnergyStorage(blockItem)
                    logger.debug("已注册方块物品: {}", id)
@@ -1093,7 +1109,7 @@ object ClassScanner {
     private fun createBlockItemForClass(
         blockClass: KClass<*>,
         block: Block,
-        id: ResourceLocation
+        id: Identifier
     ): BlockItem {
         var current: KClass<*>? = blockClass
         while (current != null && current != Any::class) {
@@ -1126,14 +1142,18 @@ object ClassScanner {
     private fun registerItems(modId: String, itemClasses: List<ItemClassInfo>) {
         for ((clazz, annotation) in itemClasses) {
             try {
-                val instance = clazz.createInstance() as Item
-
                 val name = if (annotation.name.isNotEmpty()) {
                     annotation.name
                 } else {
                     camelToSnake(clazz.simpleName ?: "unknown")
                 }
-                val id = ResourceLocation.fromNamespaceAndPath(modId, name)
+                val id = Identifier.fromNamespaceAndPath(modId, name)
+                ItemConstructionId26.CURRENT.set(ResourceKey.create(Registries.ITEM, id))
+                val instance = try {
+                    clazz.createInstance() as Item
+                } finally {
+                    ItemConstructionId26.CURRENT.remove()
+                }
 
                 // 注册物品
                Registry.register(BuiltInRegistries.ITEM, id, instance)
@@ -1267,7 +1287,7 @@ object ClassScanner {
     }
 
     private fun parseItemGroupKey(modId: String, tab: CreativeTab): ResourceKey<CreativeModeTab> {
-        val id = ResourceLocation.parse(tab.getNamespacedId(modId))
+        val id = Identifier.parse(tab.getNamespacedId(modId))
         return ResourceKey.create(Registries.CREATIVE_MODE_TAB, id)
     }
 
@@ -1275,7 +1295,7 @@ object ClassScanner {
      * 物品栏条目，包含物品ID、分组信息和类类型
      */
     private data class TabEntry(
-        val itemId: ResourceLocation,
+        val itemId: Identifier,
         val group: String,
         val itemClass: kotlin.reflect.KClass<*>? = null
     )
@@ -1368,6 +1388,7 @@ object ClassScanner {
             }
         }
         logger.info("配方生成完成 - 成功: {}, 失败: {}, 总计: {}", successCount, failCount, recipeGenerators.size)
+        check(failCount == 0) { "配方生成失败 $failCount 条（总计 ${recipeGenerators.size}）" }
     }
 
     /**
@@ -1389,6 +1410,7 @@ object ClassScanner {
             }
         }
         logger.info("{} 配方生成完成 - 成功: {}, 失败: {}, 总计: {}", modId, successCount, failCount, filtered.size)
+        check(failCount == 0) { "$modId 配方生成失败 $failCount 条（总计 ${filtered.size}）" }
     }
 
 
@@ -1441,7 +1463,7 @@ object ClassScanner {
     private fun <T : BlockEntity> resolveBlockEntityTypeFromRegistry(clazz: kotlin.reflect.KClass<T>): BlockEntityType<T>? {
         val annotation = clazz.findAnnotation<ModBlockEntity>() ?: return null
         val name = resolveNameFromBlockOrAnnotation(annotation.name, annotation.block, clazz.simpleName ?: "unknown")
-        val id = ResourceLocation.fromNamespaceAndPath(currentModId, name)
+        val id = Identifier.fromNamespaceAndPath(currentModId, name)
         val type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getOptional(id).orElse(null) ?: return null
         blockEntityTypes[clazz] = type
         return type as? BlockEntityType<T>
@@ -1478,7 +1500,7 @@ object ClassScanner {
             try {
                 val instance = clazz.createInstance() as MobEffect
                 val ns = if (annotation.namespace.isNotEmpty()) annotation.namespace else modId
-                val id = ResourceLocation.fromNamespaceAndPath(ns, annotation.name)
+                val id = Identifier.fromNamespaceAndPath(ns, annotation.name)
                 Registry.register(BuiltInRegistries.MOB_EFFECT, id, instance)
                 logger.debug("已注册效果: {}", id)
             } catch (e: Exception) {
@@ -1521,8 +1543,10 @@ object ClassScanner {
                     builder.updateInterval(annotation.trackingTickInterval)
                 }
 
-                val type = builder.build(annotation.dataFixerType) as EntityType<Entity>
-                Registry.register(BuiltInRegistries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(modId, annotation.name), type)
+                val entityId = Identifier.fromNamespaceAndPath(modId, annotation.name)
+                val entityKey = ResourceKey.create(Registries.ENTITY_TYPE, entityId)
+                val type = builder.build(entityKey) as EntityType<Entity>
+                Registry.register(BuiltInRegistries.ENTITY_TYPE, entityId, type)
                 logger.debug("已注册实体: {}:{}", modId, annotation.name)
             } catch (e: Exception) {
                 logger.error("注册实体 {} 失败: {}", clazz.simpleName, e.message, e)

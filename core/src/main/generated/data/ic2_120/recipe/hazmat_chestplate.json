@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "D": {
-      "item": "minecraft:orange_dye"
-    },
-    "R": {
-      "tag": "ic2_120:compat/rubber"
-    }
+    "D": "minecraft:orange_dye",
+    "R": "#ic2_120:compat/rubber"
   },
   "pattern": [
     "R R",
@@ -15,7 +11,6 @@
     "RDR"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:hazmat_chestplate"
   }
 }

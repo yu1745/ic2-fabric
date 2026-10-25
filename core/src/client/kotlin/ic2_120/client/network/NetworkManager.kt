@@ -18,7 +18,7 @@ import ic2_120.client.screen.ScannerScreen
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.minecraft.client.Minecraft
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 private val minecraft = net.minecraft.client.Minecraft.getInstance()
 
 object NetworkManager {

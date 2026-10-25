@@ -6,23 +6,21 @@ import ic2_120.content.block.FluidHeatExchangerBlock
 import ic2_120.content.screen.FluidHeatExchangerScreenHandler
 import ic2_120.content.sync.FluidHeatExchangerSync
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.network.chat.Component as McText
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = FluidHeatExchangerBlock::class)
 class FluidHeatExchangerScreen(
     val handler: FluidHeatExchangerScreenHandler, playerInventory: Inventory, title: McText
-) : AbstractContainerScreen<FluidHeatExchangerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<FluidHeatExchangerScreenHandler>(handler, playerInventory, title, 179, 204) {
 
     init {
-        imageWidth = 179
-        imageHeight = 204
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -150,8 +148,8 @@ class FluidHeatExchangerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guifluidheatexchanger.png")
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guifluidheatexchanger.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val TANK_DROPLETS = (FluidConstants.BUCKET * FluidHeatExchangerSync.TANK_CAPACITY_BUCKETS).toInt()

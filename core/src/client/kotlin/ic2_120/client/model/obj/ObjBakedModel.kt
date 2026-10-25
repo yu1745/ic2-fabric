@@ -1,144 +1,63 @@
 package ic2_120.client.model.obj
 
-import net.fabricmc.fabric.api.renderer.v1.RendererAccess
-import net.fabricmc.fabric.api.renderer.v1.mesh.Mesh
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel
-import net.fabricmc.fabric.api.renderer.v1.model.ModelHelper
-import net.fabricmc.fabric.api.renderer.v1.render.RenderContext
-import net.fabricmc.fabric.api.util.TriState
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.client.renderer.LightTexture
-import net.minecraft.client.resources.model.BakedModel
-import net.minecraft.client.renderer.block.model.BakedQuad
+import com.mojang.blaze3d.platform.Transparency
+import net.minecraft.client.model.geom.builders.UVPair
+import net.minecraft.client.renderer.block.dispatch.ModelState
 import net.minecraft.client.resources.model.ModelBaker
-import net.minecraft.client.resources.model.ModelState
+import net.minecraft.client.resources.model.ModelDebugName
 import net.minecraft.client.resources.model.UnbakedModel
-import net.minecraft.client.renderer.block.model.BlockModel
-import net.minecraft.client.renderer.block.model.ItemOverrides
-import net.minecraft.client.renderer.block.model.ItemTransforms
-import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite
-import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.client.resources.model.Material
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.inventory.InventoryMenu
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.core.BlockPos
+import net.minecraft.client.resources.model.geometry.BakedQuad
+import net.minecraft.client.resources.model.geometry.QuadCollection
+import net.minecraft.client.resources.model.geometry.UnbakedGeometry
+import net.minecraft.client.resources.model.sprite.Material
+import net.minecraft.client.resources.model.sprite.TextureSlots
 import net.minecraft.core.Direction
-import net.minecraft.util.RandomSource
-import net.minecraft.world.level.BlockAndTintGetter
+import net.minecraft.resources.Identifier
 import org.joml.Vector3f
-import org.joml.Vector4f
-import java.util.function.Function
-import java.util.function.Supplier
 
+/** OBJ geometry for the 26.2 model pipeline. The vanilla baker now consumes quad records. */
 class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
+    override fun parent(): Identifier? = spec.parent
 
-    private var transformation: ItemTransforms = ItemTransforms.NO_TRANSFORMS
-
-    // 物品 overrides（电量档位、开关状态等）：借原版反序列化器解析，烘焙时交给 ItemOverrides
-    private val overrideHolder: BlockModel? = spec.json.getAsJsonArray("overrides")?.let {
-        BlockModel.fromString("{\"overrides\":$it}")
+    override fun textureSlots(): TextureSlots.Data {
+        val slots = TextureSlots.Data.Builder()
+        for ((slot, id) in spec.textures) slots.addTexture(slot, Material(id))
+        return slots.build()
     }
 
-    override fun getDependencies(): Collection<ResourceLocation> =
-        listOfNotNull(spec.parent) + (overrideHolder?.overrides?.map { it.model } ?: emptyList())
-
-    override fun resolveParents(modelLoader: Function<ResourceLocation, UnbakedModel>) {
-        val parent = spec.parent?.let(modelLoader::apply) as? BlockModel ?: return
-        parent.resolveParents(modelLoader)
-        transformation = parent.transforms
-    }
-
-    override fun bake(
-        baker: ModelBaker,
-        textureGetter: Function<Material, TextureAtlasSprite>,
-        rotationContainer: ModelState,
-    ): BakedModel {
-        val atlas = InventoryMenu.BLOCK_ATLAS
-        val sprite = { slot: String ->
-            spec.textures[slot]?.let { textureGetter.apply(Material(atlas, it)) }
-                ?: textureGetter.apply(Material(atlas, MissingTextureAtlasSprite.getLocation()))
-        }
-        val renderer = RendererAccess.INSTANCE.renderer
-            ?: error("ic2_120 OBJ 模型需要 Fabric Renderer API（Indigo 或 Indium）")
-        val standard = renderer.materialFinder().find()
-        val glow = renderer.materialFinder().emissive(true).disableDiffuse(true)
-            .ambientOcclusion(TriState.FALSE).find()
-
-        // blockstate 的 x/y 旋转：绕方块中心变换顶点与法线
-        val matrix = rotationContainer.rotation.matrix
-        val tmp = Vector4f()
-        fun rotatePos(p: Vector3f): Vector3f {
-            tmp.set(p.x - 0.5f, p.y - 0.5f, p.z - 0.5f, 1f).mul(matrix)
-            return Vector3f(tmp.x + 0.5f, tmp.y + 0.5f, tmp.z + 0.5f)
-        }
-        fun rotateDir(n: Vector3f): Vector3f {
-            tmp.set(n.x, n.y, n.z, 0f).mul(matrix)
-            return Vector3f(tmp.x, tmp.y, tmp.z).normalize()
-        }
-
-        val builder = renderer.meshBuilder()
-        val emitter = builder.emitter
-        val sprites = HashMap<String, TextureAtlasSprite>()
-        for (tri in spec.geometry.triangles) {
-            val mat = spec.geometry.materials[tri.material]
-            val sp = sprites.getOrPut(mat?.texture ?: "missing") { sprite(mat?.texture ?: "missing") }
-            val pos = Array(3) { rotatePos(tri.pos[it]) }
-            val faceNormal = Vector3f(pos[1]).sub(pos[0]).cross(Vector3f(pos[2]).sub(pos[0])).normalize()
-            for (i in 0..3) {
-                val k = minOf(i, 2)
-                val uv = tri.uv[k]
-                val v = if (spec.flipV) 1f - uv.y else uv.y
-                emitter.pos(i, pos[k])
-                emitter.uv(i, sp.getU(uv.x * 16.0f), sp.getV(v * 16.0f))
-                val n = tri.normal?.let { rotateDir(it[k]) } ?: faceNormal
-                emitter.normal(i, n)
-                emitter.color(i, mat?.color ?: -1)
-                if (mat?.emissive == true) emitter.lightmap(i, LightTexture.FULL_BRIGHT)
-            }
-            emitter.colorIndex(mat?.tintIndex ?: -1)
-            emitter.nominalFace(Direction.getNearest(faceNormal.x.toDouble(), faceNormal.y.toDouble(), faceNormal.z.toDouble()))
-            emitter.material(if (mat?.emissive == true) glow else standard)
-            emitter.emit()
-        }
-        val particle = sprite("particle")
-        val overrides = overrideHolder?.let { ItemOverrides(baker, it, it.overrides) } ?: ItemOverrides.EMPTY
-        return ObjBakedModel(builder.build(), particle, transformation, overrides)
-    }
+    override fun geometry(): UnbakedGeometry = ObjGeometryBaker(spec)
 }
 
-@Suppress("OVERRIDE_DEPRECATION")
-class ObjBakedModel(
-    private val mesh: Mesh,
-    private val particle: TextureAtlasSprite,
-    private val transformation: ItemTransforms,
-    private val overrides: ItemOverrides,
-) : BakedModel, FabricBakedModel {
-
-    // 供原版路径（方块实体渲染器里的 BlockModelRenderer、物品渲染回退）使用
-    private val quadLists: Array<List<BakedQuad>> by lazy { ModelHelper.toQuadLists(mesh) }
-
-    override fun isVanillaAdapter() = false
-
-    override fun emitBlockQuads(
-        blockView: BlockAndTintGetter,
-        state: BlockState,
-        pos: BlockPos,
-        randomSupplier: Supplier<RandomSource>,
-        context: RenderContext,
-    ) = mesh.outputTo(context.emitter)
-
-    override fun emitItemQuads(stack: ItemStack, randomSupplier: Supplier<RandomSource>, context: RenderContext) =
-        mesh.outputTo(context.emitter)
-
-    override fun getQuads(state: BlockState?, face: Direction?, random: RandomSource): List<BakedQuad> =
-        quadLists[ModelHelper.toFaceIndex(face)]
-
-    override fun useAmbientOcclusion() = true
-    override fun isGui3d() = true
-    override fun usesBlockLight() = true
-    override fun isCustomRenderer() = false
-    override fun getParticleIcon() = particle
-    override fun getTransforms() = transformation
-    override fun getOverrides(): ItemOverrides = overrides
+private class ObjGeometryBaker(private val spec: ObjModelSpec) : UnbakedGeometry {
+    override fun bake(slots: TextureSlots, baker: ModelBaker, state: ModelState, name: ModelDebugName): QuadCollection {
+        val out = QuadCollection.Builder()
+        val transform = state.transformation().matrix
+        for (tri in spec.geometry.triangles) {
+            val material = spec.geometry.materials[tri.material]
+            val slot = material?.texture ?: "particle"
+            val baked = baker.materials().resolveSlot(slots, slot, name)
+            val sprite = baked.sprite()
+            val positions = Array(4) { index ->
+                val point = Vector3f(tri.pos[minOf(index, 2)]).sub(0.5f, 0.5f, 0.5f)
+                transform.transformPosition(point).add(0.5f, 0.5f, 0.5f)
+            }
+            val n = Vector3f(positions[1]).sub(positions[0])
+                .cross(Vector3f(positions[2]).sub(positions[0])).normalize()
+            val facing = Direction.getApproximateNearest(n.x, n.y, n.z)
+            val uv = LongArray(4) { index ->
+                val raw = tri.uv[minOf(index, 2)]
+                UVPair.pack(sprite.getU(raw.x), sprite.getV(if (spec.flipV) 1f - raw.y else raw.y))
+            }
+            val transparency = if (baked.forceTranslucent()) Transparency.TRANSLUCENT
+                else sprite.contents().computeTransparency(0f, 0f, 1f, 1f)
+            val info = baker.interner().materialInfo(
+                BakedQuad.MaterialInfo.of(baked, transparency, material?.tintIndex ?: -1, true, if (material?.emissive == true) 15 else 0)
+            )
+            out.addUnculledFace(BakedQuad(
+                positions[0], positions[1], positions[2], positions[3],
+                uv[0], uv[1], uv[2], uv[3], facing, info
+            ))
+        }
+        return out.build()
+    }
 }

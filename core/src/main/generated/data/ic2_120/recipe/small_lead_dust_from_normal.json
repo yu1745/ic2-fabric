@@ -1,10 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
-  "category": "misc",
   "ingredients": [
-    {
-      "tag": "ic2_120:compat/dusts/lead"
-    }
+    "#ic2_120:compat/dusts/lead"
   ],
   "result": {
     "count": 9,

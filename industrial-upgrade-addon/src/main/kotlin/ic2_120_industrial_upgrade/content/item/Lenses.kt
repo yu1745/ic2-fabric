@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120.content.block.ReinforcedGlassBlock
@@ -15,7 +17,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 /**
  * 透镜系物品（对应 1.4.0 CraftingThings.sunlinse/nightlinse/rainlinse）。
@@ -31,7 +33,7 @@ class SunLinse : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 十字：强化玻璃聚萤石之光
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SunLinse::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SunLinse::class.instance(), 1)
                 .pattern(" G ")
                 .pattern("GSG")
                 .pattern(" G ")
@@ -51,7 +53,7 @@ class NightLinse : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 十字：强化玻璃聚煤之暗
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NightLinse::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, NightLinse::class.instance(), 1)
                 .pattern(" C ")
                 .pattern("CSC")
                 .pattern(" C ")
@@ -71,7 +73,7 @@ class RainLinse : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 原版配方：2×日光镜 + 1×夜光镜
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RainLinse::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, RainLinse::class.instance(), 1)
                 .pattern("USU")
                 .define('U', SunLinse::class.instance())
                 .define('S', NightLinse::class.instance())

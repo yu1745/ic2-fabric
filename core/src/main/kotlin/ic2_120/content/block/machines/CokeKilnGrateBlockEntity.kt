@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 import ic2_120.content.block.CokeKilnGrateBlock
 import ic2_120.content.fluid.ModFluids
@@ -27,7 +29,7 @@ class CokeKilnGrateBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state) {
+) : LegacyBlockEntity26(type, pos, state) {
 
     companion object {
         const val TANK_CAPACITY = FluidConstants.BUCKET * 8
@@ -115,10 +117,10 @@ class CokeKilnGrateBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        val tankNbt = nbt.getCompound(NBT_TANK)
+        val tankNbt = nbt.getCompoundOrEmpty(NBT_TANK)
         if (!tankNbt.isEmpty) {
-            creosoteTank.variant = FluidVariant.CODEC.parse(NbtOps.INSTANCE, tankNbt.getCompound("Variant")).result().orElse(FluidVariant.blank())
-            creosoteTank.amount = tankNbt.getLong("Amount").coerceIn(0L, TANK_CAPACITY)
+            creosoteTank.variant = FluidVariant.CODEC.parse(NbtOps.INSTANCE, tankNbt.getCompoundOrEmpty("Variant")).result().orElse(FluidVariant.blank())
+            creosoteTank.amount = tankNbt.getLongOr("Amount", 0L).coerceIn(0L, TANK_CAPACITY)
         }
     }
 }

@@ -1,8 +1,8 @@
 package ic2_120.content.item.armor
 
 import ic2_120.content.item.ModArmorMaterials
-import net.minecraft.world.item.ArmorItem
-import net.minecraft.world.item.ArmorMaterial
+import ic2_120.compat.ArmorItem
+import net.minecraft.world.item.equipment.ArmorMaterial
 import net.minecraft.world.item.Item
 import net.minecraft.core.Holder
 

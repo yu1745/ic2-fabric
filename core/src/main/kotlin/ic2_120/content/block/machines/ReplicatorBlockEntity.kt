@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -46,7 +48,7 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -69,7 +71,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -83,7 +85,7 @@ class ReplicatorBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
-    IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty = ReplicatorBlock.ACTIVE
     override val tier: Int = ReplicatorSync.REPLICATOR_TIER
@@ -257,7 +259,7 @@ class ReplicatorBlockEntity(
     private fun replicatorIsDrainableUuContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = BuiltInRegistries.ITEM.getKey(stack.item)
-        val fluidCellId = ResourceLocation.fromNamespaceAndPath("ic2_120", "fluid_cell")
+        val fluidCellId = Identifier.fromNamespaceAndPath("ic2_120", "fluid_cell")
         return itemId.path == "uu_matter_bucket" ||
             itemId.path == "uu_matter_cell" ||
             (itemId == fluidCellId &&
@@ -282,7 +284,7 @@ class ReplicatorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.replicator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         ReplicatorScreenHandler(
             syncId,
             playerInventory,
@@ -295,20 +297,20 @@ class ReplicatorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.restoreEnergy(nbt.getLong(ReplicatorSync.NBT_ENERGY_STORED))
+        sync.restoreEnergy(nbt.getLongOr(ReplicatorSync.NBT_ENERGY_STORED, 0L))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.progressUb = nbt.getInt(NBT_PROGRESS_UB).coerceAtLeast(0)
-        singlePulseConsumed = nbt.getBoolean(NBT_SINGLE_PULSE_CONSUMED)
-        fluidConsumptionRemainder = nbt.getLong(NBT_FLUID_REMAINDER).coerceAtLeast(0L)
-        tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
-        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
+        sync.progressUb = nbt.getIntOr(NBT_PROGRESS_UB, 0).coerceAtLeast(0)
+        singlePulseConsumed = nbt.getBooleanOr(NBT_SINGLE_PULSE_CONSUMED, false)
+        fluidConsumptionRemainder = nbt.getLongOr(NBT_FLUID_REMAINDER, 0L).coerceAtLeast(0L)
+        tankInternal.setStoredAmount(nbt.getLongOr(NBT_TANK_AMOUNT, 0L))
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBooleanOr("RedstoneInverted", false) else false
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(ReplicatorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
@@ -540,8 +542,8 @@ class ReplicatorBlockEntity(
         }
         cachedOutputItemId = itemId
         cachedOutputStack = ItemStack.EMPTY
-        val id = net.minecraft.resources.ResourceLocation.tryParse(itemId) ?: return null
-        val item = BuiltInRegistries.ITEM.get(id) ?: return null
+        val id = net.minecraft.resources.Identifier.tryParse(itemId) ?: return null
+        val item = BuiltInRegistries.ITEM.getValue(id) ?: return null
         cachedOutputStack = if (item == net.minecraft.world.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
         return cachedOutputStack.takeUnless { it.isEmpty }
     }

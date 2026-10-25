@@ -28,7 +28,7 @@ class RubberTreeFoliagePlacer(
     override fun type(): FoliagePlacerType<*> = ModWorldgen.RUBBER_TREE_FOLIAGE_PLACER_TYPE
 
     override fun createFoliage(
-        world: LevelSimulatedReader,
+        world: net.minecraft.world.level.WorldGenLevel,
         placer: FoliagePlacer.FoliageSetter,
         random: RandomSource,
         config: TreeConfiguration,
@@ -79,7 +79,7 @@ class RubberTreeFoliagePlacer(
             val centerPos = BlockPos(center.x, y, center.z)
             if (!placer.isSet(centerPos) && TreeFeature.validTreePos(world, centerPos)) {
                 forced++
-                placer.set(centerPos, config.foliageProvider.getState(random, centerPos))
+                placer.set(centerPos, config.foliageProvider.getState(world, random, centerPos))
             }
         }
 

@@ -5,22 +5,20 @@ import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.screen.KineticGeneratorScreenHandler
 import ic2_120.content.sync.KineticGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = KineticGeneratorBlock::class)
 class KineticGeneratorScreen(
     val handler: KineticGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<KineticGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<KineticGeneratorScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -82,6 +80,6 @@ class KineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guielectrickineticgenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guielectrickineticgenerator.png")
     }
 }

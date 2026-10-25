@@ -29,7 +29,7 @@ allprojects {
 }
 
 subprojects {
-	apply plugin: 'net.fabricmc.fabric-loom-remap'
+	apply plugin: 'net.fabricmc.fabric-loom'
 	apply plugin: 'maven-publish'
 	apply plugin: 'org.jetbrains.kotlin.jvm'
 
@@ -43,34 +43,33 @@ subprojects {
 
 	dependencies {
 		minecraft "com.mojang:minecraft:${project.minecraft_version}"
-		mappings loom.officialMojangMappings()
-		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-		modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
-		modImplementation "teamreborn:energy:${project.energy_api_version}"
+		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+		implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+		implementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+		implementation "teamreborn:energy:${project.energy_api_version}"
 		implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
 		implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
 		implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
 		implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.jackson_version}")
 		// Fabric Guidebook is kept out of 1.21.1 runtime until the addon is ported.
-		modCompileOnly("maven.modrinth:jade:${project.jade_version}")
+		compileOnly("maven.modrinth:jade:${project.jade_version}")
 	}
 
 	tasks.withType(JavaCompile).configureEach {
-		it.options.release = 21
+		it.options.release = 25
 	}
 
 	tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 		kotlinOptions {
-			jvmTarget = 21
+			jvmTarget = 25
 			freeCompilerArgs += ["-Xemit-jvm-type-annotations"]
 		}
 	}
 
 	java {
 		withSourcesJar()
-		sourceCompatibility = JavaVersion.VERSION_21
-		targetCompatibility = JavaVersion.VERSION_21
+		sourceCompatibility = JavaVersion.VERSION_25
+		targetCompatibility = JavaVersion.VERSION_25
 	}
 
 	jar {

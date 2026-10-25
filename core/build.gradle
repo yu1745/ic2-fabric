@@ -57,22 +57,19 @@ dependencies {
 	// Keep guidebook resources in assets, but do not load/include the mod on 1.21.1 until it is ported.
 	include implementation("org.yaml:snakeyaml:1.33")
 
-	include modImplementation("teamreborn:energy:${project.energy_api_version}") {
+	include implementation("teamreborn:energy:${project.energy_api_version}") {
 		exclude group: "net.fabricmc"
 		exclude group: "net.fabricmc.fabric-api"
 	}
 
-	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
-	modCompileOnlyApi("maven.modrinth:jade:${project.jade_version}")
+	compileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api:${project.jei_version}")
+	compileOnlyApi("maven.modrinth:jade:${project.jade_version}")
 
-	modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }
-	modCompileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
-	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
-	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
+	compileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
 
 	// ModMenu + Cloth Config: GUI 配置编辑（软依赖，需要同时安装）
-	modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}")
-	modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
+	compileOnly("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}")
+	compileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
 
 	include implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
 	include implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")

@@ -1,0 +1,124 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "ic2_120:painter_color",
+    "entries": [
+      {
+        "threshold": 0.0625,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/white_painter"
+        }
+      },
+      {
+        "threshold": 0.125,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/orange_painter"
+        }
+      },
+      {
+        "threshold": 0.1875,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/magenta_painter"
+        }
+      },
+      {
+        "threshold": 0.25,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/light_blue_painter"
+        }
+      },
+      {
+        "threshold": 0.3125,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/yellow_painter"
+        }
+      },
+      {
+        "threshold": 0.375,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/lime_painter"
+        }
+      },
+      {
+        "threshold": 0.4375,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/pink_painter"
+        }
+      },
+      {
+        "threshold": 0.5,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/gray_painter"
+        }
+      },
+      {
+        "threshold": 0.5625,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/light_gray_painter"
+        }
+      },
+      {
+        "threshold": 0.625,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/cyan_painter"
+        }
+      },
+      {
+        "threshold": 0.6875,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/purple_painter"
+        }
+      },
+      {
+        "threshold": 0.75,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/blue_painter"
+        }
+      },
+      {
+        "threshold": 0.8125,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/brown_painter"
+        }
+      },
+      {
+        "threshold": 0.875,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/green_painter"
+        }
+      },
+      {
+        "threshold": 0.9375,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/red_painter"
+        }
+      },
+      {
+        "threshold": 1.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "ic2_120:item/black_painter"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "ic2_120:item/painter"
+    }
+  }
+}

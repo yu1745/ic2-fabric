@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120_advanced_solar_addon.content.item.QuantumCore
@@ -30,7 +32,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_advanced_solar_addon.quantum_solar_panel
 // zh_cn: 量子太阳能发电机
@@ -76,7 +78,7 @@ open class QuantumSolarPanelBlock : MachineBlock() {
             val quantumCore = QuantumCore::class.instance()
 
             // 8个终极混合太阳能 + 1个量子核心
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantumSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, QuantumSolarPanelBlock::class.item(), 1)
                 .pattern("UUU")
                 .pattern("UQU")
                 .pattern("UUU")

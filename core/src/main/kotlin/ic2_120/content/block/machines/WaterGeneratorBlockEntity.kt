@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -57,7 +59,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -79,7 +81,7 @@ class WaterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+) : MachineBlockEntity(type, pos, state), Container, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<FriendlyByteBuf> {
 
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
@@ -322,7 +324,7 @@ class WaterGeneratorBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.water_generator")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         WaterGeneratorScreenHandler(
             syncId,
             playerInventory,
@@ -334,20 +336,20 @@ class WaterGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(WaterGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, WaterGeneratorSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(WaterGeneratorSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, WaterGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
-        waterEnvAccum = nbt.getInt(NBT_WATER_ENV_ACCUM).coerceIn(0, 99)
-        tickOffset = nbt.getInt(NBT_TICK_OFFSET).coerceIn(0, WATER_CHECK_INTERVAL - 1)
-        cachedWaterCount = nbt.getInt(NBT_CACHED_WATER_COUNT).coerceAtLeast(0)
+        waterTankInternal.setStoredWater(nbt.getLongOr(NBT_WATER_AMOUNT, 0L))
+        waterEnvAccum = nbt.getIntOr(NBT_WATER_ENV_ACCUM, 0).coerceIn(0, 99)
+        tickOffset = nbt.getIntOr(NBT_TICK_OFFSET, 0).coerceIn(0, WATER_CHECK_INTERVAL - 1)
+        cachedWaterCount = nbt.getIntOr(NBT_CACHED_WATER_COUNT, 0).coerceAtLeast(0)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(WaterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.amount)
@@ -406,7 +408,7 @@ class WaterGeneratorBlockEntity(
         // 燃料槽：水桶、水单元、通用流体单元（NBT 为水）倒入水罐（必须在发电之后处理，否则会干扰发电）
         // 水罐仅 1 桶容量，必须等水罐空才能倒入整桶
         val fuelStack = getItem(FUEL_SLOT)
-        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
         val canAcceptFullBucket = waterTankInternal.amount <= 0L
         when {
             fuelStack.item == Items.WATER_BUCKET && canAcceptFullBucket -> {

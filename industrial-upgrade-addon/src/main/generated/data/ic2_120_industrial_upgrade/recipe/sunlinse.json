@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "G": "minecraft:glowstone_dust",
+    "S": "ic2_120:reinforced_glass"
+  },
+  "pattern": [
+    " G ",
+    "GSG",
+    " G "
+  ],
+  "result": {
+    "id": "ic2_120_industrial_upgrade:sunlinse"
+  }
+}

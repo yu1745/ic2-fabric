@@ -1,5 +1,7 @@
 package buildcraft_addon.content.blockentity
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 import buildcraft_addon.content.block.CreativeEngineBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
@@ -36,7 +38,7 @@ class CreativeEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), IKineticMachinePort {
+) : LegacyBlockEntity26(type, pos, state), IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         CreativeEngineBlockEntity::class.type(), pos, state
@@ -178,12 +180,12 @@ class CreativeEngineBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        progress = nbt.getFloat("progress")
-        progressPart = nbt.getInt("progressPart")
-        val dirIdx = nbt.getInt("direction")
+        progress = nbt.getFloatOr("progress", 0f)
+        progressPart = nbt.getIntOr("progressPart", 0)
+        val dirIdx = nbt.getIntOr("direction", 0)
         currentDirection = Direction.entries.getOrElse(dirIdx) { Direction.UP }
-        isRedstonePowered = nbt.getBoolean("isRedstonePowered")
-        outputIndex = nbt.getInt("outputIndex")
-        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
+        isRedstonePowered = nbt.getBooleanOr("isRedstonePowered", false)
+        outputIndex = nbt.getIntOr("outputIndex", 0)
+        pendingOutputKu = nbt.getIntOr("pendingOutputKu", 0).coerceAtLeast(0)
     }
 }

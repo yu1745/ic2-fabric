@@ -1,6 +1,6 @@
 package ic2_120.registry
 
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 /**
  * 记录方块 ID 到渲染层类型的映射。
@@ -14,17 +14,17 @@ import net.minecraft.resources.ResourceLocation
  * 空字符串表示不注册（使用默认 solid 层）。
  */
 object BlockRenderLayerRegistry {
-    private val blockRenderLayers = linkedMapOf<ResourceLocation, String>()
+    private val blockRenderLayers = linkedMapOf<Identifier, String>()
 
     fun clear() {
         blockRenderLayers.clear()
     }
 
-    fun put(id: ResourceLocation, renderLayer: String) {
+    fun put(id: Identifier, renderLayer: String) {
         if (renderLayer.isNotEmpty()) {
             blockRenderLayers[id] = renderLayer
         }
     }
 
-    fun entries(): Set<Map.Entry<ResourceLocation, String>> = blockRenderLayers.entries
+    fun entries(): Set<Map.Entry<Identifier, String>> = blockRenderLayers.entries
 }

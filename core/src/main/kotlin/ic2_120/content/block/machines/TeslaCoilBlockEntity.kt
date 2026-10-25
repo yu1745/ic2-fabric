@@ -1,4 +1,8 @@
 package ic2_120.content.block.machines
+import ic2_120.compat.getUUID
+import ic2_120.compat.putUUID
+
+import ic2_120.compat.LegacyBlockEntity26
 
 import net.minecraft.core.registries.Registries
 
@@ -23,13 +27,13 @@ import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.damagesource.DamageSource
-import net.minecraft.world.item.ArmorItem
+import ic2_120.compat.ArmorItem
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -45,7 +49,7 @@ class TeslaCoilBlockEntity(
     type: net.minecraft.world.level.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ITieredMachine {
+) : LegacyBlockEntity26(type, pos, state), ITieredMachine {
 
     override val tier: Int = 2
 
@@ -70,10 +74,10 @@ class TeslaCoilBlockEntity(
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(TeslaCoilSync.NBT_ENERGY_STORED).coerceIn(0L, TeslaCoilSync.ENERGY_CAPACITY)
+        sync.amount = nbt.getLongOr(TeslaCoilSync.NBT_ENERGY_STORED, 0L).coerceIn(0L, TeslaCoilSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        shotCooldown = nbt.getInt("ShotCooldown")
+        shotCooldown = nbt.getIntOr("ShotCooldown", 0)
         lastHitTargetUuid = if (nbt.contains("LastHitTarget")) nbt.getUUID("LastHitTarget") else null
     }
 
@@ -150,11 +154,9 @@ class TeslaCoilBlockEntity(
             target.hurt(damageSource, damageAmount)
             damageArmorDurability(world, target, 4, 6)
 
-            val lightning = EntityType.LIGHTNING_BOLT.create(serverWorld)
-            if (lightning != null) {
-                lightning.moveTo(target.x, target.y, target.z, 0f, 0f)
-                serverWorld.addFreshEntity(lightning)
-            }
+            val lightning = net.minecraft.world.entity.LightningBolt(net.minecraft.world.entity.EntityTypes.LIGHTNING_BOLT, serverWorld)
+            lightning.snapTo(target.x, target.y, target.z, 0f, 0f)
+            serverWorld.addFreshEntity(lightning)
 
             shotCooldown = TeslaCoilSync.SHOT_INTERVAL
             world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, true), 3)
@@ -169,9 +171,9 @@ class TeslaCoilBlockEntity(
     }
 
     private fun createTeslaDamageSource(world: ServerLevel): DamageSource {
-        val registry = world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
-        val key = ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "tesla_coil"))
-        val entry = registry.getHolder(key).orElseThrow { IllegalStateException("Tesla coil damage type not registered") }
+        val registry = world.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE)
+        val key = ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.fromNamespaceAndPath("ic2_120", "tesla_coil"))
+        val entry = registry.get(key).orElseThrow { IllegalStateException("Tesla coil damage type not registered") }
         return DamageSource(entry)
     }
 

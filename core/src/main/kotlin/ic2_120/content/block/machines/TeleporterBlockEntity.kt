@@ -1,4 +1,8 @@
 package ic2_120.content.block.machines
+import ic2_120.compat.getUUID
+import ic2_120.compat.putUUID
+
+import ic2_120.compat.ContainerHelper26
 
 import net.minecraft.core.registries.BuiltInRegistries
 
@@ -36,7 +40,7 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.Entity
@@ -53,7 +57,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
@@ -78,7 +82,7 @@ class TeleporterBlockEntity(
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
-    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    IRedstoneInverterUpgradeSupport, ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = TeleporterBlock.ACTIVE
     override fun getInventory(): net.minecraft.world.Container = this
@@ -92,8 +96,8 @@ class TeleporterBlockEntity(
 
     companion object {
         const val TELEPORTER_TIER = 4
-        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "machine.teleporter.charge"))
-        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "machine.teleporter.use"))
+        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("ic2", "machine.teleporter.charge"))
+        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("ic2", "machine.teleporter.use"))
 
         const val SLOT_UPGRADE_0 = 0
         const val SLOT_UPGRADE_1 = 1
@@ -217,39 +221,39 @@ class TeleporterBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.teleporter")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): net.minecraft.world.inventory.AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): net.minecraft.world.inventory.AbstractContainerMenu =
         TeleporterScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
 
-        sync.amount = nbt.getLong(TeleporterSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(TeleporterSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        if (nbt.getBoolean(NBT_TARGET_SET)) {
-            targetPos = BlockPos(nbt.getInt(NBT_TARGET_X), nbt.getInt(NBT_TARGET_Y), nbt.getInt(NBT_TARGET_Z))
-            targetDimension = nbt.getString(NBT_TARGET_DIM)
+        if (nbt.getBooleanOr(NBT_TARGET_SET, false)) {
+            targetPos = BlockPos(nbt.getIntOr(NBT_TARGET_X, 0), nbt.getIntOr(NBT_TARGET_Y, 0), nbt.getIntOr(NBT_TARGET_Z, 0))
+            targetDimension = nbt.getStringOr(NBT_TARGET_DIM, "")
         } else {
             targetPos = null
             targetDimension = ""
         }
 
-        teleportCooldown = nbt.getInt(NBT_COOLDOWN).coerceAtLeast(0)
+        teleportCooldown = nbt.getIntOr(NBT_COOLDOWN, 0).coerceAtLeast(0)
         chargingEntityUuid = if (nbt.contains(NBT_CHARGING_ENTITY)) nbt.getUUID(NBT_CHARGING_ENTITY) else null
         chargingTargetPos = if (nbt.contains(NBT_CHARGING_TARGET_X)) {
-            BlockPos(nbt.getInt(NBT_CHARGING_TARGET_X), nbt.getInt(NBT_CHARGING_TARGET_Y), nbt.getInt(NBT_CHARGING_TARGET_Z))
+            BlockPos(nbt.getIntOr(NBT_CHARGING_TARGET_X, 0), nbt.getIntOr(NBT_CHARGING_TARGET_Y, 0), nbt.getIntOr(NBT_CHARGING_TARGET_Z, 0))
         } else {
             null
         }
-        chargingEnergyNeed = nbt.getLong(NBT_CHARGING_ENERGY).coerceAtLeast(0L)
-        chargeTicksElapsed = nbt.getInt(NBT_CHARGE_ELAPSED).coerceAtLeast(0)
-        chargeTicksMax = nbt.getInt(NBT_CHARGE_MAX).coerceAtLeast(0)
-        teleportRange = normalizeRange(nbt.getInt(NBT_TELEPORT_RANGE))
+        chargingEnergyNeed = nbt.getLongOr(NBT_CHARGING_ENERGY, 0L).coerceAtLeast(0L)
+        chargeTicksElapsed = nbt.getIntOr(NBT_CHARGE_ELAPSED, 0).coerceAtLeast(0)
+        chargeTicksMax = nbt.getIntOr(NBT_CHARGE_MAX, 0).coerceAtLeast(0)
+        teleportRange = normalizeRange(nbt.getIntOr(NBT_TELEPORT_RANGE, 0))
 
-        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBooleanOr("RedstoneInverted", false) else false
         sync.cooldown = teleportCooldown
         sync.targetSet = if (targetPos != null) 1 else 0
         sync.targetX = targetPos?.x ?: 0
@@ -263,7 +267,7 @@ class TeleporterBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
 
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
@@ -321,7 +325,7 @@ class TeleporterBlockEntity(
             return
         }
 
-        val thisDim = world.dimension().location().toString()
+        val thisDim = world.dimension().identifier().toString()
         if (thisDim != targetDimension || !world.chunkSource.hasChunk(target.x shr 4, target.z shr 4)) {
             clearCharging()
             setActiveState(world, pos, state, false)
@@ -391,13 +395,13 @@ class TeleporterBlockEntity(
     private fun computeWeight(entity: Entity): Int {
         if (entity is Player) {
             var weight = 1000
-            weight += entity.inventory.armor.count { !it.isEmpty } * 100
+            weight += listOf(net.minecraft.world.entity.EquipmentSlot.FEET, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.HEAD).count { !entity.getItemBySlot(it).isEmpty } * 100
 
             var invWeight = 0.0
-            for (stack in entity.inventory.items) {
+            for (stack in entity.inventory.nonEquipmentItems) {
                 if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
             }
-            for (stack in entity.inventory.offhand) {
+            for (stack in listOf(entity.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND))) {
                 if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
             }
             weight += floor(invWeight).toInt()
@@ -617,7 +621,7 @@ class TeleporterBlockEntity(
     private fun teleportEntity(entity: Entity, x: Double, y: Double, z: Double) {
         entity.teleportTo(x, y, z)
         entity.deltaMovement = Vec3.ZERO
-        entity.hasImpulse = true
+        entity.hurtMarked = true
     }
 
 }

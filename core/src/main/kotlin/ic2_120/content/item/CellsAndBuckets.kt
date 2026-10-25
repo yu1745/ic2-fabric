@@ -1,12 +1,16 @@
 package ic2_120.content.item
 
+import ic2_120.compat.addAfter
+
+import ic2_120.compat.save
+
 import net.minecraft.core.registries.BuiltInRegistries
 
 import ic2_120.compat.orCreateNbt
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -19,7 +23,7 @@ import ic2_120.content.item.armor.JetpackItem
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
@@ -43,8 +47,7 @@ import net.minecraft.resources.ResourceKey
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.InteractionResultHolder
+import net.minecraft.resources.Identifier
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.network.chat.Component
@@ -93,14 +96,16 @@ const val FLUID_CELL_NBT_KEY = "FluidVariant"
 /** 从 NBT 读取 FluidVariant，空则返回 null */
 fun ItemStack.getFluidCellVariant(): FluidVariant? {
     val nbt = orCreateNbt
-    val fluidTag = nbt.getCompound(FLUID_CELL_NBT_KEY)
+    val fluidTag = nbt.getCompoundOrEmpty(FLUID_CELL_NBT_KEY)
     if (fluidTag.isEmpty) return null
     return decodeFluidVariant(fluidTag)
 }
 
 /** 将 FluidVariant 写入 NBT */
 fun ItemStack.setFluidCellVariant(variant: FluidVariant) {
-    orCreateNbt.put(FLUID_CELL_NBT_KEY, encodeFluidVariant(variant))
+    val tag = orCreateNbt
+    tag.put(FLUID_CELL_NBT_KEY, encodeFluidVariant(variant))
+    orCreateNbt = tag
 }
 
 /** 判断流体单元是否为空 */
@@ -110,8 +115,8 @@ fun ItemStack.isFluidCellEmpty(): Boolean = getFluidCellVariant() == null || get
 fun ItemStack.isLavaFuel(): Boolean {
     return when (item) {
         Items.LAVA_BUCKET -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "lava_cell")) -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) -> {
+        BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "lava_cell")) -> true
+        BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) -> {
             val fluid = getFluidCellVariant()?.fluid ?: return false
             fluid == Fluids.LAVA || fluid == Fluids.FLOWING_LAVA
         }
@@ -123,9 +128,9 @@ fun ItemStack.isLavaFuel(): Boolean {
 fun ItemStack.isWaterFuel(): Boolean {
     return when (item) {
         Items.WATER_BUCKET -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")) -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")) -> true
-        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) -> {
+        BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "water_cell")) -> true
+        BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "distilled_water_cell")) -> true
+        BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell")) -> {
             val fluid = getFluidCellVariant()?.fluid ?: return false
             fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||
                 fluid == ModFluids.DISTILLED_WATER_STILL || fluid == ModFluids.DISTILLED_WATER_FLOWING
@@ -143,7 +148,7 @@ fun ItemStack.isWaterFuel(): Boolean {
  * isSource() 硬编码 false，合法的 Forge 写法）会让 FluidVariant.of 抛 IAE，
  * 枚举注册表时必须跳过（#27）。
  */
-internal fun isFluidVariantRepresentable(fluid: Fluid): Boolean {
+fun isFluidVariantRepresentable(fluid: Fluid): Boolean {
     if (fluid == Fluids.EMPTY) return false
     if (fluid is FlowingFluid) return true
     return fluid.isSource(fluid.defaultFluidState())
@@ -153,7 +158,7 @@ internal fun isFluidVariantRepresentable(fluid: Fluid): Boolean {
  * 安全地为流体创建满单元 ItemStack：病态流体（无法表达为 FluidVariant）
  * 返回 EMPTY，不抛异常（#27）。
  */
-internal fun fluidToFilledCellStack(fluid: Fluid): ItemStack {
+fun fluidToFilledCellStack(fluid: Fluid): ItemStack {
     if (!isFluidVariantRepresentable(fluid)) return ItemStack.EMPTY
     val cellId = when (fluid) {
         Fluids.WATER, Fluids.FLOWING_WATER -> "water_cell"
@@ -183,7 +188,7 @@ internal fun fluidToFilledCellStack(fluid: Fluid): ItemStack {
  * 根据流体返回该流体的满桶 ItemStack。
  * 若该流体没有注册的桶（如原版水/熔岩之外未注册的），返回 null。
  */
-internal fun fluidToBucketStack(fluid: Fluid): ItemStack? {
+fun fluidToBucketStack(fluid: Fluid): ItemStack? {
     val bucket = when (fluid) {
         Fluids.WATER, Fluids.FLOWING_WATER -> Items.WATER_BUCKET
         Fluids.LAVA, Fluids.FLOWING_LAVA -> Items.LAVA_BUCKET
@@ -259,7 +264,7 @@ class FluidCellItem : Item(Item.Properties()), DispensibleContainerItem {
                 if (stack.isEmpty) {
                     player.setItemInHand(hand, empty)
                 } else if (!player.inventory.add(empty)) {
-                    player.spawnAtLocation(empty)
+                    (world as? net.minecraft.server.level.ServerLevel)?.let { player.spawnAtLocation(it, empty) }
                 }
             }
             return InteractionResult.SUCCESS
@@ -268,7 +273,7 @@ class FluidCellItem : Item(Item.Properties()), DispensibleContainerItem {
     }
 
     override fun emptyContents(
-        player: net.minecraft.world.entity.player.Player?,
+        player: net.minecraft.world.entity.LivingEntity?,
         world: Level,
         pos: BlockPos,
         hitResult: BlockHitResult?
@@ -319,7 +324,7 @@ class FluidCellItem : Item(Item.Properties()), DispensibleContainerItem {
         return false
     }
 
-    override fun getRecipeRemainder(stack: ItemStack): ItemStack = ItemStack(cellItem("empty_cell"))
+    fun getRecipeRemainder(stack: ItemStack): ItemStack = ItemStack(cellItem("empty_cell"))
 
     override fun getName(stack: ItemStack): Component {
         val variant = stack.getFluidCellVariant()
@@ -331,8 +336,9 @@ class FluidCellItem : Item(Item.Properties()), DispensibleContainerItem {
         return super.getName(stack)
     }
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         if (stack.isFluidCellEmpty()) {
             tooltip.add(Component.translatable("tooltip.ic2_120.fluid_cell.empty_hint").withStyle(ChatFormatting.GRAY))
         }
@@ -342,7 +348,7 @@ class FluidCellItem : Item(Item.Properties()), DispensibleContainerItem {
 
 // ========== 容器类 - 单元 ==========
 
-private fun cellItem(id: String): Item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, id))
+private fun cellItem(id: String): Item = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, id))
 
 /**
  * 空单元：通过 Fabric FluidStorage 与世界/方块流体交互（收集与转移）。
@@ -374,6 +380,7 @@ abstract class EmptyCellItem(settings: Item.Properties) : Item(settings) {
         hand: InteractionHand,
         hit: BlockHitResult
     ): Boolean {
+        val serverWorld = world as? net.minecraft.server.level.ServerLevel ?: return false
         val sourcePos = resolveFluidSourcePos(world, hit) ?: return false
         val state = world.getBlockState(sourcePos)
         val fluidState = state.fluidState
@@ -400,33 +407,33 @@ abstract class EmptyCellItem(settings: Item.Properties) : Item(settings) {
             if (stack.isEmpty) {
                 user.setItemInHand(hand, filled)
             } else if (!user.inventory.add(filled)) {
-                user.spawnAtLocation(filled)
+                user.spawnAtLocation(serverWorld, filled)
             }
         } else {
             if (!user.inventory.add(filled)) {
-                user.spawnAtLocation(filled)
+                user.spawnAtLocation(serverWorld, filled)
             }
         }
         return true
     }
 
-    override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResult {
         val stack = user.getItemInHand(hand)
-        if (world.isClient) return InteractionResultHolder.success(stack)
+        if (world.isClient) return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
 
         // 使用 FluidHandling.ANY 射线检测，才能命中流体方块（原版 useOnBlock 的射线会穿透水/岩浆）
         val hitResult = getPlayerPOVHitResult(world, user, ClipContext.Fluid.ANY)
         if (hitResult.type != HitResult.Type.BLOCK || hitResult !is BlockHitResult) {
-            return InteractionResultHolder.pass(stack)
+            return InteractionResult.PASS
         }
 
         if (pickupWorldFluid(world, user, hand, hitResult)) {
-            return InteractionResultHolder.success(user.getItemInHand(hand))
+            return InteractionResult.SUCCESS.heldItemTransformedTo(user.getItemInHand(hand))
         }
         if (interactAt(world, user, hand, hitResult)) {
-            return InteractionResultHolder.success(user.getItemInHand(hand))
+            return InteractionResult.SUCCESS.heldItemTransformedTo(user.getItemInHand(hand))
         }
-        return InteractionResultHolder.pass(stack)
+        return InteractionResult.PASS
     }
 
     override fun useOn(context: UseOnContext): InteractionResult {
@@ -465,8 +472,9 @@ abstract class ModFluidCell(settings: Item.Properties) : Item(settings), Dispens
     /** 子类实现：返回对应的空单元物品（用于配方剩余物） */
     internal abstract fun getEmptyCell(): Item
 
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         val fluidKey = BuiltInRegistries.FLUID.getKey(getFluid()).toLanguageKey("fluid")
         tooltip.add(Component.translatable(fluidKey).withStyle(ChatFormatting.GRAY))
     }
@@ -495,7 +503,7 @@ abstract class ModFluidCell(settings: Item.Properties) : Item(settings), Dispens
                 if (stack.isEmpty) {
                     player.setItemInHand(hand, empty)
                 } else if (!player.inventory.add(empty)) {
-                    player.spawnAtLocation(empty)
+                    (world as? net.minecraft.server.level.ServerLevel)?.let { player.spawnAtLocation(it, empty) }
                 }
             }
             return InteractionResult.SUCCESS
@@ -504,7 +512,7 @@ abstract class ModFluidCell(settings: Item.Properties) : Item(settings), Dispens
     }
 
     override fun emptyContents(
-        player: net.minecraft.world.entity.player.Player?,
+        player: net.minecraft.world.entity.LivingEntity?,
         world: Level,
         pos: BlockPos,
         hitResult: BlockHitResult?
@@ -552,7 +560,7 @@ abstract class ModFluidCell(settings: Item.Properties) : Item(settings), Dispens
         return false
     }
 
-    override fun getRecipeRemainder(stack: ItemStack): ItemStack = ItemStack(getEmptyCell())
+    fun getRecipeRemainder(stack: ItemStack): ItemStack = ItemStack(getEmptyCell())
 }
 
 // ========== 空单元 ==========
@@ -565,7 +573,7 @@ class EmptyCell : EmptyCellItem(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             val tin = TinCasing::class.instance()
             if (tin != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EmptyCell::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EmptyCell::class.instance(), 1)
                     .pattern(" T ")
                     .pattern("TGT")
                     .pattern(" T ")
@@ -626,8 +634,9 @@ class DistilledWaterCell : ModFluidCell(Item.Properties()) {
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 
     @Environment(EnvType.CLIENT)
-    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
-        super.appendHoverText(stack, context, tooltip, type)
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, display: net.minecraft.world.item.component.TooltipDisplay, consumer: java.util.function.Consumer<Component>, type: TooltipFlag) {
+        val tooltip = ic2_120.compat.TooltipSinkList(consumer)
+        super.appendHoverText(stack, context, display, consumer, type)
         tooltip.add(Component.translatable("tooltip.ic2_120.distilled_water_places_water").withStyle(ChatFormatting.GRAY))
     }
 }
@@ -734,12 +743,12 @@ class CfPowder : Item(Item.Properties()){
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 合成配方：6×石粉 + 2×沙子 + 1×黏土球 → 1×建筑泡沫粉（cf_powder），与 IC2 经典摆法一致
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CfPowder::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CfPowder::class.instance(), 1)
                 .pattern("dsd")
                 .pattern("dcd")
                 .pattern("dsd")
                 .define('d', StoneDust::class.instance())
-                .define('s', ItemTags.SAND)
+                .define('s', ic2_120.compat.tagIngredient(ItemTags.SAND))
                 .define('c', Items.CLAY_BALL)
                 .unlockedBy(getHasName(StoneDust::class.instance()), has(StoneDust::class.instance()))
                 .unlockedBy(getHasName(Items.SAND), has(Items.SAND))
@@ -800,8 +809,8 @@ private class ModFluidCellStorage(
  */
 private class FluidCellStorage(private val ctx: ContainerItemContext) : Storage<FluidVariant> {
 
-    private val fluidCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))
-    private val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
+    private val fluidCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "fluid_cell"))
+    private val emptyCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
 
     override fun supportsInsertion(): Boolean = true
 
@@ -827,7 +836,7 @@ private class FluidCellStorage(private val ctx: ContainerItemContext) : Storage<
         val current = ctx.itemVariant
         if (current.item != fluidCell) return 0
 
-        val stored = decodeFluidVariant(current.toStack().orCreateNbt.getCompound(FLUID_CELL_NBT_KEY))
+        val stored = decodeFluidVariant(current.toStack().orCreateNbt.getCompoundOrEmpty(FLUID_CELL_NBT_KEY))
         if (stored.isBlank) return 0
         if (!resource.equals(stored)) return 0
 
@@ -840,7 +849,7 @@ private class FluidCellStorage(private val ctx: ContainerItemContext) : Storage<
     override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
         val current = ctx.itemVariant
         if (current.item != fluidCell) return mutableListOf<StorageView<FluidVariant>>().iterator()
-        val stored = decodeFluidVariant(current.toStack().orCreateNbt.getCompound(FLUID_CELL_NBT_KEY))
+        val stored = decodeFluidVariant(current.toStack().orCreateNbt.getCompoundOrEmpty(FLUID_CELL_NBT_KEY))
         if (stored.isBlank) return mutableListOf<StorageView<FluidVariant>>().iterator()
         if (stored.isBlank) return mutableListOf<StorageView<FluidVariant>>().iterator()
         return mutableListOf(object : StorageView<FluidVariant> {
@@ -864,8 +873,8 @@ object CellAndBucketFluidRegistration {
 
     fun register() {
         val modId = Ic2_120.MOD_ID
-        val emptyCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "empty_cell"))
-        val fluidCell = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "fluid_cell"))
+        val emptyCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(modId, "empty_cell"))
+        val fluidCell = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(modId, "fluid_cell"))
 
         // 空单元 + 满流体单元：通用 FluidStorage（支持任意流体）
         FluidStorage.ITEM.registerForItems({ _, ctx -> FluidCellStorage(ctx) }, emptyCell)
@@ -878,19 +887,19 @@ object CellAndBucketFluidRegistration {
             "construction_foam_cell", "steam_cell", "superheated_steam_cell"
         )
         for (id in modFluidCellIds) {
-            val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, id))
+            val item = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(modId, id))
             if (item is ModFluidCell) {
                 FluidStorage.ITEM.registerForItems({ _, ctx -> ModFluidCellStorage(ctx, item) }, item)
             }
         }
 
-        val foamSprayer = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "foam_sprayer"))
+        val foamSprayer = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(modId, "foam_sprayer"))
         FluidStorage.ITEM.registerForItems({ _, ctx -> FoamSprayerFluidStorage(ctx) }, foamSprayer)
 
-        val cfPack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "cf_pack"))
+        val cfPack = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(modId, "cf_pack"))
         FluidStorage.ITEM.registerForItems({ _, ctx -> CfPackFluidStorage(ctx) }, cfPack)
 
-        val jetpack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(modId, "jetpack"))
+        val jetpack = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(modId, "jetpack"))
         FluidStorage.ITEM.registerForItems({ _, ctx -> JetpackFluidStorage(ctx) }, jetpack)
 
         // 遍历所有流体，将满流体单元注册到创造模式物品栏（IC2 材料）
@@ -912,8 +921,8 @@ object CellAndBucketFluidRegistration {
             ModFluids.COMPRESSED_AIR_STILL, ModFluids.COMPRESSED_AIR_FLOWING
         )
 
-        val ic2MaterialsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(modId, CreativeTab.IC2_MATERIALS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
+        val ic2MaterialsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(modId, CreativeTab.IC2_MATERIALS.id))
+        CreativeModeTabEvents.modifyOutputEvent(ic2MaterialsKey).register { entries ->
             val fluids = BuiltInRegistries.FLUID.filter { fluid ->
                 fluid != Fluids.EMPTY &&
                 fluid != Fluids.FLOWING_LAVA &&

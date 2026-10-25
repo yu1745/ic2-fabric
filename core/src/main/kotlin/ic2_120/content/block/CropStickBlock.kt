@@ -1,12 +1,16 @@
 package ic2_120.content.block
 
+import ic2_120.compat.LegacyBlockEntity26
+
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.time
 
@@ -39,7 +43,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.FarmBlock
+import net.minecraft.world.level.block.FarmlandBlock
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.entity.player.Player
@@ -65,9 +69,11 @@ import net.minecraft.world.level.LevelReader
     renderLayer = "cutout"
 )
 class CropStickBlock : BaseEntityBlock(
-    BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)
+    BlockBehaviour.Properties.of()
+        .mapColor(net.minecraft.world.level.material.MapColor.PLANT)
+        .sound(net.minecraft.world.level.block.SoundType.CROP)
         .instabreak()
-        .noCollission()
+        .noCollision()
          .noOcclusion()
 ) {
     override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = Block.simpleCodec { CropStickBlock() }
@@ -100,22 +106,24 @@ class CropStickBlock : BaseEntityBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun canSurvive(state: BlockState, world: LevelReader, pos: BlockPos): Boolean {
         val below = world.getBlockState(pos.below())
-        return below.block is FarmBlock
+        return below.block is FarmlandBlock
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
         state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
+        world: net.minecraft.world.level.LevelReader,
+        ticks: net.minecraft.world.level.ScheduledTickAccess,
         pos: BlockPos,
-        neighborPos: BlockPos
+        direction: Direction,
+        neighborPos: BlockPos,
+        neighborState: BlockState,
+        random: net.minecraft.util.RandomSource
     ): BlockState {
         if (!canSurvive(state, world, pos)) {
             return Blocks.AIR.defaultBlockState()
         }
-        return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
+        return super.updateShape(state, world, ticks, pos, direction, neighborPos, neighborState, random)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -285,7 +293,7 @@ class CropStickBlock : BaseEntityBlock(
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CropStickBlock::class.item(), 2)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CropStickBlock::class.item(), 2)
                 .pattern("   ")
                 .pattern("S S")
                 .pattern("S S")
@@ -301,7 +309,7 @@ class CropStickBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), CropCareTarget {
+) : LegacyBlockEntity26(type, pos, state), CropCareTarget {
 
     companion object {
         /** 固定周期，与 CropBlock.TICK_RATE 对齐（原版 tickrate=256）。 */
@@ -380,8 +388,8 @@ class CropStickBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        storageNutrients = nbt.getInt("nutrients")
-        storageWater = nbt.getInt("water")
-        storageWeedEx = nbt.getInt("weed_ex")
+        storageNutrients = nbt.getIntOr("nutrients", 0)
+        storageWater = nbt.getIntOr("water", 0)
+        storageWeedEx = nbt.getIntOr("weed_ex", 0)
     }
 }

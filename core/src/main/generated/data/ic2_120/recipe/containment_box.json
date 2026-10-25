@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "minecraft:chest"
-    },
-    "L": {
-      "item": "ic2_120:lead_casing"
-    }
+    "C": "minecraft:chest",
+    "L": "ic2_120:lead_casing"
   },
   "pattern": [
     "LLL",
@@ -15,7 +10,6 @@
     "LLL"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:containment_box"
   }
 }

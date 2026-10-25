@@ -1,3 +1,9 @@
 {
-  "type": "ic2_120:macerating"
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "tag": "ic2_120:compat/ingots/tin"
+  },
+  "result": {
+    "item": "ic2_120:tin_dust"
+  }
 }

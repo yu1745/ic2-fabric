@@ -1,8 +1,12 @@
 package ic2_120.content.item
 
+import ic2_120.compat.ContainerHelper26
+
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -13,7 +17,7 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.entity.player.Player
@@ -28,7 +32,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.InteractionResult
 import net.minecraft.core.NonNullList
 import net.minecraft.world.level.Level
 import ic2_120.editCustomData
@@ -42,12 +46,12 @@ import io.netty.buffer.Unpooled
 @ModItem(name = "containment_box", tab = CreativeTab.IC2_MATERIALS, group = "containment")
 class ContainmentBoxItem : Item(Item.Properties().stacksTo(1)) {
 
-    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+    override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResult {
         val stack = player.getItemInHand(hand)
-        if (world.isClient) return InteractionResultHolder.success(stack)
-        if (stack.isEmpty || stack.item !is ContainmentBoxItem) return InteractionResultHolder.pass(stack)
+        if (world.isClient) return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
+        if (stack.isEmpty || stack.item !is ContainmentBoxItem) return InteractionResult.PASS
 
-        player.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+        player.openMenu(object : ExtendedMenuProvider<FriendlyByteBuf> {
             override fun getDisplayName(): Component = Component.translatable("item.ic2_120.containment_box")
 
             override fun getScreenOpeningData(serverPlayer: net.minecraft.server.level.ServerPlayer): FriendlyByteBuf {
@@ -65,7 +69,7 @@ class ContainmentBoxItem : Item(Item.Properties().stacksTo(1)) {
             }
         })
 
-        return InteractionResultHolder.success(stack)
+        return InteractionResult.SUCCESS.heldItemTransformedTo(stack)
     }
 
     companion object {
@@ -73,7 +77,7 @@ class ContainmentBoxItem : Item(Item.Properties().stacksTo(1)) {
         fun generateRecipes(exporter: RecipeOutput) {
             val chest = Items.CHEST
             val leadCasing = LeadCasing::class.instance()
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ContainmentBoxItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ContainmentBoxItem::class.instance(), 1)
                 .pattern("LLL")
                 .pattern("LCL")
                 .pattern("LLL")
@@ -103,7 +107,7 @@ class ContainmentBoxInventory(
         if (!loading) saveToStack()
     }
 
-    override fun stopOpen(player: Player) {
+    override fun stopOpen(player: net.minecraft.world.entity.ContainerUser) {
         super.stopOpen(player)
         saveToStack()
     }
@@ -121,9 +125,9 @@ class ContainmentBoxInventory(
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return
         val root = stack.getCustomData() ?: return
         if (!root.contains(NBT_KEY)) return
-        val tag = root.getCompound(NBT_KEY)
+        val tag = root.getCompoundOrEmpty(NBT_KEY)
         val list = NonNullList.withSize(SIZE, ItemStack.EMPTY)
-        ContainerHelper.loadAllItems(tag, list, player.level().registryAccess())
+        ContainerHelper26.loadAllItems(tag, list, player.level().registryAccess())
         for (i in 0 until SIZE) setItem(i, list[i])
         } finally {
             loading = false
@@ -137,7 +141,7 @@ class ContainmentBoxInventory(
         val tag = CompoundTag()
         val list = NonNullList.withSize(SIZE, ItemStack.EMPTY)
         for (i in 0 until SIZE) list[i] = getItem(i).copy()
-        ContainerHelper.saveAllItems(tag, list, player.level().registryAccess())
+        ContainerHelper26.saveAllItems(tag, list, player.level().registryAccess())
         stack.editCustomData { it.put(NBT_KEY, tag) }
     }
 

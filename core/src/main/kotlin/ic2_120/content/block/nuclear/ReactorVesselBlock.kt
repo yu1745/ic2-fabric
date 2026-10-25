@@ -1,8 +1,10 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.content.block.ReinforcedGlassBlock
 import ic2_120.content.item.LeadPlate
@@ -32,9 +34,9 @@ class ReactorVesselBlock(settings: BlockBehaviour.Properties = ReactorShellBlock
         fun generateRecipes(exporter: RecipeOutput) {
             val leadPlate = LeadPlate::class.instance()
             if (leadPlate != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
                     .pattern("LGL").pattern("GLG").pattern("LGL")
-                    .define('L', Ingredient.of(ModTags.Compat.Items.PLATES_LEAD))
+                    .define('L', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_LEAD))
                     .define('G', ReinforcedGlassBlock::class.item())  // 透明外壳：铅框 + 强化玻璃
                     .unlockedBy(getHasName(leadPlate), has(leadPlate))
                     .save(exporter, ReactorVesselBlock::class.id())

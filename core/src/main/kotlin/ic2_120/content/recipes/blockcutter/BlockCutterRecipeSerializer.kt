@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.RecipeSerializer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.GsonHelper
 
 /**
@@ -33,14 +33,14 @@ import net.minecraft.util.GsonHelper
  * }
  */
 @ModMachineRecipe(id = "cutting", recipeClass = BlockCutterRecipe::class)
-object BlockCutterRecipeSerializer : RecipeSerializer<BlockCutterRecipe> {
-    private fun fromJson(id: ResourceLocation, json: JsonObject): BlockCutterRecipe {
+object BlockCutterRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<BlockCutterRecipe>() {
+    private fun fromJson(id: Identifier, json: JsonObject): BlockCutterRecipe {
         val ingredient = INGREDIENT_CODEC(json.getAsJsonObject("ingredient"))
         val inputCount = (if (json.has("input_count")) json.get("input_count").asInt else 1)
         val materialHardness = json.get("material_hardness").asFloat
         val result = json.getAsJsonObject("result")
-        val itemId = ResourceLocation.parse(result.get("item").asString)
-        val item = BuiltInRegistries.ITEM.get(itemId)
+        val itemId = Identifier.parse(result.get("item").asString)
+        val item = BuiltInRegistries.ITEM.getValue(itemId)
         val count = (if (result.has("count")) result.get("count").asInt else 1)
 
         return BlockCutterRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, inputCount, materialHardness, ItemStack(item, count))
@@ -65,7 +65,12 @@ object BlockCutterRecipeSerializer : RecipeSerializer<BlockCutterRecipe> {
     override fun codec(): MapCodec<BlockCutterRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:cutting",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", ic2_120.content.recipes.ingredientJson26(recipe.ingredient))
+            json.addProperty("input_count", recipe.inputCount)
+            json.addProperty("material_hardness", recipe.materialHardness)
+            json.add("result", ic2_120.content.recipes.stackJson26(recipe.output))
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BlockCutterRecipe> =

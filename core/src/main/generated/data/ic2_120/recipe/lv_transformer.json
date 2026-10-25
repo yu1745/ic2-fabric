@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:coil"
-    },
-    "P": {
-      "tag": "minecraft:planks"
-    },
-    "W": {
-      "item": "ic2_120:insulated_tin_cable"
-    }
+    "C": "ic2_120:coil",
+    "P": "#minecraft:planks",
+    "W": "ic2_120:insulated_tin_cable"
   },
   "pattern": [
     "PWP",
@@ -18,7 +11,6 @@
     "PWP"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:lv_transformer"
   }
 }

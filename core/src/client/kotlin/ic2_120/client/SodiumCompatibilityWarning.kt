@@ -1,7 +1,10 @@
 package ic2_120.client
 
+import ic2_120.compat.displayClientMessage
+
 import ic2_120.Ic2_120
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
+import ic2_120.client.compat.*
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
@@ -13,7 +16,7 @@ object SodiumCompatibilityWarning {
     private const val INDIUM_MOD_ID = "indium"
     private const val WARNING_DURATION_MS = 6000L
     private const val WARNING_SCALE = 2.0f
-    private const val WARNING_COLOR = 0xFFFF55
+    private const val WARNING_COLOR = -0xAB
 
     private val logger = LoggerFactory.getLogger("${Ic2_120.MOD_ID}/SodiumCompatibility")
     private var warningUntilMs: Long = 0L
@@ -25,9 +28,9 @@ object SodiumCompatibilityWarning {
                 warnPlayer(client)
             }
         })
-        HudRenderCallback.EVENT.register(HudRenderCallback { drawContext, _ ->
+        HudElementRegistry.addLast(net.minecraft.resources.Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "sodium_warning")) { drawContext, _ ->
             renderWarning(drawContext, Minecraft.getInstance())
-        })
+        }
     }
 
     private fun shouldWarn(): Boolean {
@@ -64,7 +67,7 @@ object SodiumCompatibilityWarning {
         )
     }
 
-    private fun renderWarning(drawContext: net.minecraft.client.gui.GuiGraphics, client: Minecraft) {
+    private fun renderWarning(drawContext: GuiGraphics, client: Minecraft) {
         if (System.currentTimeMillis() >= warningUntilMs) return
         if (client.player == null) return
 

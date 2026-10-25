@@ -4,23 +4,23 @@ import ic2_120.config.Ic2Config
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
-import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.Minecraft
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @Environment(EnvType.CLIENT)
 object PeatOreTooltipHandler {
 
-    private val PEAT_ORE_ID = ResourceLocation.fromNamespaceAndPath("ic2_120", "peat_ore")
+    private val PEAT_ORE_ID = Identifier.fromNamespaceAndPath("ic2_120", "peat_ore")
 
     fun register() {
         ItemTooltipCallback.EVENT.register { stack, _, _, lines ->
             val itemId = BuiltInRegistries.ITEM.getKey(stack.item)
             if (itemId != PEAT_ORE_ID) return@register
 
-            if (Screen.hasShiftDown()) {
+            if (Minecraft.getInstance().hasShiftDown()) {
                 val config = Ic2Config.current.worldgen.peatOre
                 lines.add(Component.translatable("tooltip.ic2_120.peat_ore.recipes").withStyle(ChatFormatting.GOLD))
                 lines.add(Component.translatable("tooltip.ic2_120.peat_ore.coke_oven").withStyle(ChatFormatting.DARK_GRAY))

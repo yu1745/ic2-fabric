@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "D": {
-      "tag": "ic2_120:compat/dusts/diamond"
-    },
-    "R": {
-      "tag": "ic2_120:compat/dusts/redstone"
-    }
+    "D": "#ic2_120:compat/dusts/diamond",
+    "R": "#ic2_120:compat/dusts/redstone"
   },
   "pattern": [
     "RDR",

@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "O": {
-      "item": "ic2_120:plutonium"
-    },
-    "X": {
-      "item": "ic2_120:uranium_238"
-    }
+    "O": "ic2_120:plutonium",
+    "X": "ic2_120:uranium_238"
   },
   "pattern": [
     "XXX",
@@ -15,7 +10,6 @@
     "XXX"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:mox"
   }
 }

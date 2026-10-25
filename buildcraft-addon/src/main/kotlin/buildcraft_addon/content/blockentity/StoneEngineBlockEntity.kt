@@ -1,5 +1,7 @@
 package buildcraft_addon.content.blockentity
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -10,7 +12,7 @@ import buildcraft_addon.content.screen.StoneEngineScreenHandler
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
@@ -55,7 +57,7 @@ class StoneEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Container, ExtendedScreenHandlerFactory<FriendlyByteBuf>, IKineticMachinePort {
+) : LegacyBlockEntity26(type, pos, state), Container, ExtendedMenuProvider<FriendlyByteBuf>, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         StoneEngineBlockEntity::class.type(), pos, state
@@ -80,7 +82,7 @@ class StoneEngineBlockEntity(
         override fun getCount(): Int = 2
     }
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu {
         return StoneEngineScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), propertyDelegate)
     }
 
@@ -223,9 +225,9 @@ class StoneEngineBlockEntity(
         totalBurnTime = time
 
         // 处理容器物品（如空桶）
-        val containerItem = fuel.item.craftingRemainingItem
-        if (containerItem != Items.AIR) {
-            inventory[SLOT_FUEL] = ItemStack(containerItem)
+        val containerItem = fuel.item.getCraftingRemainder()
+        if (containerItem != null) {
+            inventory[SLOT_FUEL] = containerItem.create()
         } else {
             fuel.shrink(1)
         }
@@ -335,27 +337,25 @@ class StoneEngineBlockEntity(
         nbt.putInt("pendingOutputKu", pendingOutputKu)
         val fuelStack = inventory[SLOT_FUEL]
         if (!fuelStack.isEmpty) {
-            val fuelNbt = CompoundTag()
-            fuelStack.save(lookup, fuelNbt)
-            nbt.put("fuel", fuelNbt)
+            nbt.store("fuel", ItemStack.OPTIONAL_CODEC, lookup.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), fuelStack)
         }
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        heat = nbt.getDouble("heat")
-        progress = nbt.getFloat("progress")
-        progressPart = nbt.getInt("progressPart")
-        val dirIdx = nbt.getInt("direction")
+        heat = nbt.getDoubleOr("heat", 0.0)
+        progress = nbt.getFloatOr("progress", 0f)
+        progressPart = nbt.getIntOr("progressPart", 0)
+        val dirIdx = nbt.getIntOr("direction", 0)
         currentDirection = Direction.entries.getOrElse(dirIdx) { Direction.UP }
-        burnTime = nbt.getInt("burnTime")
-        totalBurnTime = nbt.getInt("totalBurnTime")
-        isRedstonePowered = nbt.getBoolean("isRedstonePowered")
-        val stageIdx = nbt.getInt("powerStage")
+        burnTime = nbt.getIntOr("burnTime", 0)
+        totalBurnTime = nbt.getIntOr("totalBurnTime", 0)
+        isRedstonePowered = nbt.getBooleanOr("isRedstonePowered", false)
+        val stageIdx = nbt.getIntOr("powerStage", 0)
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
-        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
+        pendingOutputKu = nbt.getIntOr("pendingOutputKu", 0).coerceAtLeast(0)
         if (nbt.contains("fuel")) {
-            inventory[SLOT_FUEL] = ItemStack.parseOptional(lookup, nbt.getCompound("fuel"))
+            inventory[SLOT_FUEL] = nbt.read("fuel", ItemStack.OPTIONAL_CODEC, lookup.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE)).orElse(ItemStack.EMPTY)
         }
     }
 }

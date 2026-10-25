@@ -4,17 +4,20 @@ import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.CreativeEngineBlockEntity
 import buildcraft_addon.content.blockentity.PowerStage
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.RenderType
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.client.renderer.texture.TextureAtlas
+import net.minecraft.data.AtlasIds
+import ic2_120.client.renderers.LegacyBlockEntityRenderer26
+import ic2_120.client.renderers.LegacyMultiBufferSource26
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.inventory.InventoryMenu
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import ic2_120.compat.*
 
-class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
-    BlockEntityRenderer<CreativeEngineBlockEntity> {
+class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context?) :
+    LegacyBlockEntityRenderer26<CreativeEngineBlockEntity>() {
 
     private var spritesLoaded = false
     private lateinit var trunkBlack: TextureAtlasSprite
@@ -24,8 +27,8 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = Minecraft.getInstance().modelManager.getAtlas(InventoryMenu.BLOCK_ATLAS)
-        fun sprite(path: String) = atlas.getSprite(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
+        val atlas = Minecraft.getInstance().atlasManager.getAtlasOrThrow(AtlasIds.BLOCKS)
+        fun sprite(path: String) = atlas.getSprite(Identifier.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
         trunkBlack = sprite("block/engine/trunk_black")
         backSprite = sprite("block/engine/creative/back")
         sideSprite = sprite("block/engine/creative/side")
@@ -33,16 +36,16 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         spritesLoaded = true
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: CreativeEngineBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
-        vertexConsumers: net.minecraft.client.renderer.MultiBufferSource,
+        vertexConsumers: LegacyMultiBufferSource26,
         light: Int,
         overlay: Int
     ) {
         ensureSprites()
-        val buffer = vertexConsumers.getBuffer(RenderType.cutout())
+        val buffer = vertexConsumers.getBuffer(RenderTypes.entityCutout(TextureAtlas.LOCATION_BLOCKS))
         EngineRenderHelper.renderEngine(
             matrices = matrices,
             buffer = buffer,
@@ -60,5 +63,5 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         )
     }
 
-    override fun shouldRenderOffScreen(entity: CreativeEngineBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 }

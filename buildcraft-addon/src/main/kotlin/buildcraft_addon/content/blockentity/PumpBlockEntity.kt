@@ -1,5 +1,7 @@
 package buildcraft_addon.content.blockentity
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.block.PumpBlock
@@ -29,7 +31,7 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
@@ -61,7 +63,23 @@ class PumpBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), IKineticMachinePort {
+) : LegacyBlockEntity26(type, pos, state), IKineticMachinePort {
+
+    override fun preRemoveSideEffects(pos: BlockPos, state: BlockState) {
+        val world = level
+        if (world != null && !world.isClient) {
+            val tubeBlock = BuiltInRegistries.BLOCK.getValue(BuildCraftAddon.id("tube"))
+            val planned = mutableListOf<BlockPos>()
+            for (y in pos.y - 1 downTo pos.y - MAX_DEPTH) {
+                val bp = BlockPos(pos.x, y, pos.z)
+                if (world.getBlockState(bp).`is`(tubeBlock)) planned.add(bp) else break
+            }
+            if (ClaimProtection.allAllowedUuid(world, planned, null, ClaimProtection.EDIT_BLOCK)) {
+                for (bp in planned) world.setBlock(bp, Blocks.AIR.defaultBlockState(), 3)
+            }
+        }
+        super.preRemoveSideEffects(pos, state)
+    }
 
     constructor(pos: BlockPos, state: BlockState) : this(PumpBlockEntity::class.type(), pos, state)
 
@@ -75,8 +93,8 @@ class PumpBlockEntity(
         // A* 单次搜索最大候选数（开放集硬上限）
         private const val A_STAR_MAX_OPEN = 2048
 
-        private val TUBE_BLOCK by lazy { BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("tube")) }
-        private val SPRING_BLOCK by lazy { BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("spring")) }
+        private val TUBE_BLOCK by lazy { BuiltInRegistries.BLOCK.getValue(BuildCraftAddon.id("tube")) }
+        private val SPRING_BLOCK by lazy { BuiltInRegistries.BLOCK.getValue(BuildCraftAddon.id("spring")) }
 
         // 3D 6 邻接方向（buildQueue 扫描 + A* 都用）
         private val ALL_DIRS = arrayOf(Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
@@ -176,7 +194,7 @@ class PumpBlockEntity(
         var found: BlockPos? = null
 
         // 1. 向下扫第一个流体
-        for (searchY in pos.y - 1 downTo w.minBuildHeight) {
+        for (searchY in pos.y - 1 downTo w.minY) {
             if (pos.y - searchY > MAX_DEPTH) break
             val check = BlockPos(pos.x, searchY, pos.z)
             val fs = w.getFluidState(check)
@@ -267,7 +285,7 @@ class PumpBlockEntity(
         if (target == ModFluids.CRUDE_OIL_STILL) {
             val springBlock = SPRING_BLOCK
             outer1@ for (dx in -10..10) for (dz in -10..10) {
-                val sp = BlockPos(found.x + dx, w.minBuildHeight + 1, found.z + dz)
+                val sp = BlockPos(found.x + dx, w.minY + 1, found.z + dz)
                 if (w.getBlockState(sp).`is`(springBlock)) { oilSpringPos = sp; break@outer1 }
             }
         }
@@ -553,19 +571,19 @@ class PumpBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        val amt = nbt.getLong("tankAmount")
+        val amt = nbt.getLongOr("tankAmount", 0L)
         if (amt > 0 && nbt.contains("tankFluid")) {
-            val fid = ResourceLocation.parse(nbt.getString("tankFluid"))
-            tank.variant = FluidVariant.of(BuiltInRegistries.FLUID.get(fid))
+            val fid = Identifier.parse(nbt.getStringOr("tankFluid", ""))
+            tank.variant = FluidVariant.of(BuiltInRegistries.FLUID.getValue(fid))
             tank.amount = amt
         }
-        isRedstonePowered = nbt.getBoolean("powered")
-        isActive = nbt.getBoolean("isActive")
-        isBlocked = nbt.getBoolean("isBlocked")
-        tubeDepth = nbt.getInt("tubeDepth")
-        totalPumped = nbt.getInt("totalPumped")
-        oilPumped = nbt.getBoolean("oilPumped")
-        hasOilAchievement = nbt.getBoolean("hasOilAchievement")
+        isRedstonePowered = nbt.getBooleanOr("powered", false)
+        isActive = nbt.getBooleanOr("isActive", false)
+        isBlocked = nbt.getBooleanOr("isBlocked", false)
+        tubeDepth = nbt.getIntOr("tubeDepth", 0)
+        totalPumped = nbt.getIntOr("totalPumped", 0)
+        oilPumped = nbt.getBooleanOr("oilPumped", false)
+        hasOilAchievement = nbt.getBooleanOr("hasOilAchievement", false)
     }
 
     // ========== 客户端 NBT 同步 ==========

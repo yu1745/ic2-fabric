@@ -3,25 +3,25 @@ package ic2_120_advanced_solar_addon.client.render
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlock
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlockEntity
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes as RenderType
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
+import ic2_120.client.renderers.LegacyBlockEntityRenderer26
+import ic2_120.client.renderers.MultiBufferSource
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import com.mojang.blaze3d.vertex.PoseStack
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import com.mojang.math.Axis
 import org.joml.Matrix3f
 import org.joml.Matrix4f
 import ic2_120.compat.*
 
 class MolecularTransformerBlockEntityRenderer(
-    context: BlockEntityRendererProvider.Context
-) : BlockEntityRenderer<MolecularTransformerBlockEntity> {
+    context: BlockEntityRendererProvider.Context?
+) : LegacyBlockEntityRenderer26<MolecularTransformerBlockEntity>() {
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/models/texturemoleculartransformer.png")
-        private val PLAZMA_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/models/plazma.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/models/texturemoleculartransformer.png")
+        private val PLAZMA_TEXTURE = Identifier.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "textures/models/plazma.png")
         private const val TW = 128f
         private const val TH = 64f
 
@@ -46,7 +46,7 @@ class MolecularTransformerBlockEntityRenderer(
         private val EL_BOTTOM = floatArrayOf(px(7f), py(24f), pz(-3f), px(4f), py(19f), pz(3f))
     }
 
-    override fun render(
+    public override fun renderLegacy(
         entity: MolecularTransformerBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
@@ -60,7 +60,7 @@ class MolecularTransformerBlockEntityRenderer(
         val isActive = try { state.getValue(MolecularTransformerBlock.ACTIVE) } catch (_: Exception) { false }
         val ov = overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY
 
-        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutout(TEXTURE))
 
         matrices.pushPose()
 
@@ -213,5 +213,5 @@ class MolecularTransformerBlockEntityRenderer(
             0, 0, 3, 4, 3)
     }
 
-    override fun shouldRenderOffScreen(entity: MolecularTransformerBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 }

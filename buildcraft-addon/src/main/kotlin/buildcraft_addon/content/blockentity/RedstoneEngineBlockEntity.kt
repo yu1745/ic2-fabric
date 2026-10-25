@@ -1,5 +1,7 @@
 package buildcraft_addon.content.blockentity
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 import buildcraft_addon.content.block.RedstoneEngineBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
@@ -24,7 +26,7 @@ class RedstoneEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), IKineticMachinePort {
+) : LegacyBlockEntity26(type, pos, state), IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         RedstoneEngineBlockEntity::class.type(), pos, state
@@ -203,14 +205,14 @@ class RedstoneEngineBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        heat = nbt.getDouble("heat")
-        progress = nbt.getFloat("progress")
-        progressPart = nbt.getInt("progressPart")
-        val dirIdx = nbt.getInt("direction")
+        heat = nbt.getDoubleOr("heat", 0.0)
+        progress = nbt.getFloatOr("progress", 0f)
+        progressPart = nbt.getIntOr("progressPart", 0)
+        val dirIdx = nbt.getIntOr("direction", 0)
         currentDirection = Direction.entries.getOrElse(dirIdx) { Direction.UP }
-        isPumping = nbt.getBoolean("isPumping")
-        val stageIdx = nbt.getInt("powerStage")
+        isPumping = nbt.getBooleanOr("isPumping", false)
+        val stageIdx = nbt.getIntOr("powerStage", 0)
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
-        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
+        pendingOutputKu = nbt.getIntOr("pendingOutputKu", 0).coerceAtLeast(0)
     }
 }

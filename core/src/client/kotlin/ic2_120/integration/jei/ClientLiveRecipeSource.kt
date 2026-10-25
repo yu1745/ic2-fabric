@@ -11,6 +11,6 @@ import net.minecraft.client.Minecraft
  * 由 [ic2_120.Ic2_120Client.onInitializeClient] 注入到 [LiveRecipeSource.instance]。
  */
 object ClientLiveRecipeSource : LiveRecipeSource {
-    override fun clientRecipeManager() =
-        Minecraft.getInstance().level?.recipeManager
+    override fun clientRecipes() =
+        Minecraft.getInstance().level?.recipeAccess()?.synchronizedRecipes?.recipes()
 }

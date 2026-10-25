@@ -1,12 +1,14 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -53,7 +55,7 @@ class ReactorRedstonePortBlock(settings: BlockBehaviour.Properties = ReactorShel
         fun generateRecipes(exporter: RecipeOutput) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorRedstonePortBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, ReactorRedstonePortBlock::class.item(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
                     .define('A', vessel)
                     .define('B', Items.REDSTONE)

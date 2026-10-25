@@ -1,16 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "f": {
-      "item": "ic2_120:iron_plate"
-    },
-    "r": {
-      "item": "minecraft:redstone"
-    },
-    "x": {
-      "item": "ic2_120:insulated_copper_cable"
-    }
+    "f": "ic2_120:iron_plate",
+    "r": "minecraft:redstone",
+    "x": "ic2_120:insulated_copper_cable"
   },
   "pattern": [
     "xxx",
@@ -18,7 +11,6 @@
     "xxx"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:circuit"
   }
 }

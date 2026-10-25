@@ -1,14 +1,18 @@
 package ic2_120.content.item
 
 import ic2_120.Ic2_120
-import net.minecraft.world.item.ArmorItem
-import net.minecraft.world.item.ArmorMaterial
+import ic2_120.compat.ArmorItem
+import net.minecraft.world.item.equipment.ArmorMaterial
+import net.minecraft.world.item.equipment.EquipmentAsset
+import net.minecraft.world.item.equipment.EquipmentAssets
+import net.minecraft.resources.ResourceKey
+import net.minecraft.tags.ItemTags
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Holder
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import java.util.function.Supplier
 
 /**
@@ -19,11 +23,6 @@ import java.util.function.Supplier
 object ModArmorMaterials {
 
     // ========== 修复原料 ==========
-    private val bronzeIngot = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bronze_ingot")))
-    private val rubber = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber")))
-    private val carbonFibre = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "carbon_fibre")))
-    private val advancedAlloy = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "alloy")))
-    private val iridium = Ingredient.of(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "iridium")))
 
     /**
      * 创建自定义护甲材料
@@ -34,17 +33,17 @@ object ModArmorMaterials {
         enchantability: Int,
         equipSound: Holder<SoundEvent>,
         toughness: Float,
-        knockbackResistance: Float,
-        repairIngredient: Ingredient
+        knockbackResistance: Float
     ): Holder<ArmorMaterial> = Holder.direct(
         ArmorMaterial(
-            protection,
+            1,
+            protection.mapKeys { it.key.native },
             enchantability,
             equipSound,
-            Supplier { repairIngredient },
-            listOf(ArmorMaterial.Layer(ResourceLocation.withDefaultNamespace(name))),
             toughness,
-            knockbackResistance
+            knockbackResistance,
+            ItemTags.REPAIRS_IRON_ARMOR,
+            ResourceKey.create(EquipmentAssets.ROOT_ID, Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, name))
         )
     )
 
@@ -65,7 +64,6 @@ object ModArmorMaterials {
         equipSound = SoundEvents.ARMOR_EQUIP_DIAMOND,
         toughness = 2f,
         knockbackResistance = 0f,
-        repairIngredient = carbonFibre
     )
 
     // ========== 量子护甲材料 ==========
@@ -85,7 +83,6 @@ object ModArmorMaterials {
         equipSound = SoundEvents.ARMOR_EQUIP_NETHERITE,
         toughness = 3f,
         knockbackResistance = 0.4f,
-        repairIngredient = iridium
     )
 
     // ========== 喷气背包护甲材料 ==========
@@ -104,7 +101,6 @@ object ModArmorMaterials {
         equipSound = SoundEvents.ARMOR_EQUIP_LEATHER,
         toughness = 0f,
         knockbackResistance = 0f,
-        repairIngredient = bronzeIngot
     )
 
     // ========== 电力喷气背包护甲材料 ==========
@@ -123,7 +119,6 @@ object ModArmorMaterials {
         equipSound = SoundEvents.ARMOR_EQUIP_DIAMOND,
         toughness = 0f,
         knockbackResistance = 0f,
-        repairIngredient = carbonFibre
     )
 
     // ========== 耐久倍率常量（供 Item.Properties.maxDamage 使用）==========

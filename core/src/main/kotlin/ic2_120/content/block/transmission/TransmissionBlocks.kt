@@ -1,12 +1,14 @@
 package ic2_120.content.block.transmission
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -114,14 +116,16 @@ abstract class BaseTransmissionBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
         state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
+        world: net.minecraft.world.level.LevelReader,
+        ticks: net.minecraft.world.level.ScheduledTickAccess,
         pos: BlockPos,
-        neighborPos: BlockPos
+        direction: Direction,
+        neighborPos: BlockPos,
+        neighborState: BlockState,
+        random: net.minecraft.util.RandomSource
     ): BlockState {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
+            ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         if (world is net.minecraft.world.level.Level && !world.isClient) {
             KineticNetworkManager.invalidateConnectionCachesAt(world, pos)
@@ -133,7 +137,7 @@ abstract class BaseTransmissionBlock(
     override fun getFluidState(state: BlockState): FluidState =
         if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultFluidState()
 
-    override fun canPlaceLiquid(player: Player?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canPlaceLiquid(player: net.minecraft.world.entity.LivingEntity?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.getValue(BlockStateProperties.WATERLOGGED) && fluid == Fluids.WATER
 
     override fun placeLiquid(
@@ -150,7 +154,7 @@ abstract class BaseTransmissionBlock(
         return true
     }
 
-    override fun pickupBlock(player: Player?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack =
+    override fun pickupBlock(player: net.minecraft.world.entity.LivingEntity?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack =
         ItemStack.EMPTY
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
@@ -159,17 +163,14 @@ abstract class BaseTransmissionBlock(
     override fun getRenderShape(state: BlockState): RenderShape = RenderShape.INVISIBLE
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(
+    override fun affectNeighborsAfterRemoval(
         state: BlockState,
-        world: net.minecraft.world.level.Level,
+        world: net.minecraft.server.level.ServerLevel,
         pos: BlockPos,
-        newState: BlockState,
         moved: Boolean
     ) {
-        if (!state.`is`(newState.block)) {
-            KineticNetworkManager.invalidateAt(world, pos)
-        }
-        super.onRemove(state, world, pos, newState, moved)
+        KineticNetworkManager.invalidateAt(world, pos)
+        super.affectNeighborsAfterRemoval(state, world, pos, moved)
     }
 
     override fun <T : BlockEntity> getTicker(
@@ -260,11 +261,11 @@ class WoodTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.WOOD) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoodTransmissionShaftBlock::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, WoodTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .define('x', ItemTags.PLANKS)
+                .define('x', ic2_120.compat.tagIngredient(ItemTags.PLANKS))
                 .unlockedBy(getHasName(net.minecraft.world.item.Items.OAK_PLANKS), has(net.minecraft.world.item.Items.OAK_PLANKS))
                 .save(exporter, WoodTransmissionShaftBlock::class.recipeId("from_planks"))
         }
@@ -277,11 +278,11 @@ class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronTransmissionShaftBlock::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, IronTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .define('x', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .define('x', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON))
                 .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, IronTransmissionShaftBlock::class.recipeId("from_plates"))
         }
@@ -294,11 +295,11 @@ class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL) 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelTransmissionShaftBlock::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, SteelTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .define('x', Ingredient.of(ModTags.Compat.Items.PLATES_STEEL))
+                .define('x', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_STEEL))
                 .unlockedBy(getHasName(SteelPlate::class.instance()), has(SteelPlate::class.instance()))
                 .save(exporter, SteelTransmissionShaftBlock::class.recipeId("from_plates"))
         }
@@ -311,7 +312,7 @@ class CarbonTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.CARBON
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonTransmissionShaftBlock::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CarbonTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
@@ -351,14 +352,16 @@ class BevelGearBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun updateShape(
         state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: LevelAccessor,
+        world: LevelReader,
+        ticks: net.minecraft.world.level.ScheduledTickAccess,
         pos: BlockPos,
-        neighborPos: BlockPos
+        direction: Direction,
+        neighborPos: BlockPos,
+        neighborState: BlockState,
+        random: net.minecraft.util.RandomSource
     ): BlockState {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
+            ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         val axes = connectedAxes(world, pos)
         val plane = selectPlane(axes, state.getValue(PLANE), direction.axis)
@@ -485,11 +488,11 @@ class BevelGearBlock(
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BevelGearBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, BevelGearBlock::class.instance(), 1)
                 .pattern("s s")
                 .pattern("s s")
                 .pattern("sss")
-                .define('s', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .define('s', ic2_120.compat.tagIngredient(ModTags.Compat.Items.PLATES_IRON))
                 .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
                 .save(exporter, BevelGearBlock::class.recipeId("from_plates"))
         }

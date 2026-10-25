@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -82,7 +84,7 @@ class GeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val ironPlate = IronPlate::class.instance()
             val ironFurnace = IronFurnaceBlock::class.item()
             if (battery != Items.AIR && ironPlate != Items.AIR && ironFurnace != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, GeneratorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, GeneratorBlock::class.item(), 1)
                     .pattern(" B ")
                     .pattern("III")
                     .pattern(" F ")

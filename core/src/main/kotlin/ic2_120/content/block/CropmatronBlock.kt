@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -81,7 +83,7 @@ class CropmatronBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
             val cropStick = CropStickBlock::class.item()
             if (machine == Items.AIR || circuit == Items.AIR || emptyCell == Items.AIR || cropStick == Items.AIR) return
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CropmatronBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, CropmatronBlock::class.item(), 1)
                 .pattern("CHC")
                 .pattern("EME")
                 .pattern("SSS")

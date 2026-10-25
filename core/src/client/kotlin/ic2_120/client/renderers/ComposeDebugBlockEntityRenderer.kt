@@ -2,23 +2,21 @@ package ic2_120.client.renderers
 
 import ic2_120.content.block.ComposeDebugBlockEntity
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes as RenderType
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider
 import com.mojang.blaze3d.vertex.PoseStack
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import com.mojang.math.Axis
 import kotlin.math.PI
 import kotlin.math.sin
 
 class ComposeDebugBlockEntityRenderer(
     context: BlockEntityRendererProvider.Context
-) : BlockEntityRenderer<ComposeDebugBlockEntity> {
+) : LegacyBlockEntityRenderer26<ComposeDebugBlockEntity>() {
 
     companion object {
-        private val WHITE_TEXTURE = ResourceLocation.withDefaultNamespace("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.withDefaultNamespace("textures/misc/white.png")
         private const val RING_SEGMENTS = 24
     }
 
@@ -27,7 +25,7 @@ class ComposeDebugBlockEntityRenderer(
         val ignored = context
     }
 
-    override fun render(
+    override fun renderLegacy(
         entity: ComposeDebugBlockEntity,
         tickDelta: Float,
         matrices: PoseStack,
@@ -214,5 +212,5 @@ class ComposeDebugBlockEntityRenderer(
             .setNormal(entry, nx, ny, nz)
     }
 
-    override fun shouldRenderOffScreen(blockEntity: ComposeDebugBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(): Boolean = true
 }

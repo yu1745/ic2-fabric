@@ -12,7 +12,7 @@ import ic2_120.content.network.ToggleQuantumBootsJumpPayload
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
@@ -34,30 +34,30 @@ import org.lwjgl.glfw.GLFW
 object ArmorKeybinds {
     private val minecraft = Minecraft.getInstance()
 
-    private val toggleVisionKey = KeyBindingHelper.registerKeyBinding(
+    private val toggleVisionKey = KeyMappingHelper.registerKeyMapping(
         KeyMapping(
             "key.ic2_120.toggle_vision",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_N,
-            "category.ic2_120.ic2"
+            Ic2KeyCategory.category
         )
     )
 
-    private val toggleSpeedKey = KeyBindingHelper.registerKeyBinding(
+    private val toggleSpeedKey = KeyMappingHelper.registerKeyMapping(
         KeyMapping(
             "key.ic2_120.toggle_speed",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_L,
-            "category.ic2_120.ic2"
+            Ic2KeyCategory.category
         )
     )
 
-    private val toggleJumpKey = KeyBindingHelper.registerKeyBinding(
+    private val toggleJumpKey = KeyMappingHelper.registerKeyMapping(
         KeyMapping(
             "key.ic2_120.toggle_jump",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_J,
-            "category.ic2_120.ic2"
+            Ic2KeyCategory.category
         )
     )
 
@@ -102,7 +102,7 @@ object ArmorKeybinds {
     }
 
     private fun isAltDown(): Boolean {
-        val window = Minecraft.getInstance().window.window
+        val window = Minecraft.getInstance().window
         return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_ALT) ||
                InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_ALT)
     }

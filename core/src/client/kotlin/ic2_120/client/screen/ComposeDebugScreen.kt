@@ -6,7 +6,7 @@ import ic2_120.content.block.ComposeDebugBlock
 import ic2_120.content.screen.ComposeDebugScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
@@ -25,13 +25,11 @@ class ComposeDebugScreen(
     val handler: ComposeDebugScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<ComposeDebugScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<ComposeDebugScreenHandler>(handler, playerInventory, title, GuiSize.DEBUG.width, GuiSize.DEBUG.height) {
 
     private val ui = ComposeUI()
 
     init {
-        imageWidth = GuiSize.DEBUG.width
-        imageHeight = GuiSize.DEBUG.height
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {

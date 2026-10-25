@@ -304,12 +304,12 @@ object CropSystem {
             HItem(Items.MELON, chance = 33),
             HItem(Items.MELON_SLICE, HQt.Rng(2, 5), chance = 67),
         )
-        CropType.DANDELION -> listOf(HItem(Items.YELLOW_DYE))
-        CropType.POPPY -> listOf(HItem(Items.RED_DYE))
-        CropType.BLACKTHORN -> listOf(HItem(Items.BLACK_DYE))
-        CropType.TULIP -> listOf(HItem(Items.PURPLE_DYE))
-        CropType.CYAZINT -> listOf(HItem(Items.BLUE_DYE))
-        CropType.VENOMILIA -> listOf(HItem(Items.PURPLE_DYE))
+        CropType.DANDELION -> listOf(HItem(Items.DYE.pick(net.minecraft.world.item.DyeColor.YELLOW)))
+        CropType.POPPY -> listOf(HItem(Items.DYE.pick(net.minecraft.world.item.DyeColor.RED)))
+        CropType.BLACKTHORN -> listOf(HItem(Items.DYE.pick(net.minecraft.world.item.DyeColor.BLACK)))
+        CropType.TULIP -> listOf(HItem(Items.DYE.pick(net.minecraft.world.item.DyeColor.PURPLE)))
+        CropType.CYAZINT -> listOf(HItem(Items.DYE.pick(net.minecraft.world.item.DyeColor.BLUE)))
+        CropType.VENOMILIA -> listOf(HItem(Items.DYE.pick(net.minecraft.world.item.DyeColor.PURPLE)))
         CropType.REED -> listOf(HItem(Items.SUGAR_CANE, HQt.Age))
         CropType.STICKY_REED -> listOf(HItem(Items.SUGAR_CANE, HQt.Age))
         CropType.COCOA -> listOf(HItem(Items.COCOA_BEANS))

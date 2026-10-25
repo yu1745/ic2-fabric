@@ -1,7 +1,7 @@
 package ic2_120.client
 
 import ic2_120.content.fluid.ModFluids
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.SpriteContents
 import net.minecraft.world.level.material.Fluid
@@ -70,13 +70,13 @@ object FluidUtils {
         // 全局采样：遍历所有非边缘像素
         for (y in edgeMargin until (h - edgeMargin)) {
             for (x in edgeMargin until (w - edgeMargin)) {
-                val color = image.getPixelRGBA(x, y)
+                val color = image.getPixel(x, y)
 
-                // ABGR 格式解析
+                // 26.2 NativeImage.getPixel 返回 ARGB。
                 val a = (color shr 24) and 0xFF
-                val b = (color shr 16) and 0xFF
+                val r = (color shr 16) and 0xFF
                 val g = (color shr 8) and 0xFF
-                val r = color and 0xFF
+                val b = color and 0xFF
 
                 // 只采样不透明像素
                 if (a >= 64) {

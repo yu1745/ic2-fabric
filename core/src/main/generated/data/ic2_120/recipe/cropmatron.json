@@ -1,22 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:circuit"
-    },
-    "E": {
-      "item": "ic2_120:empty_cell"
-    },
-    "H": {
-      "item": "minecraft:chest"
-    },
-    "M": {
-      "item": "ic2_120:machine"
-    },
-    "S": {
-      "item": "ic2_120:crop_stick"
-    }
+    "C": "ic2_120:circuit",
+    "E": "ic2_120:empty_cell",
+    "H": "minecraft:chest",
+    "M": "ic2_120:machine",
+    "S": "ic2_120:crop_stick"
   },
   "pattern": [
     "CHC",
@@ -24,7 +13,6 @@
     "SSS"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120:cropmatron"
   }
 }

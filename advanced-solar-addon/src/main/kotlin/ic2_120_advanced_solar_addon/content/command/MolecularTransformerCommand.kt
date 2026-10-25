@@ -10,7 +10,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.commands.Commands.argument
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.commands.Commands.literal
 
 object MolecularTransformerCommand {
@@ -18,7 +18,7 @@ object MolecularTransformerCommand {
         CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback { dispatcher, _, _ ->
             dispatcher.register(
                 literal("ic2mt")
-                    .requires { source -> source.hasPermission(2) }
+                    .requires(net.minecraft.commands.Commands.hasPermission(net.minecraft.commands.Commands.LEVEL_GAMEMASTERS))
                     // 设置命令: /ic2mt set <energy>
                     .then(
                         literal("set")
@@ -195,7 +195,7 @@ object MolecularTransformerCommand {
         for (i in startIndex until endIndex) {
             val recipe = allRecipes[i]
             fun itemDisplay(id: String): Component {
-                val item = ResourceLocation.tryParse(id)?.let { BuiltInRegistries.ITEM.get(it) }
+                val item = Identifier.tryParse(id)?.let { BuiltInRegistries.ITEM.getValue(it) }
                 return if (item != null && item !== Items.AIR) {
                     Component.translatable(item.descriptionId)
                         .withStyle(ChatFormatting.YELLOW)

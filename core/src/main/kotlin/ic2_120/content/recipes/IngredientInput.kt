@@ -1,6 +1,7 @@
 package ic2_120.content.recipes
 
 import com.google.gson.JsonObject
+import ic2_120.compat.tagIngredient
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.Ingredient
@@ -28,9 +29,9 @@ sealed class IngredientInput {
     abstract fun toIngredient(): Ingredient
     abstract fun toItemStack(count: Int): ItemStack
     fun toItemStacks(count: Int): List<ItemStack> =
-        toIngredient().items.map { stack ->
-            stack.copy().also { it.count = count }
-        }.ifEmpty {
+        toIngredient().items().map { holder ->
+            ItemStack(holder.value(), count)
+        }.toList().ifEmpty {
             listOf(toItemStack(count))
         }
 
@@ -49,7 +50,7 @@ sealed class IngredientInput {
         override fun toJson(): JsonObject = JsonObject().apply {
             addProperty("tag", tag.location.toString())
         }
-        override fun toIngredient(): Ingredient = Ingredient.of(tag)
+        override fun toIngredient(): Ingredient = tagIngredient(tag)
         override fun toItemStack(count: Int): ItemStack = ItemStack(displayItem, count)
     }
 

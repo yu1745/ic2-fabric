@@ -1,13 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "misc",
   "key": {
-    "I": {
-      "item": "ic2_120:iridium"
-    },
-    "S": {
-      "item": "ic2_120_advanced_solar_addon:sunnarium"
-    }
+    "I": "ic2_120_advanced_solar_addon:photovoltaic_iridium_plate",
+    "S": "ic2_120_advanced_solar_addon:sunnarium"
   },
   "pattern": [
     "III",
@@ -15,7 +10,6 @@
     "III"
   ],
   "result": {
-    "count": 1,
     "id": "ic2_120_advanced_solar_addon:sunnarium_alloy"
   }
 }

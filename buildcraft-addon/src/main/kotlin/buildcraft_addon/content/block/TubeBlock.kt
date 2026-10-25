@@ -6,4 +6,4 @@ import net.minecraft.world.level.block.Blocks
 
 /** 液泵/挖掘机延伸的管道方块，仅作为位置标记，无碰撞/无渲染。 */
 @ModBlock(name = "tube", registerItem = false)
-class TubeBlock : Block(Properties.ofFullCopy(Blocks.AIR).strength(-1.0f, 0f).noLootTable().noCollission() .noOcclusion())
+class TubeBlock : Block(Properties.ofFullCopy(Blocks.AIR).strength(-1.0f, 0f).noLootTable().noCollision() .noOcclusion())

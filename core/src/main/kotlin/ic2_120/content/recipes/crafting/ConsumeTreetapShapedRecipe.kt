@@ -1,5 +1,7 @@
 package ic2_120.content.recipes.crafting
 
+import ic2_120.compat.accept
+
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.serialization.MapCodec
@@ -11,7 +13,7 @@ import net.minecraft.core.NonNullList
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.crafting.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -29,22 +31,25 @@ class ConsumeTreetapShapedRecipe(
     internal val patternKeys: Map<Char, Ingredient>,
     result: ItemStack,
     group: String = "",
-) : ShapedRecipe(group, CraftingBookCategory.MISC, ShapedRecipePattern.of(patternKeys, patternRows), result, true) {
+) : ShapedRecipe(net.minecraft.world.item.crafting.Recipe.CommonInfo(true), net.minecraft.world.item.crafting.CraftingRecipe.CraftingBookInfo(CraftingBookCategory.MISC, group), ShapedRecipePattern.of(patternKeys, patternRows), net.minecraft.world.item.ItemStackTemplate.fromNonEmptyStack(result)) {
+    internal val recipeResult: ItemStack = result.copy()
+
     override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
         // 消耗参与合成的木龙头，其余材料按原版余物规则返回
         val remainder = NonNullList.withSize(input.size(), ItemStack.EMPTY)
         for (slot in 0 until input.size()) {
             val stack = input.getItem(slot)
             if (stack.isEmpty) continue
-            remainder[slot] = if (stack.item is Treetap) ItemStack.EMPTY else stack.item.getRecipeRemainder(stack)
+            remainder[slot] = if (stack.item is Treetap) ItemStack.EMPTY else stack.item.craftingRemainder?.create() ?: ItemStack.EMPTY
         }
         return remainder
     }
 
-    override fun getSerializer(): RecipeSerializer<*> = ConsumeTreetapShapedRecipeSerializer
+    @Suppress("UNCHECKED_CAST")
+    override fun getSerializer(): RecipeSerializer<ShapedRecipe> = ConsumeTreetapShapedRecipeSerializer.serializer as RecipeSerializer<ShapedRecipe>
 }
 
-fun decodeConsumeTreetapShapedJson(id: ResourceLocation, json: JsonObject): ConsumeTreetapShapedRecipe {
+fun decodeConsumeTreetapShapedJson(id: Identifier, json: JsonObject): ConsumeTreetapShapedRecipe {
     val keyMap = linkedMapOf<Char, Ingredient>()
     val keyObj = json.getAsJsonObject("key")
     for ((charKey, value) in keyObj.entrySet()) {
@@ -52,7 +57,7 @@ fun decodeConsumeTreetapShapedJson(id: ResourceLocation, json: JsonObject): Cons
     }
     val rows = json.getAsJsonArray("pattern").map { it.asString }
     val resultObj = json.getAsJsonObject("result")
-    val resultItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(resultObj.get("item").asString))
+    val resultItem = BuiltInRegistries.ITEM.getValue(Identifier.parse(resultObj.get("item").asString))
     val count = if (resultObj.has("count")) resultObj.get("count").asInt else 1
     return ConsumeTreetapShapedRecipe(rows, keyMap, ItemStack(resultItem, count))
 }
@@ -62,10 +67,7 @@ fun encodeConsumeTreetapShapedJson(json: JsonObject, recipe: ConsumeTreetapShape
 
     val keyObj = JsonObject()
     for ((charKey, ingredient) in recipe.patternKeys) {
-        val obj = JsonObject()
-        val first = ingredient.items.firstOrNull()
-        obj.addProperty("item", first?.let { BuiltInRegistries.ITEM.getKey(it.item)?.toString() } ?: "minecraft:air")
-        keyObj.add(charKey.toString(), obj)
+        keyObj.add(charKey.toString(), ic2_120.content.recipes.ingredientJson26(ingredient))
     }
     json.add("key", keyObj)
 
@@ -73,7 +75,7 @@ fun encodeConsumeTreetapShapedJson(json: JsonObject, recipe: ConsumeTreetapShape
     for (row in recipe.patternRows) patternArr.add(row)
     json.add("pattern", patternArr)
 
-    val result = recipe.getResultItem(net.minecraft.core.RegistryAccess.EMPTY)
+    val result = recipe.recipeResult.copy()
     val resultObj = JsonObject()
     BuiltInRegistries.ITEM.getKey(result.item)?.let { resultObj.addProperty("item", it.toString()) }
     if (result.count > 1) resultObj.addProperty("count", result.count)
@@ -82,7 +84,7 @@ fun encodeConsumeTreetapShapedJson(json: JsonObject, recipe: ConsumeTreetapShape
 }
 
 @ModMachineRecipe(id = "consume_treetap_shaped", recipeClass = ConsumeTreetapShapedRecipe::class)
-object ConsumeTreetapShapedRecipeSerializer : RecipeSerializer<ConsumeTreetapShapedRecipe> {
+object ConsumeTreetapShapedRecipeSerializer : ic2_120.content.recipes.RecipeSerializerHolder26<ConsumeTreetapShapedRecipe>() {
     override fun codec(): MapCodec<ConsumeTreetapShapedRecipe> = ic2_120.content.recipes.RecipeCodecBridge.jsonMapCodec(
         "ic2_120:consume_treetap_shaped",
         ::decodeConsumeTreetapShapedJson,
@@ -90,21 +92,22 @@ object ConsumeTreetapShapedRecipeSerializer : RecipeSerializer<ConsumeTreetapSha
     )
 
     // TODO(1.21.1): 配方不走网络同步（双端各自读 datapack），流编解码仅做占位实现
-    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, ConsumeTreetapShapedRecipe> {
-        val delegate = RecipeSerializer.SHAPED_RECIPE.streamCodec()
-        return StreamCodec.ofMember(
-            { recipe: ConsumeTreetapShapedRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
-            { _ ->
-                ConsumeTreetapShapedRecipe(listOf("X"), linkedMapOf('X' to Ingredient.EMPTY), ItemStack.EMPTY)
+    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, ConsumeTreetapShapedRecipe> =
+        StreamCodec.ofMember(
+            { recipe: ConsumeTreetapShapedRecipe, buf: RegistryFriendlyByteBuf ->
+                CraftingRecipeNetwork26.writeShaped(buf, recipe.patternRows, recipe.patternKeys, recipe.recipeResult)
+            },
+            { buf: RegistryFriendlyByteBuf ->
+                val (rows, keys, result) = CraftingRecipeNetwork26.readShaped(buf)
+                ConsumeTreetapShapedRecipe(rows, keys, result)
             }
         )
-    }
 }
 
 object ConsumeTreetapShapedRecipeDatagen {
     fun offer(
         exporter: net.minecraft.data.recipes.RecipeOutput,
-        recipeId: ResourceLocation,
+        recipeId: Identifier,
         result: Item,
         pattern: List<String>,
         keys: Map<Char, Item>,

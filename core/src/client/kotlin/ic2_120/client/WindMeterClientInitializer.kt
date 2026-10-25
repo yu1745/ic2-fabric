@@ -22,7 +22,7 @@ object WindMeterClientInitializer {
             fun requiredStartY(multiplier: Int): Int {
                 val threshold = we.startThresholdForMultiplier(multiplier)
                 if (effective >= threshold) return -2
-                val top = world.maxBuildHeight
+                val top = world.maxY
                 for (y in 0..top) {
                     val windAtY = we.meanWindFromY(y) * weather * gust
                     if (windAtY >= threshold) return y
@@ -33,20 +33,20 @@ object WindMeterClientInitializer {
             fun permilleToPct(v: Double): String = String.format("%.1f%%", v * 100.0)
             fun permilleToMultiplier(v: Double): String = String.format("%.2fx", v)
 
-            val hud = Minecraft.getInstance().gui.chat
-            hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.mean_wind", permilleToPct(mean)))
-            hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.weather_bonus", permilleToMultiplier(weather)))
-            hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.gust_bonus", permilleToMultiplier(gust)))
-            hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.effective_wind", permilleToPct(effective)))
+            val hud = Minecraft.getInstance().gui.hud.chat
+            hud.addClientSystemMessage(Component.translatable("gui.ic2_120.wind_meter.mean_wind", permilleToPct(mean)))
+            hud.addClientSystemMessage(Component.translatable("gui.ic2_120.wind_meter.weather_bonus", permilleToMultiplier(weather)))
+            hud.addClientSystemMessage(Component.translatable("gui.ic2_120.wind_meter.gust_bonus", permilleToMultiplier(gust)))
+            hud.addClientSystemMessage(Component.translatable("gui.ic2_120.wind_meter.effective_wind", permilleToPct(effective)))
 
             fun rotorLine(rotorKey: String, multiplier: Int) {
                 val kuVal = ku(multiplier)
                 val requiredY = requiredStartY(multiplier)
                 val rotorName = Component.translatable(rotorKey)
                 when {
-                    requiredY >= 0 -> hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.rotor_need_height", rotorName, kuVal, requiredY))
-                    requiredY == -1 -> hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.rotor_no_weather", rotorName, kuVal))
-                    else -> hud.addMessage(Component.translatable("gui.ic2_120.wind_meter.rotor_output", rotorName, kuVal))
+                    requiredY >= 0 -> hud.addClientSystemMessage(Component.translatable("gui.ic2_120.wind_meter.rotor_need_height", rotorName, kuVal, requiredY))
+                    requiredY == -1 -> hud.addClientSystemMessage(Component.translatable("gui.ic2_120.wind_meter.rotor_no_weather", rotorName, kuVal))
+                    else -> hud.addClientSystemMessage(Component.translatable("gui.ic2_120.wind_meter.rotor_output", rotorName, kuVal))
                 }
             }
 

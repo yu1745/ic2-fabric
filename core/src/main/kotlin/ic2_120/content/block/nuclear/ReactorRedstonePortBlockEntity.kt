@@ -1,5 +1,7 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.LegacyBlockEntity26
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -30,7 +32,7 @@ class ReactorRedstonePortBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), IRedstoneControlSupport {
+) : LegacyBlockEntity26(type, pos, state), IRedstoneControlSupport {
 
     // 次构造函数：仅接受 pos 和 state，自动获取 type
     constructor(pos: BlockPos, state: BlockState) : this(
@@ -74,7 +76,7 @@ class ReactorRedstonePortBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        redstoneInverted = nbt.getBoolean("RedstoneInverted")
+        redstoneInverted = nbt.getBooleanOr("RedstoneInverted", false)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {

@@ -16,7 +16,6 @@ import net.minecraft.client.Minecraft
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
 import org.lwjgl.glfw.GLFW
 import ic2_120.content.network.ToggleChainsawShearPayload
 import ic2_120.content.network.ToggleIridiumSilkTouchPayload
@@ -68,9 +67,9 @@ object ModeKeybinds {
         UseItemCallback.EVENT.register { player, world, hand ->
             if (world.isClientSide && isAltDown() && player.getItemInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
                 toggleFoamModeOnceThisTick(player.tickCount)
-                InteractionResultHolder.fail(player.getItemInHand(hand))
+                InteractionResult.FAIL
             } else {
-                InteractionResultHolder.pass(player.getItemInHand(hand))
+                InteractionResult.PASS
             }
         }
     }

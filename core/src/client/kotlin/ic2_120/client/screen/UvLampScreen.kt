@@ -5,22 +5,20 @@ import ic2_120.client.t
 import ic2_120.content.block.UvLampBlock
 import ic2_120.content.screen.UvLampScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = UvLampBlock::class)
 class UvLampScreen(
     val handler: UvLampScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<UvLampScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<UvLampScreenHandler>(handler, playerInventory, title, 176, 162) {
 
     init {
-        imageWidth = 176
-        imageHeight = 162
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -94,7 +92,7 @@ class UvLampScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiuvlamp.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiuvlamp.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条纹理区域 (180,4)-(194,18) = 14×14

@@ -1,11 +1,11 @@
 package ic2_120.client
 
 import ic2_120.content.fluid.ModFluids
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
-import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler
-import net.minecraft.client.renderer.RenderType
-import net.minecraft.resources.ResourceLocation
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderingRegistry
+import net.minecraft.client.renderer.block.FluidModel
+import net.minecraft.client.resources.model.sprite.Material
+import net.minecraft.client.color.block.BlockTintSource
+import net.minecraft.resources.Identifier
 import org.slf4j.LoggerFactory
 
 /**
@@ -113,36 +113,7 @@ object ModFluidClient {
             "block/fluid/steam_rise_flow"
         )
 
-        // 流体方块使用半透明渲染层
-        BlockRenderLayerMap.INSTANCE.putFluids(
-            RenderType.translucent(),
-            ModFluids.COOLANT_STILL,
-            ModFluids.COOLANT_FLOWING,
-            ModFluids.HOT_COOLANT_STILL,
-            ModFluids.HOT_COOLANT_FLOWING,
-            ModFluids.UU_MATTER_STILL,
-            ModFluids.UU_MATTER_FLOWING,
-            ModFluids.WEED_EX_STILL,
-            ModFluids.WEED_EX_FLOWING,
-            ModFluids.PAHOEHOE_LAVA_STILL,
-            ModFluids.PAHOEHOE_LAVA_FLOWING,
-            ModFluids.DISTILLED_WATER_STILL,
-            ModFluids.DISTILLED_WATER_FLOWING,
-            ModFluids.BIOFUEL_STILL,
-            ModFluids.BIOFUEL_FLOWING,
-            ModFluids.BIOMASS_STILL,
-            ModFluids.BIOMASS_FLOWING,
-            ModFluids.CONSTRUCTION_FOAM_STILL,
-            ModFluids.CONSTRUCTION_FOAM_FLOWING,
-            ModFluids.CREOSOTE_STILL,
-            ModFluids.CREOSOTE_FLOWING,
-            ModFluids.COMPRESSED_AIR_STILL,
-            ModFluids.COMPRESSED_AIR_FLOWING,
-            ModFluids.STEAM_STILL,
-            ModFluids.STEAM_FLOWING,
-            ModFluids.SUPERHEATED_STEAM_STILL,
-            ModFluids.SUPERHEATED_STEAM_FLOWING
-        )
+
     }
 
     /**
@@ -159,32 +130,29 @@ object ModFluidClient {
         val flowId = parseTextureId(flowTex)
         val tint = ModFluids.getFluidTintOrNull(still)
         logFluidRegistration(still, flowing, stillId, flowId, tint)
-        if (tint != null) {
-            FluidRenderHandlerRegistry.INSTANCE.register(
-                still, flowing,
-                SimpleFluidRenderHandler(stillId, flowId, tint)
-            )
-        } else {
-            FluidRenderHandlerRegistry.INSTANCE.register(
-                still, flowing,
-                SimpleFluidRenderHandler(stillId, flowId)
-            )
-        }
+        val tintSource = tint?.let { color -> BlockTintSource { color } }
+        val model = FluidModel.Unbaked(
+            Material(stillId).withForceTranslucent(true),
+            Material(flowId).withForceTranslucent(true),
+            null,
+            tintSource
+        )
+        FluidRenderingRegistry.register(still, flowing, model)
     }
 
-    private fun parseTextureId(path: String): ResourceLocation {
+    private fun parseTextureId(path: String): Identifier {
         return if (path.contains(':')) {
-            ResourceLocation.tryParse(path) ?: ResourceLocation.fromNamespaceAndPath(TEXTURE_NS, path)
+            Identifier.tryParse(path) ?: Identifier.fromNamespaceAndPath(TEXTURE_NS, path)
         } else {
-            ResourceLocation.fromNamespaceAndPath(TEXTURE_NS, path)
+            Identifier.fromNamespaceAndPath(TEXTURE_NS, path)
         }
     }
 
     private fun logFluidRegistration(
         stillFluid: net.minecraft.world.level.material.Fluid,
         flowingFluid: net.minecraft.world.level.material.Fluid,
-        stillId: ResourceLocation,
-        flowId: ResourceLocation,
+        stillId: Identifier,
+        flowId: Identifier,
         tintColor: Int?
     ) {
         val stillPath = "/assets/${stillId.namespace}/textures/${stillId.path}.png"

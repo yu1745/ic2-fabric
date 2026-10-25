@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import ic2_120_advanced_solar_addon.content.item.MtCore
@@ -39,7 +41,7 @@ import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
 import ic2_120.compat.*
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 // i18n: block.ic2_120_advanced_solar_addon.molecular_transformer
 // zh_cn: 分子重组仪
@@ -63,7 +65,7 @@ class MolecularTransformerBlock : MachineBlock(
             val transformer = HvTransformerBlock::class.item()
             val circuit = AdvancedCircuit::class.instance()
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MolecularTransformerBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MolecularTransformerBlock::class.item(), 1)
                 .pattern("CTC")
                 .pattern("CMC")
                 .pattern("CTC")

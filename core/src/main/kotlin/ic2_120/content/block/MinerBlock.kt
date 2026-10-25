@@ -1,12 +1,14 @@
 package ic2_120.content.block
 
+import ic2_120.compat.save
+
 import ic2_120.compat.validateTicker
 
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -65,23 +67,7 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         return InteractionResult.SUCCESS
     }
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onRemove(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.`is`(newState.block) && !moved) {
-            val be = world.getBlockEntity(pos)
-            if (be is BaseMinerBlockEntity) {
-                for (stack in be.itemCache) {
-                    if (!stack.isEmpty) net.minecraft.world.Containers.dropItemStack(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack.copy())
-                }
-                be.itemCache.clear()
-                be.cacheItemCount = 0
-            }
-            retrieveMiningPipes(world, pos)
-        }
-        super.onRemove(state, world, pos, newState, moved)
-    }
-
-    private fun retrieveMiningPipes(world: Level, pos: BlockPos) {
+    fun retrieveMiningPipes(world: Level, pos: BlockPos) {
         // 读取采矿机的扫描范围，用于回收水平方向铺设的管道
         val be = world.getBlockEntity(pos)
         val radius = if (be is BaseMinerBlockEntity) {
@@ -94,7 +80,7 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         } else 0
 
         val planned = mutableListOf<BlockPos>()
-        for (y in (pos.y - 1) downTo world.minBuildHeight) {
+        for (y in (pos.y - 1) downTo world.minY) {
             var foundAny = false
 
             // 垂直管柱（直上直下的管道）
@@ -156,7 +142,7 @@ class MinerBlock : BaseMinerBlock() {
             val miningPipe = MiningPipeBlock::class.item()
             val chest = Items.CHEST
             if (machine != Items.AIR && circuit != Items.AIR && miningPipe != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MinerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, MinerBlock::class.item(), 1)
                     .pattern(" C ")
                     .pattern("cMc")
                     .pattern(" P ")
@@ -193,7 +179,7 @@ class AdvancedMinerBlock : BaseMinerBlock() {
             val advCasing = AdvancedMachineCasingBlock::class.item()
             val mfe = MfeBlock::class.item()
             if (alloy != Items.AIR && miner != Items.AIR && teleporter != Items.AIR && advCasing != Items.AIR && mfe != Items.AIR) {
-                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedMinerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, AdvancedMinerBlock::class.item(), 1)
                     .pattern("AmA")
                     .pattern("TUM")
                     .pattern("AmA")

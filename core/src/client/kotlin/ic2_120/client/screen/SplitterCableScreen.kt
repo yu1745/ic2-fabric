@@ -3,13 +3,13 @@ package ic2_120.client.screen
 import ic2_120.client.t
 import ic2_120.content.screen.SplitterCableScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.client.Minecraft
 
 @ModScreen(handler = "splitter_cable")
@@ -17,13 +17,11 @@ class SplitterCableScreen(
     val handler: SplitterCableScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<SplitterCableScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<SplitterCableScreenHandler>(handler, playerInventory, title, 176, 166) {
 
     private lateinit var invertedButton: Button
 
     init {
-        imageWidth = 176
-        imageHeight = 166
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -80,7 +78,7 @@ class SplitterCableScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guilimitercable.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guilimitercable.png")
         private const val TEX_SIZE = 256
     }
 }

@@ -1,8 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.compat.save
+
 import net.minecraft.data.recipes.RecipeProvider.getHasName
 
-import net.minecraft.data.recipes.RecipeProvider.has
+import ic2_120.compat.has
 
 import ic2_120.compat.isClient
 
@@ -29,7 +31,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.level.Level
 import ic2_120.registry.annotation.RecipeProvider
 
@@ -42,15 +44,15 @@ class EmptyTinCanItem : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             val tinIngot = TinIngot::class.instance()
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
                 .pattern("TTT").pattern("T T").pattern("TTT")
-                .define('T', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_TIN))
                 .unlockedBy(getHasName(tinIngot), has(tinIngot))
                 .save(exporter, EmptyTinCanItem::class.recipeId("from_ingots_8"))
 
-            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 4)
+            ShapedRecipeBuilder.shaped(net.minecraft.core.registries.BuiltInRegistries.ITEM, RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 4)
                 .pattern(" T ").pattern("T T").pattern("TTT")
-                .define('T', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
+                .define('T', ic2_120.compat.tagIngredient(ModTags.Compat.Items.INGOTS_TIN))
                 .unlockedBy(getHasName(tinIngot), has(tinIngot))
                 .save(exporter, EmptyTinCanItem::class.recipeId("from_ingots_6"))
         }
@@ -69,14 +71,14 @@ class FilledTinCanItem : Item(
             FoodProperties.Builder()
                 .nutrition(2)
                 .saturationModifier(0.2f)
-                .fast()
                 .alwaysEdible()
-                .build()
+                .build(),
+            net.minecraft.world.item.component.Consumable.builder().consumeSeconds(0.5f).build()
         )
 ) {
 
     private val emptyTinCanItem: Item
-        get() = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
+        get() = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
 
     /** 10 tick ≈ 1秒吃2个） */
     override fun getUseDuration(stack: ItemStack, user: LivingEntity): Int = 10
@@ -95,14 +97,13 @@ class FilledTinCanItem : Item(
         if (stack.count > 1) {
             stack.shrink(1)
             if (user is Player && !user.inventory.add(remainder)) {
-                user.spawnAtLocation(remainder, 0f)
+                (world as? net.minecraft.server.level.ServerLevel)?.let { user.spawnAtLocation(it, remainder, 0f) }
             }
             return stack
         }
         return remainder
     }
 
-    override fun getRecipeRemainder(stack: ItemStack): ItemStack = ItemStack(emptyTinCanItem)
 }
 
 /**

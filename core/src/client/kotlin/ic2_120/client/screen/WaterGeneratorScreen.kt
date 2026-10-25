@@ -7,25 +7,23 @@ import ic2_120.content.block.WaterGeneratorBlock
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.WaterGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import ic2_120.client.compat.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = WaterGeneratorBlock::class)
 class WaterGeneratorScreen(
     val handler: WaterGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<WaterGeneratorScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<WaterGeneratorScreenHandler>(handler, playerInventory, title, GUI_SIZE.width, GUI_SIZE.height) {
 
     init {
-        imageWidth = GUI_SIZE.width
-        imageHeight = GUI_SIZE.height
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -103,7 +101,7 @@ class WaterGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guiwatergenerator.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guiwatergenerator.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()

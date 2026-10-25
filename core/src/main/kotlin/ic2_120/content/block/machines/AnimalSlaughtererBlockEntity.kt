@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.ContainerHelper26
+
 import net.minecraft.network.FriendlyByteBuf
 
 import io.netty.buffer.Unpooled
@@ -33,10 +35,10 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.entity.AgeableMob
-import net.minecraft.world.entity.animal.Sheep
+import net.minecraft.world.entity.animal.sheep.Sheep
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
@@ -67,7 +69,7 @@ class AnimalSlaughtererBlockEntity(
     IEnergyStorageUpgradeSupport,
     IEjectorUpgradeSupport,
     ITransformerUpgradeSupport,
-    ExtendedScreenHandlerFactory<FriendlyByteBuf> {
+    ExtendedMenuProvider<FriendlyByteBuf> {
 
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = AnimalSlaughtererBlock.ACTIVE
     override val tier: Int = ANIMAL_SLAUGHTERER_TIER
@@ -145,7 +147,7 @@ class AnimalSlaughtererBlockEntity(
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.animal_slaughterer")
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
+    override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
         AnimalSlaughtererScreenHandler(
             syncId,
             playerInventory,
@@ -157,16 +159,16 @@ class AnimalSlaughtererBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory, lookup)
+        ContainerHelper26.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(AnimalSlaughtererSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLongOr(AnimalSlaughtererSync.NBT_ENERGY_STORED, 0L)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory, lookup)
+        ContainerHelper26.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalSlaughtererSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -285,7 +287,7 @@ class AnimalSlaughtererBlockEntity(
                 // 1-2 羊肉 + 1 羊毛（羊被击杀时如果没剪毛就掉羊毛）
                 drops.add(ItemStack(net.minecraft.world.item.Items.MUTTON, 1 + rand.nextInt(2)))
                 if ((animal as? Sheep)?.isSheared != true) {
-                    drops.add(ItemStack(net.minecraft.world.item.Items.WHITE_WOOL, 1))
+                    drops.add(ItemStack(net.minecraft.world.item.Items.WOOL.pick(net.minecraft.world.item.DyeColor.WHITE), 1))
                 }
             }
             "minecraft:chicken" -> {

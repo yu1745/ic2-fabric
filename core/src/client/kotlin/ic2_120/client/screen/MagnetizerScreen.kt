@@ -6,22 +6,20 @@ import ic2_120.content.block.MagnetizerBlock
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.MagnetizerScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.gui.GuiGraphics
+import ic2_120.client.compat.*
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 @ModScreen(block = MagnetizerBlock::class)
 class MagnetizerScreen(
     val handler: MagnetizerScreenHandler,
     playerInventory: Inventory,
     title: Component
-) : AbstractContainerScreen<MagnetizerScreenHandler>(handler, playerInventory, title) {
+) : LegacyContainerScreen26<MagnetizerScreenHandler>(handler, playerInventory, title, GUI_SIZE.width, GUI_SIZE.height) {
 
     init {
-        imageWidth = GUI_SIZE.width
-        imageHeight = GUI_SIZE.height
     }
 
     override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -105,7 +103,7 @@ class MagnetizerScreen(
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/guimagnetizer.png")
+        private val TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/guimagnetizer.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
 
@@ -126,7 +124,7 @@ class MagnetizerScreen(
         private const val BOOTS_Y = 32
 
         // uptips (4,4)
-        private val UPTIPS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
+        private val UPTIPS_TEXTURE = Identifier.fromNamespaceAndPath("ic2", "textures/gui/uptips.png")
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4
         private const val UPTIPS_SIZE = 16
