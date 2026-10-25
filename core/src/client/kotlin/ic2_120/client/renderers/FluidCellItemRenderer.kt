@@ -163,7 +163,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val sp = c.sprite
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, ny: Float, nz: Float) {
             vc.addVertex(entry.pose(), x, y, z).setColor(r, g, b, 255)
-                .setUv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
+                .setUv(sp.getU(u), sp.getV(vv))
                 .setOverlay(overlay).setLight(light).setNormal(entry, nx, ny, nz)
         }
         for (k in 0 until SIDES) {
@@ -194,7 +194,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val pts = ring(GLASS_R)
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, nz: Float) {
             vc.addVertex(entry.pose(), x, y, z).setColor(255, 255, 255, 64)
-                .setUv(sp.getU(u * 16.0f), sp.getV(vv * 16.0f))
+                .setUv(sp.getU(u), sp.getV(vv))
                 .setOverlay(overlay).setLight(light).setNormal(entry, nx, 0f, nz)
         }
         for (k in 0 until SIDES) {

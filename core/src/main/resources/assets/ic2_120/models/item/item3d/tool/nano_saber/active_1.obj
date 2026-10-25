@@ -1,5 +1,5 @@
 # ic2_120 tools/model3d/item3d 生成，勿手改
-mtllib tool/nano_saber/active_1.mtl
+mtllib active_1.mtl
 usemtl flat_383838
 v 0.5577 0.075 0.5239
 vt 0 0.075

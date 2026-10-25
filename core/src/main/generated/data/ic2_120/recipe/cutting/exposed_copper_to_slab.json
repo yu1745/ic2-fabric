@@ -1,3 +1,12 @@
 {
-  "type": "ic2_120:cutting"
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:exposed_copper"
+  },
+  "input_count": 1,
+  "material_hardness": 3,
+  "result": {
+    "count": 9,
+    "item": "minecraft:exposed_cut_copper_slab"
+  }
 }

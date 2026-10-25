@@ -62,6 +62,14 @@
     "ic2_120:electric_furnace",
     "ic2_120:electric_heat_generator",
     "ic2_120:energy_o_mat",
+    "ic2_120:batbox",
+    "ic2_120:cesu",
+    "ic2_120:mfe",
+    "ic2_120:mfsu",
+    "ic2_120:batbox_chargepad",
+    "ic2_120:cesu_chargepad",
+    "ic2_120:mfe_chargepad",
+    "ic2_120:mfsu_chargepad",
     "ic2_120:extractor",
     "ic2_120:fermenter",
     "ic2_120:fluid_canner",
@@ -188,14 +196,6 @@
     "ic2_120:iron_transmission_shaft",
     "ic2_120:steel_transmission_shaft",
     "ic2_120:carbon_transmission_shaft",
-    "ic2_120:bevel_gear",
-    "ic2_120:batbox",
-    "ic2_120:cesu",
-    "ic2_120:mfe",
-    "ic2_120:mfsu",
-    "ic2_120:batbox_chargepad",
-    "ic2_120:cesu_chargepad",
-    "ic2_120:mfe_chargepad",
-    "ic2_120:mfsu_chargepad"
+    "ic2_120:bevel_gear"
   ]
 }

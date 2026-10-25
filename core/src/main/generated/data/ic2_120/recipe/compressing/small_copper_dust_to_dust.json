@@ -1,3 +1,11 @@
 {
-  "type": "ic2_120:compressing"
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "tag": "ic2_120:compat/small_dusts/copper"
+  },
+  "input_count": 9,
+  "result": {
+    "count": 1,
+    "item": "ic2_120:copper_dust"
+  }
 }

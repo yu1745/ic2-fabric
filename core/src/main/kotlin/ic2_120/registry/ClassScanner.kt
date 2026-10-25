@@ -1368,6 +1368,7 @@ object ClassScanner {
             }
         }
         logger.info("配方生成完成 - 成功: {}, 失败: {}, 总计: {}", successCount, failCount, recipeGenerators.size)
+        check(failCount == 0) { "$failCount 个配方生成器失败，停止输出不完整的数据包" }
     }
 
     /**
@@ -1389,6 +1390,7 @@ object ClassScanner {
             }
         }
         logger.info("{} 配方生成完成 - 成功: {}, 失败: {}, 总计: {}", modId, successCount, failCount, filtered.size)
+        check(failCount == 0) { "$modId 有 $failCount 个配方生成器失败，停止输出不完整的数据包" }
     }
 
 

@@ -69,7 +69,15 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
     override fun codec(): MapCodec<MetalFormerRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:metal_forming",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", RecipeCodecBridge.ingredientJson(recipe.ingredient))
+            json.add("result", RecipeCodecBridge.stackJson(recipe.output))
+            json.addProperty("mode", when (recipe) {
+                is CuttingRecipe -> "cutting"
+                is ExtrudingRecipe -> "extruding"
+                else -> "rolling"
+            })
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, MetalFormerRecipe> =

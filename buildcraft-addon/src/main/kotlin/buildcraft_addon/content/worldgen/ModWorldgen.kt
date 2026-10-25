@@ -16,6 +16,7 @@ import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.BlockPos
+import net.minecraft.core.QuartPos
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.util.RandomSource
 import net.minecraft.world.level.levelgen.Heightmap
@@ -158,7 +159,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
     private fun generateAt(world: WorldGenLevel, cx: Int, cz: Int, genMin: BlockPos, genMax: BlockPos, isCenter: Boolean = false) {
         // BC: 确定性随机（同种子同坐标必出相同结构）
         // WorldGenLevel 运行时为 ServerLevel，可安全访问种子
-        val wSeed = if (world is net.minecraft.world.level.Level) world.seed else 0L
+        val wSeed = world.seed
         val chunkSeed = cx.toLong() * 341873128712L + cz.toLong() * 132897987541L
         val rand = RandomSource.create(wSeed xor chunkSeed xor MAGIC_GEN_NUMBER)
 
@@ -166,11 +167,16 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
         val z = cz * 16 + 8 + rand.nextInt(16)
 
         // BC: 排除末地中心岛
-        val dim = (world as? net.minecraft.world.level.Level)?.dimension()
+        val dim = world.level.dimension()
         if (dim == net.minecraft.world.level.Level.END && (Math.abs(x) < 1200 || Math.abs(z) < 1200)) return
 
         // BC: 按生物群系 + 噪声斑块计算概率加成
-        val biomeKey = world.getBiome(BlockPos(x, 0, z)).unwrapKey()
+        // The well center can be several chunks outside the region currently being generated.
+        // Query the biome source directly; WorldGenRegion.getBiome would request an unavailable chunk.
+        val chunkSource = world.level.chunkSource
+        val biomeKey = chunkSource.generator.biomeSource
+            .getNoiseBiome(QuartPos.fromBlock(x), 0, QuartPos.fromBlock(z), chunkSource.randomState().sampler())
+            .unwrapKey()
         var bonus = 1.0
         var oilBiome = false // surfaceDepositBiomes (3x + 允许 LAKE)
         if (biomeKey.isPresent) {
@@ -207,7 +213,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
         }
 
         if (isCenter) {
-            val surfaceY = world.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 1
+            val surfaceY = surfaceHeight(world, x, z)
             BuildCraftAddon.LOGGER.info("OilWellFeature.generateAt() -> {} at chunk [{}, {}], center (x={}, y={}, z={})", type, cx, cz, x, surfaceY, z)
         }
 
@@ -373,9 +379,16 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
 
     // ========== 喷口（BC 原版 1:1） ==========
 
+    private fun surfaceHeight(world: WorldGenLevel, x: Int, z: Int): Int {
+        val chunkSource = world.level.chunkSource
+        return chunkSource.generator.getBaseHeight(
+            x, z, Heightmap.Types.WORLD_SURFACE_WG, world, chunkSource.randomState()
+        ) - 1
+    }
+
     private fun generateSpout(world: WorldGenLevel, start: BlockPos, height: Int, radius: Int, min: BlockPos, max: BlockPos): Int {
         // BC: 使用高度图找到地表（从顶向下，与 BC 原版一致）
-        val surfaceY = world.getHeight(Heightmap.Types.WORLD_SURFACE_WG, start.x, start.z) - 1
+        val surfaceY = surfaceHeight(world, start.x, start.z)
         if (surfaceY <= start.y) return 0
 
         var count = 0

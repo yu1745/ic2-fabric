@@ -1,0 +1,15 @@
+{
+  "blocks": ["ic2_120:luminator_flat"],
+  "when": { "properties": { "active": "true" } },
+  "light": {
+    "type": "sphere",
+    "position": {
+      "type": "facing_offset",
+      "base": [0.5, 0.5, 0.5],
+      "property": "facing",
+      "scale": 0.45
+    },
+    "radius": 0.4,
+    "color": [1.0, 0.97, 0.9]
+  }
+}

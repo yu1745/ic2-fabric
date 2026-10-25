@@ -56,7 +56,14 @@ object CompressorRecipeSerializer : RecipeSerializer<CompressorRecipe> {
     override fun codec(): MapCodec<CompressorRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:compressing",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", RecipeCodecBridge.ingredientJson(recipe.ingredient))
+            json.addProperty("input_count", recipe.inputCount)
+            json.add("result", RecipeCodecBridge.stackJson(recipe.output))
+            if (!recipe.containerReturn.isEmpty) {
+                json.add("container_return", RecipeCodecBridge.stackJson(recipe.containerReturn))
+            }
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, CompressorRecipe> =

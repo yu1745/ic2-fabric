@@ -1,5 +1,5 @@
 # ic2_120 tools/model3d/item3d 生成，勿手改
-mtllib battery/advanced_re_battery_1.mtl
+mtllib advanced_re_battery_1.mtl
 usemtl metal_cf8825
 v 0.8125 0.0938 0.3125
 vt 0.1875 0.9062

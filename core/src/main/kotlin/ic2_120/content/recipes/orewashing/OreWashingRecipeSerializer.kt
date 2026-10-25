@@ -84,7 +84,17 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
     override fun codec(): MapCodec<OreWashingRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:ore_washing",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", RecipeCodecBridge.ingredientJson(recipe.ingredient))
+            json.add("outputs", com.google.gson.JsonArray().apply {
+                recipe.outputItems.forEach { add(RecipeCodecBridge.stackJson(it)) }
+            })
+            val bucket = net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET
+            require(recipe.waterConsumptionDroplets * 1000L % bucket == 0L) {
+                "Ore washing water amount must be an integer number of mB"
+            }
+            json.addProperty("water_consumption_mb", recipe.waterConsumptionDroplets * 1000L / bucket)
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, OreWashingRecipe> =

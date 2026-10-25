@@ -1,3 +1,10 @@
 {
-  "type": "ic2_120:macerating"
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "tag": "ic2_120:compat/ores/lead"
+  },
+  "result": {
+    "count": 2,
+    "item": "ic2_120:crushed_lead"
+  }
 }

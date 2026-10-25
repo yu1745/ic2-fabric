@@ -78,18 +78,12 @@ fun encodeDamageToolShapelessJson(json: JsonObject, recipe: DamageToolShapelessR
 
     val ingredientsArr = JsonArray()
     for (ingredient in recipe.recipeIngredients) {
-        val obj = JsonObject()
-        val first = ingredient.items.firstOrNull()
-        obj.addProperty("item", first?.let { BuiltInRegistries.ITEM.getKey(it.item)?.toString() } ?: "minecraft:air")
-        ingredientsArr.add(obj)
+        ingredientsArr.add(ic2_120.content.recipes.RecipeCodecBridge.ingredientJson(ingredient))
     }
     json.add("ingredients", ingredientsArr)
 
     val result = recipe.getResultItem(net.minecraft.core.RegistryAccess.EMPTY)
-    val resultObj = JsonObject()
-    BuiltInRegistries.ITEM.getKey(result.item)?.let { resultObj.addProperty("item", it.toString()) }
-    if (result.count > 1) resultObj.addProperty("count", result.count)
-    json.add("result", resultObj)
+    json.add("result", ic2_120.content.recipes.RecipeCodecBridge.stackJson(result))
 }
 
 @ModMachineRecipe(id = "damage_tool_shapeless", recipeClass = DamageToolShapelessRecipe::class)

@@ -5,10 +5,11 @@
       "item": "ic2_120:forge_hammer"
     },
     {
-      "item": "minecraft:air"
+      "tag": "ic2_120:compat/ingots/lead"
     }
   ],
   "result": {
+    "count": 1,
     "item": "ic2_120:lead_plate"
   }
 }

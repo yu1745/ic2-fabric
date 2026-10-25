@@ -65,7 +65,12 @@ object BlockCutterRecipeSerializer : RecipeSerializer<BlockCutterRecipe> {
     override fun codec(): MapCodec<BlockCutterRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:cutting",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", RecipeCodecBridge.ingredientJson(recipe.ingredient))
+            json.addProperty("input_count", recipe.inputCount)
+            json.addProperty("material_hardness", recipe.materialHardness)
+            json.add("result", RecipeCodecBridge.stackJson(recipe.output))
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BlockCutterRecipe> =

@@ -50,7 +50,12 @@ object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
     override fun codec(): MapCodec<MaceratorRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:macerating",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", RecipeCodecBridge.ingredientJson(recipe.ingredient).apply {
+                if (recipe.inputCount != 1) addProperty("count", recipe.inputCount)
+            })
+            json.add("result", RecipeCodecBridge.stackJson(recipe.output))
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, MaceratorRecipe> =

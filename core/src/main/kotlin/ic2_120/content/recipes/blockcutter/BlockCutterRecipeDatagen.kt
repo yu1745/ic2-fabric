@@ -68,7 +68,7 @@ object BlockCutterRecipeDatagen {
         Entry("blackstone_to_slab", IngredientInput.item(Items.BLACKSTONE), 1, 1.5f, Items.BLACKSTONE_SLAB, 9),
         Entry("polished_blackstone_to_slab", IngredientInput.item(Items.POLISHED_BLACKSTONE), 1, 1.5f, Items.POLISHED_BLACKSTONE_SLAB, 9),
         Entry("polished_blackstone_bricks_to_slab", IngredientInput.item(Items.POLISHED_BLACKSTONE_BRICKS), 1, 1.5f, Items.POLISHED_BLACKSTONE_BRICK_SLAB, 9),
-        Entry("deepslate_to_slab", IngredientInput.item(Items.DEEPSLATE), 1, 3.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "deepslate_slab")), 9),
+        Entry("deepslate_to_slab", IngredientInput.item(Items.DEEPSLATE), 1, 3.0f, Items.COBBLED_DEEPSLATE_SLAB, 9),
         Entry("polished_deepslate_to_slab", IngredientInput.item(Items.POLISHED_DEEPSLATE), 1, 3.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "polished_deepslate_slab")), 9),
         Entry("deepslate_bricks_to_slab", IngredientInput.item(Items.DEEPSLATE_BRICKS), 1, 3.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "deepslate_brick_slab")), 9),
         Entry("deepslate_tiles_to_slab", IngredientInput.item(Items.DEEPSLATE_TILES), 1, 3.0f, BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "deepslate_tile_slab")), 9),

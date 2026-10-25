@@ -1,3 +1,11 @@
 {
-  "type": "ic2_120:metal_forming"
+  "type": "ic2_120:metal_forming",
+  "ingredient": {
+    "tag": "ic2_120:compat/ingots/copper"
+  },
+  "mode": "rolling",
+  "result": {
+    "count": 1,
+    "item": "ic2_120:copper_plate"
+  }
 }

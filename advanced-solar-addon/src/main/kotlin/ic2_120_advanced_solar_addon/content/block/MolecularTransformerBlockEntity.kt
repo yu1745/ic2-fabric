@@ -259,7 +259,7 @@ class MolecularTransformerBlockEntity(
         super.saveAdditional(nbt, lookup)
         ContainerHelper.saveAllItems(nbt, inventory, lookup)
         nbt.putLong("energyUsed", energyUsed)
-        nbt.put("consumedInput", consumedInputItem.save(lookup, CompoundTag()))
+        nbt.put("consumedInput", consumedInputItem.saveOptional(lookup))
         nbt.putInt("noEnergyTicks", noEnergyTicks)
         nbt.putBoolean("isLit", isLit)
         nbt.putLong(MolecularTransformerSync.NBT_ENERGY, sync.amount)

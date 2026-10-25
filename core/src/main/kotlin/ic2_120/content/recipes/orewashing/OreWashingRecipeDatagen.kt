@@ -40,7 +40,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "small_copper_dust")), 2),
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎锡矿石
         Entry(
@@ -51,7 +51,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "small_tin_dust")), 2),
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎铁矿石
         Entry(
@@ -62,7 +62,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "small_iron_dust")), 2),
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎金矿石
         Entry(
@@ -73,7 +73,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "small_gold_dust")), 2),
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎铀矿石（副产物是小撮铅粉）
         Entry(
@@ -84,7 +84,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "small_lead_dust")), 2),
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎铅矿石（副产物是小撮硫粉*3）
         Entry(
@@ -95,7 +95,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "small_sulfur_dust")), 3),
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎银矿石
         Entry(
@@ -106,7 +106,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "small_silver_dust")), 2),
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 沙砾（只有石粉输出）
         Entry(
@@ -115,7 +115,7 @@ object OreWashingRecipeDatagen {
             listOf(
                 OutputItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         )
     )
 

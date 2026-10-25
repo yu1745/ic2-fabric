@@ -1,5 +1,5 @@
 # ic2_120 tools/model3d/item3d 生成，勿手改
-mtllib battery/lapotron_crystal_1.mtl
+mtllib lapotron_crystal_1.mtl
 usemtl flat_3a9eff
 v 0.6497 0.8125 0.438
 vt 0.6497 0.438

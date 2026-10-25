@@ -86,7 +86,14 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
     override fun codec(): MapCodec<CentrifugeRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:centrifuging",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", RecipeCodecBridge.ingredientJson(recipe.ingredient))
+            json.addProperty("input_count", recipe.inputCount)
+            json.addProperty("min_heat", recipe.minHeat)
+            json.add("results", com.google.gson.JsonArray().apply {
+                recipe.outputs.forEach { add(RecipeCodecBridge.stackJson(it)) }
+            })
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, CentrifugeRecipe> =

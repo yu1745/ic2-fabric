@@ -178,6 +178,7 @@ object MaceratorRecipeDatagen {
             val id = ResourceLocation.fromNamespaceAndPath("ic2_120", "macerating/${entry.name}")
             val inputItem = BuiltInRegistries.ITEM.get(entry.input)
             val outputItem = BuiltInRegistries.ITEM.get(entry.output)
+            if (inputItem === Items.AIR || outputItem === Items.AIR) return@forEach
             val recipe = MaceratorRecipe(
                 id,
                 Ingredient.of(ItemStack(inputItem)),

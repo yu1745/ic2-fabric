@@ -53,7 +53,13 @@ object SolidCannerRecipeSerializer : RecipeSerializer<SolidCannerRecipe> {
     override fun codec(): MapCodec<SolidCannerRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:solid_canning",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("slot0_ingredient", RecipeCodecBridge.ingredientJson(recipe.slot0Ingredient))
+            json.addProperty("slot0_count", recipe.slot0Count)
+            json.add("slot1_ingredient", RecipeCodecBridge.ingredientJson(recipe.slot1Ingredient))
+            json.addProperty("slot1_count", recipe.slot1Count)
+            json.add("result", RecipeCodecBridge.stackJson(recipe.output))
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, SolidCannerRecipe> =

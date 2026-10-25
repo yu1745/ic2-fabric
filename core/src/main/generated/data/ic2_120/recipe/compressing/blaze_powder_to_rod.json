@@ -1,3 +1,11 @@
 {
-  "type": "ic2_120:compressing"
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "minecraft:blaze_powder"
+  },
+  "input_count": 5,
+  "result": {
+    "count": 1,
+    "item": "minecraft:blaze_rod"
+  }
 }

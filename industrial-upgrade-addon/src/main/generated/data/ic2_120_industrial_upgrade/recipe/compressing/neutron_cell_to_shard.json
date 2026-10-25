@@ -1,3 +1,25 @@
 {
-  "type": "ic2_120:compressing"
+  "type": "ic2_120:compressing",
+  "container_return": {
+    "count": 1,
+    "item": "ic2_120:empty_cell"
+  },
+  "ingredient": {
+    "fabric:type": "fabric:components",
+    "base": {
+      "item": "ic2_120:fluid_cell"
+    },
+    "components": {
+      "minecraft:custom_data": {
+        "FluidVariant": {
+          "fluid": "ic2_120_industrial_upgrade:neutron"
+        }
+      }
+    }
+  },
+  "input_count": 1,
+  "result": {
+    "count": 1,
+    "item": "ic2_120_industrial_upgrade:neutron_shard"
+  }
 }

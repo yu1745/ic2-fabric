@@ -90,7 +90,7 @@ class ObjUnbakedModel(private val spec: ObjModelSpec) : UnbakedModel {
                 val uv = tri.uv[k]
                 val v = if (spec.flipV) 1f - uv.y else uv.y
                 emitter.pos(i, pos[k])
-                emitter.uv(i, sp.getU(uv.x * 16.0f), sp.getV(v * 16.0f))
+                emitter.uv(i, sp.getU(uv.x), sp.getV(v))
                 val n = tri.normal?.let { rotateDir(it[k]) } ?: faceNormal
                 emitter.normal(i, n)
                 emitter.color(i, mat?.color ?: -1)
@@ -126,10 +126,10 @@ class ObjBakedModel(
         pos: BlockPos,
         randomSupplier: Supplier<RandomSource>,
         context: RenderContext,
-    ) = mesh.outputTo(context.emitter)
+    ) = mesh.forEach { quad -> context.emitter.copyFrom(quad).emit() }
 
     override fun emitItemQuads(stack: ItemStack, randomSupplier: Supplier<RandomSource>, context: RenderContext) =
-        mesh.outputTo(context.emitter)
+        mesh.forEach { quad -> context.emitter.copyFrom(quad).emit() }
 
     override fun getQuads(state: BlockState?, face: Direction?, random: RandomSource): List<BakedQuad> =
         quadLists[ModelHelper.toFaceIndex(face)]

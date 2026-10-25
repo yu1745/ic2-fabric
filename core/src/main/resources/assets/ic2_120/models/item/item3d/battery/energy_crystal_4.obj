@@ -1,5 +1,5 @@
 # ic2_120 tools/model3d/item3d 生成，勿手改
-mtllib battery/energy_crystal_4.mtl
+mtllib energy_crystal_4.mtl
 usemtl flat_ffffff
 v 0.6497 0.8125 0.438
 vt 0.6497 0.438

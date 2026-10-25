@@ -1,3 +1,12 @@
 {
-  "type": "ic2_120:cutting"
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:obsidian"
+  },
+  "input_count": 1,
+  "material_hardness": 50,
+  "result": {
+    "count": 4,
+    "item": "ic2_120:obsidian_plate"
+  }
 }

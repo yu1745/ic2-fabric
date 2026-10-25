@@ -1,5 +1,5 @@
 # ic2_120 tools/model3d/item3d 生成，勿手改
-mtllib battery/re_battery_1.mtl
+mtllib re_battery_1.mtl
 usemtl flat_505050
 v 0.6501 0.1562 0.5622
 vt 0 0.1562

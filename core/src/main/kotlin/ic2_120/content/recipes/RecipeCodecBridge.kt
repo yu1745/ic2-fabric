@@ -10,6 +10,9 @@ import com.mojang.serialization.MapCodec
 import com.mojang.serialization.MapLike
 import com.mojang.serialization.RecordBuilder
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.world.item.crafting.Recipe
 import java.util.stream.Stream
 
@@ -23,6 +26,17 @@ import java.util.stream.Stream
 object RecipeCodecBridge {
     /** codec 解码时原版不再传入配方 id，用占位 id；真实 id 由 RecipeHolder 携带 */
     val DUMMY_ID: ResourceLocation = ResourceLocation.withDefaultNamespace("bridge")
+
+    fun ingredientJson(ingredient: Ingredient): JsonObject =
+        Ingredient.CODEC.encodeStart(JsonOps.INSTANCE, ingredient).getOrThrow().asJsonObject
+
+    fun stackJson(stack: ItemStack): JsonObject {
+        require(!stack.isEmpty) { "Cannot encode an empty recipe output" }
+        return JsonObject().apply {
+            addProperty("item", BuiltInRegistries.ITEM.getKey(stack.item).toString())
+            addProperty("count", stack.count)
+        }
+    }
 
     inline fun <reified T : Recipe<*>> jsonMapCodec(
         jsonType: String,
@@ -56,7 +70,7 @@ object RecipeCodecBridge {
                 }
                 prefix
             } catch (t: Throwable) {
-                prefix
+                throw IllegalStateException("Failed to encode $jsonType recipe", t)
             }
 
         // DFU 8.0.16：MapCodec.keys 抽象签名为 <T> Stream<T> keys(DynamicOps<T>)（javap 实锤）

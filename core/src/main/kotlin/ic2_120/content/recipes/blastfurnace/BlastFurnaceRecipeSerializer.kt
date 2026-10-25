@@ -68,7 +68,11 @@ object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
     override fun codec(): MapCodec<BlastFurnaceRecipe> = RecipeCodecBridge.jsonMapCodec(
         "ic2_120:blast_furnacing",
         { id, json -> fromJson(id, json) },
-        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+        { json, recipe ->
+            json.add("ingredient", RecipeCodecBridge.ingredientJson(recipe.ingredient))
+            json.add("steel_output", RecipeCodecBridge.stackJson(recipe.steelOutput))
+            json.add("slag_output", RecipeCodecBridge.stackJson(recipe.slagOutput))
+        }
     )
 
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BlastFurnaceRecipe> =
